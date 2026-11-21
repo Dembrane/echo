@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { AccessStore } from "@dembrane/access";
+import { contextForPrompt } from "@dembrane/core";
 import type { Completer } from "@dembrane/llm";
 import { withoutClosingFence } from "@dembrane/llm";
 import { executeGatherSpec, gatherHasTranscript } from "./gather";
@@ -214,7 +215,7 @@ export async function extractLivingCanvasUpdate(
     project: {
       name: project.name ?? null,
       language: truthy(project.language) ? project.language : "en",
-      context: truthy(project.context) ? project.context : "",
+      context: truthy(project.context) ? (contextForPrompt(project.context) ?? "") : "",
       anonymize_transcripts: project.anonymize_transcripts ?? null,
     },
     enabled_tabs: normalizeCanvasTabs(args.state.tabs),

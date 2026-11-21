@@ -30,6 +30,7 @@ export async function getMe(
     avatar: null as string | null,
     orgs: [] as { id: string; name: string; role: string; is_partner: boolean }[],
     has_pending_invites: false,
+    is_invited: false,
     is_staff: who.isStaff,
     has_legacy_projects: false,
     onboarding_answer_json: null as Record<string, unknown> | null,
@@ -54,12 +55,15 @@ export async function getMe(
       avatar: profile.avatar ?? null,
       onboarding_completed: false,
       has_pending_invites: email ? await store.hasPendingInvites(email, now) : false,
+      is_invited: email ? await store.isInvited(email, null) : false,
       has_legacy_projects: hasLegacyProjects,
     };
   }
 
-  const [hasPendingInvites, orgs, licenses] = await Promise.all([
+  const accountEmail = appUser.email || email;
+  const [hasPendingInvites, isInvited, orgs, licenses] = await Promise.all([
     email ? store.hasPendingInvites(email, now) : Promise.resolve(false),
+    accountEmail ? store.isInvited(accountEmail, appUser.created_at) : Promise.resolve(false),
     store.orgSummaries(appUser.id),
     store.licenses(appUser.id),
   ]);
@@ -73,6 +77,7 @@ export async function getMe(
     onboarding_completed: true,
     orgs,
     has_pending_invites: hasPendingInvites,
+    is_invited: isInvited,
     has_legacy_projects: hasLegacyProjects,
     onboarding_answer_json: answers,
     training_status: trainingStatus(licenses, now),

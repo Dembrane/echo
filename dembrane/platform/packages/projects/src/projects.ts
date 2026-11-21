@@ -5,7 +5,14 @@ import {
   requireProjectRoom,
   withAllowanceLock,
 } from "@dembrane/allowance";
-import { BadRequestError, ForbiddenError, NotFoundError, newId, zip } from "@dembrane/core";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+  newId,
+  ValidationError,
+  zip,
+} from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { projectAllows, projectFor, projectSource } from "@dembrane/http";
@@ -20,6 +27,8 @@ export interface ProjectDeps {
   readonly access: Access;
   readonly jobs: JobSink;
   readonly now: () => Date;
+  /** ENABLE_PARTICIPANT_EMAIL. Unset means off. */
+  readonly participantEmail?: boolean;
 }
 
 const notFound = () => new NotFoundError("project.not_found");
@@ -133,6 +142,7 @@ async function writeClone(
     image_generation_model: src.image_generation_model,
     is_enhanced_audio_processing_enabled: src.is_enhanced_audio_processing_enabled,
     is_get_reply_enabled: src.is_get_reply_enabled,
+    is_get_reply_cross_pollination_enabled: src.is_get_reply_cross_pollination_enabled,
     get_reply_mode: src.get_reply_mode,
     get_reply_prompt: src.get_reply_prompt,
     is_project_notification_subscription_allowed: src.is_project_notification_subscription_allowed,
@@ -629,12 +639,15 @@ export const PROJECT_UPDATE_FIELDS = [
   "default_conversation_description",
   "default_conversation_finish_text",
   "default_conversation_ask_for_participant_name",
+  // The name box's label (ECHO-1053), at most NAME_LABEL_MAX characters; blank clears it.
+  "conversation_ask_for_participant_name_label",
   "default_conversation_ask_for_participant_email",
   "default_conversation_transcript_prompt",
   "default_conversation_tutorial_slug",
   "get_reply_mode",
   "get_reply_prompt",
   "is_get_reply_enabled",
+  "is_get_reply_cross_pollination_enabled",
   "is_verify_enabled",
   "is_verify_on_finish_enabled",
   "is_canvas_enabled",
@@ -653,6 +666,29 @@ export const PROJECT_UPDATE_FIELDS = [
 ] as const;
 
 /**
+ * The settings that collect participant email (ECHO-1052), held behind ENABLE_PARTICIPANT_EMAIL:
+ * asking for it on the thank-you page, and the report notifications it feeds.
+ */
+export const PARTICIPANT_EMAIL_FIELDS = [
+  "default_conversation_ask_for_participant_email",
+  "is_project_notification_subscription_allowed",
+] as const;
+
+/**
+ * The first email setting a write would switch on while ENABLE_PARTICIPANT_EMAIL is off, or
+ * null. Keeping a setting that is already on, or switching it off, is always allowed.
+ */
+export function newlyEnabledEmailField(
+  enabled: boolean,
+  payload: Record<string, unknown>,
+  stored: Record<string, unknown>,
+): (typeof PARTICIPANT_EMAIL_FIELDS)[number] | null {
+  if (enabled) return null;
+  for (const f of PARTICIPANT_EMAIL_FIELDS) if (payload[f] === true && stored[f] !== true) return f;
+  return null;
+}
+
+/**
  * Edits whitelisted fields; explicit nulls clear. Hiding the event invitation is a paid
  * feature. The legal basis can switch consent off, so it needs settings:manage (spec M-6:
  * the Python compared raw role strings) and dembrane-events a dembrane account.
@@ -669,6 +705,10 @@ export async function updateProject(
   const payload: Record<string, unknown> = {};
   for (const k of PROJECT_UPDATE_FIELDS) if (fieldsSet.has(k)) payload[k] = body[k];
   if (!Object.keys(payload).length) throw new BadRequestError("request.nothing_to_update");
+
+  const emailField = newlyEnabledEmailField(Boolean(d.participantEmail), payload, project);
+  if (emailField)
+    throw new ValidationError("project.participant_email_off", { params: { field: emailField } });
 
   if (payload.is_dembrane_event_cta_enabled === false) {
     const tier = project.workspace_id ? await d.store.workspaceTier(project.workspace_id) : null;
@@ -695,6 +735,10 @@ export async function updateProject(
     }
     Object.assign(payload, legal.payload);
   }
+  // A blank name box label means the portal's own default ("Session name").
+  if (typeof payload.conversation_ask_for_participant_name_label === "string")
+    payload.conversation_ask_for_participant_name_label =
+      payload.conversation_ask_for_participant_name_label.trim() || null;
   // tutorial_slug is accepted by the whitelist but has no column; Directus dropped it too.
   delete payload.tutorial_slug;
   void pa;

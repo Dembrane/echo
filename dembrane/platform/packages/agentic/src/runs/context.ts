@@ -1,3 +1,4 @@
+import { contextForPrompt } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import type postgres from "postgres";
 import { isUuid } from "./storage";
@@ -64,7 +65,8 @@ export async function liveProject(sql: postgres.Sql, id: string): Promise<Projec
   return {
     id: row.id as string,
     name: (row.name as string | null) ?? null,
-    context: (row.context as string | null) ?? null,
+    // What the assistant's prompts read: the stored context within the prompt budget.
+    context: contextForPrompt(row.context),
     workspaceId: (row.workspace_id as string | null) ?? null,
     isCanvasEnabled: Boolean(row.is_canvas_enabled),
   };

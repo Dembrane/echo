@@ -133,7 +133,7 @@ export function freeChats(db: Db): FreeChats {
         opts.tier && !isFreeTier(opts.tier)
           ? { account: null, sample: false }
           : await projectAllowance(db, turn.projectId, turn.now);
-      if (account && !sample) await requireAccountBudget(db, account, turn.now);
+      if (account) await requireAccountBudget(db, account, turn.now);
       if (await stored(turn)) return { inserted: false };
       if (account && sample) {
         const used = await sampleTurns(turn.projectId);

@@ -1,7 +1,7 @@
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import { sql } from "drizzle-orm";
-import type { RateCounter } from "./limiter";
+import type { RateCounter, RateWindow } from "./limiter";
 
 const t = schema.platform_rate_limit;
 
@@ -10,6 +10,11 @@ export class PostgresRateCounter implements RateCounter {
   constructor(private readonly db: Db) {}
 
   async hit(key: string, windowSeconds: number, now: Date): Promise<number> {
+    return (await this.hitWindow(key, windowSeconds, now)).count;
+  }
+
+  /** The same upsert, also returning when the window ends. */
+  async hitWindow(key: string, windowSeconds: number, now: Date): Promise<RateWindow> {
     const resetAt = new Date(now.getTime() + windowSeconds * 1000);
     const [row] = await this.db
       .insert(t)
@@ -21,7 +26,7 @@ export class PostgresRateCounter implements RateCounter {
           resetAt: sql`case when ${t.resetAt} <= ${now.toISOString()}::timestamptz then ${resetAt.toISOString()}::timestamptz else ${t.resetAt} end`,
         },
       })
-      .returning({ count: t.count });
-    return row?.count ?? 1;
+      .returning({ count: t.count, resetAt: t.resetAt });
+    return { count: row?.count ?? 1, resetAt: row?.resetAt ?? resetAt };
   }
 }

@@ -11,6 +11,7 @@ export type SidebarViewId =
 	| "workspace-settings"
 	| "project-home"
 	| "project-settings"
+	| "project-portal"
 	| "admin-home";
 
 export interface ResolvedSidebarView {

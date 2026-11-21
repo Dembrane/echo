@@ -66,24 +66,25 @@ The project sidebar is the map of a project:
 | "Overview" | The project's home: the "Take part" card with the QR code and the link, the list of conversations, a summary of the portal settings, and shortcuts such as "Upload audio" and "Host guide" |
 | "Ask" | [Chat](./chat-and-ask.md) with the project's conversations. Hidden for observers |
 | "Conversations" | The [recordings and uploads](./conversations-and-transcripts.md) |
-| "Portal editor" | [What participants see](./portal-editor.md) in the portal |
+| "Brief" | What the project is about: name, context, goal, key terms, methodology and the assistant's memory |
+| "Portal editor" | [What participants see](./portal-editor.md) in the portal, one page per part of the portal, with a live preview |
 | "Monitor" (Beta) | A [live view](./live-monitor.md) of recording sessions |
 | "Present" (Beta) | The page you prepare and open the [room's screen](./present.md) from |
 | "Map" (Beta) | The [argument map](./argument-map.md) of the project |
 | "Report" | Written [reports](./reports.md) |
-| "Automation" (Beta) | Project [webhooks](./webhooks-and-integrations.md). Workspace admins and owners only |
-| "Manage" | "General", "Access", "Usage" and "Export" |
+| "Manage" | "Access", "Usage", "Export" and "Advanced" (project [webhooks](./webhooks-and-integrations.md) for workspace admins and owners, the experimental switch, moving and deleting) |
 
 ## Where each setting lives
 
 | Setting | Where | What it does |
 |---|---|---|
-| "Name" | "General", or "Rename project" in the project's menu on the workspace home | The name in the dashboard. Participants do not see it in the portal. It is printed on the host guide. |
-| "Project context" | "General" | What the project is about. Used for summaries, chat answers and replies to participants. |
-| "Project goal" | "General" | Free text with a revision history. It guides reports and the assistant's suggestions. |
-| "Methodology" | "General" | The way the project is set up and guided, chosen from the methodologies your workspace can see. |
-| "Experimental" | "General" | One switch, "Living canvas and popcorn" (Beta), which turns on [canvases](./canvas.md) for the project. |
-| "Language", "Key terms", "Tags" and every portal option | [Portal editor](./portal-editor.md) | What participants see and how transcription is guided. |
+| "Name" | "Brief", or "Rename project" in the project's menu on the workspace home | The name in the dashboard. Participants do not see it in the portal. It is printed on the host guide. |
+| "Project context" | "Brief" | What the project is about. Used for summaries, chat answers and replies to participants. |
+| "Project goal" | "Brief" | Free text with a revision history. It guides reports and the assistant's suggestions. |
+| "Methodology" | "Brief" | The way the project is set up and guided, chosen from the methodologies your workspace can see. |
+| "Key terms" | "Brief" | The names and words transcription should spell right. The Verify drafts spell by them too. |
+| "Experimental" | "Manage", "Advanced" | One switch, "Living canvas and popcorn" (Beta), which turns on [canvases](./canvas.md) for the project. |
+| "Language", "Tags" and every portal option | [Portal editor](./portal-editor.md) | What participants see and how transcription is guided. |
 | Visibility | "Access" | Who on the workspace can see the project. |
 
 ## Who can see a project
@@ -113,7 +114,7 @@ give them another role first.
 
 ## Clone, move and delete
 
-All three are under "General".
+All three are under "Manage", "Advanced".
 
 - "Clone project" makes a copy in the same workspace. Settings and tags are copied.
   Reports, chats and conversations are not.

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { ERROR_CATALOG } from "@dembrane/core";
+import { ERROR_CATALOG, RateLimitedError } from "@dembrane/core";
 import { MemoryRateCounter, RateLimiter, TOO_MANY } from "../src";
 
 test("the hit after capacity is refused until the window passes", async () => {
@@ -58,4 +58,53 @@ test("the memory counter sweeps expired windows when full and stops tracking pas
   expect(await counter.hit("c", 60, later)).toBe(2);
   expect(await counter.hit("a", 60, later)).toBe(3);
   expect(counter.size).toBe(2);
+});
+
+test("a refusal says how many seconds are left in the window", async () => {
+  let now = new Date("2026-11-10T00:00:00Z");
+  const limiter = new RateLimiter(new MemoryRateCounter(), () => now);
+  const limit = { name: "t", capacity: 1, windowSeconds: 60 };
+  await limiter.check(limit, "u");
+  now = new Date(now.getTime() + 15_500);
+  const refused = await limiter.check(limit, "u").catch((e: unknown) => e);
+  expect(refused).toBeInstanceOf(RateLimitedError);
+  expect((refused as RateLimitedError).code).toBe("rate_limit.exceeded");
+  expect((refused as RateLimitedError).params).toEqual({ retry_after_seconds: 45 });
+  // The text stays the catalog's: only the params gained the wait.
+  expect((refused as RateLimitedError).message).toBe(TOO_MANY);
+});
+
+test("the wait is at least one second, and the limit itself is unchanged", async () => {
+  let now = new Date("2026-11-10T00:00:00Z");
+  const limiter = new RateLimiter(new MemoryRateCounter(), () => now);
+  const limit = { name: "t", capacity: 2, windowSeconds: 10 };
+  await limiter.check(limit, "u");
+  await limiter.check(limit, "u");
+  now = new Date(now.getTime() + 9_999);
+  const refused = (await limiter.check(limit, "u").catch((e: unknown) => e)) as RateLimitedError;
+  expect(refused.params).toEqual({ retry_after_seconds: 1 });
+  now = new Date(now.getTime() + 2);
+  await limiter.check(limit, "u");
+});
+
+test("a counter that does not know its window refuses without a wait", async () => {
+  const limiter = new RateLimiter({ hit: async () => 5 });
+  const refused = (await limiter
+    .check({ name: "t", capacity: 1, windowSeconds: 60 }, "u")
+    .catch((e: unknown) => e)) as RateLimitedError;
+  expect(refused.code).toBe("rate_limit.exceeded");
+  expect(refused.params).toEqual({});
+});
+
+test("the memory counter reports the window's end with each hit", async () => {
+  const counter = new MemoryRateCounter();
+  const t0 = new Date("2026-11-10T00:00:00Z");
+  expect(await counter.hitWindow("a", 60, t0)).toEqual({
+    count: 1,
+    resetAt: new Date("2026-11-10T00:01:00Z"),
+  });
+  expect(await counter.hitWindow("a", 60, new Date(t0.getTime() + 5_000))).toEqual({
+    count: 2,
+    resetAt: new Date("2026-11-10T00:01:00Z"),
+  });
 });

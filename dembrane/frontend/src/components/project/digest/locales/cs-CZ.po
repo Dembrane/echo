@@ -1,0 +1,441 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-11-10 21:38+0100\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: cs-CZ\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#: src/components/project/digest/DigestReview/ReviewSection.tsx:133
+msgid "Accept and continue"
+msgstr "Přijmout a pokračovat"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:242
+msgid "Accept the rest"
+msgstr "Přijmout zbytek"
+
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:175
+msgid "Add a link"
+msgstr "Přidat odkaz"
+
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:126
+msgid "Add from a file"
+msgstr "Přidat ze souboru"
+
+#: src/components/project/digest/NameStepDigest/NameStepDigestConnected.tsx:106
+msgid "Added what the session is about to the project context. Check it above."
+msgstr "To, o čem setkání je, je teď v kontextu projektu. Zkontroluj to výše."
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:536
+msgid "All templates"
+msgstr "Všechny šablony"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:502
+msgid "Also fits:"
+msgstr "Hodí se i:"
+
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:197
+msgid "An invitation or project page. dembrane reads it once."
+msgstr "Pozvánka nebo stránka projektu. dembrane ji přečte jednou."
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:232
+msgid "Back"
+msgstr "Zpět"
+
+#: src/components/project/digest/DigestProgress/DigestProgress.tsx:59
+msgid "Cancel"
+msgstr "Zrušit"
+
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:110
+msgid "Change"
+msgstr "Změnit"
+
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:64
+msgid "Change any part, then create the project. Nothing is saved before."
+msgstr "Změň, co chceš, a pak vytvoř projekt. Do té doby se nic neukládá."
+
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:103
+#~ msgid "Change: {0}"
+#~ msgstr ""
+
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:107
+msgid "Change: {part}"
+msgstr "Změnit: {part}"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:108
+#~ msgid "Check each part, change what's off and switch off what you don't want. Nothing is saved until you create the project."
+#~ msgstr "Projdi každou část, uprav, co nesedí, a vypni, co nechceš. Nic se neuloží, dokud projekt nevytvoříš."
+
+#: src/components/project/digest/DigestConnected.tsx:226
+msgid "Choose a format below to continue."
+msgstr "Pokračuj výběrem formátu níže."
+
+#: src/components/project/digest/DigestConnected.tsx:204
+#~ msgid "Choose a template below to continue."
+#~ msgstr "Vyber níže šablonu a pokračuj."
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:491
+msgid "Choose the template that fits the session."
+msgstr "Vyber šablonu, která se k setkání hodí."
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:335
+msgid "Contact details and lists of names were left out of the context."
+msgstr "Kontaktní údaje a seznamy jmen byly z kontextu vynechány."
+
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:125
+msgid "Create project"
+msgstr "Vytvořit projekt"
+
+#: src/components/project/digest/NameStepDigest/NameStepDigestConnected.tsx:99
+msgid "dembrane couldn't read anything to add from this."
+msgstr "dembrane z toho nedokázal vyčíst nic, co by přidal."
+
+#: src/components/project/digest/DigestConnected.tsx:218
+msgid "dembrane couldn't set the project up from this."
+msgstr "dembrane podle toho nedokázal projekt nastavit."
+
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:128
+msgid "Drop files here, or choose them"
+msgstr "Přetáhni soubory sem, nebo je vyber"
+
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:112
+msgid "Drop files or choose them"
+msgstr "Přetáhni soubory, nebo je vyber"
+
+#: src/components/project/digest/DigestConnected.tsx:195
+msgid "Drop it to set up the project from it"
+msgstr "Pusť a projekt se podle toho nastaví"
+
+#: src/components/project/digest/DigestReview/ReviewSection.tsx:142
+msgid "Edit"
+msgstr "Upravit"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:182
+#: src/components/project/digest/DigestReview/DigestReview.tsx:621
+msgid "Explore question"
+msgstr "Otázka pro Explore"
+
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:228
+msgid "Files stay on your device. Only their text is sent to dembrane's model provider to prepare the setup. Don't drop material you may not share."
+msgstr "Soubory zůstanou ve tvém zařízení. Jen jejich text se pošle poskytovateli modelů, kterého dembrane používá, aby připravil nastavení. Nevkládej materiál, který nesmíš sdílet."
+
+#. placeholder {0}: provenance.source
+#: src/components/project/digest/DigestReview/Provenance.tsx:39
+msgid "From {0}"
+msgstr "Z {0}"
+
+#. placeholder {0}: term.source
+#. placeholder {1}: term.snippet
+#: src/components/project/digest/DigestReview/DigestReview.tsx:171
+msgid "From {0}: “{1}”"
+msgstr "Z {0}: „{1}“"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:396
+msgid "Give the project a name to create it."
+msgstr "Dej projektu název, abys ho mohl vytvořit."
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:183
+#: src/components/project/digest/DigestReview/DigestReview.tsx:409
+msgid "Goal"
+msgstr "Cíl"
+
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:97
+#~ msgid "Have an agenda or invitation? Drop it here and dembrane sets the project up."
+#~ msgstr "Máš program nebo pozvánku? Přetáhni je sem a dembrane projekt nastaví."
+
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:97
+msgid "Have an agenda, invitation or run sheet? Drop it here and dembrane sets the project up."
+msgstr "Máš program, pozvánku nebo scénář akce? Přetáhni ho sem a dembrane projekt nastaví."
+
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:52
+#: src/components/project/digest/DigestReview/ReviewSection.tsx:94
+msgid "Here is what dembrane understood"
+msgstr "Tohle dembrane pochopil"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:184
+msgid "Host script additions"
+msgstr "Doplnění scénáře hostitele"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:185
+msgid "Key terms"
+msgstr "Klíčové výrazy"
+
+#: src/components/project/digest/messages.ts:11
+msgid "Larger than 10 MB. Try a shorter version, or paste the part that matters."
+msgstr "Větší než 10 MB. Zkus kratší verzi, nebo vlož tu část, na které záleží."
+
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:196
+msgid "Link to a page about it"
+msgstr "Odkaz na stránku o tom"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:186
+msgid "Name"
+msgstr "Název"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:187
+#: src/components/project/digest/DigestReview/DigestReview.tsx:606
+msgid "Name box"
+msgstr "Pole pro název"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:439
+msgid "Names and words transcription should spell right. Each one is in your material."
+msgstr "Jména a slova, která má přepis psát správně. Každé je v tvém materiálu."
+
+#: src/components/project/digest/messages.ts:9
+msgid "Not read: dembrane reads up to {MAX_FILES} files at a time."
+msgstr "Nepřečteno: dembrane čte nejvýš {MAX_FILES} souborů najednou."
+
+#: src/components/project/digest/messages.ts:27
+msgid "Not read: together the files are longer than 200,000 characters."
+msgstr "Nepřečteno: soubory mají dohromady víc než 200 000 znaků."
+
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:101
+#: src/components/project/digest/DigestReview/DigestReview.tsx:363
+msgid "Nothing yet"
+msgstr "Zatím nic"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:305
+msgid "One part at a time: accept it, edit it or skip it. Nothing is saved until you create the project."
+msgstr "Jedna část po druhé: přijmi ji, uprav ji, nebo ji přeskoč. Nic se neuloží, dokud nevytvoříš projekt."
+
+#: src/components/project/digest/DigestConnected.tsx:231
+msgid "Only its start fits: dembrane reads the first 4,000 characters of the context."
+msgstr "Vejde se jen začátek: dembrane čte prvních 4 000 znaků kontextu."
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:535
+msgid "Or choose another"
+msgstr "Nebo vyber jinou"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:556
+msgid "Participants tap the round they are in before they record."
+msgstr "Účastníci před nahráváním klepnou na své kolo."
+
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:157
+msgid "Paste text"
+msgstr "Vložit text"
+
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:183
+msgid "Paste the agenda, the invitation or the brief."
+msgstr "Vlož program, pozvánku nebo zadání."
+
+#: src/components/project/digest/useDigestRun.ts:117
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:182
+msgid "Pasted text"
+msgstr "Vložený text"
+
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:132
+msgid "PDF, Word, PowerPoint or text. Up to {MAX_FILES} files of 10 MB."
+msgstr "PDF, Word, PowerPoint nebo text. Až {MAX_FILES} souborů po 10 MB."
+
+#: src/components/project/digest/messages.ts:17
+msgid "Pictures aren't read. PDF, Word, PowerPoint and text files work."
+msgstr "Obrázky se nečtou. Fungují soubory PDF, Word, PowerPoint a text."
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:181
+#: src/components/project/digest/DigestReview/DigestReview.tsx:426
+msgid "Project context"
+msgstr "Kontext projektu"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:388
+msgid "Project name"
+msgstr "Název projektu"
+
+#: src/components/project/digest/DigestProgress/DigestProgress.tsx:108
+msgid "read"
+msgstr "přečteno"
+
+#. placeholder {0}: result.sources.map((s) => s.name).join(", ")
+#: src/components/project/digest/DigestReview/DigestReview.tsx:315
+msgid "Read from: {0}"
+msgstr "Přečteno z: {0}"
+
+#: src/components/project/digest/DigestProgress/DigestProgress.tsx:104
+msgid "read, only the start: the files together are too long"
+msgstr "přečten jen začátek: soubory jsou dohromady moc dlouhé"
+
+#: src/components/project/digest/DigestProgress/DigestProgress.tsx:101
+msgid "reading"
+msgstr "čte se"
+
+#: src/components/project/digest/DigestProgress/DigestProgress.tsx:39
+msgid "Reading your files on this device…"
+msgstr "Čtu tvoje soubory v tomto zařízení…"
+
+#: src/components/project/digest/DigestProgress/DigestProgress.tsx:41
+msgid "Reading your material"
+msgstr "Čtu tvůj materiál"
+
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:61
+msgid "Ready to create"
+msgstr "Připraveno k vytvoření"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:188
+#: src/components/project/digest/DigestReview/DigestReview.tsx:561
+msgid "Rounds as tags"
+msgstr "Kola jako štítky"
+
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:216
+msgid "Set up from this"
+msgstr "Nastavit podle tohohle"
+
+#: src/components/project/digest/DigestReview/ReviewSection.tsx:152
+msgid "Skip this part"
+msgstr "Přeskočit tuto část"
+
+#: src/components/project/digest/DigestReview/ReviewSummary.tsx:101
+msgid "Skipped"
+msgstr "Přeskočeno"
+
+#: src/components/project/digest/messages.ts:15
+msgid "Spreadsheets aren't read. PDF, Word, PowerPoint and text files work."
+msgstr "Tabulky se nečtou. Fungují soubory PDF, Word, PowerPoint a text."
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:219
+#: src/components/project/digest/DigestReview/DigestReview.tsx:252
+msgid "Start over"
+msgstr "Začít znovu"
+
+#. placeholder {0}: i + 1
+#: src/components/project/digest/DigestReview/DigestReview.tsx:642
+msgid "Step {0}"
+msgstr "Krok {0}"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:634
+msgid "Steps for this session, added after the template's host script."
+msgstr "Kroky pro toto setkání, přidané za scénář hostitele ze šablony."
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:189
+msgid "Template"
+msgstr "Šablona"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:346
+msgid "The link could not be read, so this comes from your files and text."
+msgstr "Odkaz se nepodařilo přečíst, takže tohle vychází z tvých souborů a textu."
+
+#: src/components/project/digest/messages.ts:23
+msgid "There is no text in this file."
+msgstr "V tomto souboru není žádný text."
+
+#: src/components/project/digest/messages.ts:25
+msgid "This file couldn't be opened. It may be damaged or protected with a password."
+msgstr "Tento soubor nejde otevřít. Možná je poškozený nebo chráněný heslem."
+
+#: src/components/project/digest/messages.ts:19
+msgid "This kind of file can't be read. PDF, Word (.docx), PowerPoint (.pptx) and text files work."
+msgstr "Tento druh souboru nejde přečíst. Fungují soubory PDF, Word (.docx), PowerPoint (.pptx) a text."
+
+#: src/components/project/digest/messages.ts:13
+msgid "This older format can't be read here. Save it as PDF, .docx or .pptx and drop it again."
+msgstr "Tento starší formát tu nejde přečíst. Ulož ho jako PDF, .docx nebo .pptx a přetáhni znovu."
+
+#: src/components/project/digest/messages.ts:21
+msgid "This PDF is a scan, so there is no text to read. Paste the text, or drop a version you can select text in."
+msgstr "Toto PDF je sken, takže v něm není text ke čtení. Vlož text, nebo přetáhni verzi, ve které jde text označit."
+
+#: src/components/project/digest/DigestProgress/DigestProgress.tsx:47
+msgid "This takes up to half a minute for long documents."
+msgstr "U dlouhých dokumentů to trvá až půl minuty."
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:431
+#~ msgid "Use these host script steps"
+#~ msgstr "Použít tyto kroky scénáře hostitele"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:220
+#~ msgid "Use these key terms"
+#~ msgstr "Použít tyto klíčové výrazy"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:335
+#~ msgid "Use these tags"
+#~ msgstr "Použít tyto štítky"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:355
+#~ msgid "Use these Verify options"
+#~ msgstr "Použít tyto možnosti Verify"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:200
+#~ msgid "Use this context"
+#~ msgstr "Použít tento kontext"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:410
+#~ msgid "Use this Explore question"
+#~ msgstr "Použít tuto otázku pro Explore"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:179
+#~ msgid "Use this goal"
+#~ msgstr "Použít tento cíl"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:389
+#~ msgid "Use this name box label"
+#~ msgstr "Použít tento popisek pole pro název"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:190
+msgid "Verify"
+msgstr "Verify"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:578
+msgid "Verify options"
+msgstr "Možnosti Verify"
+
+#: src/components/project/digest/DigestProgress/DigestProgress.tsx:100
+msgid "waiting"
+msgstr "čeká"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:574
+msgid "What participants check together at the end of their conversation."
+msgstr "Co účastníci na konci rozhovoru společně zkontrolují."
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:602
+msgid "What the portal asks each group to type before recording."
+msgstr "Co portál chce, aby každá skupina před nahráváním napsala."
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:405
+msgid "What you want to learn or decide. Saved as the project's first goal."
+msgstr "Co chceš zjistit nebo rozhodnout. Uloží se jako první cíl projektu."
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:422
+msgid "What, who, where and the questions. dembrane reads it to keep answers and summaries on your question."
+msgstr "Co, kdo, kde a otázky. dembrane to čte, aby odpovědi a shrnutí zůstaly u tvé otázky."
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:617
+msgid "When a group presses Explore, dembrane asks one open question built from your questions. It never gives its own opinion."
+msgstr "Když skupina stiskne Explore, dembrane položí jednu otevřenou otázku postavenou na tvých otázkách. Vlastní názor nikdy nedává."
+
+#. placeholder {0}: result.template.reason
+#: src/components/project/digest/DigestReview/DigestReview.tsx:485
+msgid "Why this one: {0}"
+msgstr "Proč tahle: {0}"
+
+#: src/components/project/digest/DigestReview/ReviewSection.tsx:122
+msgid "You skipped this part. Accept it to use it after all."
+msgstr "Tato část je přeskočená. Přijmi ji, pokud ji chceš přece použít."
+
+#: src/components/project/digest/DigestConnected.tsx:213
+msgid "You've set up several projects from material in the last hour. Try again later."
+msgstr "Za poslední hodinu jsi už podle materiálů nastavil několik projektů. Zkus to později."
+
+#: src/components/project/digest/DigestProgress/DigestProgress.tsx:71
+msgid "Your files"
+msgstr "Tvoje soubory"
+
+#: src/components/project/digest/DigestReview/DigestReview.tsx:323
+msgid "Your material was long, so dembrane read its start and a condensed version. Check that nothing important is missing."
+msgstr "Tvůj materiál byl dlouhý, takže dembrane přečetl začátek a zhuštěnou verzi. Zkontroluj, že nic důležitého nechybí."
+
+#: src/components/project/digest/DigestConnected.tsx:221
+msgid "Your text is in the project context: choose a format below to continue."
+msgstr "Tvůj text je v kontextu projektu: pokračuj výběrem formátu níže."
+
+#: src/components/project/digest/DigestConnected.tsx:199
+#~ msgid "Your text is in the project context: choose a template below to continue."
+#~ msgstr "Tvůj text je v kontextu projektu: vyber níže šablonu a pokračuj."
+
+#: src/components/project/digest/DigestConnected.tsx:208
+msgid "Your workspace's AI budget for this month is used up, so dembrane can't read this now."
+msgstr "Rozpočet na AI tvého pracovního prostoru na tento měsíc je vyčerpaný, takže dembrane to teď nemůže přečíst."

@@ -3,6 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import {
 	ActionIcon,
 	Badge,
+	Box,
 	Button,
 	Card,
 	Grid,
@@ -44,6 +45,7 @@ import { SampleProjectNotice } from "@/components/project/SampleProjectNotice";
 import { useLatestProjectReport } from "@/components/report/hooks";
 import { reportStatusLabel } from "@/components/sharing/StatusLine";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { track } from "@/lib/analytics/events";
 import { canUseChat, isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 
@@ -117,19 +119,23 @@ export const ProjectHomeRoute = () => {
 			icon: <TextAaIcon size={20} />,
 			label: <Trans>Set key terms</Trans>,
 			testId: "project-home-set-key-terms",
-			to: `portal-editor#${KEY_TERMS_HASH}`,
+			to: `brief#${KEY_TERMS_HASH}`,
+			tour: "project-home-key-terms",
 		},
 		canEditProject && {
 			icon: <TargetIcon size={20} />,
 			label: <Trans>Set project context</Trans>,
 			testId: "project-home-set-project-context",
-			to: `overview#${PROJECT_CONTEXT_HASH}`,
+			to: `brief#${PROJECT_CONTEXT_HASH}`,
+			tour: "project-home-project-context",
 		},
 	].filter(Boolean) as {
 		to: string;
 		icon: ReactNode;
 		label: ReactNode;
 		testId?: string;
+		// A stable anchor for the onboarding walkthrough (ECHO-1044).
+		tour?: string;
 	}[];
 
 	return (
@@ -181,7 +187,7 @@ export const ProjectHomeRoute = () => {
 					<Grid.Col span={{ base: 12, md: 8 }}>
 						<Stack gap="xl">
 							{!isSample && (
-								<Card p="md">
+								<Card p="md" data-tour="project-home-share">
 									<Stack gap="md">
 										<Title order={4}>
 											<Trans>Take part</Trans>
@@ -192,11 +198,13 @@ export const ProjectHomeRoute = () => {
 							)}
 
 							{projectId && workspaceId && (
-								<ConversationsMiniList
-									projectId={projectId}
-									workspaceId={workspaceId}
-									withTitle
-								/>
+								<Box data-tour="project-home-conversations">
+									<ConversationsMiniList
+										projectId={projectId}
+										workspaceId={workspaceId}
+										withTitle
+									/>
+								</Box>
 							)}
 
 							{report && reportTitle && (
@@ -226,9 +234,11 @@ export const ProjectHomeRoute = () => {
 
 					<Grid.Col span={{ base: 12, md: 4 }}>
 						<Stack gap="xl">
-							<PortalSettingsOverview project={project} base={base} />
+							<Box data-tour="project-home-portal-settings">
+								<PortalSettingsOverview project={project} base={base} />
+							</Box>
 
-							<Stack gap="sm">
+							<Stack gap="sm" data-tour="project-home-jump-to">
 								<Title order={5}>
 									<Trans>Jump to</Trans>
 								</Title>
@@ -242,6 +252,7 @@ export const ProjectHomeRoute = () => {
 											justify="flex-start"
 											leftSection={jump.icon}
 											{...(jump.testId ? testId(jump.testId) : {})}
+											{...(jump.tour ? { "data-tour": jump.tour } : {})}
 										>
 											{jump.label}
 										</Button>
@@ -268,6 +279,10 @@ export const ProjectHomeRoute = () => {
 						{ id: projectId, payload: { name } },
 						{
 							onSuccess: () => {
+								track("project_settings_saved", {
+									fields_changed: ["name"],
+									project_id: projectId,
+								});
 								// Project lists on the workspace home and sidebar read
 								// the name from this cache, not from ["projects", id].
 								queryClient.invalidateQueries({

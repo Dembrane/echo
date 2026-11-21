@@ -5,6 +5,7 @@ import { useLocation, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
 import { API_BASE_URL } from "@/config";
 import { resetPromptSeen } from "@/features/accounts/help/tasksPromptState";
+import { clearAllDrafts } from "@/features/accounts/signing/signingDraft";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import {
 	AuthError,
@@ -186,8 +187,10 @@ export const useLoginMutation = () => {
 				try {
 					sessionStorage.removeItem("dembrane_ws_selected");
 				} catch {}
-				// A new sign-in may see the tasks popup again.
+				// A new sign-in may see the tasks banner again, and starts with no
+				// half-filled signing drafts.
 				resetPromptSeen();
+				clearAllDrafts();
 			}
 			emitAuthCacheBoundary();
 			await queryClient.invalidateQueries({ queryKey: ["auth", "session"] });
@@ -234,6 +237,7 @@ export const useLogoutMutation = () => {
 				try {
 					sessionStorage.removeItem("dembrane_ws_selected");
 				} catch {}
+				clearAllDrafts();
 			}
 			emitAuthCacheBoundary();
 		},

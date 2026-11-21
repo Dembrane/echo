@@ -72,6 +72,60 @@
 			}
 		}
 	},
+	"overrides": [
+		{
+			"includes": [
+				"src/**",
+				"!src/portal/**",
+				"!src/Router.tsx",
+				"!src/e2e/**"
+			],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": [
+											"@/portal",
+											"@/portal/**",
+											"**/portal",
+											"**/portal/**",
+											"!./portal",
+											"!./portal/**"
+										],
+										"message": "The participant portal (src/portal) is on its way to being its own app, so nothing outside it may import from it. Move what both need into shared code instead; only Router.tsx mounts the portal."
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/portal/**"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": ["../../../*", "../../../**"],
+										"message": "Import with an @/ alias instead of climbing three or more folders: @/portal/... inside the portal, @/components/..., @/hooks/... or @/lib/... outside it. Deep relative paths break silently when files move."
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		}
+	],
 	"vcs": {
 		"clientKind": "git",
 		"enabled": true,

@@ -84,13 +84,67 @@ function choices(
   return parts.length ? parts.join(", ") : null;
 }
 
-export function buildAnswersSummary(answersRaw: unknown): string {
-  if (!answersRaw || typeof answersRaw !== "object" || Array.isArray(answersRaw)) return "";
-  const answers = answersRaw as Record<string, unknown>;
+const objectOf = (value: unknown): Record<string, unknown> | null =>
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+
+const amount = (value: unknown): number | null =>
+  typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
+
+function euros(value: number): string {
+  const digits = Number.isInteger(value) ? 0 : 2;
+  return `€${value.toLocaleString("en-GB", { minimumFractionDigits: digits, maximumFractionDigits: 2 })}`;
+}
+
+/** The website calculator's "What does your organisation require?" options. */
+const SITE_NEEDS: Readonly<Record<string, string>> = {
+  roles: "roles and an audit log",
+  org: "single sign-on, own contract or DPIA",
+  own: "own instance or own servers",
+};
+
+/** The website calculator's plan in one line: the offer it priced, not the app's questions. */
+function sitePlanSummary(
+  answers: Record<string, unknown>,
+  config: Record<string, unknown>,
+): string[] {
   const parts: string[] = [];
-  for (const [q, label] of LABELS) {
-    const value = q in OPTIONS ? choices(q, answers[q], answers) : summaryText(answers[q]);
-    if (value) parts.push(`${label}: ${value}`);
+  const title = summaryText(config.title);
+  if (title) parts.push(title);
+  const total = amount(config.total);
+  if (answers.flow === "plan") {
+    const people = amount(answers.people);
+    if (people !== null) parts.push(`People: ${people}`);
+    if (total !== null) parts.push(`Due now: ${euros(total)}`);
+    const yearly = amount(answers.yearly);
+    if (yearly !== null) parts.push(`Per year: ${euros(yearly)}`);
+    const needs = Array.isArray(answers.needs)
+      ? answers.needs.filter((k): k is string => typeof k === "string" && k.length > 0)
+      : [];
+    if (needs.length) parts.push(`Needs: ${needs.map((k) => SITE_NEEDS[k] ?? k).join(", ")}`);
+  } else {
+    if (total !== null) parts.push(`Total: ${euros(total)}`);
+    const open = amount(answers.pending);
+    if (open) parts.push(`Still to confirm: ${open}`);
+  }
+  const link = summaryText(config.link, 300);
+  if (link && /^https:\/\//.test(link)) parts.push(`Plan: ${link}`);
+  return parts;
+}
+
+/** `config` is read only for the website's flows, which keep the offer there. */
+export function buildAnswersSummary(answersRaw: unknown, configRaw?: unknown): string {
+  const answers = objectOf(answersRaw);
+  if (!answers) return "";
+  const parts: string[] = [];
+  if (answers.flow === "plan" || answers.flow === "event") {
+    parts.push(...sitePlanSummary(answers, objectOf(configRaw) ?? {}));
+  } else {
+    for (const [q, label] of LABELS) {
+      const value = q in OPTIONS ? choices(q, answers[q], answers) : summaryText(answers[q]);
+      if (value) parts.push(`${label}: ${value}`);
+    }
   }
   const line = parts.join(" | ");
   const chars = [...line];

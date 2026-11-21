@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { CopyRichTextIconButton } from "@/components/common/CopyRichTextIconButton";
 import { Markdown } from "@/components/common/Markdown";
-import { useVerificationTopics } from "@/components/participant/verify/hooks";
+import { useVerificationTopicsQuery } from "@/components/project/hooks";
 import { getVerificationArtefacts } from "@/lib/api";
 import { testId } from "@/lib/testUtils";
 
@@ -57,7 +57,7 @@ export const VerifiedArtefactsSection = ({
 		queryKey: ["verify", "conversation_artifacts", conversationId],
 	});
 
-	const topicsQuery = useVerificationTopics(projectId);
+	const topicsQuery = useVerificationTopicsQuery(projectId);
 	const locale =
 		LANGUAGE_TO_LOCALE[projectLanguage ?? "en"] ?? LANGUAGE_TO_LOCALE.en;
 

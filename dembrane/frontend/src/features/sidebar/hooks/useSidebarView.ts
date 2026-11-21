@@ -116,7 +116,8 @@ export function resolveSidebarView(
 				segs[4] === "overview" ||
 				segs[4] === "access" ||
 				segs[4] === "usage" ||
-				segs[4] === "export"
+				segs[4] === "export" ||
+				segs[4] === "advanced"
 			) {
 				return {
 					backTo: `/w/${workspaceId}/projects/${projectId}/home`,
@@ -127,6 +128,15 @@ export function resolveSidebarView(
 					},
 					scope: "project",
 					view: "project-settings",
+				};
+			}
+			// The portal editor's pages have their own menu (ECHO-1060).
+			if (segs[4] === "portal") {
+				return {
+					backTo: `/w/${workspaceId}/projects/${projectId}/home`,
+					params: { projectId, section: segs[5], workspaceId },
+					scope: "project",
+					view: "project-portal",
 				};
 			}
 			return {
@@ -198,6 +208,7 @@ export const VIEW_IDS: readonly SidebarViewId[] = [
 	"workspace-settings",
 	"project-home",
 	"project-settings",
+	"project-portal",
 	"admin-home",
 ] as const;
 
@@ -208,6 +219,7 @@ const VIEW_DEPTH: Record<SidebarViewId, number> = {
 	"org-home": 1,
 	"org-settings": 2,
 	"project-home": 4,
+	"project-portal": 5,
 	"project-settings": 5,
 	"user-home": 0,
 	"user-settings": 1,

@@ -85,7 +85,8 @@ export const eventEnquiryUrl = ({
  *     what they just ran into;
  *   - `handover`, the random id of the row the app saved for their account.
  *     The site sends it back with its own writes and echo links the two, so
- *     the email never travels in the address;
+ *     the email never travels in the address. Without it the site asks for an
+ *     email, so it is left out unless echo confirmed the site can find the row;
  *   - `back`, where "Back to dembrane" returns to.
  */
 export const pricingHandoverUrl = ({
@@ -96,7 +97,7 @@ export const pricingHandoverUrl = ({
 }: {
 	language: string;
 	trigger: string;
-	handover: string;
+	handover: string | null;
 	back: string;
 }): string => {
 	const path = language.toLowerCase().startsWith("nl")
@@ -105,7 +106,7 @@ export const pricingHandoverUrl = ({
 	const url = new URL(path, "https://www.dembrane.com");
 	url.searchParams.set("from", "app");
 	url.searchParams.set("trigger", trigger);
-	url.searchParams.set("handover", handover);
+	if (handover) url.searchParams.set("handover", handover);
 	url.searchParams.set("back", back);
 	return url.toString();
 };

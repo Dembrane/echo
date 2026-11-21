@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { App } from "./App";
+import { App, type AppRouter } from "./App";
 import "./index.css";
 import "./lib/tamper";
 
@@ -8,6 +8,7 @@ import { PostHogProvider } from "@posthog/react";
 import posthog from "posthog-js";
 import {
 	ANALYTICS_ENABLED,
+	IS_PORTAL_PREVIEW,
 	POSTHOG_CAPTURE,
 	POSTHOG_HOST,
 	POSTHOG_TOKEN,
@@ -16,9 +17,11 @@ import {
 } from "./config";
 import { recoverFromChunkFailure } from "./lib/appVersion";
 import { errorFilter } from "./lib/errorFilter";
+import { loadMainRouter, participantRouter } from "./Router";
 
 // With analytics switched off PostHog is never initialised: no request, script or cookie.
-if (ANALYTICS_ENABLED)
+// The portal preview (ECHO-1060) never counts as a visit, so it never starts it either.
+if (ANALYTICS_ENABLED && !IS_PORTAL_PREVIEW)
 	posthog.init(POSTHOG_TOKEN, {
 		api_host: POSTHOG_HOST,
 		// Drops known browser noise and caps repeated exceptions; the portal and
@@ -35,10 +38,10 @@ if (ANALYTICS_ENABLED)
 		// over from the marketing site, stitching both into one person profile.
 		cross_subdomain_cookie: true,
 		defaults: "2026-01-30",
-		// The portal serves anonymous participants on a privacy-sensitive flow, so
-		// never record their sessions. We track the journey with explicit events
-		// instead. The dashboard (hosts) is unaffected.
-		disable_session_recording: USE_PARTICIPANT_ROUTER,
+		// Session replay stays off on the portal and the dashboard: our data
+		// processing terms limit PostHog to error tracking and explicit events.
+		// Error capture above is unaffected (forward-port of #1388).
+		disable_session_recording: true,
 		loaded: (ph) => {
 			// testing + local never send analytics (see POSTHOG_CAPTURE in config.ts).
 			// The opt-out persists per-domain, so explicitly opt back in when the
@@ -69,10 +72,20 @@ if (root === null) {
 	throw new Error("Root element not found");
 }
 
-ReactDOM.createRoot(root).render(
-	<React.StrictMode>
-		<PostHogProvider client={posthog}>
-			<App />
-		</PostHogProvider>
-	</React.StrictMode>,
-);
+const render = (router: AppRouter) =>
+	ReactDOM.createRoot(root).render(
+		<React.StrictMode>
+			<PostHogProvider client={posthog}>
+				<App router={router} />
+			</PostHogProvider>
+		</React.StrictMode>,
+	);
+
+if (IS_PORTAL_PREVIEW) {
+	// The dashboard's portal editor preview (ECHO-1060): its own small app, loaded only here.
+	void import("./portal/preview/entry").then((m) => m.renderPreview(root));
+} else if (USE_PARTICIPANT_ROUTER) {
+	render(participantRouter);
+} else {
+	void loadMainRouter().then(render);
+}

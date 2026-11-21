@@ -728,7 +728,7 @@ msgstr "Dinos quién firma {document_title}"
 
 #. js-lingui-explicit-id
 msgid "task.who_signs.body"
-msgstr "Quién firma la oferta, quién firma el acuerdo de tratamiento de datos y si necesitas una EIPD propia."
+msgstr "Quién firma la oferta, quién firma el DPA y si necesitas una EIPD propia."
 
 #. js-lingui-explicit-id
 msgid "task.billing_details.title"
@@ -740,11 +740,11 @@ msgstr "A quién facturamos: razón social, dirección, número de VAT o KvK, co
 
 #. js-lingui-explicit-id
 msgid "task.sign_dpa.title"
-msgstr "Hacer firmar el acuerdo de tratamiento de datos"
+msgstr "Hacer firmar el DPA"
 
 #. js-lingui-explicit-id
 msgid "task.sign_dpa.body"
-msgstr "Es posible que la persona que firmó la oferta no pueda autorizar el tratamiento de datos para tu organización. Quien tenga autorización (artículo 3.6 de los términos) firma el acuerdo de tratamiento de datos aquí; puedes indicar su nombre en el documento."
+msgstr "Es posible que la persona que firmó la oferta no pueda autorizar el tratamiento de datos para tu organización. Quien tenga autorización (artículo 3.6 de los términos) firma el DPA aquí; puedes indicar su nombre en el documento."
 
 #. js-lingui-explicit-id
 msgid "task.explore_demo.title"
@@ -965,3 +965,35 @@ msgstr "ID del documento"
 #. js-lingui-explicit-id
 msgid "email.facts.sha256"
 msgstr "SHA-256 del PDF firmado"
+
+#. js-lingui-explicit-id
+msgid "email.account_room_invite.subject"
+msgstr "{inviter_name} te ha invitado a la oferta para {org_name}"
+
+#. js-lingui-explicit-id
+msgid "email.account_room_invite.preview"
+msgstr "Lee la oferta y el DPA con tus compañeros."
+
+#. js-lingui-explicit-id
+msgid "email.account_room_invite.heading"
+msgstr "Revisa la oferta para {org_name} con tus compañeros"
+
+#. js-lingui-explicit-id
+msgid "email.account_room_invite.body"
+msgstr "{inviter_name} te ha invitado a leer la oferta y el acuerdo de tratamiento de datos (DPA) de dembrane para {org_name}, y a ver quién hace qué en la decisión."
+
+#. js-lingui-explicit-id
+msgid "email.account_room_invite.how"
+msgstr "Si no has iniciado sesión, el botón te da acceso con un código de un solo uso enviado a esta dirección, así que no necesitas contraseña. Puedes leer la oferta y el DPA; las facturas y los datos de facturación quedan en manos de tus administradores."
+
+#. js-lingui-explicit-id
+msgid "email.account_room_invite.cta"
+msgstr "Leer la oferta"
+
+#. js-lingui-explicit-id
+msgid "email.account_room_invite.text_cta"
+msgstr "Leer la oferta:"
+
+#. js-lingui-explicit-id
+msgid "email.account_room_invite.footer"
+msgstr "Recibes este correo porque {inviter_name} añadió esta dirección a la cuenta de {org_name} en dembrane."

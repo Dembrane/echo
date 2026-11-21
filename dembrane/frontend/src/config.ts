@@ -50,8 +50,8 @@ export const PREVIEW_PR: { number: number; url: string } | null =
 export const REGION: "eu" | undefined = RUNTIME?.region;
 
 const ENV_HOSTNAMES: Record<"production" | "staging" | "testing", string[]> = {
-	staging: ["dashboard.staging.dembrane.com", "portal.staging.dembrane.com"],
 	production: ["dashboard.dembrane.com", "portal.dembrane.com"],
+	staging: ["dashboard.staging.dembrane.com", "portal.staging.dembrane.com"],
 	testing: [
 		"dashboard.echo-testing.dembrane.com",
 		"portal.echo-testing.dembrane.com",
@@ -113,6 +113,44 @@ export const USE_PARTICIPANT_ROUTER = RUNTIME
 			globalThis.window?.location.hostname.startsWith("portal.") ||
 				globalThis.window?.location.port === "5174",
 		);
+
+/**
+ * The name of the dashboard's portal preview frame (ECHO-1062). The portal starts its
+ * preview mode for any page loaded under this name inside a frame, so a page the frame were
+ * sent to stays locked down. index.html names it too, to skip Tally's embed there.
+ */
+export const PREVIEW_FRAME_NAME = "dembrane-portal-preview";
+
+/**
+ * The portal drawn inside the dashboard's portal editor (ECHO-1060): the portal's own
+ * …/:projectId/preview address, inside a frame. Opened any other way it is not a preview
+ * (the participant router sends that address to the start screen). Any page loaded in the
+ * dashboard's preview frame (it carries PREVIEW_FRAME_NAME) is the preview too, so the
+ * frame can never become a live portal (ECHO-1062).
+ */
+export const isPortalPreview = (
+	win:
+		| {
+				self: unknown;
+				top: unknown;
+				name: string;
+				location: { pathname: string };
+		  }
+		| undefined,
+	participantRouter: boolean,
+): boolean =>
+	participantRouter &&
+	win !== undefined &&
+	win.self !== win.top &&
+	(win.name === PREVIEW_FRAME_NAME ||
+		/^\/(?:[a-z]{2}-[A-Z]{2}\/)?[^/]+\/preview\/?$/.test(
+			win.location.pathname,
+		));
+
+export const IS_PORTAL_PREVIEW = isPortalPreview(
+	typeof window !== "undefined" ? window : undefined,
+	USE_PARTICIPANT_ROUTER,
+);
 
 export const ADMIN_BASE_URL =
 	RUNTIME?.dashboardUrl ??
@@ -243,6 +281,10 @@ export const ENABLE_MAP_FIXTURES = byEnv({ local: true }, false);
 // reworked: an open or half-booked training will live on the organisation's
 // overview. Staff still manage trainings in the admin console.
 export const ENABLE_TRAINING = false;
+// Asking participants for their email (on the thank-you page) and the report notifications
+// it feeds, with the server's ENABLE_PARTICIPANT_EMAIL (ECHO-1052). Off: the portal editor
+// hides both settings unless a project already has one on, so its host can switch it off.
+export const ENABLE_PARTICIPANT_EMAIL = false;
 
 export const getProductFeedbackUrl = (locale = "en-US") =>
 	`https://portal.dembrane.com/${locale}/a2b7fbeb-af8d-41c8-b70b-9ff1f3c6d51a/start?theme=dm-sans`;

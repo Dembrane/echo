@@ -1,7 +1,11 @@
 import { NotFoundError, newId } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { projectFor } from "@dembrane/http";
-import { PROJECT_UPDATE_FIELDS, projectsStorage } from "@dembrane/projects";
+import {
+  PARTICIPANT_EMAIL_FIELDS,
+  PROJECT_UPDATE_FIELDS,
+  projectsStorage,
+} from "@dembrane/projects";
 import { agentProject } from "../access";
 import {
   type DataDeps,
@@ -20,11 +24,21 @@ async function existingProject(d: DataDeps, projectId: string): Promise<Row> {
   return p;
 }
 
-/** GET /agentic/projects/{p}/settings: the editable settings, read-only. */
+/**
+ * GET /agentic/projects/{p}/settings: the editable settings, read-only. With
+ * ENABLE_PARTICIPANT_EMAIL off, an email setting that is off is left out, so the assistant
+ * neither sees it nor can propose it (proposeProjectUpdate offers only what this lists); one
+ * a project already has on stays, so the assistant can suggest switching it off.
+ */
 export async function projectSettings(d: DataDeps, who: Signed, projectId: string) {
   const project = await existingProject(d, projectId);
   await agentProject(d.access, who, projectId);
-  return Object.fromEntries(PROJECT_UPDATE_FIELDS.map((f) => [f, project[f] ?? null]));
+  const hidden = new Set<string>(
+    d.participantEmail ? [] : PARTICIPANT_EMAIL_FIELDS.filter((f) => project[f] !== true),
+  );
+  return Object.fromEntries(
+    PROJECT_UPDATE_FIELDS.filter((f) => !hidden.has(f)).map((f) => [f, project[f] ?? null]),
+  );
 }
 
 /** GET /v2/bff/tags?project_id=: the tag vocabulary participants pick from. */

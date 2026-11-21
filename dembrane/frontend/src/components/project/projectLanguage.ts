@@ -27,3 +27,16 @@ export const projectLanguageForUpdate = (
 	value: ProjectLanguageCode,
 	dirty: boolean,
 ): ProjectLanguageCode | undefined => (dirty ? value : undefined);
+
+/**
+ * The project language a new project gets from the dashboard's language. Every UI locale
+ * maps to its own code: the platform transcribes and summarises all eight (it has a
+ * transcription prompt and a summary prompt per language, and the template registry words
+ * its portal texts in each). Anything else, or nothing, is English.
+ */
+export const projectLanguageForLocale = (
+	locale: string | null | undefined,
+): ProjectLanguageCode => {
+	const code = (locale ?? "").split("-")[0]?.toLowerCase() ?? "";
+	return PROJECT_LANGUAGE_SET.has(code) ? (code as ProjectLanguageCode) : "en";
+};

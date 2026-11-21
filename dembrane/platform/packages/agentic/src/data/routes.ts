@@ -18,6 +18,7 @@ export const dataDeps = (deps: AgenticRoutesDeps): DataDeps => ({
   access: deps.access,
   logger: deps.logger,
   now: deps.now ?? (() => new Date()),
+  participantEmail: deps.participantEmail ?? false,
 });
 
 const projectPath = { project_id: required(str()) };

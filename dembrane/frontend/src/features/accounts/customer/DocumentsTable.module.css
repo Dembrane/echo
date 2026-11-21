@@ -1,0 +1,10 @@
+.what {
+	min-width: 0;
+}
+.title {
+	overflow-wrap: anywhere;
+}
+/* The tools keep their line at the row's right, on a phone too. */
+.tools {
+	flex-shrink: 0;
+}

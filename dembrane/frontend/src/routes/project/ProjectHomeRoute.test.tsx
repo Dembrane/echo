@@ -118,3 +118,22 @@ describe("ProjectHomeRoute audio used up notice", () => {
 		expect(screen.queryByTestId("audio-used-up-notice")).toBeNull();
 	});
 });
+
+describe("ProjectHomeRoute walkthrough anchors", () => {
+	it("marks the key areas with stable data-tour names", () => {
+		const { container } = renderHome();
+		const anchors = [...container.querySelectorAll("[data-tour]")].map((el) =>
+			el.getAttribute("data-tour"),
+		);
+		expect(anchors).toEqual(
+			expect.arrayContaining([
+				"project-home-share",
+				"project-home-conversations",
+				"project-home-portal-settings",
+				"project-home-jump-to",
+				"project-home-key-terms",
+				"project-home-project-context",
+			]),
+		);
+	});
+});

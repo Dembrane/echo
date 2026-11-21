@@ -158,7 +158,7 @@ chat."
 | Notes about | Where you find them | Who shares them |
 |---|---|---|
 | You | User settings, "Assistant", card "Memory" | Only you |
-| The project | Project "Manage", "General", "Assistant memory" | Everyone who chats in the project |
+| The project | Project "Brief", "Assistant memory" | Everyone who chats in the project |
 | The workspace | Workspace settings, "Assistant memory" | Everyone in the workspace |
 
 A chat starts with the 12 newest notes. The assistant is instructed to keep private or

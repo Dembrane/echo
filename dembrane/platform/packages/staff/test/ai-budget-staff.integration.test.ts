@@ -47,10 +47,18 @@ type Costs = {
     budget_micro_eur: number | null;
     custom_budget: boolean;
     percent_used: number | null;
+    budget_spent_micro_eur: number | null;
     unlimited: boolean;
     override_until: string | null;
     deleted: boolean;
-    by_feature: { operation: string; cost_micro_eur: number; calls: number }[];
+    by_feature: {
+      operation: string;
+      group: string;
+      group_label: string;
+      label: string;
+      cost_micro_eur: number;
+      calls: number;
+    }[];
     by_model: { model: string; provider: string; cost_micro_eur: number; calls: number }[];
   }[];
   unattributed_micro_eur: number;
@@ -431,6 +439,14 @@ run("staff AI budget and costs", () => {
         cost: 100_000,
       });
       await modelCall({
+        at: oct("16"),
+        account: open,
+        operation: "conversations.chunk",
+        model: "gemini-flash",
+        provider: "vertex",
+        cost: 50_000,
+      });
+      await modelCall({
         at: oct("17"),
         account: null,
         operation: "transcribe",
@@ -547,7 +563,7 @@ run("staff AI budget and costs", () => {
       expect(view.internal_micro_eur).toBe(40_000);
       expect(view.deleted_accounts_micro_eur).toBe(25_000);
       expect(view.by_provider).toEqual([
-        { provider: "vertex", cost_micro_eur: 3_735_000 },
+        { provider: "vertex", cost_micro_eur: 3_785_000 },
         { provider: "anthropic", cost_micro_eur: 500_000 },
       ]);
       expect(view.accounts).toEqual([
@@ -560,10 +576,20 @@ run("staff AI budget and costs", () => {
           budget_micro_eur: null,
           custom_budget: false,
           percent_used: null,
+          budget_spent_micro_eur: null,
           unlimited: false,
           override_until: null,
           deleted: false,
-          by_feature: [{ operation: "chat.reply", cost_micro_eur: 2_000_000, calls: 1 }],
+          by_feature: [
+            {
+              operation: "chat.reply",
+              group: "other",
+              group_label: "Other",
+              label: "chat.reply",
+              cost_micro_eur: 2_000_000,
+              calls: 1,
+            },
+          ],
           by_model: [
             { model: "gemini-flash", provider: "vertex", cost_micro_eur: 2_000_000, calls: 1 },
           ],
@@ -577,13 +603,28 @@ run("staff AI budget and costs", () => {
           budget_micro_eur: 5_000_000,
           custom_budget: false,
           percent_used: 30,
+          budget_spent_micro_eur: 1_500_000,
           unlimited: false,
           override_until: null,
           deleted: false,
           // An unpriced call still counts as a call.
           by_feature: [
-            { operation: "chat.reply", cost_micro_eur: 1_000_000, calls: 1 },
-            { operation: "report.generate", cost_micro_eur: 500_000, calls: 2 },
+            {
+              operation: "chat.reply",
+              group: "other",
+              group_label: "Other",
+              label: "chat.reply",
+              cost_micro_eur: 1_000_000,
+              calls: 1,
+            },
+            {
+              operation: "report.generate",
+              group: "other",
+              group_label: "Other",
+              label: "report.generate",
+              cost_micro_eur: 500_000,
+              calls: 2,
+            },
           ],
           by_model: [
             { model: "gemini-flash", provider: "vertex", cost_micro_eur: 1_000_000, calls: 1 },
@@ -600,10 +641,20 @@ run("staff AI budget and costs", () => {
           budget_micro_eur: 1_000_000,
           custom_budget: true,
           percent_used: 20,
+          budget_spent_micro_eur: 200_000,
           unlimited: false,
           override_until: "2026-12-01T00:00:00.000Z",
           deleted: false,
-          by_feature: [{ operation: "chat.reply", cost_micro_eur: 500_000, calls: 2 }],
+          by_feature: [
+            {
+              operation: "chat.reply",
+              group: "other",
+              group_label: "Other",
+              label: "chat.reply",
+              cost_micro_eur: 500_000,
+              calls: 2,
+            },
+          ],
           by_model: [
             { model: "gemini-flash", provider: "vertex", cost_micro_eur: 500_000, calls: 2 },
           ],
@@ -613,16 +664,34 @@ run("staff AI budget and costs", () => {
           name: "Open Workspace",
           tier: "free",
           account_scope: "workspace",
-          cost_micro_eur: 100_000,
+          cost_micro_eur: 150_000,
           budget_micro_eur: null,
           custom_budget: false,
           percent_used: null,
+          budget_spent_micro_eur: null,
           unlimited: true,
           override_until: null,
           deleted: false,
-          by_feature: [{ operation: "", cost_micro_eur: 100_000, calls: 1 }],
+          by_feature: [
+            {
+              operation: "",
+              group: "other",
+              group_label: "Other",
+              label: "Unlabelled",
+              cost_micro_eur: 100_000,
+              calls: 1,
+            },
+            {
+              operation: "conversations.chunk",
+              group: "recording",
+              group_label: "Recording",
+              label: "Transcription",
+              cost_micro_eur: 50_000,
+              calls: 1,
+            },
+          ],
           by_model: [
-            { model: "gemini-flash", provider: "vertex", cost_micro_eur: 100_000, calls: 1 },
+            { model: "gemini-flash", provider: "vertex", cost_micro_eur: 150_000, calls: 2 },
           ],
         },
       ]);
@@ -644,6 +713,9 @@ run("staff AI budget and costs", () => {
         expect(row?.cost_micro_eur).toBe(1_500_000);
         expect(row?.by_feature).toContainEqual({
           operation: "chat.reply",
+          group: "other",
+          group_label: "Other",
+          label: "chat.reply",
           cost_micro_eur: 1_000_000,
           calls: 1,
         });
@@ -691,13 +763,28 @@ run("staff AI budget and costs", () => {
           budget_micro_eur: 5_000_000,
           custom_budget: false,
           percent_used: 18,
+          budget_spent_micro_eur: 900_000,
           unlimited: false,
           override_until: null,
           deleted: false,
           // Rolled up days carry their call count; the provider is the model's priced one.
           by_feature: [
-            { operation: "chat.reply", cost_micro_eur: 800_000, calls: 4 },
-            { operation: "map.generate", cost_micro_eur: 100_000, calls: 1 },
+            {
+              operation: "chat.reply",
+              group: "other",
+              group_label: "Other",
+              label: "chat.reply",
+              cost_micro_eur: 800_000,
+              calls: 4,
+            },
+            {
+              operation: "map.generate",
+              group: "map",
+              group_label: "Map",
+              label: "Map",
+              cost_micro_eur: 100_000,
+              calls: 1,
+            },
           ],
           by_model: [
             { model: "gemini-flash", provider: "vertex", cost_micro_eur: 800_000, calls: 4 },

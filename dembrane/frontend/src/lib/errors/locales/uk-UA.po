@@ -79,7 +79,7 @@ msgid "error.canvas.just_previewed"
 msgstr "Попередній перегляд щойно створено. Зачекайте хвилинку, перш ніж спробувати знову."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:91
+#: src/lib/errors/messages/project.ts:95
 msgid "error.project.pin_order_invalid"
 msgstr "Проєкт можна закріпити на 1-му, 2-му або 3-му місці."
 
@@ -99,7 +99,7 @@ msgid "error.workspace.partner_agreement_required"
 msgstr "Прийміть партнерську угоду, щоб продовжити."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:100
+#: src/lib/errors/messages/project.ts:104
 msgid "error.project.privacy_policy_required"
 msgstr "Додайте посилання на вашу політику конфіденційності, щоб використовувати згоду як правову основу."
 
@@ -139,7 +139,12 @@ msgid "error.workspace.admin_joins_directly"
 msgstr "Як адміністратор організації ви можете приєднатися до цього робочого простору напряму, без запиту."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:133
+#: src/lib/errors/messages/project.ts:91
+msgid "error.project.participant_email_off"
+msgstr "Запитувати в учасників їхню електронну пошту зараз неможливо."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:142
 msgid "error.project.share_role_cannot_access"
 msgstr "Учасники з доступом до білінгу не можуть відкривати проєкти. Спочатку призначте їм іншу роль."
 
@@ -199,7 +204,7 @@ msgid "error.analysis.feature_disabled"
 msgstr "Редагування результатів тут недоступне."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:95
+#: src/lib/errors/messages/project.ts:99
 msgid "error.project.privacy_policy_invalid_url"
 msgstr "Введіть посилання на політику конфіденційності, що починається з http:// або https://."
 
@@ -229,7 +234,7 @@ msgid "error.document.field_text_invalid"
 msgstr "Введіть текст для «{label}»."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:119
+#: src/lib/errors/messages/project.ts:128
 msgid "error.project.share_needs_private"
 msgstr "Усі в робочому просторі вже бачать цей проєкт. Зробіть його приватним, щоб поділитися з окремими людьми."
 
@@ -389,6 +394,16 @@ msgid "error.member.owner_removes_owner"
 msgstr "Лише власник може видалити іншого власника."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:20
+msgid "error.room.name_signer_admins_only"
+msgstr "Лише власник чи адміністратор може вибрати, хто підписує. Ти можеш підписати сам або нагадати вже вибраній людині."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:25
+msgid "error.room.new_person_admins_only"
+msgstr "Лише власник чи адміністратор може запросити того, хто ще не є учасником. Ти можеш додати колегу, який уже є учасником."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/map.ts:26
 msgid "error.map.not_a_claim"
 msgstr "Перевіряти на факти можна лише твердження. Виберіть твердження та спробуйте знову."
@@ -419,6 +434,16 @@ msgid "error.project.not_owner"
 msgstr "Це може зробити лише власник цього проєкту."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:15
+msgid "error.room.manage_forbidden"
+msgstr "Лише той, хто запросив цю людину, адміністратор чи Оплата можуть змінити, що вона робить."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:38
+msgid "error.room.remove_forbidden"
+msgstr "Лише той, хто запросив цю людину, адміністратор чи Оплата можуть її прибрати."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/invite.ts:44
 msgid "error.invite.revoke_forbidden"
 msgstr "Скасувати запрошення може лише особа, яка його надіслала, або адміністратор."
@@ -434,12 +459,12 @@ msgid "error.project.legal_basis_admin_only"
 msgstr "Лише адміністратори робочого простору можуть змінювати правову основу цього проєкту."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:143
+#: src/lib/errors/messages/project.ts:157
 msgid "error.project.visibility_admin_only"
 msgstr "Лише адміністратори робочого простору можуть змінювати видимість цього проєкту."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:115
+#: src/lib/errors/messages/project.ts:124
 msgid "error.project.share_admin_only"
 msgstr "Лише адміністратори робочого простору можуть ділитися проєктами."
 
@@ -447,6 +472,11 @@ msgstr "Лише адміністратори робочого простору 
 #: src/lib/errors/messages/offer.ts:77
 msgid "error.offer.options_not_here"
 msgstr "Варіанти, вибрані під час підписання, не поєднуються з щомісячними, розстроченими чи безкоштовними рахунками."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:6
+msgid "error.room.in_by_role"
+msgstr "Власники, адміністратори й Оплата тут завдяки своїй ролі. Зміни їхню роль на сторінці Учасники."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:41
@@ -509,7 +539,7 @@ msgid "error.memory.invalid_scope"
 msgstr "Виберіть зі списку, для кого призначений цей спогад."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:110
+#: src/lib/errors/messages/project.ts:114
 msgid "error.project.private_requires_tier"
 msgstr "Приватні проєкти доступні на тарифі Innovator і вище. Оновіть тариф, щоб зробити цей проєкт приватним."
 
@@ -554,7 +584,7 @@ msgid "error.project.move_none_selected"
 msgstr "Виберіть принаймні один проєкт для переміщення."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:138
+#: src/lib/errors/messages/project.ts:147
 msgid "error.project.sharing_tier_required"
 msgstr "Для надання доступу до приватного проєкту потрібен тариф {tier} або вище."
 
@@ -614,6 +644,11 @@ msgid "error.internal.unexpected"
 msgstr "Щось пішло не так із нашого боку. Спробуйте ще раз за мить."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:119
+msgid "error.project.setup_suggestions_unavailable"
+msgstr "Пропозиції зараз недоступні. Ви можете продовжити без них."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:22
 msgid "error.account.otp_invalid"
 msgstr "Цей код не підійшов. Введіть актуальний код із додатка-автентифікатора."
@@ -632,6 +667,11 @@ msgstr "Не вдалося розпізнати цю дату й час. Виб
 #: src/lib/errors/messages/account.ts:5
 msgid "error.account.credentials_invalid"
 msgstr "Цей пароль неправильний. Перевірте його та спробуйте ще раз."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/project.ts:152
+msgid "error.project.template_unknown"
+msgstr "Такого шаблону проєкту немає. Перезавантажте сторінку й оберіть ще раз."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:13
@@ -709,6 +749,11 @@ msgid "error.offer.zero_total"
 msgstr "Підсумок нульовий. Для безкоштовної пропозиції виберіть Безкоштовно в розділі Як ми виставляємо рахунки."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/portal.ts:9
+msgid "error.portal.try_failed"
+msgstr "Спроба не вдалася. Спробуйте ще раз."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/upload.ts:13
 msgid "error.upload.failed"
 msgstr "Завантаження не завершилося. Спробуйте ще раз."
@@ -737,6 +782,11 @@ msgstr "Для цього робочого простору немає очік�
 #: src/lib/errors/messages/billing.ts:22
 msgid "error.billing.no_payment_profile"
 msgstr "Ще немає способу оплати для оновлення. Спочатку виберіть тариф."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:30
+msgid "error.room.no_labels_question"
+msgstr "Тут нема на що відповідати."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
@@ -999,6 +1049,11 @@ msgid "error.organisation.external_cannot_manage"
 msgstr "Ця людина має роль зовнішнього користувача в одному з ваших робочих просторів. Спочатку зніміть цю роль, а потім призначте її адміністратором або власником."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:34
+msgid "error.room.person_not_found"
+msgstr "Цієї людини тут більше немає."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/member.ts:35
 msgid "error.member.not_found"
 msgstr "Ця людина більше не є учасником. Оновіть сторінку, щоб переглянути актуальний список."
@@ -1009,7 +1064,7 @@ msgid "error.member.not_in_workspace"
 msgstr "Ця людина не є учасником цього робочого простору. Оновіть сторінку, щоб переглянути актуальний список."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:128
+#: src/lib/errors/messages/project.ts:137
 msgid "error.project.share_not_member"
 msgstr "Цієї людини ще немає в робочому просторі. Спочатку запросіть її до нього."
 
@@ -1044,7 +1099,7 @@ msgid "error.present.draft_conflict"
 msgstr "Цю презентацію було змінено в іншому місці. Оновіть сторінку, щоб побачити останню версію, і внесіть зміни знову."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:105
+#: src/lib/errors/messages/project.ts:109
 msgid "error.project.privacy_policy_too_long"
 msgstr "Посилання на політику конфіденційності задовге. Використовуйте посилання до 255 символів."
 
@@ -1064,7 +1119,7 @@ msgid "error.project.no_transcripts"
 msgstr "У цьому проєкті ще немає транскриптів."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/project.ts:124
+#: src/lib/errors/messages/project.ts:133
 msgid "error.project.share_not_found"
 msgstr "Цей проєкт більше не надано у спільний доступ цій людині."
 
@@ -1607,6 +1662,11 @@ msgstr "Напишіть щось для інсайту."
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
 msgstr "Напишіть щось, щоб зберегти у пам'яті."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:11
+msgid "error.room.labels_already_answered"
+msgstr "Ти вже сказав, що робиш тут."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

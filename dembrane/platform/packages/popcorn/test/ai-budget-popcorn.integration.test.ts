@@ -177,16 +177,38 @@ run("popcorn on the AI budget", () => {
     });
   });
 
-  test("paid and sample projects past the budget are never refused", async () => {
+  test("paid projects past the budget are never refused", async () => {
     const pop = popcornAllowance(database.db);
     const now = new Date();
-    for (const s of [await seed("guardian"), await seed("free", { sample: true })]) {
-      await useAll(s);
-      expect(await pop.admit(s.projectId, now)).toBe(true);
-      expect(await pop.status(s.projectId, now)).toBeNull();
-      await pop.requireRoom(s.projectId, now);
-      expect(await withAiBudget(database.db, {}, s.projectId, now)).toEqual({ ai_budget: null });
-    }
+    const s = await seed("guardian");
+    await useAll(s);
+    expect(await pop.admit(s.projectId, now)).toBe(true);
+    expect(await pop.status(s.projectId, now)).toBeNull();
+    await pop.requireRoom(s.projectId, now);
+    expect(await withAiBudget(database.db, {}, s.projectId, now)).toEqual({ ai_budget: null });
+  });
+
+  test("a free sample project past the budget is refused", async () => {
+    const pop = popcornAllowance(database.db);
+    const now = new Date();
+    const s = await seed("free", { sample: true });
+    await useAll(s);
+    expect(await pop.admit(s.projectId, now)).toBe(false);
+    expect(await pop.status(s.projectId, now)).toEqual({ exhausted: true });
+    const err = await pop.requireRoom(s.projectId, now).then(
+      () => null,
+      (e) => e,
+    );
+    expect(err).toMatchObject({ status: 402, details: { limit: "ai_budget" } });
+  });
+
+  test("a free sample gets the free cadence floor, a paid project the fastest", async () => {
+    const pop = popcornAllowance(database.db);
+    const now = new Date();
+    const sample = await seed("free", { sample: true });
+    expect(await pop.cadenceFloorMinutes(sample.projectId, now)).toBe(5);
+    const paid = await seed("guardian");
+    expect(await pop.cadenceFloorMinutes(paid.projectId, now)).toBe(1);
   });
 
   test("at zero a scheduled live tick goes back to manual with no model call", async () => {

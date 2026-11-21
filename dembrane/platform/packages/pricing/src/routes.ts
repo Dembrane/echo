@@ -188,14 +188,19 @@ export function pricingRoutes(deps: PricingRouteDeps) {
         const email =
           ((await store.directusEmail(who.directusUserId)) ?? "").trim().toLowerCase() || null;
         if (!email) deps.logger.warn("pricing configuration: no email on the directus user");
-        return c.json(
-          await upsertConfiguration(upsertDeps, payload as PricingPayload, attachments, {
+        const saved = await upsertConfiguration(
+          upsertDeps,
+          payload as PricingPayload,
+          attachments,
+          {
             email,
             userId: who.directusUserId,
             isInternal: Boolean(email?.endsWith(INTERNAL_EMAIL_DOMAIN)),
             prefix: APP_PREFIX,
-          }),
+          },
         );
+        // The website writes only where its token is set (not EU), so only there can it find this row.
+        return c.json({ ...saved, handover: Boolean(deps.siteToken) });
       })
       .post("/api/v2/pricing-configurations/site", async (c) => {
         if (!deps.siteToken) throw new StatusError(503, "pricing.site_not_configured");

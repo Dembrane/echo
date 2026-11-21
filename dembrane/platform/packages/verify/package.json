@@ -6,7 +6,8 @@
   "dembrane": {
     "layer": "namespace",
     "allow": {
-      "conversations": "A portal feature: reuses conversations' participant token and dependencies."
+      "conversations": "A portal feature: reuses conversations' participant token and dependencies.",
+      "projects": "Reads projects' template registry: the Explore modes Try it allows, and who a draft speaks to."
     }
   },
   "exports": {
@@ -18,21 +19,23 @@
   },
   "dependencies": {
     "@dembrane/access": "workspace:*",
+    "@dembrane/allowance": "workspace:*",
     "@dembrane/conversations": "workspace:*",
     "@dembrane/core": "workspace:*",
     "@dembrane/db": "workspace:*",
     "@dembrane/http": "workspace:*",
+    "@dembrane/i18n": "workspace:*",
     "@dembrane/legacy-shape": "workspace:*",
     "@dembrane/llm": "workspace:*",
     "@dembrane/observability": "workspace:*",
     "@dembrane/projects": "workspace:*",
     "@dembrane/prompts": "workspace:*",
+    "@dembrane/ratelimit": "workspace:*",
     "ai": "^7.0.118",
     "drizzle-orm": "^0.45.3",
     "hono": "^4.9.0"
   },
   "devDependencies": {
-    "@dembrane/allowance": "workspace:*",
     "@dembrane/storage": "workspace:*",
     "postgres": "^3.4.9",
     "hono": "^4.9.0"

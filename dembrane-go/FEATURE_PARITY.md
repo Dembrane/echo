@@ -46,6 +46,7 @@ Legend: ✅ built · � gated (needs echo backend, Sameer's OK) · 🖥️ desk
 
 ## Projects / workspaces
 - ✅ List (cross-workspace flat picker, cached) · create · switch · default "Go Recordings" (auto-create, remembered)
+- ⏳ Start from a template (web: ECHO-1042): the server applies the preset, and the app only has to send `template_key` (`conversation`, `series`, `event`, `upload` or `blank`) on `POST /api/v2/workspaces/:id/projects`, with the list from `GET /api/v2/project-templates`. Without a key a project starts bare, as the app's create does today.
 - ✅ First-run "choose a workspace" onboarding
 - ✅ Settings → open project editor (dashboard portal-editor link)
 - 🖥️ Project settings/portal-editor (tags, flow, feature toggles, anonymize), access/visibility, clone, usage, webhooks, members/invites — desktop

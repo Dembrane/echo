@@ -1,10 +1,7 @@
 import { type Db, schema } from "@dembrane/db";
+import type { Limit, RateLimiter } from "@dembrane/ratelimit";
 import { eq, sql } from "drizzle-orm";
-import {
-  type AllowanceAccount,
-  allowanceForCountedProject,
-  allowanceForWorkspace,
-} from "./account";
+import { type AllowanceAccount, allowanceForProject, allowanceForWorkspace } from "./account";
 import { freeLimitError } from "./errors";
 import { isFreeTier } from "./free";
 import { AI_SPEND_KEY, type UsageKey, usedThisPeriod } from "./ledger";
@@ -75,13 +72,13 @@ function percentOf(spent: number, limit: number | null): number {
   return Math.floor((Math.min(spent, limit) * 100) / limit);
 }
 
-// Null: paid, unknown or a sample project.
+// Null: paid or unknown. A sample project spends its account's budget.
 export async function aiBudgetForProject(
   db: Db,
   projectId: string,
   now: Date,
 ): Promise<AiBudget | null> {
-  const a = await allowanceForCountedProject(db, projectId, now);
+  const a = await allowanceForProject(db, projectId, now);
   return a ? aiBudgetFor(db, a, now) : null;
 }
 
@@ -127,4 +124,21 @@ export async function requireAiBudgetForWorkspace(
   now: Date,
 ): Promise<void> {
   refuseWhenExhausted(await aiBudgetForWorkspace(db, workspaceId, now));
+}
+
+/** Who pays for an AI request: the workspace (before its project exists) or the project. */
+export type AiPayer = { readonly ref: "workspace" | "project"; readonly id: string };
+
+/**
+ * The gate in front of a host's AI request, after the caller has checked they may make it:
+ * the per-person rate limit, then the payer's AI budget (the 402 every AI feature answers
+ * when it is spent). Setup suggestions, the digest and the portal editor's Try it share it.
+ */
+export async function requireAiRequest(
+  d: { readonly db: Db; readonly limiter: RateLimiter; readonly now: () => Date },
+  r: { readonly limit: Limit; readonly userId: string; readonly payer: AiPayer },
+): Promise<void> {
+  await d.limiter.checkUser(r.limit, r.userId);
+  if (r.payer.ref === "workspace") await requireAiBudgetForWorkspace(d.db, r.payer.id, d.now());
+  else await requireAiBudget(d.db, r.payer.id, d.now());
 }

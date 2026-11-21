@@ -39,6 +39,10 @@ export type EmailTemplate =
       };
     }
   | {
+      readonly template: "account_room_invite";
+      readonly data: { inviter_name: string; org_name: string; room_url: string };
+    }
+  | {
       readonly template: "account_invite";
       readonly data: { org_name: string; sign_in_url: string };
     }
@@ -144,6 +148,8 @@ export function subjectOf(t: EmailTemplate, locale?: string | null): string | nu
       return tr("email.sign_in_code.subject");
     case "account_signer_invite":
       return tr("email.account_signer_invite.subject", t.data);
+    case "account_room_invite":
+      return tr("email.account_room_invite.subject", t.data);
     case "account_invite":
       return tr("email.account_invite.subject", t.data);
     case "account_offer_sent":
@@ -342,6 +348,32 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
           tr(`${k}.how`),
           `${tr(`${k}.text_cta`)}\n${d.sign_url}`,
           tr(`${k}.wrong_person`, d),
+          ignoreText,
+          signoff,
+        ]),
+      };
+    }
+    case "account_room_invite": {
+      // A colleague brought into the account's data room: the link opens their invitation
+      // (someone new signs in with a code) or, for a member already, the account itself.
+      const d = t.data;
+      const k = "email.account_room_invite";
+      return {
+        html: emailFrame({
+          ...c,
+          title: tr(`${k}.subject`, d),
+          preview: tr(`${k}.preview`, d),
+          heading: tr(`${k}.heading`, d),
+          body: `${e.lead(tr(`${k}.body`, { ...escAll(d), org_name: e.em(d.org_name) }))}${e.p(tr(`${k}.how`))}`,
+          action: act(tr(`${k}.cta`), d.room_url),
+          after: ignore,
+          footer: tr(`${k}.footer`, escAll(d)),
+        }),
+        text: emailText([
+          tr(`${k}.heading`, d),
+          tr(`${k}.body`, d),
+          tr(`${k}.how`),
+          `${tr(`${k}.text_cta`)}\n${d.room_url}`,
           ignoreText,
           signoff,
         ]),

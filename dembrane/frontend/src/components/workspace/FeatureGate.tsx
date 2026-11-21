@@ -225,11 +225,13 @@ interface UpgradeModalProps {
  * wall.
  *
  * "Continue on dembrane.com" is a plain link opened by the person's own click,
- * so no browser blocks the tab. The same click saves a row for the signed-in
- * account (the server takes the email from the session) and puts only that
- * row's random id in the address, so the website can link what the person
- * plans there back to their account without being told who they are. Each
- * opening is a new id: one handover, one row.
+ * so no browser blocks the tab. Opening saves a row for the signed-in account
+ * (the server takes the email from the session), and once the server confirms
+ * the website can find that row, its random id goes in the address: the
+ * website then fills in the account's email instead of asking. Until then (a
+ * failed save, a fast click, or EU, where the website cannot reach the row)
+ * the link carries no id and the website asks for an email, so no plan ends
+ * up without one. Each opening is a new id: one handover, one row.
  *
  * A gate must never offer a tier the account already holds. That happened
  * before: gates told accounts to upgrade to the tier they were already on,
@@ -272,9 +274,13 @@ export function UpgradeModal({
 		setWasOpened(opened);
 		if (opened) setHandover(newConfigSessionId());
 	}
+	// The id the server confirmed the website can find. A stale one never matches.
+	const [linked, setLinked] = useState<string | null>(null);
+	const isLinked = linked === handover;
 	const url = pricingHandoverUrl({
-		back: window.location.origin,
-		handover,
+		// The page itself, so "Back to dembrane" on the website lands here again.
+		back: window.location.href,
+		handover: isLinked ? handover : null,
 		language: i18n.locale,
 		trigger: wallKey,
 	});
@@ -282,6 +288,36 @@ export function UpgradeModal({
 	// already hold. See the prop.
 	const alreadyHas =
 		requiredTier !== null && meetsTier(currentTier, requiredTier);
+
+	const savedRef = useRef<string | null>(null);
+	const orgForRow = orgId ?? workspace?.org_id;
+	const workspaceForRow = workspaceId || workspace?.id;
+	useEffect(() => {
+		if (!opened || alreadyHas || savedRef.current === handover) return;
+		savedRef.current = handover;
+		saveHandover({
+			config_session_id: handover,
+			locale: i18n.locale,
+			org_id: orgForRow,
+			project_id: projectId,
+			wall_key: wallKey,
+			workspace_id: workspaceForRow,
+		})
+			.then((saved) => {
+				if (saved?.handover === true) setLinked(handover);
+			})
+			// A failed save leaves the link without an id; the website asks for an email.
+			.catch(() => {});
+	}, [
+		alreadyHas,
+		handover,
+		i18n.locale,
+		opened,
+		orgForRow,
+		projectId,
+		wallKey,
+		workspaceForRow,
+	]);
 
 	useEffect(() => {
 		if (!opened || alreadyHas || viewedRef.current) return;
@@ -315,19 +351,10 @@ export function UpgradeModal({
 	const continueOnSite = () => {
 		emit("pricing_config_handover_continued", {
 			config_session_id: handover,
+			linked: isLinked,
 			mount: "app",
 			wall_key: wallKey,
 		});
-		// The tab is already open by now; a failed save costs only the link to
-		// the account, never the person's way forward.
-		saveHandover({
-			config_session_id: handover,
-			locale: i18n.locale,
-			org_id: orgId ?? workspace?.org_id,
-			project_id: projectId,
-			wall_key: wallKey,
-			workspace_id: workspaceId || workspace?.id,
-		}).catch(() => {});
 		onClose();
 	};
 

@@ -7,11 +7,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import {
-	ProjectConversationsRoute,
-	ProjectSettingsRoute,
-	ProjectUploadRoute,
-} from "./ProjectRoutes";
+import { ProjectConversationsRoute, ProjectUploadRoute } from "./ProjectRoutes";
 
 const role = vi.hoisted(() => ({ current: "owner" }));
 const usageCalls = vi.hoisted(
@@ -165,56 +161,6 @@ const renderAt = (element: ReactNode) =>
 			</I18nProvider>
 		</QueryClientProvider>,
 	);
-
-describe("ProjectSettingsRoute role gating", () => {
-	it("observer sees values but cannot edit or open the goal editor", () => {
-		role.current = "observer";
-		renderAt(<ProjectSettingsRoute />);
-		const name = screen.getByTestId(
-			"project-settings-name-input",
-		) as HTMLInputElement;
-		expect(name.value).toBe("Alpha project");
-		expect(name.readOnly).toBe(true);
-		const context = screen.getByDisplayValue("ctx") as HTMLTextAreaElement;
-		expect(context.readOnly).toBe(true);
-		expect(screen.queryByRole("button", { name: "Set goal" })).toBeNull();
-		expect(
-			(screen.getByTestId("project-methodology-select") as HTMLInputElement)
-				.disabled,
-		).toBe(true);
-		expect(
-			(
-				screen.getByTestId(
-					"project-experimental-canvas-toggle",
-				) as HTMLInputElement
-			).disabled,
-		).toBe(true);
-		// Listing project memory needs chat:use, which observers lack.
-		expect(screen.queryByTestId("memory-section")).toBeNull();
-	});
-
-	it.each(["member", "admin", "owner"])("%s can edit", (r) => {
-		role.current = r;
-		renderAt(<ProjectSettingsRoute />);
-		expect(
-			(screen.getByTestId("project-settings-name-input") as HTMLInputElement)
-				.readOnly,
-		).toBe(false);
-		expect(screen.getByRole("button", { name: "Set goal" })).toBeTruthy();
-		expect(
-			(screen.getByTestId("project-methodology-select") as HTMLInputElement)
-				.disabled,
-		).toBe(false);
-		expect(
-			(
-				screen.getByTestId(
-					"project-experimental-canvas-toggle",
-				) as HTMLInputElement
-			).disabled,
-		).toBe(false);
-		expect(screen.getByTestId("memory-section")).toBeTruthy();
-	});
-});
 
 describe("Upload controls role gating", () => {
 	it("observer gets no dropzone and no usage fetch on the upload page", () => {

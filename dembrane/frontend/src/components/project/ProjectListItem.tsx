@@ -346,7 +346,7 @@ export const ProjectListItem = ({
 								<Menu.Item
 									onClick={() =>
 										navigate(
-											`/w/${workspaceId}/projects/${project.id}/portal-editor`,
+											`/w/${workspaceId}/projects/${project.id}/portal/welcome`,
 										)
 									}
 									{...testId(`project-list-item-portal-${project.id}`)}

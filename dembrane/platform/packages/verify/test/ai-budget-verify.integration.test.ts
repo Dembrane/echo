@@ -18,6 +18,7 @@ import { errorBody, newId, PlatformError } from "@dembrane/core";
 import { createDb, migrate } from "@dembrane/db";
 import { fakeCalls, fakeModels, takeUnscopedFakeCalls } from "@dembrane/llm";
 import { createLogger, withPayer } from "@dembrane/observability";
+import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { FilesystemStorage } from "@dembrane/storage";
 import { Hono } from "hono";
 import postgres from "postgres";
@@ -55,6 +56,7 @@ run("verify and the AI budget", () => {
       audioUrls: new AudioUrls("http://s3.test", "bucket"),
       models: fakeModels({ text: "# Gems\n\nChargers." }),
       tokens: new ParticipantTokens("s".repeat(48), false),
+      limiter: new RateLimiter(new MemoryRateCounter()),
       logger: createLogger(
         { service: "t", release: "r", env: "test", level: "error" },
         new Writable({ write: (_c, _e, cb) => cb() }),

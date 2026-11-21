@@ -214,8 +214,9 @@ export default defineConfig(({ mode }) => {
 		build: {
 			rollupOptions: {
 				output: {
+					// Mantine has no manual chunk: one would hold every component the
+					// dashboard uses, and the portal's first load would fetch them all.
 					manualChunks: {
-						ui: ["@mantine/core", "@mantine/hooks"],
 						vendor: ["react", "react-dom", "react-router"],
 					},
 				},

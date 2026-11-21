@@ -47,7 +47,7 @@ settings". Press Enter after each term, or separate several with commas.
 
 ## Anonymisation
 
-"Anonymize transcripts" (Beta) is a switch in the portal editor's "Advanced settings". With
+"Anonymize transcripts" (Beta) is a switch on the portal editor's "Privacy" page. With
 it on, new transcripts have personal information replaced with placeholders such as
 `<redacted_name>`, `<redacted_email>`, `<redacted_phone>` and `<redacted_address>`.
 

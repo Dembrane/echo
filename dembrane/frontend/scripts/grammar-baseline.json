@@ -89,7 +89,7 @@
 		"src/components/map/renderers/MapChrome.tsx": {
 			"shape.shadow": 1
 		},
-		"src/components/participant/verify/VerifyArtefact.tsx": {
+		"src/portal/components/verify/VerifyArtefact.tsx": {
 			"words.denylist": 4
 		},
 		"src/components/popcorn/PopcornHistory.tsx": {
@@ -160,22 +160,17 @@
 			"color.button-light": 1,
 			"space.off-scale": 2
 		},
-		"src/features/accounts/customer/SendToSomeoneElse.tsx": {
-			"action.right-aligned": 1
-		},
 		"src/features/accounts/pdf/PdfPages.tsx": {
 			"color.button-light": 1,
 			"shape.rounded": 1
 		},
 		"src/features/accounts/signing/SignatureCapture.tsx": {
-			"action.right-aligned": 2,
 			"color.hex-literal": 3,
 			"shape.rounded": 2,
 			"space.off-scale": 1,
 			"type.px-size": 1
 		},
 		"src/features/accounts/signing/SignRoute.tsx": {
-			"action.right-aligned": 3,
 			"color.button-light": 2,
 			"color.hex-literal": 2,
 			"icon.size": 3,
@@ -257,7 +252,7 @@
 			"icon.size": 5,
 			"space.off-scale": 1
 		},
-		"src/routes/participant/ParticipantPostConversation.tsx": {
+		"src/portal/routes/ParticipantPostConversation.tsx": {
 			"words.denylist": 2
 		},
 		"src/routes/project/canvas/CanvasRoute.tsx": {
@@ -284,6 +279,9 @@
 		},
 		"src/routes/workspaces/WorkspaceSettingsRoute.tsx": {
 			"space.off-scale": 1
+		},
+		"src/portal/components/verify/VerifyArtefactError.tsx": {
+			"flow.steps-back-tertiary": 1
 		}
 	}
 }

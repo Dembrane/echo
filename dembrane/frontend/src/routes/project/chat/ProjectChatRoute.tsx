@@ -24,7 +24,6 @@ import {
 	SquareIcon,
 	WarningCircleIcon,
 } from "@phosphor-icons/react";
-import { usePostHog } from "@posthog/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router";
@@ -84,6 +83,7 @@ import { invalidateFreeAllowance } from "@/hooks/useFreeAllowance";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useLoadNotification } from "@/hooks/useLoadNotification";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { track } from "@/lib/analytics/events";
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { resolveChatScreen } from "./chatModeRouting";
@@ -94,7 +94,7 @@ import { aiBudgetRefusalOf, turnCapOf, turnRefusalOf } from "./turnRefusal";
 const useDembraneChat = ({ chatId }: { chatId: string }) => {
 	const chatHistoryQuery = useChatHistory(chatId);
 	const chatContextQuery = useProjectChatContext(chatId);
-	const posthog = usePostHog();
+	const { projectId } = useParams();
 	const queryClient = useQueryClient();
 
 	const [templateKey, setTemplateKey] = useState<string | null>(null);
@@ -158,9 +158,10 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 				msg.includes("429") ||
 				msg.includes("rate limit") ||
 				msg.includes("too many");
-			posthog?.capture(isRateLimited ? "chat_rate_limited" : "chat_error", {
+			track(isRateLimited ? "chat_rate_limited" : "chat_error", {
 				chat_id: chatId,
 				message: error?.message?.slice(0, 300),
+				project_id: projectId,
 			});
 			console.log("onError", error);
 		},
@@ -257,8 +258,9 @@ const useDembraneChat = ({ chatId }: { chatId: string }) => {
 			// Submit the chat
 			handleSubmit();
 
-			posthog?.capture("chat_message_sent", {
+			track("chat_message_sent", {
 				chat_id: chatId,
+				project_id: projectId,
 				template_key: templateKey,
 			});
 

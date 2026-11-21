@@ -8,6 +8,7 @@ import {
 	QueryClientProvider,
 } from "@tanstack/react-query";
 import {
+	act,
 	cleanup,
 	fireEvent,
 	render,
@@ -25,6 +26,14 @@ import { RegisterRoute } from "./Register";
 import { RequestPasswordResetRoute } from "./RequestPasswordReset";
 
 vi.mock("@posthog/react", () => ({ usePostHog: () => null }));
+
+const { tracked } = vi.hoisted(() => ({
+	tracked: [] as { event: string; props: unknown }[],
+}));
+vi.mock("@/lib/analytics/events", async (original) => ({
+	...(await original<typeof import("@/lib/analytics/events")>()),
+	track: (event: string, props?: unknown) => tracked.push({ event, props }),
+}));
 
 beforeAll(() => {
 	i18n.load("en", {});
@@ -54,7 +63,12 @@ beforeAll(() => {
 afterEach(() => {
 	cleanup();
 	vi.unstubAllGlobals();
+	vi.useRealTimers();
+	tracked.length = 0;
 });
+
+const events = (name: string) =>
+	tracked.filter((e) => e.event === name).map((e) => e.props);
 
 type Route = (url: string, body: unknown) => Response | undefined;
 
@@ -135,13 +149,219 @@ it("a wrong password shows the inline alert and no generic toast", async () => {
 	expect(toasts).toHaveLength(0);
 });
 
-it("a login failure without a known code shows the old generic message", async () => {
+it("a server failure says what to do instead of a bare 'Something went wrong'", async () => {
 	stubFetch((url) =>
 		url.endsWith("/auth/sign-in/email") ? json(500, {}) : undefined,
 	);
 	wrap(<LoginRoute />, "/login");
 	logIn("someone@example.com");
-	await screen.findByText("Something went wrong");
+	await screen.findByText(
+		"Something went wrong. Try again, and contact support if it keeps happening.",
+	);
+	expect(screen.queryByText("Something went wrong")).toBeNull();
+	expect(events("user_login_failed")).toEqual([
+		{ cause: "server", error_code: "HTTP_500", http_status: 500 },
+	]);
+});
+
+it("a wrong password is counted as wrong credentials, with no typed value in the event", async () => {
+	stubFetch((url) =>
+		url.endsWith("/auth/sign-in/email")
+			? json(401, { code: "INVALID_EMAIL_OR_PASSWORD" })
+			: undefined,
+	);
+	wrap(<LoginRoute />, "/login");
+	logIn("someone@example.com");
+	await screen.findByText(/The email or password is not right/);
+	expect(events("user_login_failed")).toEqual([
+		{
+			cause: "wrong_credentials",
+			error_code: "INVALID_EMAIL_OR_PASSWORD",
+			http_status: 401,
+		},
+	]);
+	expect(JSON.stringify(tracked)).not.toMatch(
+		/someone@example\.com|wrong-password/,
+	);
+});
+
+it("an unreachable server says to check the connection", async () => {
+	vi.stubGlobal(
+		"fetch",
+		vi.fn(async () => {
+			throw new TypeError("Failed to fetch");
+		}),
+	);
+	wrap(<LoginRoute />, "/login");
+	logIn("someone@example.com");
+	await screen.findByText(
+		"We could not reach dembrane. Check your internet connection and try again.",
+	);
+	expect(events("user_login_failed")).toEqual([
+		{ cause: "network", error_code: null, http_status: null },
+	]);
+});
+
+it("a login blocked before dembrane says so and offers the emailed code", async () => {
+	stubFetch((url) =>
+		url.endsWith("/auth/sign-in/email")
+			? new Response("<html>Forbidden</html>", { status: 403 })
+			: undefined,
+	);
+	wrap(<LoginRoute />, "/login");
+	logIn("blocked@example.com");
+	const notice = await screen.findByTestId("auth-login-blocked");
+	expect(notice.textContent).toContain("stopped before it reached dembrane");
+	expect(notice.textContent).toContain("support@dembrane.com");
+	expect(events("user_login_failed")).toEqual([
+		{ cause: "blocked", error_code: "HTTP_403", http_status: 403 },
+	]);
+	expect(events("login_blocked_shown")).toHaveLength(1);
+	// The notice carries the way out, so the link under Log in steps aside meanwhile.
+	expect(screen.getAllByText("Email me a sign-in code instead")).toHaveLength(1);
+	expect(screen.queryByTestId("auth-login-code-mode")).toBeNull();
+	expect(screen.getByTestId("auth-login-forgot-password-link")).toBeTruthy();
+	fireEvent.click(screen.getByTestId("auth-login-blocked-use-code"));
+	const email = await screen.findByTestId("auth-login-code-email-input");
+	expect((email as HTMLInputElement).value).toBe("blocked@example.com");
+	expect(screen.queryByTestId("auth-login-blocked")).toBeNull();
+});
+
+it("a rate-limited login counts down from the server's wait and keeps Log in off until then", async () => {
+	vi.useFakeTimers({ shouldAdvanceTime: true });
+	stubFetch((url) =>
+		url.endsWith("/auth/sign-in/email")
+			? new Response(JSON.stringify({ message: "Too many requests." }), {
+					headers: { "X-Retry-After": "3" },
+					status: 429,
+				})
+			: undefined,
+	);
+	wrap(<LoginRoute />, "/login");
+	logIn("someone@example.com");
+	const notice = await screen.findByTestId("auth-login-rate-limit");
+	expect(notice.textContent).not.toMatch(/code/i);
+	expect(screen.getByTestId("auth-login-rate-limit-wait").textContent).toBe(
+		"You can try again in 0:03.",
+	);
+	const button = screen.getByTestId(
+		"auth-login-submit-button",
+	) as HTMLButtonElement;
+	expect(button.disabled).toBe(true);
+	expect(events("login_rate_limit_shown")).toEqual([{ retry_after_s: 3 }]);
+	expect(events("user_login_failed")).toEqual([
+		{ cause: "rate_limited", error_code: "HTTP_429", http_status: 429 },
+	]);
+
+	await act(() => vi.advanceTimersByTimeAsync(1000));
+	expect(screen.getByTestId("auth-login-rate-limit-wait").textContent).toBe(
+		"You can try again in 0:02.",
+	);
+	// One tick a second: each is scheduled after the previous one rendered.
+	for (let i = 0; i < 2; i++)
+		await act(() => vi.advanceTimersByTimeAsync(1000));
+	expect(screen.getByTestId("auth-login-rate-limit-wait").textContent).toBe(
+		"You can try again now.",
+	);
+	expect(button.disabled).toBe(false);
+});
+
+it("a rate limit without a wait from the server falls back to a fixed one", async () => {
+	stubFetch((url) =>
+		url.endsWith("/auth/sign-in/email") ? json(429, {}) : undefined,
+	);
+	wrap(<LoginRoute />, "/login");
+	logIn("someone@example.com");
+	await screen.findByTestId("auth-login-rate-limit");
+	expect(screen.getByTestId("auth-login-rate-limit-wait").textContent).toBe(
+		"You can try again in 0:30.",
+	);
+	expect(events("login_rate_limit_shown")).toEqual([{ retry_after_s: 30 }]);
+});
+
+it("the code sign-in reads the platform limiter's retry_after_seconds and keeps its code wording", async () => {
+	stubFetch((url) =>
+		url.endsWith("/auth/email-otp/send-verification-otp")
+			? json(429, {
+					action: "wait",
+					code: "rate_limit.exceeded",
+					detail: "Too many requests. Try again later.",
+					params: { retry_after_seconds: 42 },
+				})
+			: undefined,
+	);
+	wrap(<LoginRoute />, "/login");
+	fireEvent.click(screen.getByTestId("auth-login-code-mode"));
+	fireEvent.change(screen.getByTestId("auth-login-code-email-input"), {
+		target: { value: "code@example.com" },
+	});
+	fireEvent.click(screen.getByTestId("auth-login-code-send"));
+	const notice = await screen.findByTestId("auth-login-rate-limit");
+	expect(notice.textContent).toContain("request a new code");
+	expect(screen.getByTestId("auth-login-rate-limit-wait").textContent).toBe(
+		"You can try again in 0:42.",
+	);
+	expect(
+		(screen.getByTestId("auth-login-code-send") as HTMLButtonElement).disabled,
+	).toBe(true);
+});
+
+it("a failure after a successful sign-in is not a failed login: the person is told they are in and can carry on", async () => {
+	let devicesUp = false;
+	stubFetch((url) => {
+		if (url.endsWith("/auth/sign-in/email")) return json(200, {});
+		if (url.endsWith("/auth/other-sessions"))
+			return devicesUp
+				? json(200, { devices: [], held: false })
+				: json(500, {});
+		if (url.endsWith("/v2/me"))
+			return json(200, { onboarding_completed: false });
+		return undefined;
+	});
+	wrap(
+		<Routes>
+			<Path path="/login" element={<LoginRoute />} />
+			<Path path="/:language/onboarding" element={<p>onboarding</p>} />
+		</Routes>,
+		"/login",
+	);
+	logIn("signed-in@example.com");
+	await screen.findByTestId("auth-login-signed-in-retry");
+	expect(screen.queryByText(/Something went wrong/)).toBeNull();
+	expect(events("user_login_failed")).toHaveLength(0);
+	devicesUp = true;
+	fireEvent.click(screen.getByTestId("auth-login-signed-in-continue"));
+	await screen.findByText("onboarding", {}, { timeout: 5000 });
+	expect(events("user_logged_in")).toHaveLength(1);
+}, 15_000);
+
+it("offers 'Forgot your password?' before anything has gone wrong", () => {
+	wrap(<LoginRoute />, "/login");
+	expect(screen.getByTestId("auth-login-forgot-password-link")).toBeTruthy();
+});
+
+it("the login fields carry the sign-in hints for password managers", () => {
+	wrap(<LoginRoute />, "/login");
+	expect(
+		screen.getByTestId("auth-login-email-input").getAttribute("autocomplete"),
+	).toBe("username");
+	expect(
+		screen
+			.getByTestId("auth-login-password-input")
+			.getAttribute("autocomplete"),
+	).toBe("current-password");
+});
+
+it("a locked address from an invite or /register keeps the password manager out", () => {
+	wrap(<LoginRoute />, "/login?email=new%40example.com");
+	const email = screen.getByTestId("auth-login-email-input");
+	expect(email.getAttribute("autocomplete")).toBe("off");
+	expect(email.hasAttribute("readonly")).toBe(true);
+	expect(
+		screen
+			.getByTestId("auth-login-password-input")
+			.getAttribute("autocomplete"),
+	).toBe("new-password");
 });
 
 it("an unverified login offers to resend the verification email", async () => {
@@ -320,6 +540,99 @@ it("a failed registration shows its notice without a second toast", async () => 
 		expect(document.querySelector("[data-error-code]")).not.toBeNull(),
 	);
 	expect(toasts).toHaveLength(0);
+});
+
+it("an address the server would drop is refused on the form", async () => {
+	const calls = stubFetch(() => undefined);
+	wrap(<RegisterRoute />, "/register");
+	fillDetails();
+	// Accepted by the old includes("@") check, silently dropped by the server.
+	fireEvent.change(screen.getByTestId("auth-register-email-input"), {
+		target: { value: "reg@example" },
+	});
+	fireEvent.click(screen.getByTestId("auth-register-terms-checkbox"));
+	fireEvent.click(screen.getByTestId("auth-register-continue-button"));
+	await screen.findByText("Enter a valid email address");
+	expect(screen.queryByTestId("auth-register-password-input")).toBeNull();
+	expect(calls).toHaveLength(0);
+});
+
+it("the register fields carry the hints a password manager needs", async () => {
+	wrap(<RegisterRoute />, "/register");
+	const hint = (id: string) =>
+		screen.getByTestId(id).getAttribute("autocomplete");
+	expect(hint("auth-register-first-name-input")).toBe("given-name");
+	expect(hint("auth-register-last-name-input")).toBe("family-name");
+	expect(hint("auth-register-email-input")).toBe("username");
+	fillDetails();
+	fireEvent.click(screen.getByTestId("auth-register-terms-checkbox"));
+	fireEvent.click(screen.getByTestId("auth-register-continue-button"));
+	await screen.findByTestId("auth-register-password-input");
+	expect(hint("auth-register-password-input")).toBe("new-password");
+	expect(hint("auth-register-confirm-password-input")).toBe("new-password");
+	// The address travels with the password step for the password manager.
+	const username = document.querySelector(
+		'input[autocomplete="username"]',
+	) as HTMLInputElement;
+	expect(username.value).toBe("reg@example.com");
+});
+
+it("'Wrong address? Change email' goes back to the email field and keeps the other answers", async () => {
+	const calls = stubFetch((url) =>
+		url.endsWith("/v2/auth/register")
+			? new Response(null, { status: 204 })
+			: undefined,
+	);
+	wrap(<RegisterRoute />, "/register");
+	fillDetails();
+	fireEvent.change(screen.getByTestId("auth-register-last-name-input"), {
+		target: { value: "Ister" },
+	});
+	fireEvent.click(screen.getByTestId("auth-register-terms-checkbox"));
+	fireEvent.click(screen.getByTestId("auth-register-continue-button"));
+	const pw = await screen.findByTestId("auth-register-password-input");
+	fireEvent.change(pw, { target: { value: "Abcdefgh1!xyz" } });
+	fireEvent.change(screen.getByTestId("auth-register-confirm-password-input"), {
+		target: { value: "Abcdefgh1!xyz" },
+	});
+	fireEvent.click(screen.getByTestId("auth-register-submit-button"));
+	await screen.findByTestId("auth-register-verify-step");
+
+	fireEvent.click(screen.getByTestId("auth-register-change-email"));
+	const email = (await screen.findByTestId(
+		"auth-register-email-input",
+	)) as HTMLInputElement;
+	expect(document.activeElement).toBe(email);
+	expect(email.value).toBe("reg@example.com");
+	expect(
+		(screen.getByTestId("auth-register-first-name-input") as HTMLInputElement)
+			.value,
+	).toBe("Reg");
+	expect(
+		(screen.getByTestId("auth-register-last-name-input") as HTMLInputElement)
+			.value,
+	).toBe("Ister");
+	expect(
+		(screen.getByTestId("auth-register-terms-checkbox") as HTMLInputElement)
+			.checked,
+	).toBe(true);
+
+	fireEvent.change(email, { target: { value: "fixed@example.com" } });
+	fireEvent.click(screen.getByTestId("auth-register-continue-button"));
+	const again = (await screen.findByTestId(
+		"auth-register-password-input",
+	)) as HTMLInputElement;
+	expect(again.value).toBe("Abcdefgh1!xyz");
+	fireEvent.click(screen.getByTestId("auth-register-submit-button"));
+	await screen.findByTestId("auth-register-verify-step");
+	const sent = calls.filter((c) => c.url.endsWith("/v2/auth/register"));
+	expect(sent.map((c) => (c.body as { email: string }).email)).toEqual([
+		"reg@example.com",
+		"fixed@example.com",
+	]);
+	expect(screen.getByTestId("auth-register-verify-step").textContent).toContain(
+		"fixed@example.com",
+	);
 });
 
 it("check-your-email can resend the link to the address it names", async () => {

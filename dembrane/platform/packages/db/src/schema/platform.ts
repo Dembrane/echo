@@ -182,8 +182,18 @@ export const ai_spend_daily = pgTable(
       t.operation,
       t.model,
     ),
+    index("ai_spend_daily_billing_account_idx").on(t.billing_account_id),
   ],
 );
+
+/** The backend's AI feature rules in order, filled at worker start; obs.ai_feature() reads them. */
+export const ai_feature_rule = pgTable("ai_feature_rule", {
+  position: integer("position").primaryKey(),
+  pattern: text("pattern").notNull(),
+  feature_group: text("feature_group").notNull(),
+  group_label: text("group_label").notNull(),
+  feature: text("feature").notNull(),
+});
 
 /** One limit per tier and key; staff edit them, so each row keeps who changed it last. */
 export const tier_limit = pgTable(
@@ -213,4 +223,25 @@ export const free_usage = pgTable(
       .defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.billing_account_id, t.period_start, t.key] })],
+);
+
+/**
+ * Product milestones a host reached, once each (packages/conversations host-events.ts).
+ * The primary key is the claim: of two concurrent conversations exactly one inserts the
+ * row, so the analytics event for a milestone is sent once per host however often a
+ * step is retried.
+ */
+export const host_milestone = pgTable(
+  "host_milestone",
+  {
+    directus_user_id: uuid("directus_user_id").notNull(),
+    /** "first_value": the first conversation captured in a project the host created. */
+    milestone: text("milestone").notNull(),
+    /** The project it was reached in; no foreign key, so a deleted project keeps the row. */
+    project_id: uuid("project_id"),
+    reached_at: timestamp("reached_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.directus_user_id, t.milestone] })],
 );

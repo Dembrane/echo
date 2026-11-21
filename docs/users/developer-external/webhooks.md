@@ -8,7 +8,7 @@ audience: developer-external
 
 dembrane sends an HTTP POST with a JSON body to your URL when something happens in a project. You do not poll.
 
-A webhook belongs to one project. A host adds it under "Automation" (Beta) in the project's sidebar, with "Add webhook". Two conditions apply:
+A webhook belongs to one project. A host adds it under "Manage", "Advanced" in the project's sidebar, with "Add webhook". Two conditions apply:
 
 - The person is an admin or owner of the workspace. Anyone else reads "Only workspace admins can manage project automation."
 - The workspace is on the Changemaker plan or above. See [tiers & billing](../../features/tiers-and-billing.md).

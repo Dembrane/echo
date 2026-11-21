@@ -1,5 +1,11 @@
 import { Group, Paper, Stack, Text, Title } from "@mantine/core";
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, useContext } from "react";
+
+/**
+ * Whether sections stand alone on their page (their title is the page's, order 2) or sit
+ * as cards under a page title (order 4), as on Brief and Advanced (ECHO-1060).
+ */
+export const SettingsSectionLevel = createContext<"page" | "card">("page");
 
 type ProjectSettingsSectionProps = {
 	title: ReactNode;
@@ -19,12 +25,13 @@ export const ProjectSettingsSection = ({
 	align = "stretch",
 	id,
 }: ProjectSettingsSectionProps) => {
+	const level = useContext(SettingsSectionLevel);
 	return (
 		<Paper id={id} withBorder={false} p={{ base: "md", md: "lg" }}>
 			<Stack gap="lg">
 				<Group justify="space-between" align="flex-start">
 					<Stack gap="xs">
-						<Title order={2}>{title}</Title>
+						<Title order={level === "card" ? 4 : 2}>{title}</Title>
 						{description && (
 							<Text size="sm" c="dimmed">
 								{description}

@@ -27,8 +27,7 @@ import {
 	useMutationState,
 	useQueryClient,
 } from "@tanstack/react-query";
-import posthog from "posthog-js";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { CopyIconButton } from "@/components/common/CopyIconButton";
@@ -56,6 +55,7 @@ import { TRANSCRIPT_TROUBLESHOOTING_DOCS_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { track } from "@/lib/analytics/events";
 import { generateConversationSummary } from "@/lib/api";
 import { readApiError } from "@/lib/errors/read";
 import { aiBudgetDetails } from "@/lib/freeTier";
@@ -126,12 +126,42 @@ export const ProjectConversationRoute = () => {
 			}).format(new Date(startedAt))
 		: null;
 
+	// Viewed means shown on this page: once per conversation per visit, not while locked.
+	const hasSummary = Boolean(conversation?.summary);
+	const viewedRef = useRef<{
+		id: string;
+		transcript: boolean;
+		summary: boolean;
+	}>({ id: "", summary: false, transcript: false });
+	useEffect(() => {
+		if (!conversation || isLocked || !conversationId || !projectId) return;
+		if (viewedRef.current.id !== conversationId) {
+			viewedRef.current = {
+				id: conversationId,
+				summary: false,
+				transcript: false,
+			};
+		}
+		const ids = { conversation_id: conversationId, project_id: projectId };
+		if (!viewedRef.current.transcript) {
+			viewedRef.current.transcript = true;
+			track("transcript_viewed", ids);
+		}
+		if (hasSummary && !viewedRef.current.summary) {
+			viewedRef.current.summary = true;
+			track("summary_viewed", ids);
+		}
+	}, [conversation, isLocked, conversationId, projectId, hasSummary]);
+
 	const aiWall = useAiBudgetWall();
 	const [aiAction, setAiAction] = useState<AiAction>("summary");
 	const useHandleGenerateSummaryManually = useMutation({
 		mutationFn: async (isRegeneration: boolean) => {
 			if (isRegeneration) {
-				posthog.capture("conversation_summary_regenerated");
+				track("conversation_summary_regenerated", {
+					conversation_id: conversationId,
+					project_id: projectId,
+				});
 			}
 
 			const toastId = toast.loading(

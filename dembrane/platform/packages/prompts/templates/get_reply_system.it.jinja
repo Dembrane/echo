@@ -23,9 +23,9 @@ Questa è la parte più importante del contesto. Contiene anche le tue risposte 
 {{MAIN_USER_TRANSCRIPT}}
 </main_user_transcript>
 
-La tua risposta finale deve essere di 1-3 frasi
+{% if not own_format %}La tua risposta finale deve essere di 1-3 frasi
 
-Usa il linguaggio "noi/nostro" per la proprietà collettiva
+Usa il linguaggio "noi/nostro" per la proprietà collettiva{% endif %}
 Adatta la lingua della trascrizione
 Riconosci l'incertezza quando presente
 Scrivi sempre il nome della piattaforma come "dembrane" in minuscolo, anche a inizio frase

@@ -87,6 +87,9 @@ async function projectOut(d: ToolDeps, row: Row, orgId: string | null) {
     organisation_id: orgId,
     organisation_name: organisationName,
     language: s(row.language),
+    // The stored text whole, not the prompt budget (contextForPrompt): an agent that reads
+    // it may write it back through update_project, and a cut copy would drop the rest. The
+    // answer cap (mcp.ts fit) only shortens lists, so this field always goes out whole.
     context: s(row.context),
     is_conversation_allowed: row.is_conversation_allowed ?? null,
     created_at: s(row.created_at),

@@ -8,6 +8,7 @@ import { AudioUrls, ParticipantTokens } from "@dembrane/conversations";
 import { createDb, migrate } from "@dembrane/db";
 import { fakeModels, lastPayer, takeUnscopedFakeCalls } from "@dembrane/llm";
 import { createLogger } from "@dembrane/observability";
+import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { FilesystemStorage } from "@dembrane/storage";
 import postgres from "postgres";
 import { verifyRoutes } from "../src";
@@ -49,6 +50,7 @@ run("verify generation payer", () => {
       audioUrls: new AudioUrls("http://s3.test", "bucket"),
       models: fakeModels({ text: "# Gems\n\nChargers." }),
       tokens: new ParticipantTokens("s".repeat(48), false),
+      limiter: new RateLimiter(new MemoryRateCounter()),
       logger: createLogger(
         { service: "t", release: "r", env: "test", level: "error" },
         new Writable({ write: (_c, _e, cb) => cb() }),

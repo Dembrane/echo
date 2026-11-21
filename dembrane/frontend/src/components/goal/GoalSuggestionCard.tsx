@@ -83,7 +83,7 @@ export const GoalSuggestionCard = ({
 							size="compact-xs"
 							onClick={() =>
 								navigate(
-									`/w/${workspaceId}/projects/${suggestion.projectId}/overview`,
+									`/w/${workspaceId}/projects/${suggestion.projectId}/brief`,
 								)
 							}
 							{...testId("agentic-goal-suggestion-view")}

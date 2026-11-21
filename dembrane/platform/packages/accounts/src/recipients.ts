@@ -26,8 +26,7 @@ export async function accountRecipients(
     (p) => p.email && (!roles || roles.includes(p.role)),
   );
   if (!people.length) return [];
-  const [newest] = await store.documents(c, orgId);
-  const orgLanguage = languageOf(newest?.language);
+  const fallback = await orgLanguage(c, orgId);
   const byAddress = new Map<string, AccountRecipient>();
   for (const p of people) {
     const email = p.email as string;
@@ -36,8 +35,14 @@ export async function accountRecipients(
     byAddress.set(address, {
       appUserId: p.appUserId,
       email,
-      language: p.language ? languageOf(p.language) : orgLanguage,
+      language: p.language ? languageOf(p.language) : fallback,
     });
   }
   return [...byAddress.values()];
+}
+
+/** The organisation's language: that of its newest document, else English. */
+export async function orgLanguage(c: Conn, orgId: string): Promise<Locale> {
+  const [newest] = await store.documents(c, orgId);
+  return languageOf(newest?.language);
 }

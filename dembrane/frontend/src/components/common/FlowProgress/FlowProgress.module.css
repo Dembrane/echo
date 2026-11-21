@@ -1,0 +1,18 @@
+/* A thin line that fills as the flow goes on: the faint rule as its track, the action
+ * colour as its fill. Square, like every rule. */
+.track {
+	background: var(--app-quiet);
+	height: 2px;
+	overflow: hidden;
+	width: 100%;
+}
+.fill {
+	background: var(--app-action);
+	height: 100%;
+	transition: width 240ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+	.fill {
+		transition: none;
+	}
+}

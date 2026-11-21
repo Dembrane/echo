@@ -19,13 +19,19 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router";
 import { useLoginMutation } from "@/components/auth/hooks";
+import { LoginBlockedNotice } from "@/components/auth/LoginBlockedNotice";
+import { LoginRateLimitNotice } from "@/components/auth/LoginRateLimitNotice";
 import { ResendVerificationEmail } from "@/components/auth/ResendVerificationEmail";
 import { SignedInElsewhere } from "@/components/auth/SignedInElsewhere";
+import { SignedInRecoveryNotice } from "@/components/auth/SignedInRecoveryNotice";
 import { useResendCooldown } from "@/components/auth/useResendCooldown";
 import { isAuthPath } from "@/components/auth/utils/authPaths";
 import {
 	authErrorCode,
+	authErrorStatus,
+	authRetryAfter,
 	describeAuthError,
+	loginFailureCause,
 } from "@/components/auth/utils/errorUtils";
 import {
 	isAccountPath,
@@ -42,6 +48,8 @@ import {
 	tasksSummaryKey,
 } from "@/features/accounts/help/tasksSummary";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { track } from "@/lib/analytics/events";
+import { identifyHost } from "@/lib/analytics/identity";
 import {
 	type OtherDevice,
 	otherSessions,
@@ -79,6 +87,9 @@ import { testId } from "@/lib/testUtils";
 // 	);
 // };
 
+/** The wait when a rate-limited answer does not say how long: Better Auth's sign-in window. */
+export const LOGIN_RETRY_FALLBACK_SECONDS = 30;
+
 export const LoginRoute = () => {
 	useDocumentTitle(t`Log in | dembrane`);
 	const [searchParams, _setSearchParams] = useSearchParams();
@@ -109,8 +120,14 @@ export const LoginRoute = () => {
 	// Set when the password was right but the email is not verified yet.
 	const [unverifiedEmail, setUnverifiedEmail] = useState("");
 	const [otpRequired, setOtpRequired] = useState(false);
-	// "Forgot your password?" appears once a password has been wrong.
-	const [passwordFailed, setPasswordFailed] = useState(false);
+	// A sign-in refused before it reached dembrane (a 403 without a code of ours).
+	const [blocked, setBlocked] = useState(false);
+	// Too many tries: the countdown below disables "Log in" until it ends.
+	const [rateLimited, setRateLimited] = useState(false);
+	const loginWait = useResendCooldown(LOGIN_RETRY_FALLBACK_SECONDS);
+	// The sign-in worked but a step after it failed: the address to carry on with.
+	const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
+	const [continuing, setContinuing] = useState(false);
 	const [otpValue, setOtpValue] = useState("");
 	// Sign-in with an emailed one-time code: how contacts created by staff or sam sign in.
 	const [codeMode, setCodeMode] = useState(false);
@@ -135,8 +152,9 @@ export const LoginRoute = () => {
 	// Where a signed-in person goes: onboarding if unfinished, else ?next when it is safe,
 	// else the home list. Shared by the password and the emailed-code sign-in.
 	const afterSignIn = async (email: string, curtain = true) => {
-		posthog?.identify(email);
-		posthog?.capture("user_logged_in", { email: email });
+		// The full person (invited, organisation) is set once /v2/me loads: HostIdentitySync.
+		identifyHost(posthog, { email });
+		track("user_logged_in");
 
 		const isNewUser = searchParams.get("new") === "true";
 		const next = searchParams.get("next");
@@ -279,77 +297,129 @@ export const LoginRoute = () => {
 		await signOut().catch(() => {});
 	};
 
+	const clearNotices = () => {
+		setError("");
+		setUnverifiedEmail("");
+		setBlocked(false);
+		// A wait still running stays on screen: it is why the buttons are off.
+		if (loginWait.wait <= 0) setRateLimited(false);
+		setSignedInEmail(null);
+	};
+
+	// Waits as long as the server said, or a fixed while when it did not.
+	const showRateLimit = (error: unknown) => {
+		const seconds = authRetryAfter(error) ?? LOGIN_RETRY_FALLBACK_SECONDS;
+		loginWait.start(seconds);
+		setRateLimited(true);
+		track("login_rate_limit_shown", { retry_after_s: seconds });
+		return seconds;
+	};
+
+	const showBlocked = () => {
+		setBlocked(true);
+		track("login_blocked_shown");
+	};
+
+	// After a sign-in that worked. Whatever fails here is not a failed login: the person
+	// is signed in, so they see that and can carry on.
+	const continueSignedIn = async (email: string) => {
+		setSignedInEmail(null);
+		setContinuing(true);
+		try {
+			await afterCredentials(email);
+		} catch {
+			setSignedInEmail(email);
+		} finally {
+			setContinuing(false);
+		}
+	};
+
 	const submitLogin = async (data: {
 		email: string;
 		password: string;
 		otp?: string;
 	}) => {
-		if (loginMutation.isPending) return;
+		if (loginMutation.isPending || loginWait.wait > 0) return;
 
 		const trimmedOtp = data.otp?.trim();
+		clearNotices();
+
+		if (otpRequired && (!trimmedOtp || trimmedOtp.length < 6)) {
+			setError(t`Enter the 6-digit code from your authenticator app.`);
+			return;
+		}
 
 		try {
-			setError("");
-			setUnverifiedEmail("");
-
-			if (otpRequired && (!trimmedOtp || trimmedOtp.length < 6)) {
-				setError(t`Enter the 6-digit code from your authenticator app.`);
-				return;
-			}
-
 			await loginMutation.mutateAsync({
 				email: data.email,
 				otp: otpRequired ? trimmedOtp || undefined : undefined,
 				password: data.password,
 			});
-
-			await afterCredentials(data.email);
 		} catch (error) {
 			const code = authErrorCode(error);
-
-			posthog?.capture("user_login_failed", {
-				email: data.email,
-				error_code: code,
-			});
 
 			if (code === "INVALID_OTP") {
 				setOtpRequired(true);
 				if (trimmedOtp && trimmedOtp.length > 0) {
+					track("user_login_failed", {
+						cause: "wrong_credentials",
+						error_code: code,
+						http_status: authErrorStatus(error),
+					});
 					setError(
 						t`That code didn't work. Try again with a fresh code from your authenticator app.`,
 					);
 					setValue("otp", "");
 					setOtpValue("");
-				} else {
-					setError("");
 				}
+				// Without a code typed yet, this is the authenticator step, not a failure.
 				return;
 			}
+
+			const cause = loginFailureCause(error);
+			track("user_login_failed", {
+				cause,
+				error_code: code,
+				http_status: authErrorStatus(error),
+			});
 
 			setOtpRequired(false);
 			setValue("otp", "");
 			setOtpValue("");
 
-			// A failure with no known code reads as the Directus login did.
-			if (
-				code === "EMAIL_NOT_VERIFIED" ||
-				code === "INVALID_EMAIL_OR_PASSWORD"
-			) {
-				setError(describeAuthError(error));
-				if (code === "EMAIL_NOT_VERIFIED") setUnverifiedEmail(data.email);
-				if (code === "INVALID_EMAIL_OR_PASSWORD") setPasswordFailed(true);
-			} else {
-				setError(t`Something went wrong`);
+			if (cause === "rate_limited") {
+				showRateLimit(error);
+				return;
 			}
+			if (cause === "blocked") {
+				showBlocked();
+				return;
+			}
+			setError(describeAuthError(error, { flow: "password" }));
+			if (cause === "unverified") setUnverifiedEmail(data.email);
+			return;
 		}
+
+		await continueSignedIn(data.email);
 	};
 
 	const onSubmit = handleSubmit((formData) => submitLogin(formData));
 
+	// The code sign-in keeps its own wording ("request a new code").
+	const showCodeFailure = (e: unknown) => {
+		const cause = loginFailureCause(e);
+		if (cause === "rate_limited") {
+			const seconds = showRateLimit(e);
+			if (codeSent) resendCooldown.start(seconds);
+		} else if (cause === "blocked") showBlocked();
+		else setError(describeAuthError(e, { flow: "code" }));
+	};
+
 	const requestCode = async () => {
-		if (codeSending || (codeSent && resendCooldown.wait > 0)) return;
+		if (codeSending || loginWait.wait > 0) return;
+		if (codeSent && resendCooldown.wait > 0) return;
 		const resend = codeSent;
-		setError("");
+		clearNotices();
 		setCodeSending(true);
 		try {
 			await sendSignInCode(codeEmail.trim());
@@ -358,22 +428,31 @@ export const LoginRoute = () => {
 			resendCooldown.start();
 			if (resend) toast.success(t`We sent a new code to ${codeEmail}.`);
 		} catch (e) {
-			setError(describeAuthError(e));
+			showCodeFailure(e);
 		} finally {
 			setCodeSending(false);
 		}
 	};
 
 	const submitCode = async (value: string) => {
-		if (loginMutation.isPending || value.length < 6) return;
-		setError("");
+		if (loginMutation.isPending || value.length < 6 || loginWait.wait > 0)
+			return;
+		clearNotices();
 		try {
 			await loginMutation.mutateAsync({ code: value, email: codeEmail.trim() });
-			await afterCredentials(codeEmail.trim());
 		} catch (e) {
-			setError(describeAuthError(e));
+			showCodeFailure(e);
 			setCode("");
+			return;
 		}
+		await continueSignedIn(codeEmail.trim());
+	};
+
+	const switchToCode = () => {
+		setCodeEmail(getValues("email") || lockedEmail || "");
+		setCodeMode(true);
+		setCodeSent(false);
+		clearNotices();
 	};
 
 	useEffect(() => {
@@ -427,6 +506,26 @@ export const LoginRoute = () => {
 						</Text>
 					)}
 
+					{signedInEmail && (
+						<SignedInRecoveryNotice
+							loading={continuing}
+							onContinue={() => void continueSignedIn(signedInEmail)}
+						/>
+					)}
+
+					{rateLimited && (
+						<LoginRateLimitNotice
+							seconds={loginWait.wait}
+							flow={codeMode ? "code" : "password"}
+						/>
+					)}
+
+					{blocked && (
+						<LoginBlockedNotice
+							onUseCode={codeMode ? undefined : switchToCode}
+						/>
+					)}
+
 					{codeMode ? (
 						<Stack gap="md">
 							{error && <Alert color="red">{error}</Alert>}
@@ -447,7 +546,7 @@ export const LoginRoute = () => {
 											size="md"
 											fullWidth
 											loading={codeSending}
-											disabled={!codeEmail.includes("@")}
+											disabled={!codeEmail.includes("@") || loginWait.wait > 0}
 											onClick={requestCode}
 											{...testId("auth-login-code-send")}
 										>
@@ -479,7 +578,7 @@ export const LoginRoute = () => {
 											size="md"
 											fullWidth
 											loading={loginMutation.isPending}
-											disabled={code.length < 6}
+											disabled={code.length < 6 || loginWait.wait > 0}
 											onClick={() => submitCode(code)}
 										>
 											<Trans>Log in</Trans>
@@ -544,11 +643,16 @@ export const LoginRoute = () => {
 											placeholder={t`Email`}
 											required
 											type="email"
-											// When arriving from /register, the email is
-											// locked. Defends against password-manager
-											// autofill swapping in a different account.
+											// Arriving with ?email= (from /register, or an
+											// invite link through AcceptInviteRoute) locks the
+											// address the account was made for. The hints are
+											// deliberate: "off" and "new-password" keep a
+											// password manager from filling a different saved
+											// account in, which once logged a fresh signup in as
+											// another user (QA audit 2026-04-23). Otherwise the
+											// fields carry the standard sign-in hints.
 											readOnly={Boolean(lockedEmail)}
-											autoComplete={lockedEmail ? "off" : "email"}
+											autoComplete={lockedEmail ? "off" : "username"}
 										/>
 										<PasswordInput
 											label={<Trans>Password</Trans>}
@@ -557,9 +661,8 @@ export const LoginRoute = () => {
 											{...testId("auth-login-password-input")}
 											placeholder={t`Password`}
 											required
-											// new-password is the standard escape hatch to
-											// stop Chrome/Firefox auto-filling a saved
-											// password into this form.
+											// See the email field: new-password only for a
+											// locked address.
 											autoComplete={
 												lockedEmail ? "new-password" : "current-password"
 											}
@@ -575,7 +678,8 @@ export const LoginRoute = () => {
 										size="md"
 										type="submit"
 										fullWidth
-										loading={loginMutation.isPending}
+										loading={loginMutation.isPending || continuing}
+										disabled={loginWait.wait > 0}
 										{...testId("auth-login-submit-button")}
 									>
 										{otpRequired ? (
@@ -588,8 +692,7 @@ export const LoginRoute = () => {
 							</Stack>
 						</form>
 					)}
-					{/* Tertiary ways in, centred under the primary button. "Forgot your
-					    password?" appears only after a wrong password. */}
+					{/* Tertiary ways in, centred under the primary button. */}
 					{codeMode ? (
 						<Stack gap="xs" align="center">
 							{codeSent && (
@@ -613,7 +716,7 @@ export const LoginRoute = () => {
 								color="gray"
 								onClick={() => {
 									setCodeMode(false);
-									setError("");
+									clearNotices();
 								}}
 							>
 								<Trans>Use my password instead</Trans>
@@ -622,30 +725,27 @@ export const LoginRoute = () => {
 					) : (
 						!otpRequired && (
 							<Stack gap="xs" align="center">
-								<Button
-									variant="subtle"
-									color="gray"
-									onClick={() => {
-										setCodeEmail(getValues("email") || lockedEmail || "");
-										setCodeMode(true);
-										setCodeSent(false);
-										setError("");
-									}}
-									{...testId("auth-login-code-mode")}
-								>
-									<Trans>Email me a sign-in code instead</Trans>
-								</Button>
-								{passwordFailed && (
+								{/* The blocked notice offers the code itself, as every notice
+								    carries its own way out; one offer on the page is enough. */}
+								{!blocked && (
 									<Button
 										variant="subtle"
 										color="gray"
-										component={I18nLink}
-										to="/request-password-reset"
-										{...testId("auth-login-forgot-password-link")}
+										onClick={switchToCode}
+										{...testId("auth-login-code-mode")}
 									>
-										<Trans>Forgot your password?</Trans>
+										<Trans>Email me a sign-in code instead</Trans>
 									</Button>
 								)}
+								<Button
+									variant="subtle"
+									color="gray"
+									component={I18nLink}
+									to="/request-password-reset"
+									{...testId("auth-login-forgot-password-link")}
+								>
+									<Trans>Forgot your password?</Trans>
+								</Button>
 							</Stack>
 						)
 					)}

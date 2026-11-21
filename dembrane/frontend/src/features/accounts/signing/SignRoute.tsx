@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
+	ActionIcon,
 	Alert,
 	Anchor,
 	Box,
@@ -19,10 +20,15 @@ import {
 	TextInput,
 	ThemeIcon,
 	Title,
+	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
 import { useDocumentTitle, useMediaQuery } from "@mantine/hooks";
-import { ArrowLeftIcon, CheckIcon } from "@phosphor-icons/react";
+import {
+	ArrowLeftIcon,
+	CheckIcon,
+	ShareNetworkIcon,
+} from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
@@ -36,16 +42,20 @@ import {
 	useLegalHref,
 	usePdfData,
 	usePdfHref,
+	useRoom,
 } from "../api/hooks";
 import type { DocumentDetailT, DocumentFieldT } from "../contract/contract.gen";
 import { DocumentPreview } from "../customer/DocumentPreview";
 import { mayRemind, RemindSigner } from "../customer/RemindSigner";
+import { AddPersonModal } from "../customer/room/AddPersonModal";
+import { mayNameSigner } from "../customer/room/model";
 import { SendToSomeoneElse } from "../customer/SendToSomeoneElse";
 import { secondary } from "../customer/TaskLine";
 import { FitLabel, fitting } from "../FitLabel";
 import { formatDateTime, formatMoney } from "../format";
 import { AccountsI18n } from "../i18n";
 import { type PageBox, PdfPages } from "../pdf/PdfPages";
+import { DocumentLoadError } from "./DocumentLoadError";
 import {
 	asksDpaQuestion,
 	confirmationTemplate,
@@ -64,6 +74,8 @@ import {
 	type Values,
 } from "./fieldStepper";
 import { type CapturedImage, SignatureCapture } from "./SignatureCapture";
+import { clearDraft, readDraft, writeDraft } from "./signingDraft";
+import { captureSigning, SIGNING_EVENTS } from "./signingEvents";
 
 /**
  * Signing: the document as it will be signed, its fields on the pages, and one panel
@@ -82,7 +94,13 @@ const SignScreen = () => {
 		organisationId: string;
 		docId: string;
 	}>();
-	const { data: doc, isLoading, error } = useDocument(organisationId, docId);
+	const {
+		data: doc,
+		isLoading,
+		error,
+		isFetching,
+		refetch,
+	} = useDocument(organisationId, docId);
 	useDocumentTitle(doc ? `${doc.title} | dembrane` : t`Sign | dembrane`);
 
 	return (
@@ -93,18 +111,22 @@ const SignScreen = () => {
 				</Stack>
 			)}
 			{error && (
-				<Container size="xs" pt="15vh">
-					<Alert color="red">
-						{error instanceof AccountsApiError && error.status === 403 ? (
-							<Trans>
-								This document is not shared with you. Sign in with the email
-								address the link was sent to.
-							</Trans>
-						) : (
-							<Trans>This document could not be loaded.</Trans>
-						)}
-					</Alert>
-				</Container>
+				<DocumentLoadError
+					error={error}
+					orgId={organisationId ?? ""}
+					docId={docId ?? ""}
+					other={
+						<Container size="xs" pt="15vh">
+							<FileError
+								missing={false}
+								orgId={organisationId ?? ""}
+								retrying={isFetching}
+								onRetry={() => void refetch()}
+								access="signer"
+							/>
+						</Container>
+					}
+				/>
 			)}
 			{doc && organisationId && <Signing doc={doc} orgId={organisationId} />}
 		</Box>
@@ -120,6 +142,12 @@ function Header({
 	orgId: string;
 	children?: React.ReactNode;
 }) {
+	const [sharing, setSharing] = useState(false);
+	// On a phone the share control is its icon, so the title keeps the room.
+	const phone = useMediaQuery("(max-width: 48em)") ?? false;
+	// Those who run the account and room members share it; a named signer from outside
+	// has no room to bring anyone into.
+	const shares = doc.access === "member" || doc.access === "room";
 	return (
 		<Paper
 			radius={0}
@@ -142,10 +170,45 @@ function Header({
 							</ThemeIcon>
 						</I18nLink>
 					)}
-					<Text truncate>{doc.title}</Text>
+					{/* Two lines before it shortens, so a phone shows the whole title. */}
+					<Text lineClamp={2}>{doc.title}</Text>
 				</Group>
-				{children}
+				<Group gap="sm" wrap="nowrap">
+					{children}
+					{shares &&
+						(phone ? (
+							<Tooltip label={t`Share with a colleague`}>
+								<ActionIcon
+									variant="subtle"
+									size="lg"
+									aria-label={t`Share with a colleague`}
+									onClick={() => setSharing(true)}
+									data-testid="doc-share"
+								>
+									<ShareNetworkIcon size={20} />
+								</ActionIcon>
+							</Tooltip>
+						) : (
+							<Button
+								variant="subtle"
+								leftSection={<ShareNetworkIcon size={16} aria-hidden />}
+								onClick={() => setSharing(true)}
+								data-testid="doc-share"
+							>
+								<Trans>Share with a colleague</Trans>
+							</Button>
+						))}
+				</Group>
 			</Group>
+			{/* Mounted only while open: the signing walk under it stays as it was. */}
+			{shares && sharing && (
+				<AddPersonModal
+					orgId={orgId}
+					opened={sharing}
+					onClose={() => setSharing(false)}
+					title={t`Share with a colleague`}
+				/>
+			)}
 		</Paper>
 	);
 }
@@ -164,6 +227,8 @@ function Signing({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	}, [doc.id, doc.status, orgId, queryClient]);
 
 	if (doc.status === "signed") return <Signed doc={doc} orgId={orgId} />;
+	// A room member reads: the pages and the texts it includes, nothing to fill in.
+	if (doc.access === "room") return <Reading doc={doc} orgId={orgId} />;
 	if (doc.status !== "sent" && doc.status !== "viewed") {
 		return (
 			<>
@@ -193,6 +258,71 @@ function Signing({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	if (doc.access === "member" && doc.signer)
 		return <MaybeWaiting doc={doc} orgId={orgId} signer={doc.signer} />;
 	return <Walk doc={doc} orgId={orgId} />;
+}
+
+/**
+ * A room member reading the offer or the DPA: its pages and the legal texts it includes.
+ * Nothing to fill in or sign, and no download or print while the server says it may not
+ * be saved (may_download); who signs it is said above the pages: the person named on the
+ * document, else the room's signer of it.
+ */
+function Reading({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
+	const pdf = usePdfData(doc.file_url);
+	const href = usePdfHref(doc.may_download ? doc.file_url : null);
+	const { data: room } = useRoom(orgId);
+	const kind = doc.kind === "offer" || doc.kind === "dpa" ? doc.kind : null;
+	const roomSigner = kind ? room?.signers[kind] : null;
+	const named =
+		doc.signer ??
+		(roomSigner?.document_id === doc.id ? roomSigner : null) ??
+		null;
+	const signer = named?.name || named?.email || "";
+	return (
+		<>
+			<Header doc={doc} orgId={orgId} />
+			<Container size="md" py="lg" px="md" data-testid="sign-reading">
+				<Stack gap="lg">
+					<Text c="dimmed">
+						{signer ? (
+							<Trans>You can read this document. {signer} signs it.</Trans>
+						) : (
+							<Trans>
+								You can read this document. Who signs it is not chosen yet.
+							</Trans>
+						)}
+					</Text>
+					{href && (
+						<Group>
+							<Button
+								{...secondary}
+								component="a"
+								href={href}
+								target="_blank"
+								rel="noreferrer"
+								data-testid="doc-pdf"
+							>
+								<Trans>Download PDF</Trans>
+							</Button>
+						</Group>
+					)}
+					{pdf.data ? (
+						<PdfPages data={pdf.data} />
+					) : pdf.isError ? (
+						<Text size="sm" c="dimmed">
+							<Trans>
+								The document could not be loaded. Try again in a moment.
+							</Trans>
+						</Text>
+					) : (
+						<Stack align="center" py="xl">
+							<Loader size="sm" />
+						</Stack>
+					)}
+					<LegalDocuments doc={doc} />
+				</Stack>
+			</Container>
+		</>
+	);
 }
 
 /** Signed by some, waiting for the rest: who signed, and whose signature comes next. */
@@ -300,13 +430,15 @@ function MaybeWaiting({
 						{mayRemind(signer) && (
 							<RemindSigner orgId={orgId} docId={doc.id} name={firstName} />
 						)}
-						<Button
-							{...secondary}
-							onClick={() => setReassigning(true)}
-							data-testid="sign-reassign"
-						>
-							<Trans>Send to someone else</Trans>
-						</Button>
+						{mayNameSigner(doc) && (
+							<Button
+								{...secondary}
+								onClick={() => setReassigning(true)}
+								data-testid="sign-reassign"
+							>
+								<Trans>Send to someone else</Trans>
+							</Button>
+						)}
 					</Group>
 					<DocumentPreview doc={doc} who={assignee} />
 				</Stack>
@@ -314,7 +446,6 @@ function MaybeWaiting({
 			<SendToSomeoneElse
 				orgId={orgId}
 				docId={doc.id}
-				current={signer}
 				opened={reassigning}
 				onClose={() => setReassigning(false)}
 			/>
@@ -396,6 +527,33 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	const [error, setError] = useState<string | null>(null);
 	const [submitting, setSubmitting] = useState(false);
 	const queryClient = useQueryClient();
+	const draft = useSigningDraft({
+		current,
+		doc,
+		fields: allFields,
+		finishing,
+		hasImage: Boolean(signature || initials),
+		owner: me?.directus_user_id ?? null,
+		pickOne,
+		restore: (d) => {
+			setValues((v) => ({ ...v, ...d.values }));
+			setVisited(new Set(d.visited));
+			if (d.finishing) setFinishing(true);
+			else if (d.current) setCurrent(d.current);
+			captureSigning(SIGNING_EVENTS.resumed, doc, {
+				step_index: d.finishing
+					? fields.length
+					: Math.max(
+							0,
+							fields.findIndex((f) => f.id === d.current),
+						),
+			});
+		},
+		values,
+		visited,
+	});
+	const step = stepOf(fields, current, finishing);
+	useSigningEvents(doc, draft.started, step);
 
 	// The signer's name is the one thing we know; fill it once so they only check it.
 	useEffect(() => {
@@ -482,6 +640,9 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 				},
 				params: { docId: doc.id, orgId },
 			});
+			draft.signed();
+			signedDocs.add(doc.id);
+			captureSigning(SIGNING_EVENTS.signed, doc);
 			await queryClient.invalidateQueries({ queryKey: accountKeys.all });
 		} catch (e) {
 			setError((await presentError(e, i18n)).message);
@@ -550,7 +711,12 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 						variant="filled"
 						size="md"
 						fullWidth
-						onClick={next}
+						onClick={() => {
+							// Once per walk: back to the start and on again is not a new one.
+							if (!draft.started) captureSigning(SIGNING_EVENTS.started, doc);
+							draft.start();
+							next();
+						}}
 						data-testid="sign-start"
 					>
 						<Trans>Start</Trans>
@@ -715,6 +881,191 @@ function Walk({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 /** The step that stands for the tick boxes of an offer whose signer picks exactly one. */
 const PICK_STEP = "pick-one-option";
 
+/** Where the walk is, for the step events: its place and what kind of step it is. */
+const stepOf = (
+	fields: readonly DocumentFieldT[],
+	current: string | null,
+	finishing: boolean,
+): { index: number; kind: string } | null => {
+	if (finishing) return { index: fields.length, kind: "review" };
+	const index = fields.findIndex((f) => f.id === current);
+	const f = fields[index];
+	if (!f) return null;
+	return { index, kind: f.id === PICK_STEP ? "choice" : f.kind };
+};
+
+/**
+ * Keeps what the signer filled in for this browser session (never the drawn signature),
+ * puts it back after a reload, and warns before the page is left while something would be
+ * lost: a drawn signature, or any input when the browser does not keep it.
+ */
+function useSigningDraft({
+	doc,
+	owner,
+	fields,
+	pickOne,
+	values,
+	current,
+	finishing,
+	visited,
+	hasImage,
+	restore,
+}: {
+	doc: DocumentDetailT;
+	owner: string | null;
+	fields: readonly DocumentFieldT[];
+	pickOne: boolean;
+	values: Values;
+	current: string | null;
+	finishing: boolean;
+	visited: ReadonlySet<string>;
+	hasImage: boolean;
+	restore: (d: NonNullable<ReturnType<typeof readDraft>>) => void;
+}) {
+	const extraIds = useMemo(() => (pickOne ? [PICK_STEP] : []), [pickOne]);
+	const restored = useRef(false);
+	const [started, setStarted] = useState(false);
+	const [kept, setKept] = useState(true);
+	const done = useRef(false);
+	const restoreRef = useRef(restore);
+	restoreRef.current = restore;
+
+	useEffect(() => {
+		if (restored.current || !owner) return;
+		restored.current = true;
+		const d = readDraft(doc.id, {
+			extraIds,
+			fields,
+			owner,
+			sha256: doc.sha256,
+		});
+		if (!d) return;
+		setStarted(true);
+		restoreRef.current(d);
+	}, [doc.id, doc.sha256, extraIds, fields, owner]);
+
+	useEffect(() => {
+		if (!owner || !restored.current || done.current) return;
+		if (!started && current === null && !finishing) return;
+		setKept(
+			writeDraft(
+				doc.id,
+				{
+					current,
+					finishing,
+					owner,
+					sha256: doc.sha256,
+					values,
+					visited: [...visited],
+				},
+				fields,
+				extraIds,
+			),
+		);
+	}, [
+		current,
+		doc.id,
+		doc.sha256,
+		extraIds,
+		fields,
+		finishing,
+		owner,
+		started,
+		values,
+		visited,
+	]);
+
+	const unsaved =
+		(started || current !== null || finishing) && (hasImage || !kept);
+	useEffect(() => {
+		if (!unsaved) return;
+		const warn = (e: BeforeUnloadEvent) => {
+			if (done.current) return;
+			e.preventDefault();
+			// Older browsers show the prompt only when returnValue is set.
+			e.returnValue = "";
+		};
+		window.addEventListener("beforeunload", warn);
+		return () => window.removeEventListener("beforeunload", warn);
+	}, [unsaved]);
+
+	return {
+		signed: () => {
+			done.current = true;
+			clearDraft(doc.id);
+		},
+		start: () => setStarted(true),
+		started: started || current !== null || finishing,
+		unsaved,
+	};
+}
+
+/**
+ * The step events: each step once as it shows, and leaving before signing. Only the
+ * document's id and kind and the step's place and kind; nothing the signer typed.
+ */
+function useSigningEvents(
+	doc: DocumentDetailT,
+	started: boolean,
+	step: { index: number; kind: string } | null,
+) {
+	const ref = useMemo(
+		() => ({ id: doc.id, kind: doc.kind }),
+		[doc.id, doc.kind],
+	);
+	const last = useRef<{ index: number; kind: string } | null>(null);
+	const index = step?.index ?? null;
+	const kind = step?.kind ?? null;
+	useEffect(() => {
+		if (index === null || kind === null) return;
+		last.current = { index, kind };
+		captureSigning(SIGNING_EVENTS.stepViewed, ref, {
+			step_index: index,
+			step_kind: kind,
+		});
+	}, [index, kind, ref]);
+
+	// Left before signing: the page closed, reloaded or was navigated away from.
+	useEffect(() => {
+		if (!started) return;
+		// Mounted again straight after an unmount (React's development double mount, or
+		// the same walk coming back): that unmount was not a leave.
+		const pending = pendingLeave.get(ref.id);
+		if (pending !== undefined) {
+			clearTimeout(pending);
+			pendingLeave.delete(ref.id);
+		}
+		const leave = () => {
+			if (signedDocs.has(ref.id) || abandonedDocs.has(ref.id)) return;
+			abandonedDocs.add(ref.id);
+			captureSigning(SIGNING_EVENTS.abandoned, ref, {
+				step_index: last.current?.index ?? 0,
+			});
+		};
+		window.addEventListener("pagehide", leave);
+		return () => {
+			window.removeEventListener("pagehide", leave);
+			// Deferred, so a mount that follows at once can call it off.
+			pendingLeave.set(
+				ref.id,
+				setTimeout(() => {
+					pendingLeave.delete(ref.id);
+					leave();
+				}, 0),
+			);
+		};
+	}, [ref, started]);
+}
+
+/**
+ * Per page life, by document: signed here, so leaving the thank-you screen is not
+ * "abandoned"; already sent as abandoned, so it is sent once; and an unmount whose
+ * abandoned event waits to see whether the walk mounts again.
+ */
+const signedDocs = new Set<string>();
+const abandonedDocs = new Set<string>();
+const pendingLeave = new Map<string, ReturnType<typeof setTimeout>>();
+
 const isOptionField = (f: DocumentFieldT) =>
 	f.kind === "checkbox" && Boolean(f.key?.startsWith("option:"));
 
@@ -751,9 +1102,10 @@ function ActionRow({
 	primary: ReactNode;
 }) {
 	return (
-		<Group justify="space-between" wrap="nowrap" gap="sm">
+		<Group data-steps justify="space-between" wrap="nowrap" gap="sm">
 			{onBack ? (
 				<Button
+					variant="subtle"
 					onClick={onBack}
 					data-testid="sign-back"
 					style={{ flexShrink: 0 }}
@@ -1080,7 +1432,7 @@ function FinishStep({
 					value={dpa}
 					onChange={(v) => onDpa(v as "yes" | "no")}
 					label={t`May you also agree to data processing for your organisation?`}
-					description={t`If not, the data processing agreement becomes a separate document for someone who may.`}
+					description={t`If not, the DPA becomes a separate document for someone who may.`}
 					error={tried && unanswered ? t`Choose one to continue.` : undefined}
 				>
 					<Stack gap={6} mt={6}>
@@ -1166,7 +1518,7 @@ const legalName = (kind: string) =>
 		? t`General terms and conditions`
 		: kind === "sla"
 			? t`Service level agreement`
-			: t`Data processing agreement`;
+			: t`DPA`;
 
 /**
  * The legal documents the agreement is made of, each opening the version this document
@@ -1299,6 +1651,8 @@ function FieldBox({
 function Signed({ doc, orgId }: { doc: DocumentDetailT; orgId: string }) {
 	const { i18n } = useLingui();
 	const href = usePdfHref(doc.signed_pdf_url);
+	// Signed here or elsewhere: nothing half-filled is kept for it.
+	useEffect(() => clearDraft(doc.id), [doc.id]);
 	return (
 		<>
 			<Header doc={doc} orgId={orgId} />

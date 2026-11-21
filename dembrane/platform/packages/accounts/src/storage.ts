@@ -1,5 +1,19 @@
 import { schema } from "@dembrane/db";
-import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  notInArray,
+  or,
+  sql,
+} from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import type { Conn } from "./deps";
 
 const {
@@ -18,6 +32,8 @@ const {
   account_ticket: ticket,
   account_ticket_message: message,
   account_event: event,
+  account_room_person: roomPerson,
+  account_room_hint: roomHint,
   legal_text,
   legal_text_source,
   workspace,
@@ -43,6 +59,7 @@ export type TicketRow = typeof ticket.$inferSelect;
 export type MessageRow = typeof message.$inferSelect;
 export type EventRow = typeof event.$inferSelect;
 export type LegalRow = typeof legal_text.$inferSelect;
+export type RoomPersonRow = typeof roomPerson.$inferSelect;
 
 /** Drizzle queries only; every method takes the organisation first where it has one. */
 export const store = {
@@ -141,6 +158,12 @@ export const store = {
     return row ?? null;
   },
 
+  /** The app user of whoever has this address, if they have an account. */
+  async appUserByEmail(c: Conn, email: string) {
+    const identity = await store.identityByEmail(c, email);
+    return identity ? store.appUserByDirectusId(c, identity.id) : null;
+  },
+
   async appUser(c: Conn, id: string) {
     const [row] = await c.select().from(app_user).where(eq(app_user.id, id)).limit(1);
     return row ?? null;
@@ -206,8 +229,26 @@ export const store = {
     c: Conn,
     row: { id: string; orgId: string; email: string; invitedBy: string | null; now: Date },
   ): Promise<boolean> {
+    return (await store.inviteToOrg(c, { ...row, role: "billing" })) !== null;
+  },
+
+  /**
+   * A pending invitation to the organisation, valid as long as an offer stays open to sign
+   * (30 days). One per address: nothing is made for a member or for an address with an
+   * invitation waiting. Returns the id of the invitation made, else null.
+   */
+  async inviteToOrg(
+    c: Conn,
+    row: {
+      id: string;
+      orgId: string;
+      email: string;
+      role: "member" | "billing";
+      invitedBy: string | null;
+      now: Date;
+    },
+  ): Promise<string | null> {
     const e = row.email.trim().toLowerCase();
-    const at = row.now.toISOString();
     const [member] = await c
       .select({ id: org_membership.id })
       .from(org_membership)
@@ -221,31 +262,49 @@ export const store = {
         ),
       )
       .limit(1);
-    if (member) return false;
-    const [pending] = await c
-      .select({ id: org_invite.id })
-      .from(org_invite)
-      .where(
-        and(
-          eq(org_invite.org_id, row.orgId),
-          sql`lower(${org_invite.email}) = ${e}`,
-          isNull(org_invite.accepted_at),
-          isNull(org_invite.deleted_at),
-          gt(org_invite.expires_at, at),
-        ),
-      )
-      .limit(1);
-    if (pending) return false;
+    if (member) return null;
+    if (await store.pendingOrgInvite(c, row.orgId, e, row.now)) return null;
     await c.insert(org_invite).values({
       id: row.id,
       org_id: row.orgId,
       email: e,
-      role: "billing",
+      role: row.role,
       invited_by: row.invitedBy,
-      // As long as an offer stays open to sign.
       expires_at: new Date(row.now.getTime() + 30 * 86_400_000).toISOString(),
     });
-    return true;
+    return row.id;
+  },
+
+  /**
+   * The invitations to the organisation still waiting: not taken up, withdrawn or expired.
+   * With `email`, only that address's.
+   */
+  async pendingOrgInvites(c: Conn, orgId: string, now: Date, email?: string) {
+    return c
+      .select({ id: org_invite.id, role: org_invite.role, email: org_invite.email })
+      .from(org_invite)
+      .where(
+        and(
+          eq(org_invite.org_id, orgId),
+          email ? sql`lower(${org_invite.email}) = ${email.trim().toLowerCase()}` : undefined,
+          isNull(org_invite.accepted_at),
+          isNull(org_invite.deleted_at),
+          gt(org_invite.expires_at, now.toISOString()),
+        ),
+      );
+  },
+
+  async pendingOrgInvite(c: Conn, orgId: string, email: string, now: Date) {
+    const [row] = await store.pendingOrgInvites(c, orgId, now, email);
+    return row ?? null;
+  },
+
+  /** Withdraws an invitation (soft delete): its link and the code sign-in it allowed stop. */
+  async withdrawOrgInvite(c: Conn, id: string, now: Date) {
+    await c
+      .update(org_invite)
+      .set({ deleted_at: now.toISOString() })
+      .where(and(eq(org_invite.id, id), isNull(org_invite.accepted_at)));
   },
 
   async usage(c: Conn, orgId: string) {
@@ -677,6 +736,120 @@ export const store = {
     return new Set(rows.flatMap((r) => (r.id ? [r.id] : [])));
   },
 
+  // ── the data room ─────────────────────────────────────────────────────
+
+  /** The room's rows, with the inviter's name. */
+  async roomPeople(c: Conn, orgId: string) {
+    const inviter = alias(app_user, "room_inviter_user");
+    return c
+      .select({ row: roomPerson, inviterName: inviter.display_name })
+      .from(roomPerson)
+      .leftJoin(inviter, eq(inviter.id, roomPerson.invitedBy))
+      .where(eq(roomPerson.orgId, orgId))
+      .orderBy(asc(roomPerson.createdAt), asc(roomPerson.id));
+  },
+
+  async roomPerson(c: Conn, orgId: string, id: string): Promise<RoomPersonRow | null> {
+    const [row] = await c
+      .select()
+      .from(roomPerson)
+      .where(and(eq(roomPerson.orgId, orgId), eq(roomPerson.id, id)))
+      .limit(1);
+    return row ?? null;
+  },
+
+  async roomPersonByEmail(c: Conn, orgId: string, email: string): Promise<RoomPersonRow | null> {
+    const [row] = await c
+      .select()
+      .from(roomPerson)
+      .where(and(eq(roomPerson.orgId, orgId), eq(roomPerson.email, email.trim().toLowerCase())))
+      .limit(1);
+    return row ?? null;
+  },
+
+  /** A person's room row: by their app user, or by address on a row that has none yet. */
+  async roomPersonOf(
+    c: Conn,
+    orgId: string,
+    appUserId: string,
+    email: string | null,
+  ): Promise<RoomPersonRow | null> {
+    const [row] = await c
+      .select()
+      .from(roomPerson)
+      .where(
+        and(
+          eq(roomPerson.orgId, orgId),
+          or(
+            eq(roomPerson.appUserId, appUserId),
+            email
+              ? and(isNull(roomPerson.appUserId), eq(roomPerson.email, email.toLowerCase()))
+              : undefined,
+          ),
+        ),
+      )
+      .limit(1);
+    return row ?? null;
+  },
+
+  /** The row, held until the transaction ends, so two changes to one person take turns. */
+  async holdRoomPerson(c: Conn, id: string): Promise<RoomPersonRow | null> {
+    const [row] = await c.select().from(roomPerson).where(eq(roomPerson.id, id)).for("update");
+    return row ?? null;
+  },
+
+  /** False when the address is in the organisation's room already (unique per address). */
+  async insertRoomPerson(c: Conn, row: typeof roomPerson.$inferInsert): Promise<boolean> {
+    const made = await c
+      .insert(roomPerson)
+      .values(row)
+      .onConflictDoNothing({ target: [roomPerson.orgId, roomPerson.email] })
+      .returning({ id: roomPerson.id });
+    return made.length > 0;
+  },
+
+  async updateRoomPerson(c: Conn, id: string, patch: Partial<typeof roomPerson.$inferInsert>) {
+    await c.update(roomPerson).set(patch).where(eq(roomPerson.id, id));
+  },
+
+  async deleteRoomPerson(c: Conn, id: string) {
+    await c.delete(roomPerson).where(eq(roomPerson.id, id));
+  },
+
+  /** The org's live workspaces, as far as who derives access to them goes. */
+  async orgWorkspaces(c: Conn, orgId: string) {
+    return c
+      .select({ visibility: workspace.visibility, settings: workspace.settings })
+      .from(workspace)
+      .where(and(eq(workspace.org_id, orgId), isNull(workspace.deleted_at)));
+  },
+
+  async dismissedHints(c: Conn, orgId: string): Promise<string[]> {
+    const rows = await c
+      .select({ label: roomHint.label })
+      .from(roomHint)
+      .where(eq(roomHint.orgId, orgId));
+    return rows.map((r) => r.label);
+  },
+
+  /** True when this dismissal is new; a repeat changes nothing. */
+  async dismissHint(
+    c: Conn,
+    row: { orgId: string; label: string; dismissedBy: string | null; now: Date },
+  ): Promise<boolean> {
+    const made = await c
+      .insert(roomHint)
+      .values({
+        orgId: row.orgId,
+        label: row.label,
+        dismissedBy: row.dismissedBy,
+        dismissedAt: row.now,
+      })
+      .onConflictDoNothing()
+      .returning({ label: roomHint.label });
+    return made.length > 0;
+  },
+
   // ── legal texts ───────────────────────────────────────────────────────
 
   async latestLegal(c: Conn, kind: string): Promise<LegalRow | null> {
@@ -742,7 +915,11 @@ export const store = {
             title: string | null;
             code: string | null;
             params: unknown;
-          } | null>`(select json_build_object('title', t2.title, 'code', t2.code, 'params', t2.params) from account_task t2
+            document_id: string | null;
+            document_kind: string | null;
+          } | null>`(select json_build_object('title', t2.title, 'code', t2.code, 'params', t2.params,
+            'document_id', t2.document_id,
+            'document_kind', (select d2.kind from account_document d2 where d2.id = t2.document_id)) from account_task t2
           where t2.org_id = ${org.id} and t2.status in ('open', 'changes_requested')
           order by t2.created_at, t2.id limit 1)`,
         })
@@ -764,6 +941,68 @@ export const store = {
         )
         .orderBy(asc(org.name))
     );
+  },
+
+  /**
+   * Every organisation where the person is a member (holding none of `roles`) brought into
+   * the data room, by their app user or by their verified address on a row that has none
+   * yet, with the counts of the tasks a room member reads: those on the offer and the DPA,
+   * never a draft, billing details left out (withdrawn tasks out of the total). One row per
+   * organisation; tasks are counted distinct, as a person can match two room rows (one by
+   * app user, one by address). No index of its own and no migration: it can start from the
+   * person's memberships (org_membership_user_id_index), and account_room_person is then
+   * read per organisation on its (organisation, app user) index and (organisation,
+   * address) unique key.
+   */
+  async roomTasksSummary(
+    c: Conn,
+    appUserId: string,
+    email: string | null,
+    roles: readonly string[],
+  ) {
+    return c
+      .select({
+        org_id: org.id,
+        name: org.name,
+        logo_url: org.logo_url,
+        account_stage: org.account_stage,
+        tasks_done: sql<number>`count(distinct ${task.id}) filter (where ${task.status} = 'done')::int`,
+        tasks_total: sql<number>`count(distinct ${task.id}) filter (where ${task.status} <> 'withdrawn')::int`,
+      })
+      .from(roomPerson)
+      .innerJoin(
+        org_membership,
+        and(
+          eq(org_membership.org_id, roomPerson.orgId),
+          eq(org_membership.user_id, appUserId),
+          isNull(org_membership.deleted_at),
+          notInArray(org_membership.role, [...roles]),
+        ),
+      )
+      .innerJoin(org, eq(org.id, roomPerson.orgId))
+      .leftJoin(
+        task,
+        and(
+          eq(task.orgId, org.id),
+          sql`${task.kind} <> 'billing_details'`,
+          sql`exists (select 1 from account_document d where d.id = ${task.documentId}
+            and d.kind in ('offer', 'dpa') and d.status <> 'draft')`,
+        ),
+      )
+      .where(
+        and(
+          isNotNull(roomPerson.accessGrantedAt),
+          isNull(org.deleted_at),
+          or(
+            eq(roomPerson.appUserId, appUserId),
+            email
+              ? and(isNull(roomPerson.appUserId), eq(roomPerson.email, email.toLowerCase()))
+              : undefined,
+          ),
+        ),
+      )
+      .groupBy(org.id)
+      .orderBy(asc(org.name));
   },
 
   // ── onboarding ────────────────────────────────────────────────────────

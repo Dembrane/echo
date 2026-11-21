@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 // The API sends one code per email a minute.
 export const RESEND_COOLDOWN_SECONDS = 60;
 
-/** Seconds left before another code may be sent, and a `start` to begin the wait. */
+/**
+ * Seconds left before another try, and a `start` to begin the wait: the default length, or
+ * the seconds a rate-limited answer named.
+ */
 export function useResendCooldown(seconds = RESEND_COOLDOWN_SECONDS) {
 	const [wait, setWait] = useState(0);
 
@@ -13,5 +16,8 @@ export function useResendCooldown(seconds = RESEND_COOLDOWN_SECONDS) {
 		return () => clearTimeout(id);
 	}, [wait]);
 
-	return { start: () => setWait(seconds), wait };
+	return {
+		start: (override?: number) => setWait(override ?? seconds),
+		wait,
+	};
 }

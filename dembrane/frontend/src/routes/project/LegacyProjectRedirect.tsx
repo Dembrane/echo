@@ -14,6 +14,8 @@ const UUID_RE =
 // Project pages under /w/:workspaceId/projects/:projectId, gated as in Router.tsx.
 const CURRENT_PATHS = [
 	"access",
+	"advanced",
+	"brief",
 	"chats/:id",
 	"chats/:id/debug",
 	"chats/new",
@@ -27,7 +29,10 @@ const CURRENT_PATHS = [
 	"integrations",
 	"map",
 	"overview",
+	"portal",
 	"portal-editor",
+	"portal/:section",
+	"portal/:section/:option",
 	"report",
 	"sharing",
 	"upload",

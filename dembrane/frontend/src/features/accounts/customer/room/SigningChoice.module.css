@@ -1,0 +1,6 @@
+/* Signing is set apart from what they do: its own group under a rule, so the two read as
+ * two questions. */
+.signing {
+	border-top: var(--app-stroke) solid var(--app-text);
+	padding-top: 16px;
+}

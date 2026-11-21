@@ -5,6 +5,11 @@ import { BeautifulLoading } from "./BeautifulLoading";
 interface LazyRouteProps {
 	children: React.ReactNode;
 	fallback?: React.ComponentType;
+	/**
+	 * What shows when the chunk fails to load or the component throws; the boundary's own
+	 * screen when left out. `null` renders nothing, for an optional block inside a page.
+	 */
+	errorFallback?: React.ReactNode;
 }
 
 const DefaultFallback = () => <BeautifulLoading />;
@@ -12,9 +17,10 @@ const DefaultFallback = () => <BeautifulLoading />;
 export const LazyRoute: React.FC<LazyRouteProps> = ({
 	children,
 	fallback: FallbackComponent = DefaultFallback,
+	errorFallback,
 }) => {
 	return (
-		<ErrorBoundary>
+		<ErrorBoundary fallback={errorFallback}>
 			<Suspense fallback={<FallbackComponent />}>{children}</Suspense>
 		</ErrorBoundary>
 	);
@@ -22,15 +28,16 @@ export const LazyRoute: React.FC<LazyRouteProps> = ({
 
 // Helper function to create lazy route wrapper for default exports
 export const createLazyRoute = <
-	P extends Record<string, unknown> = Record<string, never>,
+	P extends object = Record<string, never>,
 >(
 	importFn: () => Promise<{ default: React.ComponentType<P> }>,
 	fallback?: React.ComponentType,
+	errorFallback?: React.ReactNode,
 ) => {
 	const LazyComponent = React.lazy(importFn);
 
 	return (props: P) => (
-		<LazyRoute fallback={fallback}>
+		<LazyRoute fallback={fallback} errorFallback={errorFallback}>
 			<LazyComponent {...props} />
 		</LazyRoute>
 	);
@@ -38,11 +45,12 @@ export const createLazyRoute = <
 
 // Helper function to create lazy route wrapper for named exports
 export const createLazyNamedRoute = <
-	P extends Record<string, unknown> = Record<string, never>,
+	P extends object = Record<string, never>,
 >(
 	importFn: () => Promise<Record<string, unknown>>,
 	componentName: string,
 	fallback?: React.ComponentType,
+	errorFallback?: React.ReactNode,
 ) => {
 	const LazyComponent = React.lazy(async () => {
 		const module = await importFn();
@@ -50,7 +58,7 @@ export const createLazyNamedRoute = <
 	});
 
 	return (props: P) => (
-		<LazyRoute fallback={fallback}>
+		<LazyRoute fallback={fallback} errorFallback={errorFallback}>
 			<LazyComponent {...props} />
 		</LazyRoute>
 	);

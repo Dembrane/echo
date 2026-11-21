@@ -4,6 +4,7 @@ import type { Admitted, ChatsStorage, FreeChats, UserTurn } from "@dembrane/chat
 import {
   BadRequestError,
   ConflictError,
+  contextForPrompt,
   ForbiddenError,
   NotFoundError,
   newId,
@@ -215,7 +216,7 @@ export async function createRun(
     });
     const prompt = initialPrompt({
       projectName: project.name,
-      projectContext: project.context,
+      projectContext: contextForPrompt(project.context),
       projectGoal: await currentGoal(d.store.sql, body.project_id),
       workspaceContext: await workspaceContext(d.store.sql, project.workspaceId),
       userMessage: body.message,

@@ -140,6 +140,9 @@ export function mergeAudio(existing: unknown, stored: Record<string, unknown>[])
  */
 export const HANDOVER_TTL_MS = 7 * 86_400_000;
 
+/** The question set the app's handover rows carry: an account met a wall, no answers yet. */
+export const HANDOVER_SET_VERSION = "handover-1";
+
 export interface Handover {
   readonly reference: string | null;
   readonly email: string | null;

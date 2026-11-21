@@ -28,7 +28,7 @@ the workspace is billed. See [the partner program](./partner-program.md).
 ## Legal basis
 
 Each project has a legal basis. It decides what a participant is told before they record.
-You find it in the [portal editor](./portal-editor.md) under "Basic settings": "Determines
+You find it in the [portal editor](./portal-editor.md) on the "Privacy" page: "Determines
 under which GDPR legal basis personal data is processed for this project."
 
 | Legal basis | What the participant sees |
@@ -47,7 +47,7 @@ under which GDPR legal basis personal data is processed for this project."
 
 ## Anonymisation
 
-"Anonymize transcripts" (Beta) is a switch in the portal editor under "Advanced settings".
+"Anonymize transcripts" (Beta) is a switch on the portal editor's "Privacy" page.
 When it is on, personal data in new transcripts is replaced with placeholders such as
 `<redacted_name>`, `<redacted_email>` and `<redacted_phone>`.
 

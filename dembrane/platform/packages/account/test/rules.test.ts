@@ -66,6 +66,12 @@ test("password policy lists every unmet rule", () => {
   expect(passwordProblems("Str0ng!pass")).toEqual([]);
 });
 
+test("password length counts code points, so an emoji is one character (the form counts the same)", () => {
+  // Eight UTF-16 units, seven characters.
+  expect(passwordProblems("Ab1!xy\u{1F600}")).toEqual(["Password must be at least 8 characters"]);
+  expect(passwordProblems("Ab1!xyz\u{1F600}")).toEqual([]);
+});
+
 test("upload titles read like Directus's", () => {
   expect(fileTitle("my_avatar-2.png")).toBe("My Avatar 2");
 });

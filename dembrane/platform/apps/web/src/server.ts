@@ -45,6 +45,14 @@ export function previewRuntime(
   return { previewPr: web.previewPr, previewRepo: web.previewRepo };
 }
 
+const PARTICIPANT_PATH =
+  /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\/|$)/i;
+
+/** A portal link, /:language?/:projectId/..., the only kind of page the portal serves. */
+export function isParticipantPath(path: string): boolean {
+  return PARTICIPANT_PATH.test(path);
+}
+
 const HOP_BY_HOP = [
   "connection",
   "keep-alive",
@@ -102,6 +110,14 @@ export function createHandler(opts: WebOptions) {
       }
       if (safe.startsWith("/assets/"))
         return withHeaders(new Response("Not found", { status: 404 }));
+    }
+    // The portal only serves participant links; anything else is a dashboard URL.
+    if (opts.runtime.role === "portal" && !isParticipantPath(url.pathname)) {
+      const target = new URL(String(opts.runtime.dashboardUrl));
+      // Setting only the path keeps the host fixed, so "//evil.com" can't redirect off-site.
+      target.pathname = url.pathname.replace(/^\/+/, "/");
+      target.search = url.search;
+      return withHeaders(new Response(null, { status: 302, headers: { Location: target.href } }));
     }
     // Without analytics the page is rewritten, so the precompressed copies (which still carry
     // the Tally script) are not used for it.

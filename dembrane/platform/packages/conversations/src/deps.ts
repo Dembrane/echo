@@ -1,4 +1,5 @@
 import type { Access } from "@dembrane/access";
+import type { Capture } from "@dembrane/analytics";
 import type { Media } from "@dembrane/audio";
 import type { Db } from "@dembrane/db";
 import type { Models } from "@dembrane/llm";
@@ -53,4 +54,6 @@ export interface ConversationsDeps {
   readonly tokens: ParticipantTokens;
   readonly settings: ConversationSettings;
   readonly now: () => Date;
+  /** Product analytics for host events (server_conversation_created and the like); none in tests. */
+  readonly capture?: Capture;
 }

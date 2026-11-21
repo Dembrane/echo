@@ -77,7 +77,7 @@ run("paying account", () => {
   test("a paid workspace's project pays from its own account", async () => {
     const s = await seed("paid", "paid");
     const p = await project(s.internal);
-    const want = { accountId: s.pooled, tier: "paid", downgradedAt: null, counted: true };
+    const want = { accountId: s.pooled, tier: "paid", downgradedAt: null };
     expect((await payingAccountsForProjects(db, [p])).get(p)).toEqual(want);
     expect((await payingAccountsForWorkspaces(db, [s.internal])).get(s.internal)).toEqual(want);
     const client = await project(s.client);
@@ -94,7 +94,6 @@ run("paying account", () => {
       accountId: s.pooled,
       tier: "free",
       downgradedAt: "2026-10-20T12:00:00.000000Z",
-      counted: true,
     };
     expect((await payingAccountsForProjects(db, [p])).get(p)).toEqual(want);
     expect((await payingAccountsForWorkspaces(db, [s.client])).get(s.client)).toEqual(want);
@@ -104,7 +103,7 @@ run("paying account", () => {
   test("a free client workspace of a paid org pays from its own account", async () => {
     const s = await seed("paid", "free");
     const p = await project(s.client);
-    const want = { accountId: s.own, tier: "free", downgradedAt: null, counted: true };
+    const want = { accountId: s.own, tier: "free", downgradedAt: null };
     expect((await payingAccountsForProjects(db, [p])).get(p)).toEqual(want);
     expect((await payingAccountsForWorkspaces(db, [s.client])).get(s.client)).toEqual(want);
   });
@@ -116,14 +115,13 @@ run("paying account", () => {
     expect(got?.tier).toBe("paid");
   });
 
-  test("a sample project is recorded but not counted", async () => {
+  test("a sample project pays like any other project of its workspace", async () => {
     const s = await seed("free", "free");
     const p = await project(s.internal, true);
     expect((await payingAccountsForProjects(db, [p])).get(p)).toEqual({
       accountId: s.pooled,
       tier: "free",
       downgradedAt: null,
-      counted: false,
     });
   });
 
@@ -167,7 +165,6 @@ run("paying account", () => {
       accountId: paid.pooled,
       tier: "paid",
       downgradedAt: null,
-      counted: false,
     });
   });
 });

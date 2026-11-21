@@ -1,55 +1,50 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import {
-	Button,
-	Group,
-	Modal,
-	Radio,
-	Stack,
-	Text,
-	TextInput,
-} from "@mantine/core";
-import { CheckCircleIcon } from "@phosphor-icons/react";
+import { Button, Group, Menu, Radio, Stack, Text } from "@mantine/core";
+import { CheckCircleIcon, UserPlusIcon } from "@phosphor-icons/react";
 import { type FormEvent, type ReactNode, useEffect, useState } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
+import { PersonAvatar } from "@/components/common/UserAvatar";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
+import { useV2Me } from "@/hooks/useV2Me";
 import { AccountsApiError } from "../api/client";
-import { useAccountsMutation } from "../api/hooks";
+import { useAccountPage, useAccountsMutation, useRoom } from "../api/hooks";
 import type { TaskT } from "../contract/contract.gen";
 import { FitLabel, fitting } from "../FitLabel";
 import { taskText } from "../format";
+import { Rows } from "./PageSection";
+import { signable } from "./room/AddPersonModal";
+import { AddPersonSteps, type DraftPerson } from "./room/AddPersonSteps";
+import { signText } from "./room/copy";
+import { mayNameSigner, type SignKind } from "./room/model";
+import { StepsModal } from "./StepsModal";
+import { KindIcon, secondary, TaskLine } from "./TaskLine";
+import classes from "./WhoSigns.module.css";
 
-type Step = "offer" | "dpa" | "dpia" | "done";
-const ORDER: Step[] = ["offer", "dpa", "dpia"];
+type Step = "signers" | "dpia" | "done";
+const ORDER: Step[] = ["signers", "dpia"];
+const KINDS: SignKind[] = ["offer", "dpa"];
 
-interface Person {
+/** Someone who may sign: the person asking, someone in the room, or someone just added. */
+interface Candidate {
 	email: string;
 	name: string;
-	job: string;
+	role: string | null;
+	draft?: DraftPerson;
+	/** A member who is not in the room yet. */
+	outside?: boolean;
 }
-const nobody: Person = { email: "", job: "", name: "" };
-
-// Enough to catch a slip; the server has the final word.
-const looksLikeEmail = (v: string) =>
-	/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
-
-/** The first thing missing about a person, or null when they are complete. */
-const missing = (p: Person): "email" | "name" | null =>
-	!looksLikeEmail(p.email) ? "email" : !p.name.trim() ? "name" : null;
-
-const asSigner = (p: Person) => ({
-	email: p.email.trim(),
-	name: p.name.trim(),
-	role: p.job.trim() || null,
-});
 
 /**
- * The first task on a new offer: who signs the offer, who signs the data processing
- * agreement sent with it, and whether the customer needs a DPIA of their own. One question
- * per step. The answers say whose each signing task is: anyone named gets an email with a
- * link to sign. Answers are final here; a change goes
- * through a question to dembrane. Back on the left and the step's action on the right, on
- * one row.
+ * The first task on a new offer: who signs the offer, who signs the DPA sent with it, and
+ * whether the customer needs a DPIA of their own. The signers are chosen one line per
+ * document: the person asking, someone already in the room, or someone new through the
+ * same person flow as everywhere else (AddPersonSteps, with that signing duty chosen).
+ * The DPIA is about the organisation, so it stays its own question. Anyone named gets an
+ * email with a link to sign when the task is confirmed; someone new is brought into the
+ * room too. Naming someone else is for owners and admins (the document's may_name_signer);
+ * Billing answers that they sign. Answers are final here; a change goes through a
+ * question to dembrane.
  */
 export function WhoSigns({
 	orgId,
@@ -60,73 +55,135 @@ export function WhoSigns({
 	task: TaskT | null;
 	onClose: () => void;
 }) {
-	const [step, setStep] = useState<Step>("offer");
-	const [offerWho, setOfferWho] = useState<"me" | "other" | null>(null);
-	const [offerPerson, setOfferPerson] = useState<Person>(nobody);
-	const [dpaWho, setDpaWho] = useState<"same" | "me" | "other" | null>(null);
-	const [dpaPerson, setDpaPerson] = useState<Person>(nobody);
+	const opened = task !== null;
+	const [step, setStep] = useState<Step>("signers");
+	const [holders, setHolders] = useState<Record<SignKind, string | null>>({
+		dpa: null,
+		offer: null,
+	});
+	const [added, setAdded] = useState<Candidate[]>([]);
+	const [adding, setAdding] = useState<SignKind | null>(null);
 	const [dpia, setDpia] = useState<"no" | "yes" | null>(null);
 	const [tried, setTried] = useState(false);
-	const mutation = useAccountsMutation("answerWhoSigns", {
+	const [error, setError] = useState<unknown>(null);
+	// The answer went through, but bringing someone new into the room did not.
+	const [addError, setAddError] = useState<unknown>(null);
+	const [pending, setPending] = useState(false);
+	const { data: me } = useV2Me({ enabled: opened });
+	const { data: room } = useRoom(orgId, opened);
+	const { data: page } = useAccountPage(opened ? orgId : undefined);
+	const answer = useAccountsMutation("answerWhoSigns", {
 		orgId,
 		taskId: task?.id ?? "",
 	});
-	const opened = task !== null;
+	const add = useAccountsMutation("addRoomPerson", { orgId });
 
 	// Each opening starts over.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: reset on open only
 	useEffect(() => {
 		if (!opened) return;
-		setStep("offer");
-		setOfferWho(null);
-		setOfferPerson(nobody);
-		setDpaWho(null);
-		setDpaPerson(nobody);
+		setStep("signers");
+		setHolders({ dpa: null, offer: null });
+		setAdded([]);
+		setAdding(null);
 		setDpia(null);
 		setTried(false);
-		mutation.reset();
+		setError(null);
+		setAddError(null);
 	}, [opened]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: a new step starts untried
 	useEffect(() => setTried(false), [step]);
 
-	const serverError = (key: string) =>
-		mutation.error instanceof AccountsApiError
-			? mutation.error.fields[key]
-			: undefined;
-	const fieldError =
-		mutation.error instanceof AccountsApiError &&
-		Object.keys(mutation.error.fields).length > 0;
+	const myEmail = (me?.email ?? "").toLowerCase();
+	const myName =
+		room?.people.find((p) => p.app_user_id === room.me?.app_user_id)?.name ??
+		myEmail;
+	const offer = page?.documents.find((d) => d.id === task?.document_id);
+	const mayName = mayNameSigner(offer);
+	// Everyone who may be chosen, by name; members not in the room yet are marked so.
+	const candidates: Candidate[] = [
+		{ email: myEmail, name: myName, role: null },
+		...(mayName
+			? (room?.people ?? [])
+					.filter((p) => p.email.toLowerCase() !== myEmail)
+					.map((p) => ({
+						email: p.email.toLowerCase(),
+						name: p.name,
+						outside: p.room === "none",
+						role: null,
+					}))
+			: []),
+		...added.filter(
+			(a) => !room?.people.some((p) => p.email.toLowerCase() === a.email),
+		),
+	].sort((a, b) => a.name.localeCompare(b.name));
+	const who = (email: string | null) =>
+		candidates.find((c) => c.email === email) ?? null;
 
-	// "I do" for the DPA only makes sense when someone else signs the offer.
-	const dpaOptions =
-		offerWho === "other"
-			? (["same", "me", "other"] as const)
-			: (["same", "other"] as const);
+	const choose = (kind: SignKind, email: string) =>
+		setHolders((h) => ({
+			...h,
+			[kind]: email,
+			// Whoever signs the offer signs the DPA too, unless said otherwise.
+			...(kind === "offer" && !h.dpa ? { dpa: email } : {}),
+		}));
 
 	/** What the step still needs, worded as the primary button; null when complete. */
 	const need = ((): string | null => {
-		if (step === "offer") {
-			if (!offerWho) return t`Choose who signs`;
-			if (offerWho === "other") {
-				const gap = missing(offerPerson);
-				if (gap === "email") return t`Fill in their email`;
-				if (gap === "name") return t`Fill in their name`;
-			}
-			return null;
-		}
-		if (step === "dpa") {
-			if (!dpaWho) return t`Choose who signs`;
-			if (dpaWho === "other") {
-				const gap = missing(dpaPerson);
-				if (gap === "email") return t`Fill in their email`;
-				if (gap === "name") return t`Fill in their name`;
-			}
+		if (step === "signers") {
+			if (!holders.offer) return t`Choose who signs the offer`;
+			if (!holders.dpa) return t`Choose who signs the DPA`;
 			return null;
 		}
 		if (step === "dpia" && !dpia) return t`Choose an answer`;
 		return null;
 	})();
+
+	const confirm = async () => {
+		const o = who(holders.offer);
+		const d = who(holders.dpa);
+		if (!o || !d) return;
+		const asSigner = (c: Candidate) => ({
+			email: c.email,
+			name: c.name,
+			role: c.role,
+		});
+		const dpaSame = o.email === d.email;
+		setPending(true);
+		setError(null);
+		try {
+			await answer.mutateAsync({
+				body: {
+					dpa_same: dpaSame,
+					dpa_signer: dpaSame || d.email === myEmail ? null : asSigner(d),
+					dpia: dpia === "yes",
+					offer_signer: o.email === myEmail ? null : asSigner(o),
+				},
+			});
+			// Someone new comes into the room with what they do, once named. The signing
+			// link has gone out by now, so a refusal here is said on the last step.
+			for (const c of added) {
+				if (!c.draft || !room?.me?.may_invite_new) continue;
+				const { signs: _s, role: _r, ...body } = c.draft;
+				await add.mutateAsync({ body }).catch(setAddError);
+			}
+			setStep("done");
+		} catch (e) {
+			setError(e);
+			const keys = Object.keys(e instanceof AccountsApiError ? e.fields : {});
+			if (keys.some((k) => /^(offer|dpa)_signer/.test(k))) setStep("signers");
+		} finally {
+			setPending(false);
+		}
+	};
+
+	const next = (e?: FormEvent) => {
+		e?.preventDefault();
+		if (need) return setTried(true);
+		if (step === "signers") return setStep("dpia");
+		void confirm();
+	};
 
 	const back = () => {
 		const i = ORDER.indexOf(step);
@@ -134,53 +191,64 @@ export function WhoSigns({
 		else setStep(ORDER[i - 1] as Step);
 	};
 
-	const next = (e?: FormEvent) => {
-		e?.preventDefault();
-		if (need) {
-			setTried(true);
-			return;
-		}
-		if (step === "offer") return setStep("dpa");
-		if (step === "dpa") return setStep("dpia");
-		mutation.mutate(
-			{
-				body: {
-					dpa_same: dpaWho === "same",
-					dpa_signer: dpaWho === "other" ? asSigner(dpaPerson) : null,
-					dpia: dpia === "yes",
-					offer_signer: offerWho === "other" ? asSigner(offerPerson) : null,
-				},
-			},
-			{
-				onError: (err) => {
-					// A person the server refused goes back to the step that names them.
-					const keys = Object.keys(
-						err instanceof AccountsApiError ? err.fields : {},
-					);
-					if (keys.some((k) => k.startsWith("offer_signer"))) setStep("offer");
-					else if (keys.some((k) => k.startsWith("dpa_signer"))) setStep("dpa");
-				},
-				onSuccess: () => setStep("done"),
-			},
-		);
-	};
-
 	const title = task ? taskText(task).title : "";
 	const count = ORDER.indexOf(step) + 1;
-	const offerOther = offerWho === "other" ? asSigner(offerPerson) : null;
-	const dpaOther = dpaWho === "other" ? asSigner(dpaPerson) : null;
-	// Whoever signs the offer also signs the DPA unless they said otherwise.
-	const bothToOther = offerOther !== null && dpaWho === "same";
+	const o = who(holders.offer);
+	const d = who(holders.dpa);
+	const offerOther = o && o.email !== myEmail ? o : null;
+	const dpaOther = d && d.email !== myEmail && d.email !== o?.email ? d : null;
+	const bothToOther = offerOther !== null && d?.email === o?.email;
 	const offerName = offerOther?.name ?? "";
 	const offerEmail = offerOther?.email ?? "";
 	const dpaName = dpaOther?.name ?? "";
 	const dpaEmail = dpaOther?.email ?? "";
 
+	if (adding && room?.me && page)
+		return (
+			<StepsModal
+				opened={opened}
+				onClose={onClose}
+				title={<Trans>Someone new</Trans>}
+				data-testid="who-signs"
+			>
+				<AddPersonSteps
+					me={room.me}
+					myEmail={myEmail}
+					people={room.people}
+					preset={{ signs: [adding] }}
+					signing={{
+						docs: Object.fromEntries(
+							Object.entries(signable(room, page)).map(([k, v]) => [
+								k,
+								{ ...v, signer: null },
+							]),
+						),
+						onName: async () => null,
+					}}
+					onDraft={(p) => {
+						const c: Candidate = {
+							draft: p,
+							email: p.email,
+							name: p.name,
+							role: p.role,
+						};
+						setAdded((a) => [...a.filter((x) => x.email !== c.email), c]);
+						for (const k of p.signs.length ? p.signs : [adding])
+							choose(k, c.email);
+					}}
+					onSubmit={async () => {
+						throw new Error("A draft sends nothing");
+					}}
+					onCancel={() => setAdding(null)}
+					onDone={() => setAdding(null)}
+				/>
+			</StepsModal>
+		);
+
 	return (
-		<Modal
+		<StepsModal
 			opened={opened}
 			onClose={onClose}
-			centered
 			title={step === "done" ? <Trans>Thank you</Trans> : title}
 			data-testid="who-signs"
 		>
@@ -190,9 +258,8 @@ export function WhoSigns({
 						<CheckCircleIcon
 							size={20}
 							color="var(--app-success)"
-							weight="light"
 							aria-hidden
-							style={{ flexShrink: 0 }}
+							className={classes.icon}
 						/>
 						<Stack gap="xs">
 							{offerOther &&
@@ -200,7 +267,7 @@ export function WhoSigns({
 									<Text>
 										<Trans>
 											We emailed {offerName} at {offerEmail} a link to sign the
-											offer and the data processing agreement.
+											offer and the DPA.
 										</Trans>
 									</Text>
 								) : (
@@ -214,8 +281,7 @@ export function WhoSigns({
 							{dpaOther && (
 								<Text>
 									<Trans>
-										We emailed {dpaName} at {dpaEmail} a link to sign the data
-										processing agreement.
+										We emailed {dpaName} at {dpaEmail} a link to sign the DPA.
 									</Trans>
 								</Text>
 							)}
@@ -231,11 +297,12 @@ export function WhoSigns({
 							)}
 						</Stack>
 					</Group>
+					{addError ? <ErrorNotice error={addError} /> : null}
 					<ActionRow>
 						{offerOther ? (
 							<span />
 						) : (
-							<Button onClick={onClose}>
+							<Button variant="subtle" onClick={onClose}>
 								<Trans>Close</Trans>
 							</Button>
 						)}
@@ -263,78 +330,102 @@ export function WhoSigns({
 				<form onSubmit={next} noValidate>
 					<Stack gap="md">
 						<Text size="sm" c="dimmed">
-							<Trans>Step {count} of 3</Trans>
+							<Trans>Step {count} of 2</Trans>
 						</Text>
-						{step === "offer" && (
-							<>
-								<Radio.Group
-									value={offerWho}
-									onChange={(v) => {
-										setOfferWho(v as "me" | "other");
-										setTried(false);
-									}}
-									label={t`Who signs the offer?`}
-									error={tried && !offerWho ? t`Choose one.` : undefined}
-								>
-									<Stack gap="xs" mt="xs">
-										<Radio value="me" label={t`I do`} data-testid="offer-me" />
-										<Radio
-											value="other"
-											label={t`Someone else`}
-											data-testid="offer-other"
-										/>
-									</Stack>
-								</Radio.Group>
-								{offerWho === "other" && (
-									<PersonFields
-										prefix="offer"
-										person={offerPerson}
-										onChange={setOfferPerson}
-										tried={tried}
-										serverError={(k) => serverError(`offer_signer.${k}`)}
-									/>
-								)}
-							</>
-						)}
-						{step === "dpa" && (
-							<>
-								<Radio.Group
-									value={dpaWho}
-									onChange={(v) => {
-										setDpaWho(v as "same" | "me" | "other");
-										setTried(false);
-									}}
-									label={t`Who signs the data processing agreement?`}
-									description={t`It is a separate document. Some organisations have it signed by someone else, such as their legal representative.`}
-									error={tried && !dpaWho ? t`Choose one.` : undefined}
-								>
-									<Stack gap="xs" mt="xs">
-										{dpaOptions.map((o) => (
-											<Radio
-												key={o}
-												value={o}
-												data-testid={`dpa-${o}`}
-												label={
-													o === "same"
-														? t`The same person who signs the offer`
-														: o === "me"
-															? t`I do`
-															: t`Someone else`
+						{step === "signers" && (
+							<Stack gap={0}>
+								<Rows>
+									{KINDS.map((kind) => {
+										const holder = who(holders[kind]);
+										const holderName = holder?.name ?? "";
+										return (
+											<TaskLine
+												key={kind}
+												testId={`signer-row-${kind}`}
+												marker={<KindIcon kind="sign" quiet={!holder} />}
+												title={signText(kind)}
+												fact={
+													holder ? (
+														holder.email === myEmail ? (
+															<You name={holderName} />
+														) : (
+															<>
+																{holderName} · {holder.email}
+															</>
+														)
+													) : (
+														<Trans>Nobody yet</Trans>
+													)
+												}
+												actions={
+													<Menu position="bottom-start" withinPortal>
+														<Menu.Target>
+															<Button
+																{...secondary}
+																data-testid={`signer-choose-${kind}`}
+															>
+																{holder ? (
+																	<Trans>Change</Trans>
+																) : (
+																	<Trans>Choose someone</Trans>
+																)}
+															</Button>
+														</Menu.Target>
+														<Menu.Dropdown>
+															{candidates.map((c) => (
+																<Menu.Item
+																	key={c.email}
+																	leftSection={
+																		<PersonAvatar person={c} size={28} />
+																	}
+																	onClick={() => choose(kind, c.email)}
+																	data-testid="signer-candidate"
+																>
+																	{c.email === myEmail ? (
+																		<You name={c.name} />
+																	) : (
+																		c.name
+																	)}
+																	{c.outside && (
+																		<Text
+																			span
+																			size="xs"
+																			c="dimmed"
+																			ml="xs"
+																			data-testid="signer-candidate-outside"
+																		>
+																			<Trans>not added yet</Trans>
+																		</Text>
+																	)}
+																</Menu.Item>
+															))}
+															{mayName && (
+																<>
+																	<Menu.Divider />
+																	<Menu.Item
+																		leftSection={
+																			<UserPlusIcon size={20} aria-hidden />
+																		}
+																		onClick={() => setAdding(kind)}
+																		data-testid="signer-new"
+																	>
+																		<Trans>Someone new</Trans>
+																	</Menu.Item>
+																</>
+															)}
+														</Menu.Dropdown>
+													</Menu>
 												}
 											/>
-										))}
-									</Stack>
-								</Radio.Group>
-								{dpaWho === "other" && (
-									<PersonFields
-										prefix="dpa"
-										person={dpaPerson}
-										onChange={setDpaPerson}
-										tried={tried}
-										serverError={(k) => serverError(`dpa_signer.${k}`)}
-									/>
+										);
+									})}
+								</Rows>
+								{tried && need && (
+									<Text size="sm" c="var(--app-danger)" mt="xs">
+										{need}
+									</Text>
 								)}
-							</>
+							</Stack>
 						)}
 						{step === "dpia" && (
 							<>
@@ -357,106 +448,53 @@ export function WhoSigns({
 								</Text>
 							</>
 						)}
-						{mutation.error && !fieldError ? (
-							<ErrorNotice error={mutation.error} />
-						) : null}
+						{error ? <ErrorNotice error={error} /> : null}
 						<ActionRow>
 							<Button
+								variant="subtle"
 								onClick={back}
 								data-testid="who-signs-back"
-								style={{ flexShrink: 0 }}
+								className={classes.back}
 							>
-								{step === "offer" ? <Trans>Cancel</Trans> : <Trans>Back</Trans>}
+								{step === "signers" ? (
+									<Trans>Cancel</Trans>
+								) : (
+									<Trans>Back</Trans>
+								)}
 							</Button>
 							<Button
 								{...fitting}
 								type="submit"
 								variant="filled"
-								loading={mutation.isPending}
+								loading={pending}
 								data-testid="who-signs-next"
 							>
 								<FitLabel>
-									{need ??
-										(step === "dpia" ? (
-											<Trans>Confirm</Trans>
-										) : (
-											<Trans>Next</Trans>
-										))}
+									{step === "dpia" ? (
+										<Trans>Confirm</Trans>
+									) : (
+										<Trans>Next</Trans>
+									)}
 								</FitLabel>
 							</Button>
 						</ActionRow>
 					</Stack>
 				</form>
 			)}
-		</Modal>
+		</StepsModal>
 	);
 }
 
-/** Back on the left and the step's action on the right; dialogs otherwise left-align. */
+/** A row of steps: Back on the left, quiet; the step's action on the right (rules.css). */
 function ActionRow({ children }: { children: ReactNode }) {
 	return (
-		<Group
-			justify="space-between"
-			wrap="nowrap"
-			style={{ justifyContent: "space-between" }}
-		>
+		<Group data-steps justify="space-between" wrap="nowrap">
 			{children}
 		</Group>
 	);
 }
 
-/** The person who signs: email first, as that is what people have at hand. */
-function PersonFields({
-	prefix,
-	person,
-	onChange,
-	tried,
-	serverError,
-}: {
-	prefix: string;
-	person: Person;
-	onChange: (p: Person) => void;
-	tried: boolean;
-	serverError: (key: string) => string | undefined;
-}) {
-	const gap = missing(person);
-	return (
-		<Stack gap="sm">
-			<TextInput
-				label={t`Their email address`}
-				type="email"
-				autoComplete="off"
-				data-autofocus
-				value={person.email}
-				onChange={(e) => onChange({ ...person, email: e.currentTarget.value })}
-				error={
-					tried && gap === "email"
-						? person.email.trim()
-							? t`This is not an email address.`
-							: t`The email address is empty.`
-						: serverError("email")
-				}
-				data-testid={`${prefix}-email`}
-			/>
-			<TextInput
-				label={t`Their name`}
-				autoComplete="off"
-				value={person.name}
-				onChange={(e) => onChange({ ...person, name: e.currentTarget.value })}
-				error={
-					tried && gap === "name" ? t`The name is empty.` : serverError("name")
-				}
-				data-testid={`${prefix}-name`}
-			/>
-			<TextInput
-				label={t`Their job title`}
-				description={t`Optional. It goes on the signature.`}
-				autoComplete="off"
-				value={person.job}
-				onChange={(e) => onChange({ ...person, job: e.currentTarget.value })}
-				error={serverError("role")}
-				data-testid={`${prefix}-job`}
-			/>
-		</Stack>
-	);
+/** A name with "(you)" after it. */
+function You({ name }: { name: string }) {
+	return <Trans>{name} (you)</Trans>;
 }

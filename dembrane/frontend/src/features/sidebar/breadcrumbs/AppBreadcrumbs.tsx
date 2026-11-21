@@ -8,6 +8,10 @@ import { useChat } from "@/components/chat/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
 import { useConversationById } from "@/components/conversation/hooks";
 import { useProjectById } from "@/components/project/hooks";
+import {
+	isSectionKey,
+	type SectionKey,
+} from "@/components/project/portal-editor/sectionKeys";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useSidebarView } from "../hooks/useSidebarView";
 
@@ -45,6 +49,7 @@ const WORKSPACE_SETTINGS_LABELS: Record<string, string> = {
 
 const PROJECT_SECTION_LABELS: Record<string, string> = {
 	access: "Access",
+	brief: "Project brief",
 	canvases: "Library",
 	chats: "Ask",
 	conversation: "Conversation",
@@ -63,6 +68,16 @@ const PROJECT_SECTION_LABELS: Record<string, string> = {
 	report: "Report",
 	upload: "Upload",
 	usage: "Usage",
+};
+
+// The portal editor's pages (ECHO-1060), one label for each of SECTION_KEYS.
+const PORTAL_PAGE_LABELS: Record<SectionKey, string> = {
+	about: "About",
+	explore: "Explore",
+	finish: "Finish",
+	privacy: "Privacy",
+	verify: "Verify",
+	welcome: "Welcome",
 };
 
 const USER_SETTINGS_LABELS: Record<string, string> = {
@@ -284,7 +299,25 @@ export const AppBreadcrumbs = () => {
 				if (section === "access") out.push({ label: "Access" });
 				else if (section === "usage") out.push({ label: "Usage" });
 				else if (section === "export") out.push({ label: "Export" });
-				else if (section === "overview") out.push({ label: "General" });
+				else if (section === "advanced") out.push({ label: "Advanced" });
+				return out;
+			}
+			case "project-portal": {
+				if (workspace) {
+					pushWorkspaceCrumbs(workspace);
+				}
+				if (projectQuery.data?.name) {
+					out.push({
+						href: `/w/${params.workspaceId}/projects/${params.projectId}/home`,
+						label: projectQuery.data.name,
+					});
+				}
+				out.push({
+					href: `/w/${params.workspaceId}/projects/${params.projectId}/portal/welcome`,
+					label: "Portal editor",
+				});
+				if (isSectionKey(params.section))
+					out.push({ label: PORTAL_PAGE_LABELS[params.section] });
 				return out;
 			}
 		}

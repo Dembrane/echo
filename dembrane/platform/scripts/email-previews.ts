@@ -60,6 +60,14 @@ const previews: Record<string, Preview> = {
     template: "account_signer_invite",
     data: { ...offer, inviter_name: "Bram Jansen" },
   }),
+  account_room_invite: catalog({
+    template: "account_room_invite",
+    data: {
+      org_name: offer.org_name,
+      inviter_name: "Bram Jansen",
+      room_url: `${D}/o/1/account/join?invite=abc`,
+    },
+  }),
   account_document_withdrawn: catalog({
     template: "account_document_withdrawn",
     data: {

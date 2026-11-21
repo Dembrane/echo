@@ -43,25 +43,35 @@ const recording = vi.hoisted(() => ({
 }));
 
 const dropped = vi.hoisted(() => ({
+	accept: undefined as unknown,
 	files: [] as { name: string; type: string }[],
 }));
 
 vi.mock("./hooks", () => ({ useConversationUploader: () => uploader }));
 vi.mock("./Dropzone", () => ({
-	CommonDropzone: ({ onDrop }: { onDrop: (files: File[]) => void }) => (
-		<button
-			type="button"
-			onClick={() =>
-				onDrop(
-					dropped.files.map(
-						(f) => new File([new Uint8Array(6000)], f.name, { type: f.type }),
-					),
-				)
-			}
-		>
-			drop
-		</button>
-	),
+	CommonDropzone: ({
+		onDrop,
+		accept,
+	}: {
+		onDrop: (files: File[]) => void;
+		accept?: unknown;
+	}) => {
+		dropped.accept = accept;
+		return (
+			<button
+				type="button"
+				onClick={() =>
+					onDrop(
+						dropped.files.map(
+							(f) => new File([new Uint8Array(6000)], f.name, { type: f.type }),
+						),
+					)
+				}
+			>
+				drop
+			</button>
+		);
+	},
 }));
 vi.mock("@/components/project/hooks", () => ({
 	useProjectById: () => ({ isLoading: false }),
@@ -180,6 +190,17 @@ it("keeps Upload files enabled when some files can still upload", async () => {
 	fireEvent.click(button);
 	await waitFor(() => expect(uploader.uploadFiles).toHaveBeenCalled());
 	expect((button as HTMLButtonElement).disabled).toBe(false);
+});
+
+it("hands the drop zone the audio accept setting, not a list to print", async () => {
+	renderDropzone();
+	fireEvent.click(screen.getByTestId("conversation-upload-button"));
+	await screen.findByText("drop");
+	const accept = dropped.accept as Record<string, string[]>;
+	expect(Object.keys(accept)).toContain("audio/mpeg");
+	expect(Object.values(accept).flat()).toEqual(
+		expect.arrayContaining([".mp3", ".m4a", ".qta", ".opus"]),
+	);
 });
 
 const renderFailed = (error: Error) => {

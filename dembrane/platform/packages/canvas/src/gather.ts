@@ -1,4 +1,5 @@
 import { type AccessStore, resolveProject } from "@dembrane/access";
+import { contextForPrompt } from "@dembrane/core";
 import { directusTime, isRecord, type Json, orStr, pyStr, truthy, utcNowIso } from "./py";
 import type { CanvasStore } from "./storage";
 
@@ -102,7 +103,7 @@ export async function executeGatherSpec(
     id: args.projectId,
     workspace_id: project.workspace_id ?? null,
     name: project.name ?? null,
-    context: project.context ?? null,
+    context: contextForPrompt(project.context),
     goal: await d.store.goalContent(args.projectId),
     language: truthy(project.language) ? project.language : "en",
     anonymize_transcripts: truthy(project.anonymize_transcripts),

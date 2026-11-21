@@ -233,9 +233,11 @@ export function ShareControls({
 export function EventPrintoutsItem({
 	workspaceId,
 	projectId,
+	onClick,
 }: {
 	workspaceId: string;
 	projectId: string;
+	onClick?: () => void;
 }) {
 	return (
 		<Button
@@ -243,6 +245,7 @@ export function EventPrintoutsItem({
 			component={I18nLink}
 			to={`/w/${workspaceId}/projects/${projectId}/host-guide?print=1`}
 			target="_blank"
+			onClick={onClick}
 			leftSection={<PrinterIcon size={20} />}
 			{...testId("share-event-printouts")}
 		>

@@ -21,6 +21,7 @@ export {
   cleanEmail,
   configWithBooking,
   flatMirrors,
+  HANDOVER_SET_VERSION,
   HANDOVER_TTL_MS,
   type Handover,
   handoverFrom,

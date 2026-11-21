@@ -1,21 +1,21 @@
 export {
   type AllowanceAccount,
-  allowanceForCountedProject,
   allowanceForProject,
   allowanceForWorkspace,
-  isSampleProject,
   type ProjectAllowance,
   projectAllowance,
 } from "./account";
 export {
   AI_SPEND_KEY,
   type AiBudget,
+  type AiPayer,
   aiBudgetFor,
   aiBudgetForProject,
   aiBudgetForWorkspace,
   requireAccountBudget,
   requireAiBudget,
   requireAiBudgetForWorkspace,
+  requireAiRequest,
 } from "./budget";
 export { type FreeLimitName, freeLimitError, isFreeLimit } from "./errors";
 export { isFreeTier } from "./free";

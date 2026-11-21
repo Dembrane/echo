@@ -87,7 +87,7 @@ export function bookingPayload(row: PricingRow, environment: string): Record<str
   }
   const start = bookingStart(row);
   if (start) p.booking_start = start;
-  const summary = buildAnswersSummary(row.answers_raw);
+  const summary = buildAnswersSummary(row.answers_raw, row.config);
   if (summary) p.summary = summary;
   return p;
 }
@@ -139,7 +139,7 @@ export function enquiryPayload(row: PricingRow, environment: string): Record<str
     const val = row[k];
     if (val) p[k] = String(val);
   }
-  const summary = buildAnswersSummary(row.answers_raw);
+  const summary = buildAnswersSummary(row.answers_raw, row.config);
   if (summary) p.summary = summary.slice(0, 600);
   return p;
 }

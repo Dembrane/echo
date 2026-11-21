@@ -133,14 +133,14 @@ The assistant saves short notes across chats, without asking first, in three pla
 | Notes about | Where you see them | Who sees them |
 |---|---|---|
 | You | Your user settings, "Assistant" | Only you |
-| The project | The project's "Manage" menu, "General", "Assistant memory" | Everyone who chats in the project |
+| The project | The project's "Brief", "Assistant memory" | Everyone who chats in the project |
 | The workspace | Workspace settings, "Assistant memory" | Everyone in the workspace |
 
 You cannot write or edit a note. "Remove" makes the assistant forget it in every future chat.
 Workspace admins can also give it
 [standing context](./managing-your-workspace.md#give-the-assistant-standing-context).
 
-With "Living canvas and popcorn" switched on for a project (in "Manage", "General",
+With "Living canvas and popcorn" switched on for a project (in "Manage", "Advanced",
 "Experimental"), the assistant can also propose a [canvas](../../features/canvas.md): a live
 page built from recent conversations.
 

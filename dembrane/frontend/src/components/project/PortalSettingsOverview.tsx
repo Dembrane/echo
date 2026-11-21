@@ -155,7 +155,7 @@ export const PortalSettingsOverview = ({
 				<Box>
 					<Button
 						component={I18nLink}
-						to={`${base}/portal-editor`}
+						to={`${base}/portal/welcome`}
 						leftSection={<PaintBrushIcon size={20} />}
 					>
 						<Trans>Portal editor</Trans>

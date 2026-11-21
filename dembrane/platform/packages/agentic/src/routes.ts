@@ -20,6 +20,8 @@ export interface AgenticRoutesDeps {
   readonly logger: Logger;
   readonly config: Pick<Config, "agentic" | "canvas" | "http">;
   readonly now?: () => Date;
+  /** ENABLE_PARTICIPANT_EMAIL: whether the assistant may see and propose email settings. */
+  readonly participantEmail?: boolean;
 }
 
 /**

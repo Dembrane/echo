@@ -12,7 +12,9 @@
     <link rel="icon" type="image/png" href="/src/assets/dembrane-logo.png" media="(prefers-color-scheme: light)" />
     <link rel="icon" type="image/png" href="/src/assets/favicon-dark.png" media="(prefers-color-scheme: dark)" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://tally.so/widgets/embed.js"></script>
+    <!-- Tally's embed, except in the portal editor's preview frame, which sends nothing (ECHO-1062).
+         One line, so a deployment without analytics drops it whole (platform web withoutTally). -->
+    <script>if (window.name !== "dembrane-portal-preview") { var tally = document.createElement("script"); tally.src="https://tally.so/widgets/embed.js"; document.head.appendChild(tally); }</script>
     <title>dembrane</title>
     <!-- The loading sketches (BeautifulLoading): in cache before any page can wait on them -->
     <link rel="preload" href="/loading/mark-anim.png" as="image" type="image/png" />

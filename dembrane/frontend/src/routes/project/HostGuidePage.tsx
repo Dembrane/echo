@@ -247,7 +247,7 @@ const defaultTranslations = {
 				text: "Fokus-/Nicht-Stören-Modus aktivieren, um Benachrichtigungen auf dem Bildschirm zu vermeiden",
 			},
 		],
-		title: "So nehmen Sie auf",
+		title: "So nimmst du auf",
 	},
 	en: {
 		steps: [

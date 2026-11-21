@@ -1,3 +1,4 @@
+import { contextForPrompt } from "@dembrane/core";
 import type { Completer } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
 import type postgres from "postgres";
@@ -112,7 +113,8 @@ const truthyList = (v: unknown) => Array.isArray(v) && v.length > 0;
 export function projectContext(p: Record<string, unknown>): string | null {
   const b: string[] = [];
   if (p.name) b.push(`name: ${p.name}`);
-  if (p.context) b.push(`context: ${p.context}`);
+  const context = contextForPrompt(p.context);
+  if (context) b.push(`context: ${context}`);
   if (p.default_conversation_transcript_prompt)
     b.push(`hotwords that the user set: ${p.default_conversation_transcript_prompt}`);
   if (p.default_conversation_title)

@@ -84,3 +84,12 @@ export function renderPrompt(
   }
   return env.render(file, vars);
 }
+
+/**
+ * A template given as text (not one of templates/), rendered the same way: Jinja's dropped
+ * final newline and Python value printing. For comparing an earlier version of a template
+ * with the current one (packages/verify/test/prompt-pack).
+ */
+export function renderPromptSource(source: string, vars: Record<string, unknown> = {}): string {
+  return env.renderString(source.endsWith("\n") ? source.slice(0, -1) : source, vars);
+}

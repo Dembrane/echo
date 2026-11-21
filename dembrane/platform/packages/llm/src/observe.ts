@@ -155,6 +155,22 @@ function reason(finish: LanguageModelV4FinishReason | undefined): string | null 
   return value ? String(value).toLowerCase() : null;
 }
 
+/**
+ * What a failed model call may put in a log line: its name and HTTP status, no message, no
+ * request, no prompt. The SDK's errors carry the request body, which holds what the host
+ * or the participant gave (a transcript, uploaded material), so a log never takes the error.
+ */
+export function modelErrorShape(err: unknown): { name: string; status: number | null } {
+  const e = err as { name?: unknown; statusCode?: unknown; status?: unknown } | null;
+  const status =
+    typeof e?.statusCode === "number"
+      ? e.statusCode
+      : typeof e?.status === "number"
+        ? e.status
+        : null;
+  return { name: typeof e?.name === "string" ? e.name : "Error", status };
+}
+
 /** What an error is, without its text: a status code, a code, or its class. */
 export function errorLabel(err: unknown): string {
   if (!err || typeof err !== "object") return "error";

@@ -73,8 +73,8 @@ export interface DemoInput {
   readonly feedbackUrl?: string;
   /**
    * Marks each demo project a sample (project.is_sample): its invented conversations then
-   * count toward no usage, limit or number, and it takes no recording. The sales portal
-   * project is never one: it takes real conversations.
+   * count toward no audio limit or number, and it takes no recording; its AI use still
+   * spends the AI budget. The sales portal project is never one: it takes real conversations.
    */
   readonly sample?: boolean;
 }

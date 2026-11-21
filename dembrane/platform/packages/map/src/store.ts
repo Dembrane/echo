@@ -1,4 +1,4 @@
-import { newId } from "@dembrane/core";
+import { contextForPrompt, newId } from "@dembrane/core";
 import type postgres from "postgres";
 
 /**
@@ -298,6 +298,6 @@ export class MapStore {
   /** The project's name and context, which the title and fact-check prompts carry. */
   async projectContext(projectId: string): Promise<[string, string]> {
     const row = await this.one("SELECT name, context FROM project WHERE id = $1", [projectId]);
-    return [String(row?.name ?? ""), String(row?.context ?? "")];
+    return [String(row?.name ?? ""), contextForPrompt(row?.context) ?? ""];
   }
 }

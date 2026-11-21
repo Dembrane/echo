@@ -32,10 +32,41 @@ function deviceId(): string {
 
 export class AuthError extends Error {
 	readonly errors: { message: string; extensions: { code: string } }[];
-	constructor(message: string, code: string) {
+	/** The HTTP status of the refusal, when it came from a response. */
+	readonly status: number | null;
+	/** How many seconds the server asked to wait before trying again, when it said. */
+	readonly retryAfterSeconds: number | null;
+	constructor(
+		message: string,
+		code: string,
+		extra: { status?: number; retryAfterSeconds?: number | null } = {},
+	) {
 		super(message);
 		this.errors = [{ extensions: { code }, message }];
+		this.status = extra.status ?? null;
+		this.retryAfterSeconds = extra.retryAfterSeconds ?? null;
 	}
+}
+
+/**
+ * The wait a rate-limited answer names: Better Auth's X-Retry-After header, a standard
+ * Retry-After in seconds, or the platform limiter's `params.retry_after_seconds`. Null
+ * when the answer names none.
+ */
+export function retryAfterOf(res: Response, data: unknown): number | null {
+	const seconds = (value: unknown): number | null => {
+		const n = typeof value === "string" ? Number(value.trim()) : value;
+		return typeof n === "number" && Number.isFinite(n) && n > 0
+			? Math.ceil(n)
+			: null;
+	};
+	const params = (data as { params?: { retry_after_seconds?: unknown } } | null)
+		?.params;
+	return (
+		seconds(res.headers.get("X-Retry-After")) ??
+		seconds(res.headers.get("Retry-After")) ??
+		seconds(params?.retry_after_seconds)
+	);
 }
 
 async function post<T>(path: string, body: unknown): Promise<T> {
@@ -49,7 +80,10 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 	if (!res.ok) {
 		const code =
 			typeof data?.code === "string" ? data.code : `HTTP_${res.status}`;
-		throw new AuthError(messageFor(code, data?.message), code);
+		throw new AuthError(messageFor(code, data?.message), code, {
+			retryAfterSeconds: res.status === 429 ? retryAfterOf(res, data) : null,
+			status: res.status,
+		});
 	}
 	return data as T;
 }
@@ -93,7 +127,9 @@ export async function signIn(
 	if (!otp) throw new AuthError("Two-factor code required.", "INVALID_OTP");
 	try {
 		await post("/two-factor/verify-totp", { code: otp });
-	} catch {
+	} catch (e) {
+		// A wait is a wait, not a wrong code: the login page counts it down.
+		if (e instanceof AuthError && e.status === 429) throw e;
 		throw new AuthError("Invalid user OTP.", "INVALID_OTP");
 	}
 }

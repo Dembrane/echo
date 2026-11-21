@@ -1,6 +1,6 @@
 ---
 title: Setting up the portal
-description: Every setting of the portal editor in the order you see it. Language, name and email, legal basis, tutorial, tags, Explore, Verify, the texts participants read, key terms, anonymisation and titles.
+description: Every setting of the portal editor, page by page, in the order participants meet them. Welcome, Privacy, About, Explore, Verify and Finish, with a live preview.
 audience: host
 ---
 
@@ -9,15 +9,20 @@ audience: host
 The portal editor decides what participants see and what happens to their recording. Open
 "Portal editor" in the project sidebar. Your changes save by themselves. For a first session,
 three things are worth five minutes: the "Language", the "Page title" with its "Page content",
-and the "Key terms".
+and the "Key terms", which you set in "Brief".
 
-"Show preview" opens a "Live preview" of the real start page next to the settings. Press
-"Refresh" in the preview to see your latest changes. The QR code and the link are not here.
+The editor has its own menu, one page per part of the portal: "Welcome", "Privacy",
+"About", "Explore", "Verify" and "Finish". Each page shows its options one at a time: the
+open one has its field, the others show their value in one line. "Next" takes you to the
+next option, and after the last one to the next page.
+
+Next to the options, a phone shows what participants see, with your changes before they
+are saved. On a phone, press "Preview" under the options. The QR code and the link are not here.
 They are on the project's "Overview", in the "Take part" card.
 
 With the "Observer" role you can read the settings and not change them.
 
-## "Basic settings"
+## "Welcome"
 
 ### "Language"
 
@@ -30,16 +35,25 @@ Choose from English, Dutch, German, Spanish, French, Italian, Ukrainian and Czec
   switch language, and uses the hint when the audio leaves room for doubt.
 - A Ukrainian or Czech portal shows the tutorial and privacy cards in English.
 
-### "Ask for name?" and "Ask for email?"
+### "Tutorial cards"
 
-"Ask for name?" is on in a new project. A participant then has to fill in "Session name"
-before recording. Tell people what to enter: a table number or a group name works as well as
-a person's name. With the name off and no tags, the portal has nothing to ask and starts the
-conversation right after the cards.
+| Option | Participants see |
+|---|---|
+| No tutorial (the default) | The privacy card only. |
+| "Basic (essential tutorial slides)" | Six short cards about dembrane and how to take part, then the privacy card. |
+| "Advanced (tips and best practices)" | The basic cards and the privacy card, then three tips: "Reduce background noise", "Strong internet connection" and "Don't lock your device!". |
 
-With "Ask for email?" on, the thank you page asks "Do you want to stay in the loop?" and
-people can leave one or more addresses. You see them in "Edit conversation" under
-"Participant email", behind "Show".
+For a room of first-time users, "Advanced" says what you would otherwise have to say
+yourself.
+
+### "Page title" and "Page content"
+
+"Page title" sits at the top of the recording screen; "Page content" under it, for as long as
+participants record. You can format the text. Put your question in "Page content". It stays on
+the screen while people talk, and dembrane reads the title and the content when it writes
+summaries.
+
+## "Privacy"
 
 ### "Legal basis"
 
@@ -58,16 +72,31 @@ worth following: "Only change this setting in consultation with the responsible 
 data protection within your organisation." More in
 [data ownership and compliance](../../features/data-ownership-and-compliance.md).
 
-### "Select tutorial"
+### "Anonymize transcripts" (Beta)
 
-| Option | Participants see |
-|---|---|
-| No tutorial (the default) | The privacy card only. |
-| "Basic (essential tutorial slides)" | Six short cards about dembrane and how to take part, then the privacy card. |
-| "Advanced (tips and best practices)" | The basic cards and the privacy card, then three tips: "Reduce background noise", "Strong internet connection" and "Don't lock your device!". |
+With "Enable transcript anonymization" on, new transcripts have personal information (names,
+emails, phone numbers, addresses) replaced with placeholders such as `<redacted_name>`.
 
-For a room of first-time users, "Advanced" says what you would otherwise have to say
-yourself.
+- For an anonymised conversation you cannot play the audio, download the audio or
+  retranscribe.
+- Participants are told on the recording screen that the transcript is anonymised and that
+  the host cannot listen to the recording.
+- Names you listed as key terms are replaced too.
+- It cannot be undone for conversations that were already processed. Switch it on before the
+  session starts.
+
+## "About"
+
+### "Ask for name?" and "Ask for email?"
+
+"Ask for name?" is on in a new project. A participant then has to fill in "Session name"
+before recording. Tell people what to enter: a table number or a group name works as well as
+a person's name. With the name off and no tags, the portal has nothing to ask and starts the
+conversation right after the cards.
+
+With "Ask for email?" on, the thank you page asks "Do you want to stay in the loop?" and
+people can leave one or more addresses. You see them in "Edit conversation" under
+"Participant email", behind "Show".
 
 ### "Tags"
 
@@ -78,18 +107,28 @@ good start.
 
 Deleting a tag removes it from the conversations that carry it.
 
-## "Participant features"
+### "Auto-generate titles" (Beta)
+
+Gives each conversation a short title about its topic once the summary is written. The name
+the participant entered is kept separately. With the switch on, dembrane also gives the
+conversation up to three of the project's existing tags. "Custom title prompt" lets you steer
+how titles are written.
+
+## "Explore"
 
 ### "Explore" (Beta)
 
 Switch on "Enable Explore" and participants get a button labelled "ECHO" while they record.
 After 60 seconds of recording they can ask dembrane for a written reply that helps them go
 deeper. A language model writes it from what they said so far, your project context and
-summaries of the project's other conversations. Recording continues in the meantime. After a
-reply, Explore is unavailable for 2 minutes.
+summaries of the project's other conversations ("Cross-pollination", on by default: switch it
+off to keep each reply to the participant's own conversation). Recording continues in the
+meantime. After a reply, Explore is unavailable for 2 minutes.
 
 "Mode" sets the kind of reply: "Default", "Brainstorm ideas" or "Custom". "Custom" adds a
 "Reply prompt" in which you describe the reply you want.
+
+## "Verify"
 
 ### "Verify" (Beta)
 
@@ -107,58 +146,31 @@ You see approved outcomes only. They are on the conversation's page under "Outco
 dembrane uses them when it writes the summary. The participant's side is in
 [refining and verifying](../participant/refining-and-verifying.md).
 
+## "Finish"
+
 ### "Report notifications"
 
 "Enable report notifications" appears when "Ask for email?" is on. With it on, the thank you
 page tells participants they only get a message when you make a report, and that they can opt
 out. The email itself goes out when you publish a report. See [reports](./reports.md).
 
-## "Portal content"
+### "Thank you page content" and "dembrane event invitation"
 
-| Setting | Where participants see it |
-|---|---|
-| "Page title" | At the top of the recording screen. |
-| "Page content" | Under the title, for as long as they record. You can format the text. |
-| "Thank you page content" | After "Finish". Left empty, the page says "Thank you for participating!". |
-| "dembrane event invitation" | A card at the end of the thank you page that invites participants to run their own event with dembrane. |
+"Thank you page content" shows after "Finish". Left empty, the page says "Thank you for
+participating!". In the thank you text, `{{CONVERSATION_ID}}` and `{{PROJECT_ID}}` are
+replaced by the real values. That helps when you link to a follow-up form.
 
-Put your question in "Page content". It stays on the screen while people talk, and dembrane
-reads the title and the content when it writes summaries.
+"dembrane event invitation" is a card at the end of the thank you page that invites
+participants to run their own event with dembrane. "Show the invitation" is on by default. On
+the free plan you cannot switch it off: "Switching it off comes with a paid plan."
 
-In the thank you text, `{{CONVERSATION_ID}}` and `{{PROJECT_ID}}` are replaced by the real
-values. That helps when you link to a follow-up form.
+## Key terms
 
-"Show the invitation" is on by default. On the free plan you cannot switch it off: "Switching
-it off comes with a paid plan."
-
-## "Advanced settings"
-
-### "Key terms"
-
+Key terms are in "Brief" in the project sidebar; the "Verify" page shows them read-only.
 The names, places, organisations and jargon you expect to hear. Press Enter after each term.
 Key terms tell transcription how to spell words it does not know, and they also reach
 summaries and Explore replies. Fill them in before the session: they apply to audio
 transcribed from then on.
-
-### "Anonymize transcripts" (Beta)
-
-With "Enable transcript anonymization" on, new transcripts have personal information (names,
-emails, phone numbers, addresses) replaced with placeholders such as `<redacted_name>`.
-
-- For an anonymised conversation you cannot play the audio, download the audio or
-  retranscribe.
-- Participants are told on the recording screen that the transcript is anonymised and that
-  the host cannot listen to the recording.
-- Names you listed as key terms are replaced too.
-- It cannot be undone for conversations that were already processed. Switch it on before the
-  session starts.
-
-### "Auto-generate titles" (Beta)
-
-Gives each conversation a short title about its topic once the summary is written. The name
-the participant entered is kept separately. With the switch on, dembrane also gives the
-conversation up to three of the project's existing tags. "Custom title prompt" lets you steer
-how titles are written.
 
 ## A good first setup
 

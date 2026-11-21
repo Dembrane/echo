@@ -38,7 +38,7 @@ Reports have their own ways of sharing. See [reports](./reports.md).
 
 ## Sending data to another system
 
-- [Webhooks](./webhooks-and-integrations.md), "Automation" in the product, send a message
+- [Webhooks](./webhooks-and-integrations.md), under "Manage", "Advanced" in the product, send a message
   to your own system when something happens in a project. The message for a summarised
   conversation carries the transcript and the summary.
 - [MCP](./mcp-and-bring-your-own-llm.md) lets an assistant such as Claude or ChatGPT read

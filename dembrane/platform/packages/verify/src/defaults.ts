@@ -1,6 +1,7 @@
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import { and, eq, isNull, sql } from "drizzle-orm";
+import { PREVIOUS_TOPICS } from "./previous-defaults";
 
 const { languages, verification_topic, verification_topic_translations: translations } = schema;
 
@@ -20,154 +21,197 @@ interface DefaultTopic {
   readonly key: string;
   readonly icon: string;
   readonly sort: number;
+  /** The instruction in English: what the database holds and every other language reads. */
   readonly prompt: string;
+  /** The approved Dutch instruction, used when the project's language is Dutch. */
+  readonly promptNl: string;
   readonly labels: Readonly<Record<(typeof DEFAULT_LANGUAGES)[number]["code"], string>>;
 }
 
-/** The global topics every project offers, copied from server/dembrane/seed.py. */
+/**
+ * The global topics every project offers (ECHO-1052), in the order hosts see them. Short,
+ * checkable drafts a table can read aloud and correct: the shared rules (length, "one
+ * person" versus "the group", first and last line) live in generate_artifact. The keys
+ * are the ones the Python stack seeded, so stored selections keep working; `heard` is new.
+ * Labels other than English and Dutch are model-translated.
+ */
 export const DEFAULT_TOPICS: readonly DefaultTopic[] = [
   {
     key: "agreements",
     icon: ":white_check_mark:",
     sort: 1,
     prompt:
-      "Extract the concrete agreements and shared understandings from this conversation. " +
-      "Focus on points where multiple participants explicitly or implicitly aligned. " +
-      "Include both major decisions and small points of consensus. Present these as clear, " +
-      "unambiguous statements that all participants would recognize as accurate. Distinguish " +
-      "between firm agreements and tentative consensus. If participants used different words " +
-      "to express the same idea, synthesize into shared language. Format as a living document " +
-      "of mutual understanding. Output character should be diplomatic but precise, like meeting " +
-      "minutes with soul.",
+      "List 3 to 5 points this group mostly agreed on, one sentence each, at most 20 words. " +
+      "Then 'Also heard:' 1 or 2 views that differed. If none, write 'Nobody clearly disagreed. Is that right?'",
+    promptNl:
+      "Noem 3 tot 5 punten waar deze groep het grotendeels over eens was, elk één zin van hooguit 20 woorden. " +
+      "Daarna 'Ook gehoord:' 1 of 2 afwijkende standpunten. Zo niet: 'Niemand week duidelijk af. Klopt dat?'",
     labels: {
-      "en-US": "What we actually agreed on",
-      "nl-NL": "Waar we het over eens werden",
-      "de-DE": "Worauf wir uns wirklich geeinigt haben",
-      "es-ES": "En qué estuvimos de acuerdo",
-      "fr-FR": "Ce qu'on a décidé ensemble",
-      "it-IT": "Su cosa ci siamo accordati",
-      "uk-UA": "Про що ми домовились",
-      "cs-CZ": "Na čem jsme se shodli",
-    },
-  },
-  {
-    key: "gems",
-    icon: ":mag:",
-    sort: 2,
-    prompt:
-      "Identify the valuable insights that emerged unexpectedly or were mentioned briefly but " +
-      "contain significant potential. Look for: throwaway comments that solve problems, questions " +
-      "that reframe the entire discussion, metaphors that clarify complex ideas, connections between " +
-      "seemingly unrelated points, and wisdom hiding in personal anecdotes. Present these as discoveries " +
-      "worth preserving, explaining why each gem matters. These are the insights people might forget but " +
-      "shouldn't. Output character should be excited and precise.",
-    labels: {
-      "en-US": "Hidden gems",
-      "nl-NL": "Verborgen parels",
-      "de-DE": "Verborgene Schätze",
-      "es-ES": "Joyas ocultas",
-      "fr-FR": "Pépites cachées",
-      "it-IT": "Perle nascoste",
-      "uk-UA": "Приховані перлини",
-      "cs-CZ": "Skryté klenoty",
-    },
-  },
-  {
-    key: "truths",
-    icon: ":eyes:",
-    sort: 3,
-    prompt:
-      "Surface the uncomfortable realities acknowledged in this conversation - the elephants in the room that " +
-      "got named, the difficult facts accepted, the challenging feedback given or received. Include systemic " +
-      "problems identified, personal blind spots revealed, and market realities confronted. Present these with " +
-      "compassion but without sugar-coating. Frame them as shared recognitions that took courage to voice. " +
-      "These truths are painful but necessary for genuine progress. Output character should be gentle but " +
-      "unflinching.",
-    labels: {
-      "en-US": "Painful truths",
-      "nl-NL": "Pijnlijke waarheden",
-      "de-DE": "Unbequeme Wahrheiten",
-      "es-ES": "Verdades incómodas",
-      "fr-FR": "Vérités difficiles",
-      "it-IT": "Verità scomode",
-      "uk-UA": "Болючі істини",
-      "cs-CZ": "Bolestivé pravdy",
-    },
-  },
-  {
-    key: "moments",
-    icon: ":rocket:",
-    sort: 4,
-    prompt:
-      "Capture the moments when thinking shifted, new possibilities emerged, or collective understanding jumped " +
-      "to a new level. Identify: sudden realizations, creative solutions, perspective shifts, moments when " +
-      "complexity became simple, and ideas that energized the group. Show both the breakthrough itself and what " +
-      "made it possible. These are the moments when the conversation transcended its starting point. Output " +
-      "character should be energetic and forward-looking.",
-    labels: {
-      "en-US": "Breakthrough moments",
-      "nl-NL": "Doorbraken",
-      "de-DE": "Durchbrüche",
-      "es-ES": "Momentos decisivos",
-      "fr-FR": "Moments décisifs",
-      "it-IT": "Momenti di svolta",
-      "uk-UA": "Моменти прориву",
-      "cs-CZ": "Průlomové okamžiky",
-    },
-  },
-  {
-    key: "actions",
-    icon: ":arrow_upper_right:",
-    sort: 5,
-    prompt:
-      "Synthesize the group's emerging sense of direction and next steps. Include: explicit recommendations made, " +
-      "implicit preferences expressed, priorities that emerged through discussion, and logical next actions even " +
-      "if not explicitly stated. Distinguish between unanimous direction and majority leanings. Present as " +
-      "provisional navigation rather than fixed commands. This is the group's best current thinking about the " +
-      "path forward. Output character should be pragmatic but inspirational.",
-    labels: {
-      "en-US": "What we think should happen",
-      "nl-NL": "Wat we denken dat moet gebeuren",
-      "de-DE": "Was wir denken, das passieren sollte",
-      "es-ES": "Lo que creemos que debe pasar",
-      "fr-FR": "Ce qu'on pense qu'il faut faire",
-      "it-IT": "Cosa pensiamo debba succedere",
-      "uk-UA": "Що, на нашу думку, має статися",
-      "cs-CZ": "Co by se podle nás mělo stát",
+      "en-US": "Table check",
+      "nl-NL": "Tafelcheck",
+      "de-DE": "Tischcheck",
+      "es-ES": "Repaso de la mesa",
+      "fr-FR": "Point de la table",
+      "it-IT": "Verifica del tavolo",
+      "uk-UA": "Перевірка за столом",
+      "cs-CZ": "Kontrola u stolu",
     },
   },
   {
     key: "disagreements",
     icon: ":warning:",
+    sort: 2,
+    prompt:
+      "List up to 3 points where views stayed different. For each, give each side in one neutral sentence, " +
+      "without saying who is right.",
+    promptNl:
+      "Noem hooguit 3 punten waar de meningen verschillend bleven. Geef per punt elke kant in één neutrale zin, " +
+      "zonder te zeggen wie gelijk heeft.",
+    labels: {
+      "en-US": "Differences",
+      "nl-NL": "Verschillen",
+      "de-DE": "Unterschiede",
+      "es-ES": "Diferencias",
+      "fr-FR": "Différences",
+      "it-IT": "Differenze",
+      "uk-UA": "Розбіжності",
+      "cs-CZ": "Rozdíly",
+    },
+  },
+  {
+    key: "actions",
+    icon: ":arrow_upper_right:",
+    sort: 3,
+    prompt:
+      "List up to 5 actions or proposals that were said out loud, with who or what was named, if anyone. " +
+      "Mark each 'agreed' or 'suggested by some'. Do not add actions nobody said.",
+    promptNl:
+      "Noem hooguit 5 acties of voorstellen die hardop zijn genoemd, met wie of wat erbij genoemd werd. " +
+      "Markeer elk als 'afgesproken' of 'voorgesteld door sommigen'. Voeg geen acties toe die niemand noemde.",
+    labels: {
+      "en-US": "Decisions and actions",
+      "nl-NL": "Besluiten en acties",
+      "de-DE": "Entscheidungen und Aufgaben",
+      "es-ES": "Decisiones y acciones",
+      "fr-FR": "Décisions et actions",
+      "it-IT": "Decisioni e azioni",
+      "uk-UA": "Рішення та дії",
+      "cs-CZ": "Rozhodnutí a úkoly",
+    },
+  },
+  {
+    key: "gems",
+    icon: ":mag:",
+    sort: 4,
+    prompt:
+      "List up to 3 ideas or stories that were mentioned only briefly but could matter, each in one sentence " +
+      "using the speaker's own words where possible.",
+    promptNl:
+      "Noem hooguit 3 ideeën of verhalen die maar kort genoemd werden maar ertoe kunnen doen, elk in één zin, " +
+      "zo veel mogelijk in de eigen woorden van de spreker.",
+    labels: {
+      "en-US": "Ideas worth keeping",
+      "nl-NL": "Ideeën om te bewaren",
+      "de-DE": "Ideen, die bleiben sollten",
+      "es-ES": "Ideas para guardar",
+      "fr-FR": "Idées à garder",
+      "it-IT": "Idee da conservare",
+      "uk-UA": "Ідеї, які варто зберегти",
+      "cs-CZ": "Nápady, které stojí za to uchovat",
+    },
+  },
+  {
+    key: "truths",
+    icon: ":eyes:",
+    sort: 5,
+    prompt:
+      "List up to 3 difficult points the group named itself: problems, risks or doubts. Use their wording. " +
+      "Do not judge people.",
+    promptNl:
+      "Noem hooguit 3 lastige punten die de groep zelf benoemde: problemen, risico's of twijfels. " +
+      "Gebruik hun woorden. Oordeel niet over mensen.",
+    labels: {
+      "en-US": "Hard points",
+      "nl-NL": "Lastige punten",
+      "de-DE": "Schwierige Punkte",
+      "es-ES": "Puntos difíciles",
+      "fr-FR": "Points difficiles",
+      "it-IT": "Punti difficili",
+      "uk-UA": "Складні моменти",
+      "cs-CZ": "Obtížné body",
+    },
+  },
+  {
+    key: "heard",
+    icon: ":ear:",
     sort: 6,
     prompt:
-      "Document the points of productive tension where different perspectives remained distinct but respected. " +
-      "Include: fundamental differences in approach, varying priorities, different risk tolerances, and contrasting " +
-      "interpretations of data. Frame these not as failures to agree but as valuable diversity of thought. Show how " +
-      "each perspective has merit. These disagreements are features, not bugs - they prevent premature convergence " +
-      "and keep important tensions alive. Output character should be respectful and balanced.",
+      "Give back what this person or group told us in up to 5 short points, in their own words where possible, " +
+      "in the order they said it. No interpretation.",
+    promptNl:
+      "Geef in hooguit 5 korte punten terug wat deze persoon of groep ons vertelde, zo veel mogelijk in hun " +
+      "eigen woorden en in de volgorde waarin het gezegd is. Geen interpretatie.",
     labels: {
-      "en-US": "Moments we agreed to disagree",
-      "nl-NL": "Waar we het oneens bleven",
-      "de-DE": "Worüber wir uns nicht einig wurden",
-      "es-ES": "Donde no coincidimos",
-      "fr-FR": "Là où on n'était pas d'accord",
-      "it-IT": "Dove non eravamo d'accordo",
-      "uk-UA": "Де ми погодились не погоджуватись",
-      "cs-CZ": "Kdy jsme se shodli, že se neshodneme",
+      "en-US": "What we heard",
+      "nl-NL": "Wat we hoorden",
+      "de-DE": "Was wir gehört haben",
+      "es-ES": "Lo que escuchamos",
+      "fr-FR": "Ce que nous avons entendu",
+      "it-IT": "Cosa abbiamo sentito",
+      "uk-UA": "Що ми почули",
+      "cs-CZ": "Co jsme slyšeli",
+    },
+  },
+  {
+    key: "moments",
+    icon: ":rocket:",
+    sort: 7,
+    prompt: "Name up to 2 moments where the group's view changed, saying what changed it.",
+    promptNl:
+      "Noem hooguit 2 momenten waarop het beeld van de groep veranderde en wat dat veroorzaakte.",
+    labels: {
+      "en-US": "Turning points",
+      "nl-NL": "Kantelpunten",
+      "de-DE": "Wendepunkte",
+      "es-ES": "Puntos de inflexión",
+      "fr-FR": "Tournants",
+      "it-IT": "Punti di svolta",
+      "uk-UA": "Поворотні моменти",
+      "cs-CZ": "Zlomové okamžiky",
     },
   },
 ];
 
+/** The key a project falls back to when it selected nothing: one topic, so no picker. */
+export const DEFAULT_TOPIC_KEY = "agreements";
+
+/**
+ * The instruction for a global topic in the project's language: the approved Dutch text
+ * for a Dutch project, otherwise the stored text. A topic someone edited in the database
+ * (its prompt is no longer the shipped English one) keeps its own text in every language.
+ */
+export function defaultTopicPrompt(
+  key: string,
+  stored: string | null,
+  language: string | null | undefined,
+): string | null {
+  const topic = DEFAULT_TOPICS.find((t) => t.key === key);
+  if (!topic || stored !== topic.prompt) return stored;
+  return (language ?? "").toLowerCase().startsWith("nl") ? topic.promptNl : topic.prompt;
+}
+
 export interface SeedTopicsResult {
   readonly topicsAdded: number;
+  /** Global topics still on the pre-ECHO-1052 text, moved to the new prompt, sort and icon. */
+  readonly topicsUpdated: number;
   readonly translationsAdded: number;
   readonly translationsUpdated: number;
 }
 
 /**
  * Adds any missing default language, global topic and label, and resets a changed label, as
- * the Python API did at startup. An existing topic's prompt, icon and sort are left alone.
+ * the Python API did at startup. A global topic still holding the text the Python stack
+ * seeded moves to the current prompt, sort and icon; one someone edited is left alone.
  */
 export async function seedDefaultTopics(db: Db): Promise<SeedTopicsResult> {
   return db.transaction(async (tx) => {
@@ -181,6 +225,7 @@ export async function seedDefaultTopics(db: Db): Promise<SeedTopicsResult> {
       .onConflictDoNothing();
     const now = new Date().toISOString();
     let topicsAdded = 0;
+    let topicsUpdated = 0;
     let translationsAdded = 0;
     let translationsUpdated = 0;
     for (const topic of DEFAULT_TOPICS) {
@@ -202,6 +247,21 @@ export async function seedDefaultTopics(db: Db): Promise<SeedTopicsResult> {
         .from(verification_topic)
         .where(and(eq(verification_topic.key, topic.key), isNull(verification_topic.project_id)));
       if (!global) continue;
+      const previous = PREVIOUS_TOPICS.find((t) => t.key === topic.key);
+      if (previous) {
+        const moved = await tx
+          .update(verification_topic)
+          .set({ prompt: topic.prompt, icon: topic.icon, sort: topic.sort, date_updated: now })
+          .where(
+            and(
+              eq(verification_topic.key, topic.key),
+              isNull(verification_topic.project_id),
+              eq(verification_topic.prompt, previous.prompt),
+            ),
+          )
+          .returning({ key: verification_topic.key });
+        topicsUpdated += moved.length;
+      }
       const existing = await tx
         .select()
         .from(translations)
@@ -219,6 +279,6 @@ export async function seedDefaultTopics(db: Db): Promise<SeedTopicsResult> {
         }
       }
     }
-    return { topicsAdded, translationsAdded, translationsUpdated };
+    return { topicsAdded, topicsUpdated, translationsAdded, translationsUpdated };
   });
 }

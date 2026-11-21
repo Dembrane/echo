@@ -358,18 +358,24 @@ run("map routes and the AI budget", () => {
     expect(enqueued).toHaveLength(1);
   });
 
-  test("paid and sample projects never refuse", async () => {
-    const paid = await project("changemaker");
-    const sample = await project("free", true);
-    for (const p of [paid, sample]) {
-      await spend(p.accountId, LIMIT * 2);
-      const resultId = await savedMap(p.pid);
-      expect((await generate(p.pid)).status).toBe(202);
-      expect((await title(resultId)).status).toBe(200);
-      expect((await factCheck(resultId)).status).toBe(200);
-      // Past the budget check: a v1 map has no groups.
-      expect((await group(resultId)).status).toBe(409);
-    }
+  test("paid projects never refuse", async () => {
+    const p = await project("changemaker");
+    await spend(p.accountId, LIMIT * 2);
+    const resultId = await savedMap(p.pid);
+    expect((await generate(p.pid)).status).toBe(202);
+    expect((await title(resultId)).status).toBe(200);
+    expect((await factCheck(resultId)).status).toBe(200);
+    // Past the budget check: a v1 map has no groups.
+    expect((await group(resultId)).status).toBe(409);
+  });
+
+  test("a free sample project at zero refuses with no model call", async () => {
+    const { pid, accountId } = await project("free", true);
+    const resultId = await savedMap(pid);
+    await spend(accountId, LIMIT);
+    for (const call of [generate(pid), title(resultId), factCheck(resultId)])
+      expect(await call).toMatchObject({ status: 402, limit: "ai_budget" });
+    expect(completer.calls).toHaveLength(0);
   });
 
   test("a cached title reads nothing but its fact-checks", async () => {
@@ -396,7 +402,7 @@ run("map routes and the AI budget", () => {
       expect(await ask()).toMatchObject({ cached: false });
       c.log.length = 0;
       expect(await ask()).toMatchObject({ title: "Ferry timetables", cached: true });
-      // No budget read for a title already made (account, sample, override and usage before).
+      // No budget read for a title already made (account, override and usage before).
       const budget = /as own_id|is_sample|ai_budget|free_usage|tier_limit/;
       expect(c.log.filter((l) => budget.test(l.q))).toEqual([]);
     } finally {

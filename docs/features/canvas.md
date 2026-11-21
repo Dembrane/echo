@@ -15,7 +15,7 @@ removed."
 
 ## Switch canvases on for a project
 
-Open the project's "Manage", then "General", then "Experimental", and switch on "Living
+Open the project's "Manage", then "Advanced", then "Experimental", and switch on "Living
 canvas and popcorn". Anyone who can edit the project can do this. It needs no paid plan.
 
 > [!NOTE]

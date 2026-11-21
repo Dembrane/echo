@@ -231,3 +231,50 @@ test("only a PR preview names its pull request in the runtime config", () => {
   expect(previewRuntime("staging", web)).toEqual({});
   expect(previewRuntime("prod", web)).toEqual({});
 });
+
+const PID = "01a1aaff-233f-71c7-a330-34d273960099";
+const portal = createHandler({
+  distDir: dist,
+  release: "r1",
+  runtime: {
+    env: "testing",
+    role: "portal",
+    apiBase: "/api",
+    dashboardUrl: "https://dash.example",
+  },
+  headers: {},
+});
+const location = async (path: string) => {
+  const res = await portal(new Request(`https://portal.example${path}`));
+  return { status: res.status, location: res.headers.get("location") };
+};
+
+test("the portal sends anything that isn't a participant link to the dashboard, query kept", async () => {
+  expect(await location("/")).toEqual({ status: 302, location: "https://dash.example/" });
+  expect(await location("/?ref=email")).toEqual({
+    status: 302,
+    location: "https://dash.example/?ref=email",
+  });
+  for (const path of ["/o/123/account", "/login", "/nl-NL", "/home", `/projects/${PID}/overview`])
+    expect(await location(path)).toEqual({ status: 302, location: `https://dash.example${path}` });
+});
+
+test("the portal never redirects off the dashboard host", async () => {
+  expect((await location("//evil.example/x")).location).toBe("https://dash.example/evil.example/x");
+  expect((await location("/\\evil.example")).location).toBe("https://dash.example/evil.example");
+});
+
+test("the portal serves participant links, its files and its API", async () => {
+  for (const path of [`/${PID}`, `/nl-NL/${PID}/start`, `/en-US/${PID}/conversation/${PID}/text`]) {
+    const res = await portal(new Request(`https://portal.example${path}`));
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("<html>app</html>");
+  }
+  expect((await portal(new Request("https://portal.example/version.json"))).status).toBe(200);
+  expect((await portal(new Request("https://portal.example/health"))).status).toBe(200);
+});
+
+test("the dashboard serves every path itself", async () => {
+  expect((await handler()(new Request("https://dash.example/"))).status).toBe(200);
+  expect((await handler()(new Request("https://dash.example/login"))).status).toBe(200);
+});

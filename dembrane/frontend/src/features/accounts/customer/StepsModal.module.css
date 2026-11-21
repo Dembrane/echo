@@ -1,0 +1,30 @@
+/* The full-screen sheet on a phone: the body takes the height under the title, what the
+ * dialog shows fills it, and the row of steps goes to its foot (margin-top: auto). While
+ * the steps above it scroll, the row stays at the bottom of the screen, on the sheet's
+ * parchment with the quiet rule above it, flush with the bottom edge. */
+.sheet {
+	display: flex;
+	flex-direction: column;
+}
+.body {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	padding-bottom: 0;
+}
+.body > *,
+.body > form > :global(.mantine-Stack-root) {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+}
+.body :global([data-steps]) {
+	background: var(--app-background);
+	border-top: var(--app-stroke) solid var(--app-quiet);
+	bottom: 0;
+	margin-inline: calc(-1 * var(--mantine-spacing-md));
+	margin-top: auto;
+	padding: 12px var(--mantine-spacing-md);
+	position: sticky;
+	z-index: 2;
+}

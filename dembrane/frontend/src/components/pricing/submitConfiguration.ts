@@ -1,6 +1,6 @@
 import { api } from "@/lib/api";
 
-/** The write the upgrade prompt makes when someone continues to the website.
+/** The write the upgrade prompt makes when it opens.
  *
  *   POST /api/v2/pricing-configurations
  *
@@ -24,8 +24,11 @@ export type HandoverPayload = {
 	project_id?: string;
 };
 
+/** `handover` is true only where the website writes too, so it can find this row. */
+export type HandoverSaved = { reference: string; handover?: boolean };
+
 export const saveHandover = (row: HandoverPayload) =>
-	api.post<unknown, { reference: string }>(PRICING_CONFIGURATION_PATH, {
+	api.post<unknown, HandoverSaved>(PRICING_CONFIGURATION_PATH, {
 		...row,
 		answers_raw: {},
 		config: { handover: true },

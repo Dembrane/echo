@@ -1,4 +1,3 @@
-import { ORG_ROLE_POLICIES, type OrgRole } from "@dembrane/access";
 import { sendEmail } from "@dembrane/account";
 import {
   ConflictError,
@@ -9,7 +8,17 @@ import {
 } from "@dembrane/core";
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail, resolveLocale, translator } from "@dembrane/i18n";
-import { customerOrg, documentFor } from "./access";
+import {
+  ACCOUNT_ROLES,
+  assertMayNameSigner,
+  bringsInNewPeople,
+  customerOrg,
+  customerOrgAs,
+  documentFor,
+  inRoom,
+  roomOrg,
+  verifiedEmail,
+} from "./access";
 import { checkBilling, countryCodeOf, countryName, type Delivery } from "./billing-rules";
 import { customerEmailFor } from "./customer-email";
 import type { AccountsDeps, Tx } from "./deps";
@@ -41,26 +50,42 @@ import {
   ticketView,
 } from "./views";
 
-/** The customer's account, as one page reads it: tasks, documents, billing, questions. */
+/**
+ * The customer's account, as one page reads it: tasks, documents, billing, questions. A
+ * room member reads the offer and the DPA and every task on them, answers and reviews
+ * included (the room is open among colleagues): nothing about paying or billing details,
+ * and no questions to dembrane.
+ */
 export async function accountPage(d: AccountsDeps, who: Signed, orgId: string) {
-  const org = await customerOrg(d, who, orgId, "account:read");
-  const [docs, sigs, tasks, tickets, billing, reminded] = await Promise.all([
+  const { org, via, role } = await roomOrg(d, who, orgId);
+  const room = via === "room";
+  const mayNameSigner = bringsInNewPeople(role);
+  const [allDocs, sigs, allTasks, allTickets, billing, reminded] = await Promise.all([
     store.documents(d.db, org.id),
     store.signatures(d.db, org.id),
     store.tasks(d.db, org.id),
-    store.tickets(d.db, org.id),
-    store.billing(d.db, org.id),
+    room ? [] : store.tickets(d.db, org.id),
+    room ? null : store.billing(d.db, org.id),
     store.lastReminders(d.db, org.id),
   ]);
+  const docs = room ? allDocs.filter(inRoom) : allDocs;
+  const tasks = room
+    ? allTasks.filter(
+        (t) => t.kind !== "billing_details" && docs.some((x) => x.id === t.documentId),
+      )
+    : allTasks;
+  const tickets = room ? [] : allTickets;
   const messages = await store.messages(
     d.db,
     tickets.map((t) => t.id),
   );
-  const pricing = org.origin_pricing_configuration_id
-    ? await store.pricingById(d.db, org.origin_pricing_configuration_id)
-    : null;
+  const pricing =
+    !room && org.origin_pricing_configuration_id
+      ? await store.pricingById(d.db, org.origin_pricing_configuration_id)
+      : null;
   return {
     organisation: { id: org.id, name: org.name, account_stage: org.account_stage },
+    access: via,
     // Next steps first: what waits on the customer, then what waits on us, then the rest.
     tasks: tasks
       .filter((t) => t.status !== "withdrawn")
@@ -75,6 +100,8 @@ export async function accountPage(d: AccountsDeps, who: Signed, orgId: string) {
           d.settings.company,
           customerBase(org.id),
           reminded.get(x.id) ?? null,
+          room,
+          mayNameSigner,
         ),
       ),
     billing: billingView(billing),
@@ -92,17 +119,19 @@ const taskOrder = (s: string) => {
 /** One document with everything the signing screen shows. */
 export async function readDocument(d: AccountsDeps, who: Signed, orgId: string, docId: string) {
   const a = await documentFor(d, who, orgId, docId, "account:read");
-  return documentDetail(d, a.doc, a.via, who);
+  return documentDetail(d, a.doc, a.via, who, true, bringsInNewPeople(a.role));
 }
 
 export async function documentDetail(
   d: AccountsDeps,
   doc: DocumentRow,
-  via: "member" | "signer" | "staff",
+  via: "member" | "signer" | "room" | "staff",
   /** The staff member asking; signs the email in `customer_email`. */
   viewer: Signed | null = null,
   /** False leaves `customer_email` out: the preview seed runs without the server catalogs. */
   withEmail = true,
+  /** The caller may name someone to sign: an owner or admin reading as a member. */
+  mayNameSigner = false,
 ) {
   const [sig, allFields, terms, sla, dpa, reminded, all] = await Promise.all([
     store.signatureOf(d.db, doc.id),
@@ -118,8 +147,11 @@ export async function documentDetail(
   const content = doc.kind === "offer" ? (doc.content as OfferContent | null) : null;
   const awaiting = doc.status === "signed" ? [] : awaitingSlots(content, all);
   const mine = customerSlot(awaiting);
-  const fields =
-    via === "staff" || slotsOf(content).length === 1
+  // A room member reads: nothing to fill in, nothing to confirm, no billing details.
+  const reader = via === "room";
+  const fields = reader
+    ? []
+    : via === "staff" || slotsOf(content).length === 1
       ? allFields
       : mine
         ? fieldsOf(allFields, mine)
@@ -131,6 +163,10 @@ export async function documentDetail(
     store.billing(d.db, doc.orgId),
   ]);
   const toTheCustomer = via === "staff" && doc.status === "sent" && doc.requiresSignature;
+  // A room member sees who signed and when; the signer's address, VAT number and what
+  // they filled in stay with those who run the account (the signed PDF stays readable).
+  const readerSafe = (v: ReturnType<typeof signatureView>) =>
+    reader ? { ...v, address: null, vat_number: null, values: {} } : v;
   const isEvent = (doc.content as OfferContent | null)?.template === "event";
   const has = (pick: (f: (typeof fields)[number]) => boolean) => fields.some(pick);
   const placeholders = {
@@ -147,6 +183,8 @@ export async function documentDetail(
       d.settings.company,
       via === "staff" ? staffBase(doc.orgId) : customerBase(doc.orgId),
       reminded.get(doc.id) ?? null,
+      reader,
+      mayNameSigner,
     ),
     body: doc.body,
     content: (doc.content ?? null) as OfferContent | null,
@@ -173,15 +211,16 @@ export async function documentDetail(
       .filter((x) => x && (x.kind !== "sla" || !isEvent)),
     signing_note: doc.requiresSignature ? signingNote(doc) : null,
     // The sentence the signer confirms; the page fills in the three values it asks for.
-    confirmation: doc.requiresSignature
-      ? {
-          dpa_authorised: confirmationText(doc, { ...placeholders, dpa_authorised: true }),
-          dpa_not_authorised:
-            doc.kind === "offer" && !(doc.content as OfferContent | null)?.dpa_separate
-              ? confirmationText(doc, { ...placeholders, dpa_authorised: false })
-              : null,
-        }
-      : null,
+    confirmation:
+      doc.requiresSignature && !reader
+        ? {
+            dpa_authorised: confirmationText(doc, { ...placeholders, dpa_authorised: true }),
+            dpa_not_authorised:
+              doc.kind === "offer" && !(doc.content as OfferContent | null)?.dpa_separate
+                ? confirmationText(doc, { ...placeholders, dpa_authorised: false })
+                : null,
+          }
+        : null,
     signatures: all.map((x) => ({
       slot: x.slot as Slot,
       name: x.typedName,
@@ -191,14 +230,18 @@ export async function documentDetail(
     })),
     awaiting_signatures: doc.requiresSignature && doc.status !== "draft" ? awaiting : [],
     signature: sig
-      ? signatureView(
-          sig,
-          via === "staff" && sig.evidenceKey
-            ? `${staffBase(doc.orgId)}/documents/${doc.id}/evidence`
-            : undefined,
+      ? readerSafe(
+          signatureView(
+            sig,
+            via === "staff" && sig.evidenceKey
+              ? `${staffBase(doc.orgId)}/documents/${doc.id}/evidence`
+              : undefined,
+          ),
         )
       : null,
-    prefill: signingPrefill(org?.name ?? null, billing, doc),
+    prefill: reader
+      ? { organisation: null, address: null, po_number: null }
+      : signingPrefill(org?.name ?? null, billing, doc),
     access: via,
     staff_url:
       via === "staff" ? staffDocumentUrl(d.settings.dashboardUrl, doc.orgId, doc.id) : null,
@@ -314,7 +357,8 @@ const REMIND_LIMIT = { name: "account_signer_remind", capacity: 1, windowSeconds
  * to that address reaches this one document and nothing else of the organisation. They
  * also show among the members as invited, and the signing task waits on them: their
  * signature completes it. Naming a different person than the one already named goes on
- * the timeline as a replacement.
+ * the timeline as a replacement. Only owners and admins name or change the signer: someone
+ * who is not a member is invited in, and bringing someone new in is theirs to do.
  */
 export async function nameSigner(
   d: AccountsDeps,
@@ -323,7 +367,9 @@ export async function nameSigner(
   docId: string,
   signer: { name: string; email: string; role: string | null },
 ) {
-  const org = await customerOrg(d, who, orgId, "account:sign");
+  const { org, role } = await customerOrgAs(d, who, orgId, "account:sign");
+  // Before anything else, so a refusal costs none of the organisation's namings.
+  assertMayNameSigner(role);
   const doc = await store.document(d.db, org.id, docId);
   if (!doc || doc.status === "draft") throw new NotFoundError("document.not_found");
   if (!doc.requiresSignature || !["sent", "viewed"].includes(doc.status))
@@ -445,12 +491,27 @@ async function emailSigner(
 
 type Person = { name: string; email: string; role: string | null };
 
+/** The DPA an offer went out with: the one pinning the same DPA text, in one of `statuses`. */
+export function dpaOf(
+  docs: readonly DocumentRow[],
+  offer: DocumentRow,
+  statuses: readonly string[],
+): DocumentRow | null {
+  return (
+    docs.find(
+      (x) => x.kind === "dpa" && x.dpaTextId === offer.dpaTextId && statuses.includes(x.status),
+    ) ?? null
+  );
+}
+
 /**
  * The answers to "who signs": who signs the offer (null: the person answering), whether the
  * same person signs the DPA, else who does (null: the person answering), and whether they
  * want their own DPIA. The DPA is its own document, sent with the offer (openDpa); the
  * answers only say whose each signature is. Asked once per offer, before signing; changing
- * it later goes through a question to us.
+ * it later goes through a question to us. An answer that names anyone is for owners and
+ * admins: from Billing it is refused whole, before anything is applied, and "I sign" (no
+ * one named) is theirs to give.
  */
 export async function answerWhoSigns(
   d: AccountsDeps,
@@ -464,7 +525,11 @@ export async function answerWhoSigns(
     dpia: boolean;
   },
 ) {
-  const org = await customerOrg(d, who, orgId, "account:sign");
+  const { org, role } = await customerOrgAs(d, who, orgId, "account:sign");
+  const dpaSigner = input.dpa_same ? input.offer_signer : input.dpa_signer;
+  // Refused whole, before anything is applied: also when the DPA no longer waits, and the
+  // person would only be named in the answer.
+  if (input.offer_signer || dpaSigner) assertMayNameSigner(role);
   const task = await store.task(d.db, org.id, taskId);
   if (task?.code !== "who_signs") throw new NotFoundError("task.not_found");
   if (!["open", "changes_requested"].includes(task.status))
@@ -472,12 +537,8 @@ export async function answerWhoSigns(
   const offer = task.documentId ? await store.document(d.db, org.id, task.documentId) : null;
   if (!offer || !["sent", "viewed"].includes(offer.status))
     throw new ConflictError("document.not_awaiting_signature");
-  const dpaSigner = input.dpa_same ? input.offer_signer : input.dpa_signer;
   // The DPA the offer went out with, while it still waits on a signature.
-  const dpa = (await store.documents(d.db, org.id)).find(
-    (x) =>
-      x.kind === "dpa" && x.dpaTextId === offer.dpaTextId && ["sent", "viewed"].includes(x.status),
-  );
+  const dpa = dpaOf(await store.documents(d.db, org.id), offer, ["sent", "viewed"]);
   const me = await store.identity(d.db, who.directusUserId);
   const self = me?.name ? `${me.name} (${me.email})` : (me?.email ?? "the person answering");
   const person = (p: Person | null) =>
@@ -941,23 +1002,46 @@ export async function recordTutorialOpened(d: AccountsDeps, who: Signed, orgId: 
   return { recorded: true as const };
 }
 
-/** The roles whose holders run an account, straight from the access policies. */
-const ACCOUNT_ROLES = (Object.keys(ORG_ROLE_POLICIES) as OrgRole[]).filter((r) =>
-  ORG_ROLE_POLICIES[r].has("account:read"),
-);
+const DOCUMENT_KINDS = ["offer", "dpa", "invoice", "other"] as const;
+const isDocumentKind = (v: unknown): v is (typeof DOCUMENT_KINDS)[number] =>
+  typeof v === "string" && (DOCUMENT_KINDS as readonly string[]).includes(v);
 
 /**
  * Every organisation whose account the caller runs, with task counts and the next task:
- * the "Tasks 1/2" entry and the org picker. One indexed query; cheap on every page load.
+ * the "Tasks 1/2" entry and the org picker; then those where the caller is a member with
+ * room access, marked so, counting only what a room member reads and with nothing waiting
+ * on them. Two indexed queries; cheap on every page load.
  */
 export async function tasksSummary(d: AccountsDeps, who: Signed) {
   if (!who.appUserId) return [];
-  const rows = await store.tasksSummary(d.db, who.appUserId, ACCOUNT_ROLES);
-  return rows.map(({ next_task, ...r }) => ({
+  const [rows, roomRows] = await Promise.all([
+    store.tasksSummary(d.db, who.appUserId, ACCOUNT_ROLES),
+    verifiedEmail(d, who).then((email) =>
+      store.roomTasksSummary(d.db, who.appUserId as string, email, ACCOUNT_ROLES),
+    ),
+  ]);
+  const room = roomRows.map((r) => ({
     ...r,
+    access: "room" as const,
+    account_stage: r.account_stage as "prospect" | "customer" | "churned" | null,
+    tasks_waiting: 0,
+    next_task_title: null,
+    next_task_code: null,
+    next_task_params: null,
+    next_task_document_id: null,
+    next_task_document_kind: null,
+  }));
+  const account = rows.map(({ next_task, ...r }) => ({
+    ...r,
+    access: "account" as const,
     account_stage: r.account_stage as "prospect" | "customer" | "churned" | null,
     next_task_title: next_task?.code ? null : (next_task?.title ?? null),
     next_task_code: isTaskCode(next_task?.code) ? next_task.code : null,
     next_task_params: next_task?.code ? ((next_task.params ?? {}) as Record<string, string>) : null,
+    next_task_document_id: next_task?.document_id ?? null,
+    next_task_document_kind: isDocumentKind(next_task?.document_kind)
+      ? next_task.document_kind
+      : null,
   }));
+  return [...account, ...room].sort((a, b) => a.name.localeCompare(b.name));
 }
