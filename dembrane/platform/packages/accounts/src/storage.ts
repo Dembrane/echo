@@ -1148,17 +1148,20 @@ export const store = {
     },
   ) {
     const like = opts.q ? `%${opts.q.replace(/[\\%_]/g, (m) => `\\${m}`)}%` : null;
+    // Drizzle drops the table name from select-list columns, so a bare `${org.id}` here
+    // would bind to the subquery's own `id`.
+    const orgId = sql`${org}.${sql.identifier(org.id.name)}`;
     return c
       .select({
         id: org.id,
         name: org.name,
         stage: org.account_stage,
         created_at: org.created_at,
-        open_tasks: sql<number>`(select count(*)::int from account_task t where t.org_id = ${org.id} and t.status in ('open', 'changes_requested'))`,
-        waiting_on_us: sql<number>`(select count(*)::int from account_task t where t.org_id = ${org.id} and t.status = 'submitted')`,
-        unsigned_documents: sql<number>`(select count(*)::int from account_document d where d.org_id = ${org.id} and d.requires_signature and d.status in ('sent', 'viewed'))`,
-        overdue_invoices: sql<number>`(select count(*)::int from account_document d where d.org_id = ${org.id} and d.kind = 'invoice' and (d.invoice_status = 'overdue' or (d.invoice_status = 'open' and d.due_on < current_date)))`,
-        open_tickets: sql<number>`(select count(*)::int from account_ticket k where k.org_id = ${org.id} and k.status <> 'closed')`,
+        open_tasks: sql<number>`(select count(*)::int from account_task t where t.org_id = ${orgId} and t.status in ('open', 'changes_requested'))`,
+        waiting_on_us: sql<number>`(select count(*)::int from account_task t where t.org_id = ${orgId} and t.status = 'submitted')`,
+        unsigned_documents: sql<number>`(select count(*)::int from account_document d where d.org_id = ${orgId} and d.requires_signature and d.status in ('sent', 'viewed'))`,
+        overdue_invoices: sql<number>`(select count(*)::int from account_document d where d.org_id = ${orgId} and d.kind = 'invoice' and (d.invoice_status = 'overdue' or (d.invoice_status = 'open' and d.due_on < current_date)))`,
+        open_tickets: sql<number>`(select count(*)::int from account_ticket k where k.org_id = ${orgId} and k.status <> 'closed')`,
       })
       .from(org)
       .where(
