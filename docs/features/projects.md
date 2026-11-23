@@ -26,19 +26,24 @@ The full table is on [roles and permissions](./roles-and-permissions.md).
 
 ## Create a project
 
-Choose "Create project" on the workspace home. There are four steps, and only the name is
-required.
+Choose "Create project" on the workspace home. On Home, the page that asks "Where would you
+like to go?", "Create" above the search box does the same: "Quick project" or "Project from
+a template". If you can create projects in more than one workspace, it first asks "Which
+workspace?".
 
-1. "Name". Fill in "Project name" and "Project context". The context says what the project
-   is about and what you want to learn. dembrane uses it when it writes summaries, answers
-   in chat and replies to participants. Switch on "Set up with the assistant after creating"
-   if you want to land in a chat that helps you shape the project.
-2. "Key terms". Add the people, places, organisations and jargon you expect to hear, so that
-   [transcription](./transcription.md) spells them right. You can skip this and add them
-   later.
-3. "Access". Choose "Open to the workspace" (the default) or "Private". Private needs a
-   workspace on Innovator or higher.
-4. "Review". Check the summary, then choose "Create project".
+1. Choose how to start. Under the place to drop an agenda, invitation or run sheet, the
+   first card, "Quick start", makes a plain project: nothing is set up for you, and you can
+   change every setting later. The cards after it are formats, such as "Table
+   conversations" or "Focus group", that set the project up for that kind of session. "See
+   all formats" shows every format with filters. "Quick project" on Home skips this step
+   and starts from "Quick start".
+2. Fill in "Project name" and, if you like, "Project context". The context says what the
+   project is about and what you want to learn. dembrane uses it when it writes summaries,
+   answers in chat and replies to participants.
+3. Choose "Create project". "More options" holds the key terms, who can see the project
+   ("Open to the workspace" or "Private", which needs Innovator or higher), "Set up with the
+   assistant after creating" where it is offered, and a summary to check. You can skip all
+   of it.
 
 You land on the project's "Overview", or in a chat with the assistant if you switched that
 on.

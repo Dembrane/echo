@@ -161,11 +161,35 @@ describe("workspace home for a host with no project of their own", () => {
 		});
 	});
 
-	it("starts blank or uploads from the quiet links", async () => {
+	it("offers Quick start as the first card, and goes on with it as a plain project", async () => {
 		renderHome();
-		fireEvent.click(await screen.findByTestId("template-picker-start-blank"));
+		await screen.findByTestId("template-picker");
+		const cards = screen
+			.getAllByRole("radio")
+			.map((r) => r.getAttribute("data-testid"));
+		expect(cards[0]).toBe("template-card-blank");
+		expect(screen.queryByTestId("template-picker-start-blank")).toBeNull();
+		// Nothing is chosen for the host.
+		expect(screen.getByTestId("project-home-create-button")).toHaveProperty(
+			"disabled",
+			true,
+		);
+		fireEvent.click(screen.getByTestId("template-card-blank"));
+		fireEvent.click(screen.getByTestId("project-home-create-button"));
 		expect(navigate).toHaveBeenCalledWith("/w/w1/projects/new?template=blank");
-		fireEvent.click(screen.getByTestId("template-picker-upload"));
+		expect(tracked).toHaveBeenCalledWith("project_template_selected", {
+			featured: false,
+			filters_active: [],
+			setup: null,
+			surface: "workspace_home",
+			template_key: "blank",
+			verbs: [],
+		});
+	});
+
+	it("uploads from the quiet link", async () => {
+		renderHome();
+		fireEvent.click(await screen.findByTestId("template-picker-upload"));
 		expect(navigate).toHaveBeenCalledWith("/w/w1/projects/new?template=upload");
 	});
 

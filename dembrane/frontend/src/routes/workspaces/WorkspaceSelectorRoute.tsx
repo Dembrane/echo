@@ -4,28 +4,39 @@ import {
 	Box,
 	Button,
 	CloseButton,
+	Group,
 	Stack,
 	Text,
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useDisclosure, useDocumentTitle } from "@mantine/hooks";
 import { House, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
 import { Navigate } from "react-router";
+import { useCurrentUser } from "@/components/auth/hooks";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { FetchErrorPanel } from "@/components/common/FetchErrorPanel";
+import classes from "@/components/common/ResultRow/ResultRow.module.css";
+import { CreateOrganisationModal } from "@/components/organisation/CreateOrganisationModal";
+import { createAccess } from "@/components/workspace/CreateMenu/access";
+import {
+	CreateMenu,
+	type ProjectStart,
+} from "@/components/workspace/CreateMenu/CreateMenu";
 import { API_BASE_URL } from "@/config";
 import {
 	type SearchHit,
 	useSearchHits,
 } from "@/features/sidebar/hooks/useSearchHits";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useManagedFreeOrg } from "@/hooks/useManagedFreeOrg";
 import { useMyInvites } from "@/hooks/useMyInvites";
 import { useV2Me } from "@/hooks/useV2Me";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { track } from "@/lib/analytics/events";
 import { isOutsiderRole } from "@/lib/roles";
-import classes from "./WorkspaceSelectorRoute.module.css";
 
 // Full-page search over the orgs, workspaces, projects and settings the user
 // can reach. Rich workspace cards live a level down at the org overview.
@@ -189,6 +200,39 @@ export const WorkspaceSelectorRoute = () => {
 
 	const { hits, isFetching } = useSearchHits(q, workspaces);
 
+	// Create: the menu above the search box (createAccess says who may create what). It
+	// reads this page's own answer, loaded before the menu shows, so no item comes late;
+	// the organisations' roles are the org memberships, as me.orgs carries them.
+	const { workspaceId: lastWorkspaceId, setWorkspace } = useWorkspace();
+	const { data: user } = useCurrentUser();
+	const orgCapped = !!useManagedFreeOrg();
+	const [createOrgOpened, createOrgHandlers] = useDisclosure(false);
+	const { projectWorkspaces, canCreateWorkspace } = createAccess({
+		orgs: organisations,
+		projectsBlocked: !!user?.disable_create_project,
+		workspaces,
+	});
+	const startProject = (workspaceId: string, start: ProjectStart) => {
+		// Sync the context first so the create page's workspace queries do not lag.
+		setWorkspace(workspaceId);
+		track("project_create_started");
+		if (start === "template") {
+			navigate(`/w/${workspaceId}/projects/new`);
+			return;
+		}
+		// Quick project is Quick start, the plain project, chosen here: the create page
+		// opens on the name with it, so the choice is counted here, as workspace home does.
+		track("project_template_selected", {
+			featured: false,
+			filters_active: [],
+			setup: null,
+			surface: "home",
+			template_key: "blank",
+			verbs: [],
+		});
+		navigate(`/w/${workspaceId}/projects/new?template=blank`);
+	};
+
 	const onSelect = (hit: SearchHit) => {
 		navigate(hit.href);
 	};
@@ -242,9 +286,28 @@ export const WorkspaceSelectorRoute = () => {
 				<Title order={2}>
 					{firstName ? <Trans>Hi {firstName}</Trans> : <Trans>Hi</Trans>}
 				</Title>
-				<Text size="md" mt={8}>
-					<Trans>Where would you like to go?</Trans>
-				</Text>
+				{/* One row while the lede and Create fit; on a narrow screen Create drops to its
+				    own line, still at the right, rather than splitting the lede. */}
+				<Group justify="space-between" align="center" gap="md" mt={8}>
+					<Text size="md">
+						<Trans>Where would you like to go?</Trans>
+					</Text>
+					<Box ml="auto">
+						<CreateMenu
+							projectWorkspaces={projectWorkspaces}
+							lastWorkspaceId={lastWorkspaceId}
+							canCreateWorkspace={canCreateWorkspace}
+							orgCapped={orgCapped}
+							onProject={startProject}
+							onWorkspace={() => navigate("/w/new")}
+							onOrganisation={createOrgHandlers.open}
+						/>
+					</Box>
+				</Group>
+				<CreateOrganisationModal
+					opened={createOrgOpened}
+					onClose={createOrgHandlers.close}
+				/>
 
 				<TextInput
 					ref={searchInputRef}

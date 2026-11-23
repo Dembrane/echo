@@ -15,8 +15,10 @@ import posthog from "posthog-js";
  *    drawn format cards; pressing a card goes straight to the name (no Continue). "See all
  *    formats" opens the full list with its filters (step "formats"). The review after an
  *    upload is one part per screen, with step events of its own.
+ * 5: Quick start (the plain project) is the first card wherever templates are offered, and
+ *    Home has a Create menu whose "Quick project" lands on the name step with it chosen.
  */
-export const FLOW_VERSION = 4;
+export const FLOW_VERSION = 5;
 
 export type OnboardingStep = "org" | "invite" | "questions";
 /** Flow 2's to 4's steps ("formats" from 4); flow 1 also sent "key_terms", "access", "review". */
@@ -40,7 +42,8 @@ export type DigestReviewStep =
 	| "explore"
 	| "host_steps"
 	| "summary";
-export type TemplateSurface = "create" | "workspace_home";
+/** Where a template was chosen: the create flow, workspace home, Home's Create menu (5). */
+export type TemplateSurface = "create" | "workspace_home" | "home";
 /** A picker filter (ECHO-1053): a verb, the setup, or "Show all". */
 export type TemplateFilterName = "verb" | "setup" | "show_all";
 export type KeyTermsSurface =

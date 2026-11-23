@@ -34,12 +34,19 @@ const cards = () =>
 		.querySelectorAll<HTMLButtonElement>("button[data-testid^=template-card-]");
 
 describe("TemplateRow", () => {
-	it("holds all sixteen cards in one row, the most used first", () => {
+	it("holds Quick start, then all sixteen formats in one row, the most used first", () => {
 		renderRow();
 		const list = [...cards()].map((c) => c.dataset.testid);
-		expect(list).toHaveLength(16);
-		expect(list[0]).toBe("template-card-resident_evening");
-		expect(list[6]).toBe("template-card-round_table");
+		expect(list).toHaveLength(17);
+		expect(list[0]).toBe("template-card-blank");
+		expect(list[1]).toBe("template-card-resident_evening");
+		expect(list[7]).toBe("template-card-round_table");
+		const quick = screen.getByTestId("template-card-blank");
+		expect(quick.textContent).toContain("Quick start");
+		expect(quick.textContent).toContain(
+			"A plain project. Nothing is set up for you, and you can change every setting later.",
+		);
+		expect(quick.querySelector("[data-testid=template-card-tags]")).toBeNull();
 		expect(
 			screen.getByRole("region", { name: "Or start from a format" }),
 		).toBeTruthy();
@@ -57,6 +64,18 @@ describe("TemplateRow", () => {
 		});
 	});
 
+	it("chooses Quick start as a plain project: not featured, no verbs, no setup", () => {
+		const { onChoose } = renderRow();
+		fireEvent.click(screen.getByTestId("template-card-blank"));
+		expect(onChoose).toHaveBeenCalledWith("blank", {
+			featured: false,
+			filtersActive: [],
+			list: "row",
+			setup: null,
+			verbs: [],
+		});
+	});
+
 	it("is one tab stop; the arrow keys, Home and End move along it", () => {
 		renderRow();
 		const all = cards();
@@ -66,11 +85,33 @@ describe("TemplateRow", () => {
 		expect(document.activeElement).toBe(all[1]);
 		expect(all[1]?.tabIndex).toBe(0);
 		fireEvent.keyDown(all[1] as HTMLElement, { key: "End" });
-		expect(document.activeElement).toBe(all[15]);
-		fireEvent.keyDown(all[15] as HTMLElement, { key: "ArrowRight" });
-		expect(document.activeElement).toBe(all[15]);
-		fireEvent.keyDown(all[15] as HTMLElement, { key: "Home" });
+		expect(document.activeElement).toBe(all[16]);
+		fireEvent.keyDown(all[16] as HTMLElement, { key: "ArrowRight" });
+		expect(document.activeElement).toBe(all[16]);
+		fireEvent.keyDown(all[16] as HTMLElement, { key: "Home" });
 		expect(document.activeElement).toBe(all[0]);
+	});
+
+	it("keeps one tab stop when the row shrinks under the focus", () => {
+		const props = { onChoose: vi.fn(), onSeeAll: vi.fn() };
+		const view = render(
+			<Providers>
+				<TemplateRow templates={TEMPLATE_SUMMARIES} {...props} />
+			</Providers>,
+		);
+		const all = cards();
+		all[0]?.focus();
+		fireEvent.keyDown(all[0] as HTMLElement, { key: "End" });
+		expect(cards()[16]?.tabIndex).toBe(0);
+		// A refetch that fails leaves Quick start alone.
+		view.rerender(
+			<Providers>
+				<TemplateRow templates={undefined} failed {...props} />
+			</Providers>,
+		);
+		const left = cards();
+		expect(left).toHaveLength(1);
+		expect(left[0]?.tabIndex).toBe(0);
 	});
 
 	it("names its scroll buttons and the way to all formats", () => {
@@ -83,11 +124,24 @@ describe("TemplateRow", () => {
 		expect(onSeeAll).toHaveBeenCalled();
 	});
 
-	it("waits while the templates load, and keeps all formats when they fail", () => {
+	it("waits while the templates load, with no card yet", () => {
 		renderRow({ templates: undefined });
 		expect(screen.queryByTestId("template-row-list")).toBeNull();
-		cleanup();
-		renderRow({ failed: true, templates: undefined });
+		expect(screen.queryByTestId("template-card-blank")).toBeNull();
+		expect(
+			screen.getByTestId("template-row").querySelector("[aria-busy=true]"),
+		).toBeTruthy();
+	});
+
+	it("offers Quick start alone when the templates fail, and keeps all formats", () => {
+		const { onChoose } = renderRow({ failed: true, templates: undefined });
+		expect([...cards()].map((c) => c.dataset.testid)).toEqual([
+			"template-card-blank",
+		]);
 		expect(screen.getByTestId("template-row-see-all")).toBeTruthy();
+		// One card has nowhere to scroll.
+		expect(screen.queryByRole("button", { name: "More formats" })).toBeNull();
+		fireEvent.click(screen.getByTestId("template-card-blank"));
+		expect(onChoose).toHaveBeenCalledWith("blank", expect.anything());
 	});
 });

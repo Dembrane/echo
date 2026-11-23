@@ -365,7 +365,6 @@ export const ProjectsHomeRoute = () => {
 								})
 							}
 							onUpload={() => startFromTemplate("upload")}
-							onStartBlank={() => startFromTemplate("blank")}
 						/>
 						<Group gap="sm">
 							<CreateProjectButton

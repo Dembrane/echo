@@ -46,6 +46,20 @@ describe("TemplateCard", () => {
 		expect(svg.getAttribute("aria-hidden")).toBe("true");
 	});
 
+	it("shows Quick start with its own drawing, its line, and no tags", () => {
+		renderCard({
+			greatFor:
+				"A plain project. Nothing is set up for you, and you can change every setting later.",
+			name: "Quick start",
+			tags: [],
+			template: "blank",
+		});
+		const card = screen.getByTestId("card");
+		expect(screen.getByTestId("template-illustration-blank")).toBeTruthy();
+		expect(card.textContent).toContain("Quick start");
+		expect(screen.queryByTestId("template-card-tags")).toBeNull();
+	});
+
 	it("shows each tag on its own, and none when there are none", () => {
 		renderCard({ tags: ["World Café", "Explore"] });
 		expect(

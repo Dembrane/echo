@@ -3,10 +3,12 @@ import { expect, type Page, test } from "@playwright/test";
 import { RESIDENT_EVENING_GUIDE } from "../src/components/project/templates/hostGuide.fixture";
 import { grammarAudit } from "./grammar-checks";
 
-// ECHO-1042, ECHO-1053, ECHO-1058: the start screen's row of formats, all formats with each
-// verb filter and the setup filter, the name step with "What this sets up" open, the portal editor's name
-// box label, a host guide a template filled in, and workspace home's first-project state,
-// at desktop and phone width. E2E_SHOTS=<dir> also saves screenshots.
+// ECHO-1042, ECHO-1053, ECHO-1058: the start screen's row of formats (Quick start first),
+// all formats with each verb filter and the setup filter, the name step with "What this
+// sets up" open and from Quick start, the portal editor's name box label, a host guide a
+// template filled in, workspace home's first-project state, and Home's Create menu with
+// its "Which workspace?" question, at desktop and phone width. E2E_SHOTS=<dir> also saves
+// screenshots.
 const shots = process.env.E2E_SHOTS;
 // E2E_GRAMMAR=<file> also runs the rendered design-grammar audit on every screen shot here
 // and appends its findings to that file, one JSON line per screen.
@@ -80,6 +82,48 @@ async function answerApi(page: Page, nl: boolean) {
 	await page.route("**/conversations**", (route) =>
 		route.fulfill({ json: [] }),
 	);
+	// Home (/o): two workspaces in two organisations, so a project asks which.
+	await page.route("**/v2/workspaces", (route) =>
+		route.fulfill({
+			json: {
+				organisations: [
+					{
+						id: "o1",
+						logo_url: null,
+						name: "Sam's organisation",
+						role: "owner",
+						total_members: 1,
+						workspace_count: 1,
+					},
+				],
+				recent_removals: [],
+				workspaces: [
+					{
+						id: "w1",
+						name: "Sam's workspace",
+						org_id: "o1",
+						org_logo_url: null,
+						org_name: "Sam's organisation",
+						role: "owner",
+					},
+					{
+						id: "w2",
+						name: "Neighbourhood panels",
+						org_id: "o2",
+						org_logo_url: null,
+						org_name: "Gemeente Lindenwijk",
+						role: "member",
+					},
+				],
+			},
+		}),
+	);
+	await page.route("**/v2/me/invites**", (route) =>
+		route.fulfill({ json: [] }),
+	);
+	await page.route("**/user-settings/me", (route) =>
+		route.fulfill({ json: {} }),
+	);
 }
 
 for (const size of sizes)
@@ -124,7 +168,14 @@ for (const size of sizes)
 			// Start (ECHO-1058): the upload first, then every format in one row.
 			await expect(page.getByTestId("project-digest-entry")).toBeVisible();
 			const row = page.getByTestId("template-row-list");
-			await expect(row.locator("button")).toHaveCount(16);
+			await expect(row.locator("button")).toHaveCount(17);
+			await expect(row.locator("button").first()).toHaveAttribute(
+				"data-testid",
+				"template-card-blank",
+			);
+			await expect(page.getByTestId("template-card-blank")).toContainText(
+				nl ? "Snelstart" : "Quick start",
+			);
 			await expect(
 				page.getByTestId("template-card-resident_evening"),
 			).toContainText(nl ? "Tafelgesprekken" : "Table conversations");
@@ -143,9 +194,12 @@ for (const size of sizes)
 			// All formats: the filters first, then the grid.
 			await page.getByTestId("template-row-see-all").click();
 			await expect(page.getByTestId("all-formats")).toBeVisible();
-			await expect(
-				page.getByTestId("all-formats-grid").locator("button"),
-			).toHaveCount(16);
+			const grid = page.getByTestId("all-formats-grid").locator("button");
+			await expect(grid).toHaveCount(17);
+			await expect(grid.first()).toHaveAttribute(
+				"data-testid",
+				"template-card-blank",
+			);
 			await shot("02-all-formats");
 			await noSideScroll();
 			for (const verb of VERBS) {
@@ -158,9 +212,12 @@ for (const size of sizes)
 			// The last verb pressed again clears it.
 			await page.getByTestId("template-filter-verb-decide").click();
 			await page.getByTestId("template-filter-setup-many_groups").click();
-			await expect(
-				page.getByTestId("all-formats-grid").locator("button"),
-			).toHaveCount(10);
+			// Ten formats, and Quick start steps aside while a filter is on.
+			await expect(grid).toHaveCount(10);
+			await expect(page.getByTestId("template-card-blank")).toHaveCount(0);
+			await expect(page.getByTestId("template-filter-count")).toHaveText(
+				nl ? "10 sjablonen" : "10 templates",
+			);
 			await shot("03-many-groups");
 			await noSideScroll();
 
@@ -184,6 +241,22 @@ for (const size of sizes)
 			);
 			await page.waitForTimeout(300);
 			await shot("05-name-what-this-sets-up");
+			await noSideScroll();
+
+			// Quick start: one press, then the name, with nothing set up to show.
+			await page.goto(
+				`/e2e/templates-harness.html?path=/${lang}/w/w1/projects/new`,
+			);
+			await page.getByTestId("template-card-blank").click();
+			await expect(
+				page.getByTestId("create-project-chosen-template"),
+			).toHaveText(
+				nl ? "Vertrekpunt: Snelstart" : "Starting from: Quick start",
+			);
+			await expect(
+				page.getByTestId("template-setup-summary-toggle"),
+			).toHaveCount(0);
+			await shot("05b-quick-start-name");
 			await noSideScroll();
 
 			await page.goto(`/e2e/templates-harness.html?path=/${lang}/editor`);
@@ -253,9 +326,36 @@ for (const size of sizes)
 			);
 			await expect(
 				page.getByTestId("contact-sheet").locator("svg"),
-			).toHaveCount(16);
+			).toHaveCount(17);
 			await page.waitForTimeout(200);
 			await shot("10-contact-sheet");
 			await noSideScroll();
+
+			// Home: Create above the search box, its menu, and the question which workspace.
+			await page.goto(`/e2e/templates-harness.html?path=/${lang}/o`);
+			await expect(page.getByTestId("create-menu-button")).toBeVisible();
+			await expect(page.getByRole("combobox")).toBeVisible();
+			await shot("11-home");
+			await noSideScroll();
+			await page.getByTestId("create-menu-button").click();
+			await expect(page.getByTestId("create-menu-quick-project")).toBeVisible();
+			await expect(page.getByRole("menuitem")).toHaveCount(4);
+			await page.waitForTimeout(300);
+			await shot("11b-home-create-menu");
+			await noSideScroll();
+			await page.getByTestId("create-menu-quick-project").click();
+			await expect(page.getByRole("dialog")).toBeVisible();
+			await expect(
+				page.locator("[data-testid^=which-workspace-w]"),
+			).toHaveCount(2);
+			await page.waitForTimeout(300);
+			await shot("11c-home-which-workspace");
+			await noSideScroll();
+			await page.getByTestId("which-workspace-w2").click();
+			await expect(
+				page.getByTestId("create-project-chosen-template"),
+			).toHaveText(
+				nl ? "Vertrekpunt: Snelstart" : "Starting from: Quick start",
+			);
 			expect(errors).toEqual([]);
 		});

@@ -45,12 +45,13 @@ const cards = () =>
 	screen.getAllByRole("radio").map((r) => r.getAttribute("data-testid"));
 
 describe("TemplatePicker", () => {
-	it("asks what the host is going to do and shows the most used cards first", () => {
+	it("asks what the host is going to do and shows Quick start, then the most used cards", () => {
 		renderPicker();
 		expect(
 			screen.getByRole("radiogroup", { name: "What are you going to do?" }),
 		).toBeTruthy();
 		expect(cards()).toEqual([
+			"template-card-blank",
 			"template-card-resident_evening",
 			"template-card-focus_group",
 			"template-card-interviews",
@@ -70,6 +71,7 @@ describe("TemplatePicker", () => {
 		expect(decide.getAttribute("aria-pressed")).toBe("false");
 		fireEvent.click(decide);
 		expect(decide.getAttribute("aria-pressed")).toBe("true");
+		// Only the formats that match: Quick start matches no filter.
 		expect(cards()).toEqual([
 			"template-card-resident_evening",
 			"template-card-working_group",
@@ -85,7 +87,7 @@ describe("TemplatePicker", () => {
 		// Pressing it again clears it.
 		fireEvent.click(decide);
 		expect(onFilterChange).toHaveBeenLastCalledWith("verb", "none");
-		expect(cards()).toHaveLength(6);
+		expect(cards()).toHaveLength(7);
 	});
 
 	it("filters by setup, and both filters together", () => {
@@ -100,12 +102,29 @@ describe("TemplatePicker", () => {
 		]);
 	});
 
-	it("shows all sixteen cards and clears the filters", () => {
+	it("shows Quick start alone when no format fits both filters", () => {
+		renderPicker();
+		fireEvent.click(screen.getByTestId("template-filter-verb-explore"));
+		fireEvent.click(screen.getByTestId("template-filter-setup-one_recording"));
+		expect(screen.getByTestId("template-picker-none").textContent).toBe(
+			"No template fits both. Clear a filter, or use Quick start.",
+		);
+		expect(cards()).toEqual(["template-card-blank"]);
+		expect(screen.getByTestId("template-filter-count").textContent).toBe(
+			"0 templates",
+		);
+	});
+
+	it("shows Quick start and all sixteen formats and clears the filters", () => {
 		const onFilterChange = vi.fn();
 		renderPicker({ onFilterChange });
 		fireEvent.click(screen.getByTestId("template-filter-verb-explore"));
 		fireEvent.click(screen.getByTestId("template-filter-show-all"));
-		expect(cards()).toHaveLength(16);
+		expect(cards()).toHaveLength(17);
+		expect(cards()[0]).toBe("template-card-blank");
+		expect(screen.getByTestId("template-filter-count").textContent).toBe(
+			"17 templates",
+		);
 		expect(
 			screen
 				.getByTestId("template-filter-verb-explore")
@@ -139,6 +158,25 @@ describe("TemplatePicker", () => {
 		).toBe("true");
 	});
 
+	it("hands Quick start out as a plain project, and shows it checked", () => {
+		const onChange = vi.fn();
+		const view = renderPicker({ onChange });
+		fireEvent.click(screen.getByTestId("template-filter-show-all"));
+		fireEvent.click(screen.getByTestId("template-card-blank"));
+		expect(onChange).toHaveBeenCalledWith("blank", {
+			featured: false,
+			filtersActive: ["show_all"],
+			setup: null,
+			verbs: [],
+		});
+		view.unmount();
+		renderPicker({ value: "blank" });
+		const quick = screen.getByTestId("template-card-blank");
+		expect(quick.getAttribute("aria-checked")).toBe("true");
+		expect(quick.textContent).toContain("Quick start");
+		expect(quick.querySelector("[data-testid=template-card-tags]")).toBeNull();
+	});
+
 	it("shows the drawing, Great for and the tags on each card, no feature lines", () => {
 		renderPicker();
 		const evening = screen.getByTestId("template-card-resident_evening");
@@ -162,17 +200,14 @@ describe("TemplatePicker", () => {
 		).toContain("World Café");
 	});
 
-	it("offers Upload recordings and Start blank as quiet links, only when they can be used", () => {
-		const onStartBlank = vi.fn();
+	it("offers Upload recordings as a quiet link, only when it can be used, and no Start blank", () => {
 		const onUpload = vi.fn();
-		const view = renderPicker({ onStartBlank, onUpload });
+		const view = renderPicker({ onUpload });
 		fireEvent.click(screen.getByTestId("template-picker-upload"));
-		fireEvent.click(screen.getByTestId("template-picker-start-blank"));
 		expect(onUpload).toHaveBeenCalled();
-		expect(onStartBlank).toHaveBeenCalled();
-		// Links, not cards.
+		// A link, not a card; Quick start is the card, so there is no Start blank link.
 		expect(cards()).not.toContain("template-card-upload");
-		expect(cards()).not.toContain("template-card-blank");
+		expect(screen.queryByTestId("template-picker-start-blank")).toBeNull();
 		view.unmount();
 		renderPicker();
 		expect(screen.queryByTestId("template-picker-links")).toBeNull();
@@ -185,18 +220,17 @@ describe("TemplatePicker", () => {
 		).toBe("template-picker");
 	});
 
-	it("waits while loading and keeps blank open when the list fails", () => {
+	it("waits while loading and keeps Quick start when the list fails", () => {
 		const view = renderPicker({ templates: undefined });
 		expect(screen.queryAllByRole("radio")).toHaveLength(0);
 		view.unmount();
 		renderPicker({
 			failed: true,
-			onStartBlank: () => {},
 			onUpload: () => {},
 			templates: undefined,
 		});
 		expect(screen.getByTestId("template-picker-failed")).toBeTruthy();
-		expect(screen.getByTestId("template-picker-start-blank")).toBeTruthy();
+		expect(cards()).toEqual(["template-card-blank"]);
 		expect(screen.queryByTestId("template-picker-upload")).toBeNull();
 	});
 });

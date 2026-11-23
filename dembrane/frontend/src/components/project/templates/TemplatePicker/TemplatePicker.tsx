@@ -2,14 +2,16 @@ import { Skeleton } from "@mantine/core";
 import { useId, useState } from "react";
 import { SelectableCardGrid } from "@/components/common/SelectableCardGrid/SelectableCardGrid";
 import {
-	type CardKey,
+	type ChoiceKey,
+	cardFacts,
+	cardLine,
 	cardTags,
-	isCardKey,
+	isChoiceKey,
 	NO_FILTER,
+	offeredCards,
 	type TemplateFilter,
 	type TemplateKey,
 	type TemplateSummary,
-	templateGreatFor,
 	templateName,
 	visibleCards,
 } from "../projectTemplates";
@@ -21,7 +23,8 @@ import { TemplateFilters } from "../TemplateFilters/TemplateFilters";
 export interface TemplateChoiceContext {
 	featured: boolean;
 	verbs: string[];
-	setup: string;
+	/** Null for Quick start, which sets nothing up. */
+	setup: string | null;
 	/** "verb:<verb>", "setup:<setup>" or "show_all"; empty in the first view. */
 	filtersActive: string[];
 	/** Where the card was pressed: the start screen's row, all formats, or the old picker. */
@@ -31,17 +34,16 @@ export interface TemplateChoiceContext {
 interface TemplatePickerProps {
 	/** From GET /v2/project-templates; undefined while it loads. */
 	templates: readonly TemplateSummary[] | undefined;
-	/** The list could not load: the cards are left out and blank stays possible. */
+	/** The list could not load: the formats are left out and Quick start stays. */
 	failed?: boolean;
 	value: TemplateKey | null;
-	onChange: (key: CardKey, context: TemplateChoiceContext) => void;
+	onChange: (key: ChoiceKey, context: TemplateChoiceContext) => void;
 	/** A filter changed: which one, and its new value ("none" when cleared). */
 	onFilterChange?: (
 		filter: "verb" | "setup" | "show_all",
 		value: string,
 	) => void;
-	/** The quiet links under the cards. Each is hidden when not given. */
-	onStartBlank?: () => void;
+	/** The quiet link under the cards, hidden when not given. */
 	onUpload?: () => void;
 	/** Heading level: a step of a page is a 4, a group inside a section a 5. */
 	order?: 4 | 5;
@@ -54,10 +56,12 @@ const activeFilters = (f: TemplateFilter, showAll: boolean): string[] => [
 ];
 
 /**
- * "What are you going to do?" (ECHO-1053): templates by purpose. The first view is the
- * short "most used" set; the filters (what you need to do, how it is recorded) and "Show
- * all" reveal the rest. Cards are a radio group; "Upload recordings" and "Start blank" are
- * quiet links under them. Props in, callbacks out; TemplatePickerConnected fetches.
+ * "What are you going to do?" (ECHO-1053): templates by purpose. The first view is Quick
+ * start and the short "most used" set; the filters (what you need to do, how it is
+ * recorded) and "Show all" reveal the rest. A filter shows only the formats that match, or
+ * Quick start alone when none do (offeredCards). Cards are a radio group; "Upload
+ * recordings" is a quiet link under them. Props in, callbacks out;
+ * TemplatePickerConnected fetches.
  */
 export const TemplatePicker = ({
 	templates,
@@ -65,14 +69,15 @@ export const TemplatePicker = ({
 	value,
 	onChange,
 	onFilterChange,
-	onStartBlank,
 	onUpload,
 	order = 4,
 }: TemplatePickerProps) => {
 	const headingId = useId();
 	const [filter, setFilter] = useState<TemplateFilter>(NO_FILTER);
 	const [showAll, setShowAll] = useState(false);
-	const cards = templates ? visibleCards(templates, filter, showAll) : [];
+	const formats =
+		templates && !failed ? visibleCards(templates, filter, showAll) : [];
+	const { cards, count } = offeredCards(formats, filter);
 
 	return (
 		<TemplateChooser
@@ -84,7 +89,7 @@ export const TemplatePicker = ({
 			filters={
 				<TemplateFilters
 					value={filter}
-					count={cards.length}
+					count={count}
 					onChange={(next, changed) => {
 						setFilter(next);
 						onFilterChange?.(changed, next[changed] ?? "none");
@@ -99,9 +104,8 @@ export const TemplatePicker = ({
 					}}
 				/>
 			}
-			empty={cards.length === 0}
+			empty={formats.length === 0}
 			onUpload={onUpload}
-			onStartBlank={onStartBlank}
 			gap="md"
 			testId="template-picker"
 			tour="template-picker"
@@ -112,30 +116,25 @@ export const TemplatePicker = ({
 				value={value}
 				onChange={(key) => {
 					const tpl = cards.find((c) => c.key === key);
-					if (!tpl || !isCardKey(key)) return;
+					if (!tpl || !isChoiceKey(key)) return;
 					onChange(key, {
-						featured: tpl.card.featured,
+						...cardFacts(tpl),
 						filtersActive: activeFilters(filter, showAll),
-						setup: tpl.card.setup,
-						verbs: tpl.card.verbs,
 					});
 				}}
 				testId="template-picker-grid"
-				options={cards.map((tpl) => {
-					const key = tpl.key as CardKey;
-					return {
-						render: () => (
-							<TemplateCard
-								template={key}
-								name={templateName(key)}
-								greatFor={templateGreatFor(key)}
-								tags={cardTags(tpl)}
-							/>
-						),
-						testId: `template-card-${key}`,
-						value: key,
-					};
-				})}
+				options={cards.map((tpl) => ({
+					render: () => (
+						<TemplateCard
+							template={tpl.key}
+							name={templateName(tpl.key)}
+							greatFor={cardLine(tpl.key)}
+							tags={cardTags(tpl)}
+						/>
+					),
+					testId: `template-card-${tpl.key}`,
+					value: tpl.key,
+				}))}
 			/>
 		</TemplateChooser>
 	);

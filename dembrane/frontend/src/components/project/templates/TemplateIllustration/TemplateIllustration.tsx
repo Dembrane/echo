@@ -1,8 +1,8 @@
-import type { CardKey } from "../projectTemplates";
+import type { ChoiceKey } from "../projectTemplates";
 import { DRAWINGS } from "./drawings";
 
 interface TemplateIllustrationProps {
-	template: CardKey;
+	template: ChoiceKey;
 	className?: string;
 }
 

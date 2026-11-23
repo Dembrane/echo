@@ -2,14 +2,20 @@ import { i18n } from "@lingui/core";
 import { beforeAll, describe, expect, it } from "vitest";
 import {
 	CARD_KEYS,
+	cardFacts,
+	cardLine,
 	cardTags,
+	isChoiceKey,
 	isTemplateKey,
 	NO_FILTER,
+	offeredCards,
+	QUICK_START_CARD,
 	rowCards,
 	type TemplateSummary,
 	templateGreatFor,
 	templateName,
 	visibleCards,
+	withQuickStart,
 } from "./projectTemplates";
 import { TEMPLATE_SUMMARIES } from "./projectTemplates.fixture";
 
@@ -57,8 +63,70 @@ describe("what a template card says", () => {
 	it("knows its keys, old ones included", () => {
 		expect(isTemplateKey("resident_evening")).toBe(true);
 		expect(isTemplateKey("event")).toBe(true);
+		expect(isTemplateKey("blank")).toBe(true);
 		expect(isTemplateKey("festival")).toBe(false);
 		expect(isTemplateKey(undefined)).toBe(false);
+		expect(isChoiceKey("blank")).toBe(true);
+		expect(isChoiceKey("world_cafe")).toBe(true);
+		expect(isChoiceKey("upload")).toBe(false);
+	});
+});
+
+describe("Quick start, the plain project", () => {
+	it("is the blank template, named as its card says it, with its own line and no tags", () => {
+		expect(QUICK_START_CARD.key).toBe("blank");
+		expect(templateName("blank")).toBe("Quick start");
+		expect(cardLine("blank")).toBe(
+			"A plain project. Nothing is set up for you, and you can change every setting later.",
+		);
+		expect(cardLine("interviews")).toBe(templateGreatFor("interviews"));
+		expect(cardTags(QUICK_START_CARD)).toEqual([]);
+		// The list's own blank (a link with a setup) has no tags either.
+		expect(cardTags(byKey("blank"))).toEqual([]);
+		expect(CARD_KEYS.map(templateName)).not.toContain("Quick start");
+	});
+
+	it("comes first, before the formats given, and only once", () => {
+		const list = withQuickStart(TEMPLATE_SUMMARIES);
+		expect(list[0]).toBe(QUICK_START_CARD);
+		expect(keys(list.slice(1) as TemplateSummary[])).toEqual([...CARD_KEYS]);
+		expect(withQuickStart([])).toEqual([QUICK_START_CARD]);
+	});
+
+	it("leads a list with no filter on, and steps aside under a filter unless nothing fits", () => {
+		const all = visibleCards(TEMPLATE_SUMMARIES, NO_FILTER, true);
+		const none = offeredCards(all, NO_FILTER);
+		expect(none.cards[0]).toBe(QUICK_START_CARD);
+		expect(none.count).toBe(17);
+		const decide = { setup: null, verb: "decide" } as const;
+		const some = offeredCards(
+			visibleCards(TEMPLATE_SUMMARIES, decide, true),
+			decide,
+		);
+		expect(keys(some.cards as TemplateSummary[])).toEqual([
+			"resident_evening",
+			"working_group",
+			"citizens_assembly",
+		]);
+		expect(some.count).toBe(3);
+		expect(offeredCards([], decide)).toEqual({
+			cards: [QUICK_START_CARD],
+			count: 0,
+		});
+	});
+
+	it("is not featured and sets nothing up, for analytics", () => {
+		expect(cardFacts(QUICK_START_CARD)).toEqual({
+			featured: false,
+			setup: null,
+			verbs: [],
+		});
+		const evening = withQuickStart([byKey("resident_evening")])[1];
+		expect(evening && cardFacts(evening)).toEqual({
+			featured: true,
+			setup: "many_groups",
+			verbs: ["understand", "decide"],
+		});
 	});
 });
 

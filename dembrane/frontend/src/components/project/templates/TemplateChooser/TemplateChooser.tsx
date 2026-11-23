@@ -8,7 +8,8 @@ import { linkLabel, linkLine, type TemplateSummary } from "../projectTemplates";
 interface TemplateChooserProps {
 	/** From GET /v2/project-templates; undefined while it loads. */
 	templates: readonly TemplateSummary[] | undefined;
-	/** The list could not load: the cards and the upload link are left out, blank stays. */
+	/** The list could not load: the filters and the upload link are left out; the cards
+	 * (then Quick start alone) stay. */
 	failed: boolean;
 	/** Heading level: a step of a page is a 4, a group inside a section a 5. */
 	order: 4 | 5;
@@ -18,22 +19,22 @@ interface TemplateChooserProps {
 	skeleton: ReactNode;
 	/** The filters above the cards. */
 	filters: ReactNode;
-	/** No card fits the filters. */
+	/** No format fits the filters; Quick start still shows. */
 	empty: boolean;
-	/** The quiet links under the cards. Each is hidden when not given. */
+	/** The quiet link under the cards, hidden when not given. */
 	onUpload?: () => void;
-	onStartBlank?: () => void;
 	gap: "md" | "lg";
 	testId: string;
 	tour?: string;
-	/** The cards. */
+	/** The cards, Quick start first. */
 	children: ReactNode;
 }
 
 /**
  * What every way of choosing a template shares (the picker, all formats): the heading and
- * its lede, the loading, failed and empty states, the filters, and the quiet links to
- * upload recordings or start blank. The cards are the child. Props in, callbacks out.
+ * its lede, the loading, failed and empty states, the filters, and the quiet link to
+ * upload recordings. The cards are the child, shown in every state but loading, so Quick
+ * start is always there. Props in, callbacks out.
  */
 export const TemplateChooser = ({
 	templates,
@@ -44,7 +45,6 @@ export const TemplateChooser = ({
 	filters,
 	empty,
 	onUpload,
-	onStartBlank,
 	gap,
 	testId,
 	tour,
@@ -67,66 +67,54 @@ export const TemplateChooser = ({
 			<Stack gap="sm" aria-busy="true" aria-label={t`Loading templates`}>
 				{skeleton}
 			</Stack>
-		) : failed ? (
-			<Text size="sm" data-testid="template-picker-failed">
-				<Trans>
-					The templates did not load. You can still start blank and set it up
-					yourself.
-				</Trans>
-			</Text>
 		) : (
 			<>
-				{filters}
-				{empty ? (
-					<Text size="sm" data-testid="template-picker-none">
+				{failed ? (
+					<Text size="sm" data-testid="template-picker-failed">
 						<Trans>
-							No template fits both. Clear a filter, or start blank.
+							The templates did not load. You can still use Quick start and set
+							the project up yourself.
 						</Trans>
 					</Text>
 				) : (
-					children
+					<>
+						{filters}
+						{empty && (
+							<Text size="sm" data-testid="template-picker-none">
+								<Trans>
+									No template fits both. Clear a filter, or use Quick start.
+								</Trans>
+							</Text>
+						)}
+					</>
 				)}
+				{children}
 			</>
 		)}
 
-		{(onUpload || onStartBlank) && (
-			<Stack gap="xs" data-testid="template-picker-links">
-				{onUpload && !failed && (
-					<Group gap="xs" align="baseline" wrap="wrap">
-						<Anchor
-							component="button"
-							type="button"
-							size="sm"
-							onClick={onUpload}
-							data-testid="template-picker-upload"
-						>
-							<Group gap="xs" component="span" wrap="nowrap">
-								<UploadSimpleIcon size={16} aria-hidden />
-								{linkLabel("upload")}
-							</Group>
-						</Anchor>
-						<Text size="xs" className="app-muted">
-							{linkLine("upload")}
-						</Text>
+		{onUpload && !failed && (
+			<Group
+				gap="xs"
+				align="baseline"
+				wrap="wrap"
+				data-testid="template-picker-links"
+			>
+				<Anchor
+					component="button"
+					type="button"
+					size="sm"
+					onClick={onUpload}
+					data-testid="template-picker-upload"
+				>
+					<Group gap="xs" component="span" wrap="nowrap">
+						<UploadSimpleIcon size={16} aria-hidden />
+						{linkLabel("upload")}
 					</Group>
-				)}
-				{onStartBlank && (
-					<Group gap="xs" align="baseline" wrap="wrap">
-						<Anchor
-							component="button"
-							type="button"
-							size="sm"
-							onClick={onStartBlank}
-							data-testid="template-picker-start-blank"
-						>
-							{linkLabel("blank")}
-						</Anchor>
-						<Text size="xs" className="app-muted">
-							{linkLine("blank")}
-						</Text>
-					</Group>
-				)}
-			</Stack>
+				</Anchor>
+				<Text size="xs" className="app-muted">
+					{linkLine("upload")}
+				</Text>
+			</Group>
 		)}
 	</Stack>
 );

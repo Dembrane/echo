@@ -11,9 +11,11 @@ import {
 	useState,
 } from "react";
 import {
-	type CardKey,
+	type ChoiceKey,
+	cardFacts,
 	rowCards,
 	type TemplateSummary,
+	withQuickStart,
 } from "../projectTemplates";
 import { TemplateCardButton } from "../TemplateCard/TemplateCardButton";
 import type { TemplateChoiceContext } from "../TemplatePicker/TemplatePicker";
@@ -22,10 +24,10 @@ import classes from "./TemplateRow.module.css";
 interface TemplateRowProps {
 	/** From GET /v2/project-templates; undefined while it loads. */
 	templates: readonly TemplateSummary[] | undefined;
-	/** The list could not load: no row, only the way to all formats (and blank). */
+	/** The list could not load: Quick start alone, and the way to all formats. */
 	failed?: boolean;
 	/** A card was pressed: the flow moves on with it. */
-	onChoose: (key: CardKey, context: TemplateChoiceContext) => void;
+	onChoose: (key: ChoiceKey, context: TemplateChoiceContext) => void;
 	/** "See all formats": skip the row for the full list with its filters. */
 	onSeeAll: () => void;
 }
@@ -36,9 +38,10 @@ const reducedMotion = () =>
 	);
 
 /**
- * "Or start from a format" (ECHO-1058): every template in one horizontal row, the most used
- * first. Pressing a card chooses it and moves on. One tab stop; the arrow keys, Home and
- * End move between cards and bring them into view. Props in, callbacks out.
+ * "Or start from a format" (ECHO-1058): Quick start first, then every template in one
+ * horizontal row, the most used first. Pressing a card chooses it and moves on. One tab
+ * stop; the arrow keys, Home and End move between cards and bring them into view. Props
+ * in, callbacks out.
  */
 export const TemplateRow = ({
 	templates,
@@ -51,9 +54,11 @@ export const TemplateRow = ({
 	const cardRefs = useRef<(HTMLButtonElement | null)[]>([]);
 	const [focus, setFocus] = useState(0);
 	const [ends, setEnds] = useState({ end: false, start: true });
-	const cards = rowCards(templates ?? []) as (TemplateSummary & {
-		key: CardKey;
-	})[];
+	const loading = !templates && !failed;
+	const cards = withQuickStart(failed ? [] : rowCards(templates ?? []));
+	// The list can shrink under the focus (a refetch that fails leaves Quick start alone):
+	// one card always keeps the tab stop.
+	const tabStop = Math.min(focus, cards.length - 1);
 
 	const measure = useCallback(() => {
 		const el = listRef.current;
@@ -116,7 +121,7 @@ export const TemplateRow = ({
 				<Group
 					gap={4}
 					wrap="nowrap"
-					display={cards.length ? undefined : "none"}
+					display={!loading && cards.length > 1 ? undefined : "none"}
 				>
 					<ActionIcon
 						variant="subtle"
@@ -142,24 +147,17 @@ export const TemplateRow = ({
 					</ActionIcon>
 				</Group>
 			</Group>
-			{!templates || failed ? (
-				failed ? null : (
-					<Group
-						gap="sm"
-						wrap="nowrap"
-						aria-busy="true"
-						style={{ overflow: "hidden" }}
-					>
-						{[0, 1, 2].map((i) => (
-							<Skeleton
-								key={i}
-								height={280}
-								w={264}
-								style={{ flexShrink: 0 }}
-							/>
-						))}
-					</Group>
-				)
+			{loading ? (
+				<Group
+					gap="sm"
+					wrap="nowrap"
+					aria-busy="true"
+					style={{ overflow: "hidden" }}
+				>
+					{[0, 1, 2].map((i) => (
+						<Skeleton key={i} height={280} w={264} style={{ flexShrink: 0 }} />
+					))}
+				</Group>
 			) : (
 				<ul
 					ref={listRef}
@@ -174,15 +172,13 @@ export const TemplateRow = ({
 									cardRefs.current[i] = el;
 								}}
 								template={tpl}
-								tabIndex={i === focus ? 0 : -1}
+								tabIndex={i === tabStop ? 0 : -1}
 								onKeyDown={onKeyDown(i)}
 								onChoose={() =>
 									onChoose(tpl.key, {
-										featured: tpl.card.featured,
+										...cardFacts(tpl),
 										filtersActive: [],
 										list: "row",
-										setup: tpl.card.setup,
-										verbs: tpl.card.verbs,
 									})
 								}
 							/>
