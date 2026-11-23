@@ -195,6 +195,30 @@ describe("LiveButton", () => {
 			expect(screen.getByText("Starts now")).toBeTruthy();
 			vi.useRealTimers();
 		});
+
+		it("books tomorrow once the time has passed with the menu closed", async () => {
+			vi.useFakeTimers({ toFake: ["Date"] });
+			const morning = new Date();
+			morning.setHours(9, 0, 0, 0);
+			vi.setSystemTime(morning);
+			const onReadyBy = vi.fn();
+			button({ onReadyBy });
+			more();
+			fireEvent.change(await screen.findByLabelText("Ready by"), {
+				target: { value: "14:30" },
+			});
+			more();
+			const afternoon = new Date(morning);
+			afternoon.setHours(15, 0, 0, 0);
+			vi.setSystemTime(afternoon);
+			more();
+			fireEvent.click(await screen.findByRole("button", { name: "Book" }));
+			const tomorrow = new Date(afternoon);
+			tomorrow.setDate(tomorrow.getDate() + 1);
+			tomorrow.setHours(14, 30, 0, 0);
+			expect(onReadyBy).toHaveBeenCalledWith(8, tomorrow);
+			vi.useRealTimers();
+		});
 	});
 
 	describe("booked", () => {
