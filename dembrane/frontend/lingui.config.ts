@@ -1,4 +1,5 @@
 import type { LinguiConfig } from "@lingui/conf";
+import { formatter } from "@lingui/format-po";
 
 const config: LinguiConfig = {
 	catalogs: [
@@ -57,6 +58,8 @@ const config: LinguiConfig = {
 	fallbackLocales: {
 		default: "en-US",
 	},
+	// File paths without line numbers, so a catalog changes only when its strings do.
+	format: formatter({ lineNumbers: false }),
 	locales: [
 		"en-US",
 		"nl-NL",
