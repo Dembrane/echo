@@ -284,20 +284,14 @@ export interface TemplateFilter {
 }
 export const NO_FILTER: TemplateFilter = { setup: null, verb: null };
 
-/**
- * The cards to show: the featured ones until the host filters or asks for all, then every
- * card matching the filters, in the registry's order.
- */
+/** The cards to show: every card matching the filters, in the registry's order. */
 export const visibleCards = (
 	templates: readonly TemplateSummary[],
 	filter: TemplateFilter,
-	showAll: boolean,
 ): TemplateSummary[] => {
 	const cards = CARD_KEYS.map((key) =>
 		templates.find((tpl) => tpl.key === key && tpl.card.offer === "card"),
 	).filter((tpl): tpl is TemplateSummary => !!tpl);
-	const filtering = filter.verb !== null || filter.setup !== null;
-	if (!filtering && !showAll) return cards.filter((tpl) => tpl.card.featured);
 	return cards.filter(
 		(tpl) =>
 			(filter.verb === null || tpl.card.verbs.includes(filter.verb)) &&
@@ -307,8 +301,18 @@ export const visibleCards = (
 
 export const isCardKey = (v: unknown): v is CardKey =>
 	typeof v === "string" && (CARD_KEYS as readonly string[]).includes(v);
-export const isChoiceKey = (v: unknown): v is ChoiceKey =>
-	v === QUICK_START || isCardKey(v);
+
+/** What a list knew when a card was chosen, for analytics: never free text. */
+export interface TemplateChoiceContext {
+	featured: boolean;
+	verbs: string[];
+	/** Null for Quick start, which sets nothing up. */
+	setup: string | null;
+	/** "verb:<verb>" or "setup:<setup>"; empty with no filter on. */
+	filtersActive: string[];
+	/** Where the card was pressed: the start screen's row or all formats. */
+	list?: "row" | "all_formats";
+}
 
 /** Quick start as a card: it has no summary, so it is only its key. */
 export const QUICK_START_CARD = { key: QUICK_START } as const;
@@ -375,7 +379,7 @@ export const cardTags = (tpl: ChoiceCard | TemplateSummary): string[] =>
 export const rowCards = (
 	templates: readonly TemplateSummary[],
 ): TemplateSummary[] => {
-	const all = visibleCards(templates, NO_FILTER, true);
+	const all = visibleCards(templates, NO_FILTER);
 	return [
 		...all.filter((tpl) => tpl.card.featured),
 		...all.filter((tpl) => !tpl.card.featured),

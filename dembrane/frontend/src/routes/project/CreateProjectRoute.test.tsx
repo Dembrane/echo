@@ -724,13 +724,24 @@ describe("CreateProjectRoute: setup suggestions", () => {
 	});
 
 	describe("the context digest (ECHO-1055)", () => {
-		it("sits above the row, which steps aside with the progress line while it is active", async () => {
+		it("sits under the row, which steps aside with the progress line and Cancel while it is active", async () => {
 			renderCreate();
-			expect(screen.getByTestId("digest-stub")).toBeTruthy();
-			expect(await screen.findByTestId("template-row")).toBeTruthy();
+			const row = await screen.findByTestId("template-row");
+			const digest = screen.getByTestId("digest-stub");
+			// Templates first, the drop area under them, Cancel last.
+			expect(
+				row.compareDocumentPosition(digest) & Node.DOCUMENT_POSITION_FOLLOWING,
+			).toBeTruthy();
+			const cancel = screen.getByRole("button", { name: "Cancel" });
+			expect(
+				digest.compareDocumentPosition(cancel) &
+					Node.DOCUMENT_POSITION_FOLLOWING,
+			).toBeTruthy();
 			fireEvent.click(screen.getByText("digest active"));
 			expect(screen.queryByTestId("template-row")).toBeNull();
 			expect(screen.queryByTestId("create-project-progress")).toBeNull();
+			expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
+			expect(screen.getByTestId("digest-stub")).toBeTruthy();
 		});
 
 		it("creates from the review in one request, with the digest", async () => {

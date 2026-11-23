@@ -37,7 +37,7 @@ import { ProjectsHomeRoute } from "@/routes/project/ProjectsHome";
 import { WorkspaceSelectorRoute } from "@/routes/workspaces/WorkspaceSelectorRoute";
 import { cssVariablesResolver, theme } from "@/theme";
 
-// The create flow and workspace home's first-project state (ECHO-1042, ECHO-1053), the
+// The create flow and workspace home with its Create menu (ECHO-1042, ECHO-1053), the
 // portal editor's name box label, a host guide a template filled in, and Home (/o) with
 // its Create menu, outside the signed-in shell, for screenshots. ?path= picks the page;
 // the spec answers the API.

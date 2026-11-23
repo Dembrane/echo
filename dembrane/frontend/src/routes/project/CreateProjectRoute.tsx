@@ -45,11 +45,11 @@ import {
 } from "@/components/project/templates/lazy";
 import {
 	isTemplateKey,
+	type TemplateChoiceContext,
 	type TemplateKey,
 	templateName,
 	useProjectTemplates,
 } from "@/components/project/templates/projectTemplates";
-import type { TemplateChoiceContext } from "@/components/project/templates/TemplatePicker/TemplatePicker";
 import { TemplateSetupSummary } from "@/components/project/templates/TemplateSetupSummary/TemplateSetupSummary";
 import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { AGENTIC_CHAT_IS_DEFAULT, ENABLE_AGENTIC_CHAT } from "@/config";
@@ -92,15 +92,15 @@ const setVisibility = (projectId: string, visibility: Access) =>
  * Creating a project, one thing at a time (ECHO-1058). The template's preset is applied by
  * the server in the creating transaction.
  *
- * Start: the offer to set up from what the host already has (the context digest,
- * ECHO-1055: drop an agenda, invitation or run sheet, paste text or add a link). dembrane
- * reads it and proposes the setup, reviewed one part per screen; Create there makes the
- * project with what they kept. If the digest fails, the row takes over with the material's
- * text in the project context. Under it, Quick start (a plain project) and every format in
- * one row of drawn cards: pressing one chooses it and goes to the name. "See all formats"
- * leads to the full list with its filters (verbs and setup), Quick start first again, and
- * the quiet "Upload recordings". A ?template=<key> link (workspace home's picker, Home's
- * Create menu) arrives on the name with it chosen.
+ * Start: "Start from a template", Quick start (a plain project) and every format in one
+ * row of drawn cards: pressing one chooses it and goes to the name. "See all formats" leads
+ * to the full list with its filters (verbs and setup), Quick start first again, and the
+ * quiet "Upload recordings". Under the row, the offer to set up from what the host already
+ * has (the context digest, ECHO-1055: drop an agenda, invitation or run sheet, paste text
+ * or add a link). dembrane reads it and proposes the setup, reviewed one part per screen;
+ * Create there makes the project with what they kept. If the digest fails, the row above
+ * takes over with the material's text in the project context. A ?template=<key> link (the
+ * Create menu on Home and on workspace home) arrives on the name with it chosen.
  *
  * Step 2 "Name": name and the optional project context, with "Suggest key terms" under it
  * (setup suggestions from the context: key terms and settings to accept), and "What this
@@ -454,6 +454,16 @@ export const CreateProjectRoute = () => {
 
 				{screen === "start" && (
 					<Stack gap="xl" data-testid="create-project-start">
+						{/* A template first, the drop area under it: most hosts start from a
+						    format. While a drop is read the drop area has the page to itself. */}
+						{!digestActive && (
+							<LazyTemplateRow
+								templates={templates.data}
+								failed={templates.isError}
+								onChoose={chooseTemplate}
+								onSeeAll={() => setScreen("formats")}
+							/>
+						)}
 						<LazyDigest
 							workspaceId={workspaceId ?? null}
 							language={projectLanguage}
@@ -472,24 +482,16 @@ export const CreateProjectRoute = () => {
 							pageDrop
 						/>
 						{!digestActive && (
-							<>
-								<LazyTemplateRow
-									templates={templates.data}
-									failed={templates.isError}
-									onChoose={chooseTemplate}
-									onSeeAll={() => setScreen("formats")}
-								/>
-								<Group gap="sm">
-									<Button
-										variant="subtle"
-										color="gray"
-										size="sm"
-										onClick={handleCancel}
-									>
-										<Trans>Cancel</Trans>
-									</Button>
-								</Group>
-							</>
+							<Group gap="sm">
+								<Button
+									variant="subtle"
+									color="gray"
+									size="sm"
+									onClick={handleCancel}
+								>
+									<Trans>Cancel</Trans>
+								</Button>
+							</Group>
 						)}
 					</Stack>
 				)}

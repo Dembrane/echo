@@ -14,11 +14,11 @@ import {
 	type ChoiceKey,
 	cardFacts,
 	rowCards,
+	type TemplateChoiceContext,
 	type TemplateSummary,
 	withQuickStart,
 } from "../projectTemplates";
 import { TemplateCardButton } from "../TemplateCard/TemplateCardButton";
-import type { TemplateChoiceContext } from "../TemplatePicker/TemplatePicker";
 import classes from "./TemplateRow.module.css";
 
 interface TemplateRowProps {
@@ -38,10 +38,10 @@ const reducedMotion = () =>
 	);
 
 /**
- * "Or start from a format" (ECHO-1058): Quick start first, then every template in one
- * horizontal row, the most used first. Pressing a card chooses it and moves on. One tab
- * stop; the arrow keys, Home and End move between cards and bring them into view. Props
- * in, callbacks out.
+ * "Start from a template" (ECHO-1058), first on the start screen: Quick start first, then
+ * every template in one horizontal row, the most used first. Pressing a card chooses it
+ * and moves on. One tab stop; the arrow keys, Home and End move between cards and bring
+ * them into view. Props in, callbacks out.
  */
 export const TemplateRow = ({
 	templates,
@@ -115,8 +115,8 @@ export const TemplateRow = ({
 	return (
 		<section aria-labelledby={headingId} data-testid="template-row">
 			<Group justify="space-between" align="center" mb="xs" wrap="nowrap">
-				<Text component="h3" size="md" m={0} id={headingId}>
-					<Trans>Or start from a format</Trans>
+				<Text component="h3" size="lg" m={0} id={headingId}>
+					<Trans>Start from a template</Trans>
 				</Text>
 				<Group
 					gap={4}

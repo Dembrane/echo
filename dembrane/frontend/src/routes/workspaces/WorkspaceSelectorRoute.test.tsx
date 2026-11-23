@@ -127,13 +127,14 @@ const renderHome = () => {
 };
 
 describe("Home's Create menu", () => {
-	it("sits on the line above the search box", async () => {
+	it("sits on the lede's line, above the search box", async () => {
 		state.workspaces = [ws("w1", "Team")];
 		renderHome();
 		const button = await screen.findByTestId("create-menu-button");
-		expect(button.closest(".mantine-Group-root")?.textContent).toContain(
-			"Where would you like to go?",
-		);
+		const row = button.closest(".mantine-Group-root");
+		expect(row?.textContent).toContain("What would you like to do?");
+		// One line on a phone too, where Create is a plus alone.
+		expect(row?.getAttribute("style") ?? "").toContain("nowrap");
 		const search = screen.getByRole("combobox");
 		expect(
 			button.compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING,

@@ -5,7 +5,6 @@ import {
 	cardFacts,
 	cardLine,
 	cardTags,
-	isChoiceKey,
 	isTemplateKey,
 	NO_FILTER,
 	offeredCards,
@@ -66,9 +65,6 @@ describe("what a template card says", () => {
 		expect(isTemplateKey("blank")).toBe(true);
 		expect(isTemplateKey("festival")).toBe(false);
 		expect(isTemplateKey(undefined)).toBe(false);
-		expect(isChoiceKey("blank")).toBe(true);
-		expect(isChoiceKey("world_cafe")).toBe(true);
-		expect(isChoiceKey("upload")).toBe(false);
 	});
 });
 
@@ -94,15 +90,12 @@ describe("Quick start, the plain project", () => {
 	});
 
 	it("leads a list with no filter on, and steps aside under a filter unless nothing fits", () => {
-		const all = visibleCards(TEMPLATE_SUMMARIES, NO_FILTER, true);
+		const all = visibleCards(TEMPLATE_SUMMARIES, NO_FILTER);
 		const none = offeredCards(all, NO_FILTER);
 		expect(none.cards[0]).toBe(QUICK_START_CARD);
 		expect(none.count).toBe(17);
 		const decide = { setup: null, verb: "decide" } as const;
-		const some = offeredCards(
-			visibleCards(TEMPLATE_SUMMARIES, decide, true),
-			decide,
-		);
+		const some = offeredCards(visibleCards(TEMPLATE_SUMMARIES, decide), decide);
 		expect(keys(some.cards as TemplateSummary[])).toEqual([
 			"resident_evening",
 			"working_group",
@@ -146,30 +139,16 @@ describe("the start screen's row", () => {
 });
 
 describe("which cards show", () => {
-	it("starts with the short most used set, in both setups", () => {
-		const first = visibleCards(TEMPLATE_SUMMARIES, NO_FILTER, false);
-		expect(keys(first)).toEqual([
-			"resident_evening",
-			"focus_group",
-			"interviews",
-			"strategy_day",
-			"working_group",
-			"ideation",
-		]);
-		expect(new Set(first.map((s) => s.card.setup)).size).toBe(2);
-	});
-
 	it("shows every card, never the old logistic ones or the links", () => {
-		const all = visibleCards(TEMPLATE_SUMMARIES, NO_FILTER, true);
+		const all = visibleCards(TEMPLATE_SUMMARIES, NO_FILTER);
 		expect(keys(all)).toEqual([...CARD_KEYS]);
 	});
 
-	it("filters by verb from all cards, not only the most used", () => {
-		const decide = visibleCards(
-			TEMPLATE_SUMMARIES,
-			{ setup: null, verb: "decide" },
-			false,
-		);
+	it("filters by verb from all cards", () => {
+		const decide = visibleCards(TEMPLATE_SUMMARIES, {
+			setup: null,
+			verb: "decide",
+		});
 		expect(keys(decide)).toEqual([
 			"resident_evening",
 			"working_group",
@@ -178,11 +157,10 @@ describe("which cards show", () => {
 	});
 
 	it("combines a verb and a setup", () => {
-		const list = visibleCards(
-			TEMPLATE_SUMMARIES,
-			{ setup: "many_groups", verb: "understand" },
-			false,
-		);
+		const list = visibleCards(TEMPLATE_SUMMARIES, {
+			setup: "many_groups",
+			verb: "understand",
+		});
 		expect(keys(list)).toEqual([
 			"resident_evening",
 			"world_cafe",
@@ -199,7 +177,7 @@ describe("which cards show", () => {
 			"decide",
 		] as const)
 			expect(
-				visibleCards(TEMPLATE_SUMMARIES, { setup: null, verb }, false).length,
+				visibleCards(TEMPLATE_SUMMARIES, { setup: null, verb }).length,
 			).toBeGreaterThanOrEqual(2);
 	});
 });

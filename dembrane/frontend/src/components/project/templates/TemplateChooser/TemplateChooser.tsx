@@ -11,8 +11,6 @@ interface TemplateChooserProps {
 	/** The list could not load: the filters and the upload link are left out; the cards
 	 * (then Quick start alone) stay. */
 	failed: boolean;
-	/** Heading level: a step of a page is a 4, a group inside a section a 5. */
-	order: 4 | 5;
 	/** The heading's id, for a card grid that is labelled by it. */
 	headingId?: string;
 	/** What shows while the list loads. */
@@ -23,36 +21,31 @@ interface TemplateChooserProps {
 	empty: boolean;
 	/** The quiet link under the cards, hidden when not given. */
 	onUpload?: () => void;
-	gap: "md" | "lg";
 	testId: string;
-	tour?: string;
 	/** The cards, Quick start first. */
 	children: ReactNode;
 }
 
 /**
- * What every way of choosing a template shares (the picker, all formats): the heading and
- * its lede, the loading, failed and empty states, the filters, and the quiet link to
- * upload recordings. The cards are the child, shown in every state but loading, so Quick
+ * All formats' frame: the heading (a group inside the create page, so a 5) and its lede,
+ * the loading, failed and empty states, the filters, and the quiet link to upload
+ * recordings. The cards are the child, shown in every state but loading, so Quick
  * start is always there. Props in, callbacks out.
  */
 export const TemplateChooser = ({
 	templates,
 	failed,
-	order,
 	headingId,
 	skeleton,
 	filters,
 	empty,
 	onUpload,
-	gap,
 	testId,
-	tour,
 	children,
 }: TemplateChooserProps) => (
-	<Stack gap={gap} data-testid={testId} data-tour={tour}>
+	<Stack gap="lg" data-testid={testId}>
 		<Stack gap="xs">
-			<Title order={order} id={headingId}>
+			<Title order={5} id={headingId}>
 				<Trans>What are you going to do?</Trans>
 			</Title>
 			<Text size="sm" className="app-muted">

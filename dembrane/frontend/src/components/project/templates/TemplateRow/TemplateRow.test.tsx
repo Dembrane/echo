@@ -48,7 +48,7 @@ describe("TemplateRow", () => {
 		);
 		expect(quick.querySelector("[data-testid=template-card-tags]")).toBeNull();
 		expect(
-			screen.getByRole("region", { name: "Or start from a format" }),
+			screen.getByRole("region", { name: "Start from a template" }),
 		).toBeTruthy();
 	});
 

@@ -3,11 +3,12 @@ import { expect, type Page, test } from "@playwright/test";
 import { RESIDENT_EVENING_GUIDE } from "../src/components/project/templates/hostGuide.fixture";
 import { grammarAudit } from "./grammar-checks";
 
-// ECHO-1042, ECHO-1053, ECHO-1058: the start screen's row of formats (Quick start first),
-// all formats with each verb filter and the setup filter, the name step with "What this
-// sets up" open and from Quick start, the portal editor's name box label, a host guide a
-// template filled in, workspace home's first-project state, and Home's Create menu with
-// its "Which workspace?" question, at desktop and phone width. E2E_SHOTS=<dir> also saves
+// ECHO-1042, ECHO-1053, ECHO-1058: the start screen's row of formats (Quick start first)
+// above the upload, all formats with each verb filter and the setup filter, the name step
+// with "What this sets up" open and from Quick start, the portal editor's name box label,
+// a host guide a template filled in, workspace home's Create menu (and the workspace with
+// no project at all), and Home's Create menu with its "Which workspace?" question, at
+// desktop and phone width; on a phone Create is a plus alone. E2E_SHOTS=<dir> also saves
 // screenshots.
 const shots = process.env.E2E_SHOTS;
 // E2E_GRAMMAR=<file> also runs the rendered design-grammar audit on every screen shot here
@@ -165,9 +166,15 @@ for (const size of sizes)
 			await page.goto(
 				`/e2e/templates-harness.html?path=/${lang}/w/w1/projects/new`,
 			);
-			// Start (ECHO-1058): the upload first, then every format in one row.
+			// Start (ECHO-1058): every format in one row first, the upload under it.
 			await expect(page.getByTestId("project-digest-entry")).toBeVisible();
 			const row = page.getByTestId("template-row-list");
+			await expect(row).toBeVisible();
+			const rowBox = await page.getByTestId("template-row").boundingBox();
+			const dropBox = await page
+				.getByTestId("project-digest-entry")
+				.boundingBox();
+			expect(rowBox && dropBox && rowBox.y < dropBox.y).toBe(true);
 			await expect(row.locator("button")).toHaveCount(17);
 			await expect(row.locator("button").first()).toHaveAttribute(
 				"data-testid",
@@ -315,10 +322,71 @@ for (const size of sizes)
 				await shot(name);
 			}
 
+			// Off the button and past its 120ms colour transition, so a closed shot shows it at
+			// rest rather than hovered or halfway back.
+			const atRest = async () => {
+				await page.mouse.move(0, 0);
+				await page.waitForTimeout(250);
+			};
+			// Create, a plus alone on a phone and the labelled pill from 48em.
+			const createLabel = page
+				.getByTestId("create-menu-button")
+				.locator(".mantine-Button-label");
+			const phone = size.name === "phone";
+			const createShape = async () => {
+				await expect(
+					page.getByTestId("create-menu-button"),
+				).toHaveAccessibleName(nl ? "Aanmaken" : "Create");
+				if (phone) await expect(createLabel).toBeHidden();
+				else await expect(createLabel).toBeVisible();
+			};
+
+			// Workspace home: Create on the All projects row, its two project items.
 			await page.goto(`/e2e/templates-harness.html?path=/${lang}/w/w1/home`);
-			await expect(page.getByTestId("workspace-home-start")).toBeVisible();
-			await expect(page.getByTestId("template-picker")).toBeVisible();
+			await expect(page.getByTestId("create-menu-button")).toBeVisible();
+			await expect(page.getByTestId("project-search-input")).toBeVisible();
+			await expect(page.getByTestId("template-picker")).toHaveCount(0);
+			await createShape();
+			await atRest();
 			await shot("08-workspace-home");
+			await noSideScroll();
+			await page.getByTestId("create-menu-button").click();
+			await expect(page.getByRole("menuitem")).toHaveCount(2);
+			await page.waitForTimeout(300);
+			await shot("08b-workspace-home-create-menu");
+			await noSideScroll();
+			// No project at all, not even the sample: one quiet line where the list would be.
+			await page.route("**/v2/workspaces/w1/projects?**", (route) =>
+				route.fulfill({
+					json: {
+						has_more: false,
+						is_admin: true,
+						pinned: [],
+						projects: [],
+						total_count: 0,
+					},
+				}),
+			);
+			await page.goto(`/e2e/templates-harness.html?path=/${lang}/w/w1/home`);
+			await expect(
+				page.getByText(
+					nl ? /Hier komen je projecten/ : /Your projects will appear here/,
+				),
+			).toBeVisible();
+			await expect(page.getByTestId("create-menu-button")).toBeVisible();
+			await atRest();
+			await shot("08c-workspace-home-empty");
+			await noSideScroll();
+			// At the free project cap: the button looks unavailable, says why, opens the wall.
+			await page.route("**/v2/workspaces/w1/free-allowance**", (route) =>
+				route.fulfill({
+					json: { free: true, projects: { limit: 1, used: 1 } },
+				}),
+			);
+			await page.goto(`/e2e/templates-harness.html?path=/${lang}/w/w1/home`);
+			await expect(page.getByTestId("unavailable-info")).toBeVisible();
+			await atRest();
+			await shot("08d-workspace-home-cap");
 
 			// All sixteen cards side by side.
 			await page.goto(
@@ -335,6 +403,26 @@ for (const size of sizes)
 			await page.goto(`/e2e/templates-harness.html?path=/${lang}/o`);
 			await expect(page.getByTestId("create-menu-button")).toBeVisible();
 			await expect(page.getByRole("combobox")).toBeVisible();
+			const lede = page.getByText(
+				nl ? "Wat wil je doen?" : "What would you like to do?",
+			);
+			await expect(lede).toBeVisible();
+			await createShape();
+			// The lede and Create share one line, on a phone too.
+			const ledeBox = await lede.boundingBox();
+			const createBox = await page
+				.getByTestId("create-menu-button")
+				.boundingBox();
+			expect(
+				ledeBox &&
+					createBox &&
+					Math.abs(
+						ledeBox.y +
+							ledeBox.height / 2 -
+							(createBox.y + createBox.height / 2),
+					) < 8,
+			).toBe(true);
+			await atRest();
 			await shot("11-home");
 			await noSideScroll();
 			await page.getByTestId("create-menu-button").click();

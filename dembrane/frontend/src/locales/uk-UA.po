@@ -67,12 +67,12 @@ msgid "(direct workspace access)"
 msgstr "(прямий доступ до робочого простору)"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:701
-#: src/routes/project/CreateProjectRoute.tsx:686
+#: src/routes/project/CreateProjectRoute.tsx:688
 msgid "(missing)"
 msgstr "(відсутнє)"
 
-#: src/routes/project/CreateProjectRoute.tsx:692
-#: src/routes/project/CreateProjectRoute.tsx:695
+#: src/routes/project/CreateProjectRoute.tsx:694
+#: src/routes/project/CreateProjectRoute.tsx:697
 msgid "(none)"
 msgstr "(немає)"
 
@@ -164,7 +164,7 @@ msgstr "{0, plural, one {# наживо} few {# наживо} many {# нажив
 
 #. placeholder {0}: workspace.member_count
 #. placeholder {0}: ws.member_count
-#: src/routes/project/ProjectsHome.tsx:307
+#: src/routes/project/ProjectsHome.tsx:270
 #: src/components/workspace/DiscoverableWorkspaces.tsx:313
 #: src/components/workspace/DiscoverableWorkspaces.tsx:369
 msgid "{0, plural, one {# member} other {# members}}"
@@ -227,7 +227,7 @@ msgstr "{0, plural, one {# місце оплачене} few {# місця опл
 
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
-#: src/routes/project/ProjectsHome.tsx:513
+#: src/routes/project/ProjectsHome.tsx:425
 #: src/components/workspace/DiscoverableWorkspaces.tsx:338
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# вибрано} few {# вибрано} many {# вибрано} other {# вибрано}}"
@@ -1229,8 +1229,8 @@ msgid "A privacy policy link is required for consent-based processing. It must s
 msgstr "Для обробки на основі згоди потрібне посилання на політику конфіденційності. Воно має починатися з http:// або https:// і містити не більше 255 символів."
 
 #: src/routes/project/ProjectsHome.tsx:396
-msgid "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
-msgstr "Проєкт містить усе, що стосується однієї теми. Поділіться посиланням з учасниками, зберіть думки, а dembrane перетворить їх на інсайти."
+#~ msgid "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
+#~ msgstr "Проєкт містить усе, що стосується однієї теми. Поділіться посиланням з учасниками, зберіть думки, а dembrane перетворить їх на інсайти."
 
 #: src/routes/project/present/PresentRoute.tsx:818
 msgid "A public page needs a higher plan. Switch Public page off under Share to show the other changes."
@@ -1299,7 +1299,7 @@ msgstr "Заголовок і підзаголовок перед зворотн
 msgid "A typo"
 msgstr "Помилка друку"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:400
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:405
 #: src/routes/invite/AcceptInviteRoute.tsx:48
 msgid "a workspace"
 msgstr "робочий простір"
@@ -1342,7 +1342,7 @@ msgstr "Умови прийнято"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1892
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:592
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:725
-#: src/routes/project/CreateProjectRoute.tsx:700
+#: src/routes/project/CreateProjectRoute.tsx:702
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:26
 #: src/components/project/ProjectUsageAndSharing.tsx:217
 msgid "Access"
@@ -1978,7 +1978,7 @@ msgstr "All files were uploaded successfully."
 msgid "All kinds"
 msgstr "Усі види"
 
-#: src/routes/project/ProjectsHome.tsx:440
+#: src/routes/project/ProjectsHome.tsx:335
 msgid "All projects"
 msgstr "Усі проєкти"
 
@@ -2791,8 +2791,8 @@ msgstr "Немає на місці"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:370
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:760
-#: src/routes/project/CreateProjectRoute.tsx:519
-#: src/routes/project/CreateProjectRoute.tsx:738
+#: src/routes/project/CreateProjectRoute.tsx:521
+#: src/routes/project/CreateProjectRoute.tsx:740
 #: src/routes/project/report/ProjectReportRoute.tsx:500
 #: src/routes/organisation/OrganisationRoute.tsx:696
 #: src/routes/organisation/OrganisationRoute.tsx:719
@@ -3100,8 +3100,8 @@ msgstr "Запити, яким не вдалося підібрати акаун
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1341
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1976
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:760
-#: src/routes/project/ProjectsHome.tsx:542
-#: src/routes/project/CreateProjectRoute.tsx:489
+#: src/routes/project/ProjectsHome.tsx:454
+#: src/routes/project/CreateProjectRoute.tsx:492
 #: src/routes/project/report/ProjectReportRoute.tsx:281
 #: src/routes/organisation/OrganisationRoute.tsx:1833
 #: src/routes/organisation/OrganisationRoute.tsx:1856
@@ -3664,8 +3664,8 @@ msgstr "Очистити все"
 msgid "Clear filters"
 msgstr "Скинути фільтри"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:329
-#: src/routes/project/ProjectsHome.tsx:463
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:334
+#: src/routes/project/ProjectsHome.tsx:365
 #: src/routes/project/chat/NewChatRoute.tsx:175
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
 #: src/components/invite/WorkspaceSelectList.tsx:98
@@ -4060,7 +4060,7 @@ msgstr "Звернутися до підтримки"
 #~ msgid "Contact support"
 #~ msgstr "Звернутися до підтримки"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:426
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:431
 msgid "Contact the admin if this was unexpected."
 msgstr "Зверніться до адміністратора, якщо це сталося неочікувано."
 
@@ -4632,7 +4632,8 @@ msgid "Country"
 msgstr "Країна"
 
 #. js-lingui-explicit-id
-#: src/components/workspace/CreateMenu/CreateMenu.tsx:77
+#: src/components/workspace/CreateMenu/CreateMenu.tsx:65
+#: src/components/workspace/CreateMenu/CreateMenu.tsx:71
 msgid "create-menu.button"
 msgstr "Створити"
 
@@ -4699,11 +4700,10 @@ msgid "Create password"
 msgstr "Створити пароль"
 
 #: src/routes/project/CreateProjectRoute.tsx:445
-#: src/routes/project/CreateProjectRoute.tsx:748
+#: src/routes/project/CreateProjectRoute.tsx:750
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:82
 #: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:209
-#: src/components/project/CreateProjectButton.tsx:32
 msgid "Create project"
 msgstr "Створити проєкт"
 
@@ -5543,7 +5543,7 @@ msgstr "наприклад, Клієнт Альфа, Дослідження за
 msgid "e.g. Client onboarding interviews, Q1 product research"
 msgstr "наприклад, Інтерв'ю онбордингу клієнтів, дослідження продукту за Q1"
 
-#: src/routes/project/CreateProjectRoute.tsx:534
+#: src/routes/project/CreateProjectRoute.tsx:536
 msgid "e.g. Climate Listening, Q1 Research"
 msgstr "наприклад, Кліматичні обговорення, Дослідження за Q1"
 
@@ -6040,7 +6040,7 @@ msgid "Everyone can find it. Admins join directly; members can ask."
 msgstr "Знайти може кожен. Адміністратори приєднуються напряму; учасники можуть надіслати запит."
 
 #. placeholder {0}: workspace.name
-#: src/routes/project/CreateProjectRoute.tsx:634
+#: src/routes/project/CreateProjectRoute.tsx:636
 msgid "Everyone in {0} can find and open this project."
 msgstr "Кожен у {0} може знайти та відкрити цей проєкт."
 
@@ -7078,7 +7078,7 @@ msgstr "Перейти до редактора порталу"
 msgid "Go to previous release notes"
 msgstr "До попередніх приміток до випуску"
 
-#: src/routes/project/CreateProjectRoute.tsx:714
+#: src/routes/project/CreateProjectRoute.tsx:716
 msgid "Go to project home"
 msgstr "На головну проєкту"
 
@@ -7090,7 +7090,7 @@ msgstr "Перейти до звіту"
 msgid "Go to settings"
 msgstr "Перейти до налаштувань"
 
-#: src/routes/project/CreateProjectRoute.tsx:712
+#: src/routes/project/CreateProjectRoute.tsx:714
 msgid "Go to the upload page"
 msgstr "На сторінку завантаження"
 
@@ -7452,7 +7452,7 @@ msgstr "If you are happy with the {objectLabel} click \"Approve\" to show you fe
 msgid "If you need something different, we will draft an offer for your use case."
 msgstr "Якщо вам потрібно щось інше, ми підготуємо індивідуальну пропозицію для ваших потреб."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:439
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:444
 msgid "If you were expecting access, please ask the person who invited you to send it again."
 msgstr "Якщо ви очікували на доступ, попросіть людину, яка вас запросила, надіслати запрошення ще раз."
 
@@ -7582,7 +7582,7 @@ msgstr "успадковано від організації"
 msgid "Initial"
 msgstr "Початковий"
 
-#: src/routes/project/CreateProjectRoute.tsx:655
+#: src/routes/project/CreateProjectRoute.tsx:657
 msgid "Innovator or higher"
 msgstr "Innovator або вище"
 
@@ -8087,8 +8087,8 @@ msgstr "Продовжуйте працювати, поки аудіо зава�
 msgid "Keeps the tier until the date below, then reverts to Free unless they subscribe."
 msgstr "Зберігає тариф до вказаної нижче дати, після чого повертає на Free, якщо не оформлено підписку."
 
-#: src/routes/project/CreateProjectRoute.tsx:610
-#: src/routes/project/CreateProjectRoute.tsx:694
+#: src/routes/project/CreateProjectRoute.tsx:612
+#: src/routes/project/CreateProjectRoute.tsx:696
 #: src/components/project/KeyTermsInput.tsx:89
 #: src/components/common/settingChange.tsx:26
 msgid "Key terms"
@@ -8265,8 +8265,8 @@ msgstr "Знайдімо те, що вам підходить"
 
 #: src/routes/project/ProjectsHome.tsx:342
 #: src/routes/project/ProjectsHome.tsx:386
-msgid "Let's hear your first conversation."
-msgstr "Послухаймо вашу першу розмову."
+#~ msgid "Let's hear your first conversation."
+#~ msgstr "Послухаймо вашу першу розмову."
 
 #. placeholder {0}: canvas.name
 #: src/routes/project/canvas/CanvasRoute.tsx:453
@@ -9125,7 +9125,7 @@ msgstr "More actions"
 msgid "More dependable anonymisation and recording"
 msgstr "Надійніша анонімізація та запис"
 
-#: src/routes/project/CreateProjectRoute.tsx:600
+#: src/routes/project/CreateProjectRoute.tsx:602
 msgid "More options"
 msgstr "Більше параметрів"
 
@@ -9201,7 +9201,7 @@ msgstr "Історія переміщень"
 msgid "Move project"
 msgstr "Перемістити проєкт"
 
-#: src/routes/project/ProjectsHome.tsx:532
+#: src/routes/project/ProjectsHome.tsx:444
 #: src/components/project/BulkMoveProjectsModal.tsx:89
 msgid "Move projects"
 msgstr "Перемістити проєкти"
@@ -9258,7 +9258,7 @@ msgstr "My templates"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1551
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:453
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:699
-#: src/routes/project/CreateProjectRoute.tsx:685
+#: src/routes/project/CreateProjectRoute.tsx:687
 #: src/components/results/curate/StakeholdersTab.tsx:45
 #: src/components/project/ProjectBasicEdit.tsx:124
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:372
@@ -9284,7 +9284,7 @@ msgstr "Name is required"
 msgid "Name it after the client, engagement, or purpose."
 msgstr "Назвіть його на честь клієнта, ініціативи чи мети."
 
-#: src/routes/project/CreateProjectRoute.tsx:533
+#: src/routes/project/CreateProjectRoute.tsx:535
 msgid "Name it after the topic, engagement, or question you're exploring."
 msgstr "Назвіть його відповідно до теми, ініціативи або питання, яке ви досліджуєте."
 
@@ -9738,7 +9738,7 @@ msgstr "Результати для мапи ще не готові."
 msgid "No matches"
 msgstr "Збігів немає"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:353
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:358
 msgid "No matches found"
 msgstr "Збігів не знайдено"
 
@@ -9862,7 +9862,7 @@ msgstr "Немає активності в проєкті за цей періо
 msgid "No projects found {0}"
 msgstr "No projects found {0}"
 
-#: src/routes/project/ProjectsHome.tsx:482
+#: src/routes/project/ProjectsHome.tsx:394
 msgid "No projects found for search term"
 msgstr "No projects found for search term"
 
@@ -10211,7 +10211,7 @@ msgstr "Нотатки про цей робочий простір, збереж
 msgid "Nothing from dembrane right now."
 msgstr "Зараз від dembrane нічого немає."
 
-#: src/routes/project/ProjectsHome.tsx:384
+#: src/routes/project/ProjectsHome.tsx:296
 msgid "Nothing here for you yet."
 msgstr "Тут для вас поки нічого немає."
 
@@ -10448,7 +10448,7 @@ msgstr "Бачити це можуть лише додані або запрош
 msgid "Only when recording an invoice already paid out-of-band."
 msgstr "Лише під час реєстрації рахунку, вже сплаченого в інший спосіб."
 
-#: src/routes/project/CreateProjectRoute.tsx:660
+#: src/routes/project/CreateProjectRoute.tsx:662
 msgid "Only workspace admins and the people you invite can open this project."
 msgstr "Лише адміністратори робочого простору та запрошені вами люди можуть відкрити цей проєкт."
 
@@ -10612,8 +10612,8 @@ msgstr "Відкрий цю сторінку в {browserName} через мен�
 msgid "Open this page in your browser from the app's menu, or copy the link."
 msgstr "Відкрий цю сторінку у своєму браузері через меню застосунку або скопіюй посилання."
 
-#: src/routes/project/CreateProjectRoute.tsx:631
-#: src/routes/project/CreateProjectRoute.tsx:702
+#: src/routes/project/CreateProjectRoute.tsx:633
+#: src/routes/project/CreateProjectRoute.tsx:704
 msgid "Open to the workspace"
 msgstr "Відкрити для робочого простору"
 
@@ -10729,7 +10729,7 @@ msgid "Organisation"
 msgstr "Організація"
 
 #. js-lingui-explicit-id
-#: src/components/workspace/CreateMenu/CreateMenu.tsx:120
+#: src/components/workspace/CreateMenu/CreateMenu.tsx:159
 msgid "create-menu.organisation"
 msgstr "Організація"
 
@@ -11305,7 +11305,7 @@ msgstr "Закріплюйте до трьох проєктів угорі сп�
 msgid "Pin your most-used templates directly in chat."
 msgstr "Закріплюйте найуживаніші шаблони просто в чаті."
 
-#: src/routes/project/ProjectsHome.tsx:417
+#: src/routes/project/ProjectsHome.tsx:311
 msgid "Pinned"
 msgstr "Закріплені"
 
@@ -11720,8 +11720,8 @@ msgstr "URL політики конфіденційності"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1947
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:399
-#: src/routes/project/CreateProjectRoute.tsx:651
-#: src/routes/project/CreateProjectRoute.tsx:704
+#: src/routes/project/CreateProjectRoute.tsx:653
+#: src/routes/project/CreateProjectRoute.tsx:706
 #: src/components/workspace/OrganisationProjectsTable.tsx:246
 #: src/components/workspace/DiscoverableWorkspaces.tsx:309
 #: src/components/sharing/StatusLine.tsx:93
@@ -11815,7 +11815,7 @@ msgstr "Картки проєктів тепер показують мову п�
 msgid "project chats"
 msgstr "чати проєкту"
 
-#: src/routes/project/CreateProjectRoute.tsx:689
+#: src/routes/project/CreateProjectRoute.tsx:691
 #: src/components/project/ProjectContextInput.tsx:35
 #: src/components/project/ProjectBasicEdit.tsx:144
 #: src/components/common/settingChange.tsx:15
@@ -11841,7 +11841,7 @@ msgstr "Project default: enabled. Personal information will be replaced with pla
 msgid "Project deleted"
 msgstr "Проєкт видалено"
 
-#: src/components/workspace/CreateMenu/CreateMenu.tsx:95
+#: src/components/workspace/CreateMenu/CreateMenu.tsx:133
 msgid "Project from a template"
 msgstr "Проєкт із шаблону"
 
@@ -11874,7 +11874,7 @@ msgid "Project moved"
 msgstr "Проєкт переміщено"
 
 #: src/routes/project/ProjectHomeRoute.tsx:270
-#: src/routes/project/CreateProjectRoute.tsx:532
+#: src/routes/project/CreateProjectRoute.tsx:534
 #: src/components/project/ProjectListItem.tsx:403
 #: src/components/project/ProjectDangerZone.tsx:146
 #: src/components/common/settingChange.tsx:42
@@ -11931,7 +11931,7 @@ msgstr "проєкти"
 msgid "Projects"
 msgstr "Projects"
 
-#: src/routes/project/ProjectsHome.tsx:86
+#: src/routes/project/ProjectsHome.tsx:62
 msgid "Projects | dembrane"
 msgstr "Projects | dembrane"
 
@@ -11944,7 +11944,7 @@ msgstr "Проєкти організації · {0}"
 msgid "Projects moved"
 msgstr "Проєкти переміщено"
 
-#: src/routes/project/ProjectsHome.tsx:391
+#: src/routes/project/ProjectsHome.tsx:299
 msgid "Projects will show up here once someone on the organisation shares one with you."
 msgstr "Проєкти з'являться тут, щойно хтось в організації поділиться з вами одним із них."
 
@@ -12038,7 +12038,7 @@ msgstr "Запитання про роботу dembrane, а не лише про
 msgid "Queued"
 msgstr "У черзі"
 
-#: src/components/workspace/CreateMenu/CreateMenu.tsx:88
+#: src/components/workspace/CreateMenu/CreateMenu.tsx:126
 msgid "Quick project"
 msgstr "Швидкий проєкт"
 
@@ -13588,7 +13588,7 @@ msgstr "Шукайте людей або введіть email"
 msgid "Search project or workspace"
 msgstr "Пошук проєкту або робочого простору"
 
-#: src/routes/project/ProjectsHome.tsx:470
+#: src/routes/project/ProjectsHome.tsx:372
 msgid "Search projects"
 msgstr "Search projects"
 
@@ -13600,7 +13600,7 @@ msgstr "Search Projects"
 msgid "Search projects, conversations, transcripts…"
 msgstr "Пошук проєктів, розмов, транскриптів…"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:317
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:322
 msgid "Search projects, organisations, workspaces, settings…"
 msgstr "Пошук проєктів, організацій, робочих просторів, налаштувань…"
 
@@ -13609,7 +13609,7 @@ msgstr "Пошук проєктів, організацій, робочих пр
 msgid "Search projects..."
 msgstr "Search projects..."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:343
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:348
 #: src/features/sidebar/blocks/SearchBlock.tsx:178
 msgid "Search results"
 msgstr "Результати пошуку"
@@ -13666,7 +13666,7 @@ msgstr "Пошук у стенограмах"
 msgid "Searching transcripts for \"{0}\""
 msgstr "Пошук у стенограмах за запитом \"{0}\""
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:351
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:356
 #: src/features/sidebar/blocks/SearchBlock.tsx:183
 msgid "Searching…"
 msgstr "Пошук…"
@@ -13737,7 +13737,7 @@ msgstr "See you soon"
 msgid "Sees usage and invoices. No project or content access."
 msgstr "Бачить використання та рахунки. Не має доступу до проєктів чи вмісту."
 
-#: src/routes/project/ProjectsHome.tsx:554
+#: src/routes/project/ProjectsHome.tsx:466
 #: src/components/billing/BillingManager.tsx:450
 msgid "Select"
 msgstr "Вибрати"
@@ -13778,7 +13778,7 @@ msgstr "Спершу виберіть слово"
 msgid "Select a workspace"
 msgstr "Виберіть робочий простір"
 
-#: src/routes/project/ProjectsHome.tsx:519
+#: src/routes/project/ProjectsHome.tsx:431
 #: src/components/workspace/DiscoverableWorkspaces.tsx:279
 #: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all"
@@ -14048,7 +14048,7 @@ msgstr "Перевести на керований білінг"
 msgid "Set up a new webhook from scratch"
 msgstr "Налаштувати новий вебхук з нуля"
 
-#: src/routes/project/CreateProjectRoute.tsx:677
+#: src/routes/project/CreateProjectRoute.tsx:679
 msgid "Set up with the assistant after creating"
 msgstr "Налаштувати з асистентом після створення"
 
@@ -14086,7 +14086,7 @@ msgid "Setting up"
 msgstr "Налаштування"
 
 #: src/routes/settings/UserSettingsRoute.tsx:59
-#: src/routes/project/ProjectsHome.tsx:302
+#: src/routes/project/ProjectsHome.tsx:265
 #: src/portal/layout/ParticipantHeader.tsx:125
 #: src/portal/layout/ParticipantHeader.tsx:126
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:29
@@ -14121,7 +14121,7 @@ msgstr "Налаштування для зміни"
 msgid "Settings updated"
 msgstr "Налаштування оновлено"
 
-#: src/routes/project/CreateProjectRoute.tsx:708
+#: src/routes/project/CreateProjectRoute.tsx:710
 #: src/features/sidebar/views/user/UserHomeView.tsx:76
 msgid "Setup"
 msgstr "Налаштування"
@@ -14816,7 +14816,7 @@ msgstr "Start fresh"
 msgid "Start from a template, like a focus group or citizens' assembly, already set up for you."
 msgstr "Почни з шаблону, як-от фокус-група чи громадянська асамблея, уже налаштованого за тебе."
 
-#: src/routes/project/CreateProjectRoute.tsx:710
+#: src/routes/project/CreateProjectRoute.tsx:712
 msgid "Start in assistant chat"
 msgstr "Почати в чаті з асистентом"
 
@@ -14846,7 +14846,7 @@ msgstr "Користуйся dembrane безкоштовно, з годинам�
 msgid "Started recording"
 msgstr "Запис розпочато"
 
-#: src/routes/project/CreateProjectRoute.tsx:528
+#: src/routes/project/CreateProjectRoute.tsx:530
 msgid "Starting from: {templateLabel}"
 msgstr "Основа: {templateLabel}"
 
@@ -15316,7 +15316,7 @@ msgstr "Повідомте адміністраторам робочого пр�
 msgid "Tell us what you need"
 msgstr "Розкажіть нам про ваші потреби"
 
-#: src/routes/project/CreateProjectRoute.tsx:684
+#: src/routes/project/CreateProjectRoute.tsx:686
 msgid "Template"
 msgstr "Шаблон"
 
@@ -16566,7 +16566,7 @@ msgstr "Позначте всі відповідні варіанти"
 msgid "Tick the ones you want. The rest stay as the template sets them."
 msgstr "Позначте ті, які хочете. Решта залишиться такою, як задає шаблон."
 
-#: src/routes/project/CreateProjectRoute.tsx:718
+#: src/routes/project/CreateProjectRoute.tsx:720
 #: src/routes/admin/AdminSettingsRoute.tsx:1576
 #: src/routes/admin/AdminSettingsRoute.tsx:2603
 #: src/routes/admin/AdminSettingsRoute.tsx:3025
@@ -17203,7 +17203,7 @@ msgstr "Вебхук без назви"
 msgid "Unpin"
 msgstr "Unpin"
 
-#: src/routes/project/ProjectsHome.tsx:207
+#: src/routes/project/ProjectsHome.tsx:195
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Unpin a project first (max {MAX_PINNED})"
 
@@ -17809,7 +17809,7 @@ msgstr "View"
 msgid "View example payload"
 msgstr "View example payload"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:410
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:415
 msgid "View invite"
 msgstr "Переглянути запрошення"
 
@@ -18269,6 +18269,10 @@ msgstr "Що допоможе вам зараз?"
 msgid "What would resolve this tension"
 msgstr "Що розв'язало б це напруження"
 
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:299
+msgid "What would you like to do?"
+msgstr "Що ви хочете зробити?"
+
 #: src/components/chat/ChatModeSelector.tsx:200
 msgid "What would you like to explore?"
 msgstr "What would you like to explore?"
@@ -18366,8 +18370,8 @@ msgid "Where views stayed different, each side in one line."
 msgstr "Де погляди залишилися різними, кожна сторона одним рядком."
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:293
-msgid "Where would you like to go?"
-msgstr "Куди ви хочете перейти?"
+#~ msgid "Where would you like to go?"
+#~ msgstr "Куди ви хочете перейти?"
 
 #: src/routes/project/chat/NewChatRoute.tsx:574
 #: src/components/chat/AgenticChatPanel.tsx:1916
@@ -18395,7 +18399,7 @@ msgstr "Поки люди говорять, текст з'являється ч�
 msgid "Who can see and collaborate on this project."
 msgstr "Хто може бачити цей проєкт і співпрацювати над ним."
 
-#: src/routes/project/CreateProjectRoute.tsx:620
+#: src/routes/project/CreateProjectRoute.tsx:622
 #: src/components/project/ProjectSharingModal.tsx:283
 msgid "Who can see this project?"
 msgstr "Хто може бачити цей проєкт?"
@@ -18503,7 +18507,7 @@ msgstr "Працюємо над відповіддю..."
 #~ msgid "workspace"
 #~ msgstr "робочий простір"
 
-#: src/routes/project/CreateProjectRoute.tsx:697
+#: src/routes/project/CreateProjectRoute.tsx:699
 #: src/routes/admin/AdminSettingsRoute.tsx:1682
 #: src/routes/admin/AdminSettingsRoute.tsx:2230
 #: src/features/sidebar/hooks/useSearchHits.ts:166
@@ -18514,7 +18518,7 @@ msgid "Workspace"
 msgstr "Робочий простір"
 
 #. js-lingui-explicit-id
-#: src/components/workspace/CreateMenu/CreateMenu.tsx:106
+#: src/components/workspace/CreateMenu/CreateMenu.tsx:144
 msgid "create-menu.workspace"
 msgstr "Робочий простір"
 
@@ -18699,7 +18703,7 @@ msgstr "Ви є власником даних"
 msgid "You can change this anytime in settings."
 msgstr "Ви можете змінити це будь-коли в налаштуваннях."
 
-#: src/routes/project/CreateProjectRoute.tsx:621
+#: src/routes/project/CreateProjectRoute.tsx:623
 msgid "You can change this later in project settings."
 msgstr "Ви можете змінити це пізніше в налаштуваннях проєкту."
 
@@ -18814,12 +18818,12 @@ msgid "You have a pending invite"
 msgstr "У вас є очікуване запрошення"
 
 #. placeholder {0}: invites[0].org_name
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:393
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:398
 msgid "You have a pending invite to {0}. Open it to join the organisation."
 msgstr "У вас є очікуване запрошення до {0}. Відкрийте його, щоб приєднатися до організації."
 
 #. placeholder {0}: invites[0].workspace_name ?? t`a workspace`
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:398
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:403
 msgid "You have a pending invite to {0}. The admin needs to free a seat before you can join."
 msgstr "У вас є очікуване запрошення до {0}. Адміністратор має звільнити місце, перш ніж ви зможете приєднатися."
 
@@ -18934,7 +18938,7 @@ msgstr "Вас буде додано як адміністратора до {sin
 msgid "You'll find all your projects waiting for you."
 msgstr "Усі ваші проєкти вже чекають на вас."
 
-#: src/routes/project/CreateProjectRoute.tsx:678
+#: src/routes/project/CreateProjectRoute.tsx:680
 msgid "You'll land in a chat where dembrane helps shape the project before you collect conversations."
 msgstr "Ви потрапите в чат, де dembrane допоможе сформувати проєкт, перш ніж ви почнете збирати розмови."
 
@@ -18996,7 +19000,7 @@ msgstr "Ви входите не з тієї електронної адреси
 msgid "You're not in any organisation yet. Create a workspace to start an organisation, or ask a member for an invite."
 msgstr "Ви ще не належите до жодної організації. Створіть робочий простір, щоб заснувати організацію, або попросіть учасника надіслати запрошення."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:436
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:441
 msgid "You're not part of any organisation right now."
 msgstr "Зараз ви не належите до жодної організації."
 
@@ -19077,7 +19081,7 @@ msgstr "Ваш доступ"
 
 #. placeholder {0}: recentRemovals[0].workspace_name
 #. placeholder {1}: new Date(recentRemovals[0].ended_at).toLocaleDateString()
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:420
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:425
 msgid "Your access to {0} ended on {1}."
 msgstr "Ваш доступ до {0} завершився {1}."
 
@@ -19294,7 +19298,7 @@ msgstr "Ваші портали продовжують працювати, і н
 msgid "Your project context is long, so suggestions read its first 20,000 characters. The whole text is saved."
 msgstr "Контекст вашого проєкту довгий, тому пропозиції читають перші 20 000 символів. Увесь текст збережено."
 
-#: src/routes/project/ProjectsHome.tsx:345
+#: src/routes/project/ProjectsHome.tsx:382
 msgid "Your projects will appear here. A project holds everything for one topic: the link participants record on, their conversations, and what dembrane makes of them."
 msgstr "Тут з’являться ваші проєкти. Проєкт містить усе для однієї теми: посилання, за яким учасники записують, їхні розмови та те, що з них робить dembrane."
 

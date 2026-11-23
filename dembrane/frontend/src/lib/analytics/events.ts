@@ -15,8 +15,10 @@ import posthog from "posthog-js";
  *    drawn format cards; pressing a card goes straight to the name (no Continue). "See all
  *    formats" opens the full list with its filters (step "formats"). The review after an
  *    upload is one part per screen, with step events of its own.
- * 5: Quick start (the plain project) is the first card wherever templates are offered, and
- *    Home has a Create menu whose "Quick project" lands on the name step with it chosen.
+ * 5: Quick start (the plain project) is the first card wherever templates are offered,
+ *    and the start screen puts the row of templates above the upload. Home and workspace
+ *    home have a Create menu whose "Quick project" lands on the name step with Quick start
+ *    chosen; workspace home no longer shows the template picker ("picker" lists end).
  */
 export const FLOW_VERSION = 5;
 

@@ -5,6 +5,7 @@ import {
 	cardFacts,
 	NO_FILTER,
 	offeredCards,
+	type TemplateChoiceContext,
 	type TemplateFilter,
 	type TemplateSummary,
 	visibleCards,
@@ -12,7 +13,6 @@ import {
 import { TemplateCardButton } from "../TemplateCard/TemplateCardButton";
 import { TemplateChooser } from "../TemplateChooser/TemplateChooser";
 import { TemplateFilters } from "../TemplateFilters/TemplateFilters";
-import type { TemplateChoiceContext } from "../TemplatePicker/TemplatePicker";
 
 interface AllFormatsProps {
 	/** From GET /v2/project-templates; undefined while it loads. */
@@ -44,15 +44,13 @@ export const AllFormats = ({
 	onUpload,
 }: AllFormatsProps) => {
 	const [filter, setFilter] = useState<TemplateFilter>(NO_FILTER);
-	const formats =
-		templates && !failed ? visibleCards(templates, filter, true) : [];
+	const formats = templates && !failed ? visibleCards(templates, filter) : [];
 	const { cards, count } = offeredCards(formats, filter);
 
 	return (
 		<TemplateChooser
 			templates={templates}
 			failed={failed}
-			order={5}
 			skeleton={
 				<>
 					<Skeleton height={40} />
@@ -71,7 +69,6 @@ export const AllFormats = ({
 			}
 			empty={formats.length === 0}
 			onUpload={onUpload}
-			gap="lg"
 			testId="all-formats"
 		>
 			<SimpleGrid

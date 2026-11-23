@@ -6,13 +6,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { TEMPLATE_SUMMARIES } from "@/components/project/templates/projectTemplates.fixture";
 import { ProjectsHomeRoute } from "./ProjectsHome";
 
 const navigate = vi.hoisted(() => vi.fn());
 const tracked = vi.hoisted(() => vi.fn());
 const role = vi.hoisted(() => ({ current: "owner" }));
 const projects = vi.hoisted(() => ({ current: [] as unknown[] }));
+const atCap = vi.hoisted(() => ({ current: false }));
 
 vi.mock("@formkit/auto-animate/react", () => ({
 	useAutoAnimate: () => [null],
@@ -36,9 +36,12 @@ vi.mock("@/hooks/useWorkspace", () => ({
 		workspaceId: "w1",
 	}),
 }));
-vi.mock("@/hooks/useProjectCap", () => ({ useProjectCap: () => false }));
+vi.mock("@/hooks/useProjectCap", () => ({
+	useProjectCap: () => atCap.current,
+}));
 vi.mock("@/components/workspace/FeatureGate", () => ({
-	UpgradeModal: () => null,
+	UpgradeModal: ({ opened }: { opened: boolean }) =>
+		opened ? <div data-testid="upgrade-modal" /> : null,
 }));
 vi.mock("@/components/project/hooks", () => ({
 	useTogglePinMutation: () => ({ isPending: false, mutate: vi.fn() }),
@@ -63,18 +66,6 @@ vi.mock("@/hooks/useWorkspaceProjects", () => ({
 		isFetchingNextPage: false,
 		status: "success",
 	}),
-}));
-vi.mock("@/components/project/templates/projectTemplates", async (orig) => ({
-	...(await orig<
-		typeof import("@/components/project/templates/projectTemplates")
-	>()),
-	useProjectTemplates: () => ({ data: TEMPLATE_SUMMARIES, isError: false }),
-}));
-vi.mock("@/components/project/templates/i18n", () => ({
-	useTemplatesCatalog: () => true,
-}));
-vi.mock("@/hooks/useLanguage", () => ({
-	useLanguage: () => ({ language: "en-US" }),
 }));
 vi.mock("@/lib/analytics/events", async (orig) => ({
 	...(await orig<typeof import("@/lib/analytics/events")>()),
@@ -103,6 +94,7 @@ afterEach(() => {
 	tracked.mockReset();
 	role.current = "owner";
 	projects.current = [];
+	atCap.current = false;
 });
 
 const sample = { id: "s1", is_sample: true, name: "Best practices (sample)" };
@@ -112,7 +104,7 @@ const renderHome = () =>
 	render(
 		<QueryClientProvider client={new QueryClient()}>
 			<I18nProvider i18n={i18n}>
-				<MantineProvider>
+				<MantineProvider env="test">
 					<MemoryRouter>
 						<ProjectsHomeRoute />
 					</MemoryRouter>
@@ -121,62 +113,48 @@ const renderHome = () =>
 		</QueryClientProvider>,
 	);
 
-describe("workspace home for a host with no project of their own", () => {
+const openCreate = () => {
+	fireEvent.click(screen.getByTestId("create-menu-button"));
+	return screen.getAllByRole("menuitem").map((el) => el.textContent?.trim());
+};
+
+describe("workspace home's Create menu", () => {
 	it.each([
 		["no projects at all", []],
 		["only the sample", [sample]],
+		["projects of their own", [own, sample]],
 	])(
-		"with %s, the template picker is the one primary action",
-		async (_, list) => {
+		"with %s, sits on the All projects row above the search, with the project items only",
+		(_, list) => {
 			projects.current = list;
 			renderHome();
-			expect(screen.getByTestId("workspace-home-start")).toBeTruthy();
-			// Loaded on its own, only here.
-			expect(await screen.findByTestId("template-picker")).toBeTruthy();
-			// One create button, waiting for a card.
-			const create = screen.getAllByTestId("project-home-create-button");
-			expect(create).toHaveLength(1);
-			expect(create[0]).toHaveProperty("disabled", true);
-			expect(screen.getByText(/Your projects will appear here/)).toBeTruthy();
+			const button = screen.getByTestId("create-menu-button");
+			expect(button.closest(".mantine-Group-root")?.textContent).toContain(
+				"All projects",
+			);
+			expect(
+				button.compareDocumentPosition(
+					screen.getByTestId("project-search-input"),
+				) & Node.DOCUMENT_POSITION_FOLLOWING,
+			).toBeTruthy();
+			expect(screen.getAllByTestId("create-menu-button")).toHaveLength(1);
+			expect(openCreate()).toEqual([
+				"Quick project",
+				"Project from a template",
+			]);
+			// The old start block is gone.
+			expect(
+				screen.queryByText("Let's hear your first conversation."),
+			).toBeNull();
+			expect(screen.queryByTestId("template-picker")).toBeNull();
 		},
 	);
 
-	it("continues to the name step with the chosen template", async () => {
-		projects.current = [sample];
+	it("starts a Quick project here: counts it as Quick start and goes to the name", () => {
 		renderHome();
-		fireEvent.click(
-			await screen.findByTestId("template-card-resident_evening"),
-		);
-		fireEvent.click(screen.getByTestId("project-home-create-button"));
-		expect(navigate).toHaveBeenCalledWith(
-			"/w/w1/projects/new?template=resident_evening",
-		);
-		expect(tracked).toHaveBeenCalledWith("project_template_selected", {
-			featured: true,
-			filters_active: [],
-			setup: "many_groups",
-			surface: "workspace_home",
-			template_key: "resident_evening",
-			verbs: ["understand", "decide"],
-		});
-	});
-
-	it("offers Quick start as the first card, and goes on with it as a plain project", async () => {
-		renderHome();
-		await screen.findByTestId("template-picker");
-		const cards = screen
-			.getAllByRole("radio")
-			.map((r) => r.getAttribute("data-testid"));
-		expect(cards[0]).toBe("template-card-blank");
-		expect(screen.queryByTestId("template-picker-start-blank")).toBeNull();
-		// Nothing is chosen for the host.
-		expect(screen.getByTestId("project-home-create-button")).toHaveProperty(
-			"disabled",
-			true,
-		);
-		fireEvent.click(screen.getByTestId("template-card-blank"));
-		fireEvent.click(screen.getByTestId("project-home-create-button"));
-		expect(navigate).toHaveBeenCalledWith("/w/w1/projects/new?template=blank");
+		openCreate();
+		fireEvent.click(screen.getByTestId("create-menu-quick-project"));
+		expect(tracked).toHaveBeenCalledWith("project_create_started");
 		expect(tracked).toHaveBeenCalledWith("project_template_selected", {
 			featured: false,
 			filters_active: [],
@@ -185,25 +163,54 @@ describe("workspace home for a host with no project of their own", () => {
 			template_key: "blank",
 			verbs: [],
 		});
+		expect(navigate).toHaveBeenCalledWith("/w/w1/projects/new?template=blank");
 	});
 
-	it("uploads from the quiet link", async () => {
+	it("goes to the template screen for a project from a template", () => {
+		projects.current = [own];
 		renderHome();
-		fireEvent.click(await screen.findByTestId("template-picker-upload"));
-		expect(navigate).toHaveBeenCalledWith("/w/w1/projects/new?template=upload");
+		openCreate();
+		fireEvent.click(screen.getByTestId("create-menu-template-project"));
+		expect(tracked).toHaveBeenCalledWith("project_create_started");
+		expect(tracked).not.toHaveBeenCalledWith(
+			"project_template_selected",
+			expect.anything(),
+		);
+		expect(navigate).toHaveBeenCalledWith("/w/w1/projects/new");
 	});
 
-	it("shows the list as before once the host has a project", () => {
-		projects.current = [own, sample];
+	it("at the free project cap opens the wall instead of the menu", () => {
+		atCap.current = true;
 		renderHome();
-		expect(screen.queryByTestId("workspace-home-start")).toBeNull();
-		expect(screen.getAllByTestId("project-home-create-button")).toHaveLength(1);
+		fireEvent.click(screen.getByTestId("create-menu-button"));
+		expect(screen.queryByRole("menuitem")).toBeNull();
+		expect(screen.getByTestId("upgrade-modal")).toBeTruthy();
+		expect(screen.getByTestId("unavailable-info")).toBeTruthy();
+		expect(navigate).not.toHaveBeenCalled();
+	});
+});
+
+describe("an empty workspace", () => {
+	it("shows the row, the search and one quiet line where the list would be", () => {
+		renderHome();
+		expect(screen.getByTestId("create-menu-button")).toBeTruthy();
+		expect(screen.getByTestId("project-search-input")).toBeTruthy();
+		expect(screen.getByText(/Your projects will appear here/)).toBeTruthy();
+		expect(screen.queryAllByTestId("project-row")).toHaveLength(0);
 	});
 
-	it("does not offer the picker to someone who cannot create", () => {
+	it("does not show the quiet line once there is a project, the sample included", () => {
+		projects.current = [sample];
+		renderHome();
+		expect(screen.queryByText(/Your projects will appear here/)).toBeNull();
+		expect(screen.getAllByTestId("project-row")).toHaveLength(1);
+	});
+
+	it("tells a guest nothing is shared yet, with no Create", () => {
 		role.current = "observer";
 		renderHome();
-		expect(screen.queryByTestId("workspace-home-start")).toBeNull();
 		expect(screen.getByText("Nothing here for you yet.")).toBeTruthy();
+		expect(screen.queryByTestId("create-menu-button")).toBeNull();
+		expect(screen.queryByTestId("project-search-input")).toBeNull();
 	});
 });

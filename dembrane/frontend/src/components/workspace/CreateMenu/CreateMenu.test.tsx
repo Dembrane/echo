@@ -35,7 +35,15 @@ const team = { id: "w-team", name: "Team", orgName: "Gemeente Utrecht" };
 const lab = { id: "w-lab", name: "Lab", orgName: "Gemeente Utrecht" };
 const pilot = { id: "w-pilot", name: "Pilot", orgName: "Atelier" };
 
-const renderMenu = (props: Partial<ComponentProps<typeof CreateMenu>> = {}) => {
+/** Home's form: every item. */
+const renderMenu = (
+	props: {
+		projectWorkspaces?: ComponentProps<typeof CreateMenu>["projectWorkspaces"];
+		lastWorkspaceId?: string | null;
+		onWorkspace?: () => void;
+		orgCapped?: boolean;
+	} = {},
+) => {
 	const handlers = {
 		onOrganisation: vi.fn(),
 		onProject: vi.fn(),
@@ -47,7 +55,6 @@ const renderMenu = (props: Partial<ComponentProps<typeof CreateMenu>> = {}) => {
 				<CreateMenu
 					projectWorkspaces={[team]}
 					lastWorkspaceId={null}
-					canCreateWorkspace
 					orgCapped={false}
 					{...handlers}
 					{...props}
@@ -56,6 +63,23 @@ const renderMenu = (props: Partial<ComponentProps<typeof CreateMenu>> = {}) => {
 		</I18nProvider>,
 	);
 	return handlers;
+};
+
+/** Workspace home's form: its one workspace, the project items only. */
+const renderProjectMenu = (onProjectCap?: () => void) => {
+	const onProject = vi.fn();
+	render(
+		<I18nProvider i18n={i18n}>
+			<MantineProvider env="test">
+				<CreateMenu
+					projectWorkspaces={[team]}
+					onProject={onProject}
+					onProjectCap={onProjectCap}
+				/>
+			</MantineProvider>
+		</I18nProvider>,
+	);
+	return onProject;
 };
 
 const open = () => fireEvent.click(screen.getByTestId("create-menu-button"));
@@ -130,6 +154,8 @@ describe("CreateMenu", () => {
 		const button = screen.getByTestId("create-menu-button");
 		expect(button.textContent).toBe("Create");
 		expect(button.getAttribute("data-variant")).toBe("filled");
+		// Named "Create" also on a phone, where the label is hidden and the plus stays.
+		expect(button.getAttribute("aria-label")).toBe("Create");
 		open();
 		expect(items()).toEqual([
 			"Quick project",
@@ -142,7 +168,7 @@ describe("CreateMenu", () => {
 	});
 
 	it("shows the project items only where a project can be created, and Workspace only for an organisation admin", () => {
-		renderMenu({ canCreateWorkspace: false, projectWorkspaces: [] });
+		renderMenu({ onWorkspace: undefined, projectWorkspaces: [] });
 		open();
 		expect(items()).toEqual(["Organisation"]);
 	});
@@ -215,6 +241,44 @@ describe("CreateMenu", () => {
 				.getByTestId("create-menu-organisation")
 				.querySelector('[data-testid="unavailable-info"]'),
 		).toBeNull();
+	});
+});
+
+describe("CreateMenu with the project items only (workspace home)", () => {
+	it("offers Quick project and Project from a template, with no divider and no question", () => {
+		const onProject = renderProjectMenu();
+		open();
+		expect(items()).toEqual(["Quick project", "Project from a template"]);
+		expect(
+			screen.getByTestId("create-menu").querySelector(".mantine-Menu-divider"),
+		).toBeNull();
+		fireEvent.click(screen.getByTestId("create-menu-quick-project"));
+		expect(onProject).toHaveBeenCalledWith("w-team", "quick");
+		expect(screen.queryByRole("dialog")).toBeNull();
+	});
+
+	it("at the free project cap looks unavailable, says why, and opens the wall instead of the menu", () => {
+		const wall = vi.fn();
+		const onProject = renderProjectMenu(wall);
+		const button = screen.getByTestId("create-menu-button");
+		expect(button.getAttribute("aria-label")).toBe("Create");
+		expect(screen.getByTestId("unavailable-info")).toBeTruthy();
+		fireEvent.click(button);
+		expect(wall).toHaveBeenCalledOnce();
+		expect(screen.queryByRole("menuitem")).toBeNull();
+		expect(onProject).not.toHaveBeenCalled();
+	});
+	it("takes the cap only with the project items alone, so it can hide no other item", () => {
+		const props = {
+			onProject: () => {},
+			onProjectCap: () => {},
+			projectWorkspaces: [team],
+		};
+		// @ts-expect-error The cap with Organisation would hide Organisation behind the wall.
+		<CreateMenu {...props} onOrganisation={() => {}} />;
+		// @ts-expect-error The cap with Workspace would hide Workspace behind the wall.
+		<CreateMenu {...props} onWorkspace={() => {}} />;
+		expect(<CreateMenu {...props} />).toBeTruthy();
 	});
 });
 

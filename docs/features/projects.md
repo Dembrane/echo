@@ -11,7 +11,7 @@ transcripts, summaries, chats and reports. A good rule is one question or one en
 project. If you would report on it as one thing, it is one project.
 
 Projects live in a [workspace](./organisations-and-workspaces.md). The workspace home lists
-them, with a "Search projects" box and a "Create project" button.
+them, with a "Search projects" box and a "Create" button above it.
 
 ## Who can do what
 
@@ -26,17 +26,17 @@ The full table is on [roles and permissions](./roles-and-permissions.md).
 
 ## Create a project
 
-Choose "Create project" on the workspace home. On Home, the page that asks "Where would you
-like to go?", "Create" above the search box does the same: "Quick project" or "Project from
-a template". If you can create projects in more than one workspace, it first asks "Which
-workspace?".
+Choose "Create" above the search box on the workspace home, then "Quick project" or
+"Project from a template". On a phone the button is a plus. Home, the page that asks "What
+would you like to do?", has the same "Create" button; if you can create projects in more
+than one workspace, it first asks "Which workspace?".
 
-1. Choose how to start. Under the place to drop an agenda, invitation or run sheet, the
-   first card, "Quick start", makes a plain project: nothing is set up for you, and you can
-   change every setting later. The cards after it are formats, such as "Table
-   conversations" or "Focus group", that set the project up for that kind of session. "See
-   all formats" shows every format with filters. "Quick project" on Home skips this step
-   and starts from "Quick start".
+1. Choose how to start. Under "Start from a template", the first card, "Quick start", makes
+   a plain project: nothing is set up for you, and you can change every setting later. The
+   cards after it are formats, such as "Table conversations" or "Focus group", that set the
+   project up for that kind of session. "See all formats" shows every format with filters.
+   Under the cards you can drop an agenda, invitation or run sheet instead. "Quick project"
+   skips this step and starts from "Quick start".
 2. Fill in "Project name" and, if you like, "Project context". The context says what the
    project is about and what you want to learn. dembrane uses it when it writes summaries,
    answers in chat and replies to participants.

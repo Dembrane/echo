@@ -286,23 +286,28 @@ export const WorkspaceSelectorRoute = () => {
 				<Title order={2}>
 					{firstName ? <Trans>Hi {firstName}</Trans> : <Trans>Hi</Trans>}
 				</Title>
-				{/* One row while the lede and Create fit; on a narrow screen Create drops to its
-				    own line, still at the right, rather than splitting the lede. */}
-				<Group justify="space-between" align="center" gap="md" mt={8}>
+				{/* One row: on a phone Create is a plus alone (CreateMenu), so the lede keeps
+				    its line beside it. */}
+				<Group
+					justify="space-between"
+					align="center"
+					gap="md"
+					mt={8}
+					wrap="nowrap"
+				>
 					<Text size="md">
-						<Trans>Where would you like to go?</Trans>
+						<Trans>What would you like to do?</Trans>
 					</Text>
-					<Box ml="auto">
-						<CreateMenu
-							projectWorkspaces={projectWorkspaces}
-							lastWorkspaceId={lastWorkspaceId}
-							canCreateWorkspace={canCreateWorkspace}
-							orgCapped={orgCapped}
-							onProject={startProject}
-							onWorkspace={() => navigate("/w/new")}
-							onOrganisation={createOrgHandlers.open}
-						/>
-					</Box>
+					<CreateMenu
+						projectWorkspaces={projectWorkspaces}
+						lastWorkspaceId={lastWorkspaceId}
+						onProject={startProject}
+						onWorkspace={
+							canCreateWorkspace ? () => navigate("/w/new") : undefined
+						}
+						onOrganisation={createOrgHandlers.open}
+						orgCapped={orgCapped}
+					/>
 				</Group>
 				<CreateOrganisationModal
 					opened={createOrgOpened}
