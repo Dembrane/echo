@@ -5,14 +5,17 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 /** jsdom has no MediaRecorder and no Audio playback. The hook module reads
  * MediaRecorder at import time, so both fakes have to exist before the import
  * below runs. */
-const { getUserMedia, recorderFailure } = vi.hoisted(() => {
+const { getUserMedia, recorderFailure, recorders } = vi.hoisted(() => {
 	// lets a test simulate an unsupported-mimeType constructor throw (Safari)
 	// or a start() that throws after the ref was already assigned
 	const recorderFailure = { failNextConstruct: false, failNextStart: false };
 
+	const recorders: FakeMediaRecorder[] = [];
+
 	class FakeMediaRecorder {
 		static isTypeSupported = () => true;
 		state: "inactive" | "recording" | "paused" = "inactive";
+		timeslice: number | undefined;
 		ondataavailable: ((event: { data: Blob }) => void) | null = null;
 		onstop: (() => void) | null = null;
 		constructor(
@@ -23,12 +26,14 @@ const { getUserMedia, recorderFailure } = vi.hoisted(() => {
 				recorderFailure.failNextConstruct = false;
 				throw new Error("mimeType not supported");
 			}
+			recorders.push(this);
 		}
-		start() {
+		start(timeslice?: number) {
 			if (recorderFailure.failNextStart) {
 				recorderFailure.failNextStart = false;
 				throw new Error("start failed");
 			}
+			this.timeslice = timeslice;
 			this.state = "recording";
 		}
 		stop() {
@@ -62,13 +67,41 @@ const { getUserMedia, recorderFailure } = vi.hoisted(() => {
 		value: { getUserMedia },
 	});
 
-	return { getUserMedia, recorderFailure };
+	return { getUserMedia, recorderFailure, recorders };
 });
 
-import useChunkedAudioRecorder from "./useChunkedAudioRecorder";
+import useChunkedAudioRecorder, {
+	type ChunkSink,
+} from "./useChunkedAudioRecorder";
 
 const track = { stop: vi.fn() };
 const fakeStream = { getTracks: () => [track] } as unknown as MediaStream;
+
+/** A sink that logs what the recorder writes to it, in order. */
+const loggingSink = () => {
+	const log: string[] = [];
+	const sink: ChunkSink = {
+		begin: () => {
+			log.push("begin");
+			return {
+				append: (slice) => {
+					log.push(`append ${slice.size}`);
+				},
+				discard: async () => {
+					log.push("discard");
+				},
+				seal: async () => {
+					log.push("seal");
+				},
+			};
+		},
+	};
+	return { log, sink };
+};
+
+const { sink } = loggingSink();
+
+const slice = (bytes: number) => ({ data: new Blob([new Uint8Array(bytes)]) });
 
 const makeStream = () => {
 	const streamTrack = { stop: vi.fn() };
@@ -82,6 +115,7 @@ beforeEach(() => {
 	getUserMedia.mockReset();
 	recorderFailure.failNextConstruct = false;
 	recorderFailure.failNextStart = false;
+	recorders.length = 0;
 });
 
 afterEach(() => {
@@ -97,9 +131,7 @@ it("ignores a second startRecording while the mic prompt is pending", async () =
 			}),
 	);
 
-	const { result } = renderHook(() =>
-		useChunkedAudioRecorder({ onChunk: vi.fn() }),
-	);
+	const { result } = renderHook(() => useChunkedAudioRecorder({ sink }));
 
 	act(() => {
 		result.current.startRecording();
@@ -132,9 +164,7 @@ it("bails when stopRecording lands while the mic prompt is pending", async () =>
 	);
 	track.stop.mockClear();
 
-	const { result } = renderHook(() =>
-		useChunkedAudioRecorder({ onChunk: vi.fn() }),
-	);
+	const { result } = renderHook(() => useChunkedAudioRecorder({ sink }));
 
 	act(() => {
 		result.current.startRecording();
@@ -158,9 +188,7 @@ it("bails when stopRecording lands while the mic prompt is pending", async () =>
 it("ignores startRecording while already recording", async () => {
 	getUserMedia.mockResolvedValue(fakeStream);
 
-	const { result } = renderHook(() =>
-		useChunkedAudioRecorder({ onChunk: vi.fn() }),
-	);
+	const { result } = renderHook(() => useChunkedAudioRecorder({ sink }));
 
 	await act(async () => {
 		result.current.startRecording();
@@ -183,9 +211,7 @@ it("clears the latch when the mic is denied so a retry works", async () => {
 	getUserMedia.mockResolvedValueOnce(fakeStream);
 	const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
-	const { result } = renderHook(() =>
-		useChunkedAudioRecorder({ onChunk: vi.fn() }),
-	);
+	const { result } = renderHook(() => useChunkedAudioRecorder({ sink }));
 
 	await act(async () => {
 		result.current.startRecording();
@@ -213,9 +239,7 @@ it("recovers when MediaRecorder construction fails after the mic is granted", as
 	recorderFailure.failNextConstruct = true;
 	const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
-	const { result } = renderHook(() =>
-		useChunkedAudioRecorder({ onChunk: vi.fn() }),
-	);
+	const { result } = renderHook(() => useChunkedAudioRecorder({ sink }));
 
 	let started: boolean | undefined;
 	await act(async () => {
@@ -249,9 +273,7 @@ it("recovers when recorder.start() fails after the ref was assigned", async () =
 	recorderFailure.failNextStart = true;
 	const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
-	const { result } = renderHook(() =>
-		useChunkedAudioRecorder({ onChunk: vi.fn() }),
-	);
+	const { result } = renderHook(() => useChunkedAudioRecorder({ sink }));
 
 	let started: boolean | undefined;
 	await act(async () => {
@@ -282,7 +304,7 @@ it("reports an interruption when a chunk restart fails", async () => {
 	const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
 	const { result, rerender } = renderHook(() =>
-		useChunkedAudioRecorder({ onChunk: vi.fn(), onRecordingInterrupted }),
+		useChunkedAudioRecorder({ onRecordingInterrupted, sink }),
 	);
 
 	await act(async () => {
@@ -310,4 +332,89 @@ it("reports an interruption when a chunk restart fails", async () => {
 	expect(result.current.isRecording).toBe(false);
 	vi.useRealTimers();
 	consoleError.mockRestore();
+});
+
+it("writes each slice to the sink as it's recorded, and seals the chunk on stop", async () => {
+	getUserMedia.mockResolvedValue(fakeStream);
+	const { log, sink } = loggingSink();
+	const { result } = renderHook(() => useChunkedAudioRecorder({ sink }));
+	await act(async () => {
+		await result.current.startRecording();
+	});
+
+	const recorder = recorders.at(-1);
+	expect(recorder?.timeslice).toBe(1000);
+	act(() => {
+		recorder?.ondataavailable?.(slice(600));
+		recorder?.ondataavailable?.(slice(700));
+		recorder?.ondataavailable?.(slice(800));
+	});
+	// Already written, so a crash now loses none of it.
+	expect(log).toEqual(["begin", "append 600", "append 700", "append 800"]);
+
+	await act(() => result.current.stopRecording());
+
+	expect(log).toEqual([
+		"begin",
+		"append 600",
+		"append 700",
+		"append 800",
+		"seal",
+	]);
+});
+
+it("seals each good chunk at the chunk mark, and discards one too small to hold audio", async () => {
+	vi.useFakeTimers();
+	getUserMedia.mockResolvedValue(fakeStream);
+	const { log, sink } = loggingSink();
+	const { result } = renderHook(() => useChunkedAudioRecorder({ sink }));
+	await act(async () => {
+		await result.current.startRecording();
+	});
+
+	act(() => recorders.at(-1)?.ondataavailable?.(slice(2048)));
+	await act(async () => {
+		vi.advanceTimersByTime(30000);
+		await Promise.resolve();
+	});
+	act(() => recorders.at(-1)?.ondataavailable?.(slice(600)));
+	await act(async () => {
+		vi.advanceTimersByTime(30000);
+		await Promise.resolve();
+	});
+
+	expect(log).toEqual([
+		"begin",
+		"append 2048",
+		"seal",
+		"begin",
+		"append 600",
+		"discard",
+		"begin",
+	]);
+	act(() => {
+		result.current.stopRecording();
+	});
+	vi.useRealTimers();
+});
+
+it("resolves stopRecording once the last chunk is handed over", async () => {
+	getUserMedia.mockResolvedValue(fakeStream);
+	const { log, sink } = loggingSink();
+	const { result } = renderHook(() => useChunkedAudioRecorder({ sink }));
+	await act(async () => {
+		await result.current.startRecording();
+	});
+	act(() => recorders.at(-1)?.ondataavailable?.(slice(2048)));
+
+	await act(async () => {
+		const stopped = result.current.stopRecording();
+		// A second stop, before onstop has run, waits on the same chunk.
+		await Promise.all([
+			stopped.then(() => log.push("stopped")),
+			result.current.stopRecording(),
+		]);
+	});
+
+	expect(log).toEqual(["begin", "append 2048", "seal", "stopped"]);
 });
