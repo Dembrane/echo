@@ -21,6 +21,7 @@ import {
 	it,
 	vi,
 } from "vitest";
+import { RoomJoinGate } from "./SignGate";
 
 // The page the room invitation email links to (/o/:orgId/account/join?invite=<token>):
 // who invited them to which organisation, the one-time code sign-in SignGate already has,
@@ -113,7 +114,6 @@ vi.mock("../api/client", async (importOriginal) => {
 });
 
 const load = async () => {
-	const { RoomJoinGate } = await import("./SignGate");
 	expect(RoomJoinGate, "SignGate exports RoomJoinGate").toBeTypeOf("function");
 	return RoomJoinGate;
 };
