@@ -449,6 +449,23 @@ run("a demo placed in an organisation the contact already works in", () => {
       expect(emailsQueued(w)).toEqual([]);
     });
 
+    test("an organisation deleted outright takes its held demo workspace with it, and a publish with the email on is refused and sends nothing", async () => {
+      const { org, contact } = await organisation("member");
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      const where = await placedIn(view, org.id);
+      // Nothing of the demo stands in the way of deleting the organisation's row.
+      await w.db.delete(schema.org).where(eq(schema.org.id, org.id));
+      const left = await w.db
+        .select({ id: schema.workspace.id })
+        .from(schema.workspace)
+        .where(eq(schema.workspace.id, where.workspace_id as string));
+      expect(left).toEqual([]);
+      w.jobs.jobs.length = 0;
+      await refusedReadably(view.id, /no longer exists/i);
+      expect((await statusOf(view.id)).status).toBe("draft");
+      expect(emailsQueued(w)).toEqual([]);
+    });
+
     test("email off, unpublish, email on: the hand-over and the one email happen on the last step", async () => {
       const { org, contact } = await organisation("member");
       const view = await draftIn(org.id, contact, { sign_in: true });

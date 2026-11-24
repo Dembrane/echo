@@ -258,9 +258,12 @@ export async function publishDemo(
   const now = d.now();
   await d.db.transaction(async (tx) => {
     // The organisation or the contact may have changed since the build: a hand-over then
-    // would put a workspace in a deleted organisation, or give it to someone who left.
-    if (placed && signIn && row.orgId) {
-      const still = await placement(tx, row.orgId, input.contact_email);
+    // would put a workspace in a deleted organisation, or give it to someone who left. An
+    // organisation deleted outright took the workspace with it and left the demo no org_id.
+    if (placed && signIn) {
+      const still = row.orgId
+        ? await placement(tx, row.orgId, input.contact_email)
+        : ({ ok: false, problem: "organisation_missing" } as const);
       if (!still.ok)
         throw new ConflictError(
           still.problem === "organisation_missing" || still.problem === "organisation_deleted"
