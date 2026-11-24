@@ -37,7 +37,9 @@ export function buildSpeechKit(o: {
   const { profile, settings, logger } = o;
   const models = (provider: "whisper" | "gemini", geminiModel?: string): Models =>
     speechModels(settings, profile, provider, o.hooks ?? {}, geminiModel);
-  const retry = profile.live.secondListen ? DEFAULT_RETRY : null;
+  // The second listen spends the provider's per-minute audio budget again: only the worker,
+  // which transcribes the recordings, has it. The API's stateless transcription never did.
+  const retry = o.withFinal && profile.live.secondListen ? DEFAULT_RETRY : null;
   const liveModels =
     profile.live.provider === "whisper" ? models("whisper") : models("gemini", profile.live.model);
   const transcriber = new GeminiTranscriber(liveModels, logger, { retry });
