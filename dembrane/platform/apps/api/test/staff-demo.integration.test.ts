@@ -102,6 +102,8 @@ run("a staff demo where the deployment is production", () => {
   let ownProject = "";
   let contact: Person;
   let statsBefore: Awaited<ReturnType<typeof computeStats>>;
+  /** Who the test app signs in, by the x-as header. */
+  const byId = new Map<string, Person>();
 
   const as = (who: Person | null) => ({
     ...(who && { "x-as": who.directusUserId }),
@@ -161,7 +163,6 @@ run("a staff demo where the deployment is production", () => {
     const nowIso = new Date().toISOString();
     const role = newId();
     await db.insert(schema.directus_roles).values({ id: role, name: "Administrator" });
-    const byId = new Map<string, Person>();
     const person = async (email: string, name: string, directusRoleId?: string) => {
       const u = await db.transaction((tx) =>
         ensureUser(tx, {
@@ -824,5 +825,211 @@ run("a staff demo where the deployment is production", () => {
     expect(usage.project_count).toBe(1);
     expect(usage.audio_hours).toBe(1);
     expect(await stats()).toEqual({ projects_count: 2, conversations_count: 3, hours_recorded: 2 });
+  });
+
+  // Story 2: a demo placed in an organisation its contact already works in. Before staff
+  // publish with the email on, nobody there sees it through the dashboard's routes, its
+  // owner included; afterwards the contact has it and an admin colleague can join it.
+  describe("a demo placed in an organisation the contact already works in", () => {
+    const brook = { org: newId(), workspace: newId(), billing: newId() };
+    const team = {} as Record<"owner" | "colleague" | "contact", Person>;
+    let placed: K.DemoStatusT;
+    let placedWorkspace = "";
+    let placedProject = "";
+
+    beforeAll(async () => {
+      const nowIso = new Date().toISOString();
+      for (const [key, email, name] of [
+        ["owner", "olive@brookside.example", "Olive Owner"],
+        ["colleague", "ada@brookside.example", "Ada Admin"],
+        ["contact", "casey@brookside.example", "Casey Member"],
+      ] as const) {
+        const u = await db.transaction((tx) =>
+          ensureUser(tx, { email, name, passwordHash: null, nowIso }),
+        );
+        team[key] = { appUserId: u.appUserId, directusUserId: u.userId, isStaff: false, email };
+        byId.set(u.userId, team[key]);
+      }
+      await db
+        .insert(schema.org)
+        .values({ id: brook.org, name: "Brookside Water (sample)", account_stage: "customer" });
+      await db
+        .insert(schema.billing_account)
+        .values({ id: brook.billing, org_id: brook.org, tier: "free" });
+      for (const [key, role] of [
+        ["owner", "owner"],
+        ["colleague", "admin"],
+        ["contact", "member"],
+      ] as const)
+        await db.insert(schema.org_membership).values({
+          id: newId(),
+          org_id: brook.org,
+          user_id: team[key].appUserId as string,
+          role,
+        });
+      await db.insert(schema.workspace).values({
+        id: brook.workspace,
+        org_id: brook.org,
+        name: "Brookside",
+        billing_account_id: brook.billing,
+        visibility: "open_to_organisation",
+        is_default: true,
+      });
+      for (const [key, role] of [
+        ["owner", "admin"],
+        ["contact", "member"],
+      ] as const)
+        await db.insert(schema.workspace_membership).values({
+          id: newId(),
+          workspace_id: brook.workspace,
+          user_id: team[key].appUserId as string,
+          role,
+          source: "direct",
+        });
+    });
+
+    /** Everything the dashboard shows a person of the organisation about its workspaces. */
+    const dashboardOf = async (who: Person) => {
+      const read = async (path: string) => {
+        const res = await app.request(path, { headers: as(who) });
+        return { status: res.status, data: (await res.json()) as unknown };
+      };
+      const org = `/api/v2/orgs/${brook.org}`;
+      return {
+        workspaces: await read("/api/v2/workspaces"),
+        organisations: await read("/api/v2/orgs"),
+        overview: await read(org),
+        cards: await read(`${org}/workspaces`),
+        joinable: await read(`${org}/discoverable-workspaces`),
+        projects: await read(`${org}/projects`),
+        usage: await read(`${org}/usage`),
+      };
+    };
+    const publishPlaced = (signIn: boolean) =>
+      app.request(`/api/v2/admin/accounts/demos/${placed.id}/publish`, {
+        method: "POST",
+        headers: as(people.staff),
+        body: JSON.stringify({ sign_in: signIn }),
+      });
+
+    test("while it is a draft nobody in the organisation, its owner included, sees a trace of it", async () => {
+      const before = {
+        owner: await dashboardOf(team.owner),
+        colleague: await dashboardOf(team.colleague),
+        contact: await dashboardOf(team.contact),
+      };
+      expect(before.owner.overview.status).toBe(200);
+      const emailsBefore = (deps.jobs as MemoryJobs).of("account.send-email").length;
+
+      const res = await app.request("/api/v2/admin/accounts/demos", {
+        method: "POST",
+        headers: as(people.staff),
+        body: JSON.stringify({
+          organisation_name: "Millpond District (sample)",
+          website_url: SITE,
+          brief: "Participation for the new waterfront.",
+          language: "en",
+          contact_name: "Casey Member",
+          contact_email: team.contact.email,
+          org_id: brook.org,
+          sign_in: true,
+        }),
+      });
+      expect(res.status).toBe(201);
+      const started = K.DemoStatus.parse(await res.json());
+      await buildDemo(build, started.id, 1);
+      placed = K.DemoStatus.parse(
+        (await get(people.staff, `/api/v2/admin/accounts/demos/${started.id}`)).data,
+      );
+      placedProject = placed.links.projects[0]?.project_id as string;
+      const [where] = await db
+        .select({ workspace: schema.project.workspace_id, org: schema.workspace.org_id })
+        .from(schema.project)
+        .innerJoin(schema.workspace, eq(schema.workspace.id, schema.project.workspace_id))
+        .where(eq(schema.project.id, placedProject));
+      placedWorkspace = where?.workspace as string;
+      expect(placed.status).toBe("draft");
+      expect(placed.existing_organisation).toEqual({
+        id: brook.org,
+        name: "Brookside Water (sample)",
+      });
+      // The demo is in the organisation, so the comparisons below mean something.
+      expect(where?.org).toBe(brook.org);
+
+      const after = {
+        owner: await dashboardOf(team.owner),
+        colleague: await dashboardOf(team.colleague),
+        contact: await dashboardOf(team.contact),
+      };
+      for (const who of ["owner", "colleague", "contact"] as const) {
+        const seen = JSON.stringify(after[who]);
+        expect(seen).not.toContain(placedWorkspace);
+        expect(seen).not.toContain(placedProject);
+        expect(seen).not.toContain("Millpond District");
+        // Every list and count reads as it did before the demo.
+        expect(after[who]).toEqual(before[who]);
+      }
+      expect((deps.jobs as MemoryJobs).of("account.send-email")).toHaveLength(emailsBefore);
+    });
+
+    test("after a publish with the email on, the contact has its workspace and an admin colleague can join it", async () => {
+      expect(placedWorkspace).not.toBe("");
+      const emailsBefore = (deps.jobs as MemoryJobs).of("account.send-email").length;
+      expect((await publishPlaced(true)).status).toBe(200);
+      const mine = (await get(team.contact, "/api/v2/workspaces")).data as {
+        workspaces: { id: string; org_id: string; role: string }[];
+      };
+      expect(mine.workspaces.find((w) => w.id === placedWorkspace)).toMatchObject({
+        org_id: brook.org,
+        role: "admin",
+      });
+      // On their organisation page it is a card, with the demo pinned on it.
+      const cards = (await get(team.contact, `/api/v2/orgs/${brook.org}/workspaces`))
+        .data as unknown as { id: string; name: string; pinned_projects: { id: string }[] }[];
+      expect(cards.find((c) => c.id === placedWorkspace)).toMatchObject({
+        name: "Millpond District (sample)",
+        pinned_projects: [{ id: placedProject }],
+      });
+      const joinable = (
+        await get(team.colleague, `/api/v2/orgs/${brook.org}/discoverable-workspaces`)
+      ).data as { workspaces: { id: string; action: string }[] };
+      expect(joinable.workspaces.find((w) => w.id === placedWorkspace)?.action).toBe("join");
+      const emails = (deps.jobs as MemoryJobs).of("account.send-email").slice(emailsBefore);
+      expect(emails).toMatchObject([{ to: team.contact.email, template: "account_demo_ready" }]);
+    });
+
+    test("the check answers staff with what they need, refuses everyone else, and reads the email from the body only", async () => {
+      const check = (who: Person | null, body: unknown, query = "") =>
+        app.request(`/api/v2/admin/accounts/demos/check${query}`, {
+          method: "POST",
+          headers: as(who),
+          body: JSON.stringify(body),
+        });
+      const res = await check(people.staff, {
+        contact_email: team.contact.email,
+        organisation_name: "Millpond District (sample)",
+      });
+      expect(res.status).toBe(200);
+      const answer = K.DemoCheck.parse(await res.json());
+      expect(answer.contact?.has_account).toBe(true);
+      expect(answer.contact?.organisations).toContainEqual({
+        id: brook.org,
+        name: "Brookside Water (sample)",
+        account_stage: "customer",
+        role: "member",
+      });
+      // Not for a customer, not for the contact, not signed out.
+      for (const who of [people.customer, team.contact])
+        expect((await check(who, { contact_email: team.contact.email })).status).toBe(403);
+      expect((await check(null, { contact_email: team.contact.email })).status).toBe(401);
+      // An address in the URL is not read: the answer has no contact.
+      const query = await check(
+        people.staff,
+        {},
+        `?contact_email=${encodeURIComponent(team.contact.email)}`,
+      );
+      expect(query.status).toBe(200);
+      expect(K.DemoCheck.parse(await query.json()).contact).toBeNull();
+    });
   });
 });

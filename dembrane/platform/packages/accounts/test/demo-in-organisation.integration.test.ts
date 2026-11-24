@@ -1,0 +1,616 @@
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
+import { resolveProject } from "@dembrane/access";
+import { newId } from "@dembrane/core";
+import { schema } from "@dembrane/db";
+import { resolveLocale } from "@dembrane/i18n";
+import { eq } from "drizzle-orm";
+import * as K from "../src/contract";
+import { demoBuildAccess } from "../src/demo/access";
+import { buildDemo, type DemoBuildDeps } from "../src/demo/build";
+import { ensureUser, releaseHeldContacts } from "../src/prospect";
+import { accountsRoutes } from "../src/routes";
+import {
+  ADMIN_PLACE,
+  accountOf,
+  DEMO_SITE,
+  emailsQueued,
+  existingOrganisation,
+  fakeDemoBuild,
+  type OrgRole,
+  organisationCount,
+  type Person,
+  personWithAccount,
+  placesIn,
+  setOrganisationDeleted,
+  setRemovedFromOrganisation,
+  whereIs,
+  workspacesOf,
+} from "./demo-helpers";
+import { admin, call, dropDatabase, type World, world } from "./helpers";
+
+// Story 2: a demo staff place in an organisation its contact already works in. It gets a
+// workspace of its own there, hidden until staff publish with the email on; nothing of the
+// organisation changes, and the contact gets a "demo is ready" email instead of an account
+// invitation. The prospect path (a new organisation) is held by demo-build.integration.test.ts.
+const run = admin ? describe : describe.skip;
+const DB = `accounts_demo_in_org_${process.pid}`;
+const DEMOS = "/api/v2/admin/accounts/demos";
+const SUBJECT = "Brent Council";
+
+run("a demo placed in an organisation the contact already works in", () => {
+  setDefaultTimeout(120_000);
+  let w: World;
+  let deps: DemoBuildDeps;
+  let extracted: string[];
+
+  beforeAll(async () => {
+    w = await world(DB, accountsRoutes);
+    ({ deps, extracted } = fakeDemoBuild(w));
+  });
+  afterAll(async () => {
+    await w?.close();
+    await dropDatabase(DB);
+  });
+
+  let made = 0;
+  /**
+   * A fresh organisation for one test: its owner, the contact with `role`, and an admin
+   * colleague. The contact's saved language is German, the demo's is English, so the email's
+   * language says which one was used.
+   */
+  const organisation = async (
+    role: OrgRole,
+    over: Partial<Parameters<typeof existingOrganisation>[1]> = {},
+  ) => {
+    made++;
+    const owner = await personWithAccount(w, `owner${made}`);
+    const contact = await personWithAccount(w, `contact${made}`, {
+      name: `Olivia ${made}`,
+      language: "de-DE",
+    });
+    const colleague = await personWithAccount(w, `colleague${made}`);
+    const org = await existingOrganisation(w, {
+      name: `Demos ${made}`,
+      stage: "customer",
+      billingEmail: `finance${made}@example.test`,
+      members: [
+        { person: owner, role: "owner" },
+        { person: contact, role },
+        { person: colleague, role: "admin" },
+      ],
+      ...over,
+    });
+    return { org, owner, contact, colleague };
+  };
+
+  const start = (orgId: string | null, contact: Person, over: Record<string, unknown> = {}) =>
+    call(w, "POST", DEMOS, "staff", {
+      organisation_name: SUBJECT,
+      website_url: DEMO_SITE,
+      brief: "Participation for the new town square.",
+      language: "en",
+      contact_name: "Olivia",
+      contact_email: contact.email,
+      ...(orgId && { org_id: orgId }),
+      ...over,
+    });
+  const statusOf = async (id: string) =>
+    K.DemoStatus.parse((await call(w, "GET", `${DEMOS}/${id}`, "staff")).data);
+  /** Starts and builds a demo in the organisation; answers its status as a draft. */
+  const draftIn = async (orgId: string, contact: Person, over: Record<string, unknown> = {}) => {
+    const r = await start(orgId, contact, over);
+    expect(r.status).toBe(201);
+    const id = K.DemoStatus.parse(r.data).id;
+    await buildDemo(deps, id, 1);
+    return statusOf(id);
+  };
+  const publish = (id: string, signIn: boolean) =>
+    call(w, "POST", `${DEMOS}/${id}/publish`, "staff", { sign_in: signIn });
+  const unpublish = (id: string) => call(w, "POST", `${DEMOS}/${id}/unpublish`, "staff");
+  const projectOf = (view: K.DemoStatusT) => view.links.projects[0]?.project_id as string;
+  /**
+   * Where the demo's project is. Every test below first checks that it is in a workspace of
+   * the chosen organisation: without that, a test about what the organisation does not see
+   * would pass for a demo that went somewhere else.
+   */
+  const placedIn = async (view: K.DemoStatusT, orgId: string) => {
+    const where = await whereIs(w, projectOf(view));
+    expect(where?.org_id).toBe(orgId);
+    return where as NonNullable<typeof where>;
+  };
+  const release = (orgId: string) =>
+    w.db.transaction((tx) => releaseHeldContacts(tx, orgId, w.clock.now));
+
+  describe("the demo is a workspace of its own in the organisation (criterion 3)", () => {
+    test("after publishing with the email on, the organisation has one new workspace named after the demo, the project pinned in it, the contact its admin", async () => {
+      const { org, contact } = await organisation("member");
+      const before = await workspacesOf(w, org.id);
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      expect((await publish(view.id, true)).status).toBe(200);
+      const after = await workspacesOf(w, org.id);
+      const added = after.filter((a) => !before.some((b) => b.id === a.id));
+      expect(added.map((a) => [a.name, a.deleted_at])).toEqual([[SUBJECT, null]]);
+      const where = await placedIn(view, org.id);
+      expect(where.workspace_id).toBe(added[0]?.id as string);
+      expect(where.pin_order).not.toBeNull();
+      expect(await placesIn(w, where.workspace_id as string, contact)).toEqual([ADMIN_PLACE]);
+    });
+
+    test("publishing again, also after an unpublish, adds no second workspace row for the contact", async () => {
+      const { org, contact } = await organisation("member");
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      const where = await placedIn(view, org.id);
+      expect((await publish(view.id, true)).status).toBe(200);
+      expect((await publish(view.id, true)).status).toBe(200);
+      expect((await unpublish(view.id)).status).toBe(200);
+      expect((await publish(view.id, true)).status).toBe(200);
+      expect(await placesIn(w, where.workspace_id as string, contact)).toEqual([ADMIN_PLACE]);
+      expect((await workspacesOf(w, org.id)).length).toBe(2);
+    });
+
+    test("a contact removed from the demo's workspace is not put back when staff publish", async () => {
+      const { org, contact } = await organisation("member");
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      const where = await placedIn(view, org.id);
+      await w.db.insert(schema.workspace_membership).values({
+        id: newId(),
+        workspace_id: where.workspace_id as string,
+        user_id: contact.appUserId as string,
+        role: "member",
+        source: "direct",
+        deleted_at: w.clock.now.toISOString(),
+      });
+      expect((await publish(view.id, true)).status).toBe(200);
+      expect(
+        (await placesIn(w, where.workspace_id as string, contact)).map((r) => [
+          r.role,
+          r.deleted_at !== null,
+        ]),
+      ).toEqual([["member", true]]);
+    });
+  });
+
+  describe("no newcomer treatment (criterion 4)", () => {
+    test("for a contact who is a plain member: no new organisation, no tasks, and manager, stage, billing and their role stay as they were", async () => {
+      // No stage and no account manager yet, and a @dembrane.com staff member starts the
+      // demo: the prospect path would fill both. The contact is a member, not an admin.
+      const { org, contact } = await organisation("member", {
+        stage: null,
+        managerAppUserId: null,
+      });
+      const sales = await w.db.transaction((tx) =>
+        ensureUser(tx, {
+          email: "sales@dembrane.com",
+          name: "Sales Person",
+          passwordHash: null,
+          nowIso: w.clock.now.toISOString(),
+        }),
+      );
+      const before = await accountOf(w, org.id);
+      const organisations = await organisationCount(w);
+      const r = await start(org.id, contact, { sign_in: true });
+      expect(r.status).toBe(201);
+      const id = K.DemoStatus.parse(r.data).id;
+      await w.db
+        .update(schema.account_demo)
+        .set({ createdBy: sales.userId })
+        .where(eq(schema.account_demo.id, id));
+      await buildDemo(deps, id, 1);
+      const view = await statusOf(id);
+      await placedIn(view, org.id);
+      expect(await organisationCount(w)).toBe(organisations);
+      expect(await accountOf(w, org.id)).toEqual(before);
+      expect((await publish(id, true)).status).toBe(200);
+      expect(await organisationCount(w)).toBe(organisations);
+      const after = await accountOf(w, org.id);
+      expect(after).toEqual(before);
+      expect(after.tasks).toEqual([]);
+      expect(after.stage).toBeNull();
+      expect(after.account_manager_id).toBeNull();
+      expect(after.members.find((m) => m.user === contact.appUserId)?.role).toBe("member");
+    });
+
+    test("for a contact who is an admin of a customer with a manager: the same, nothing changes", async () => {
+      const { org, contact } = await organisation("admin", {
+        stage: "customer",
+        managerAppUserId: w.people.staff.appUserId as string,
+      });
+      const before = await accountOf(w, org.id);
+      const organisations = await organisationCount(w);
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      await placedIn(view, org.id);
+      expect((await publish(view.id, true)).status).toBe(200);
+      expect(await organisationCount(w)).toBe(organisations);
+      const after = await accountOf(w, org.id);
+      expect(after).toEqual(before);
+      expect(after.stage).toBe("customer");
+      expect(after.members.find((m) => m.user === contact.appUserId)?.role).toBe("admin");
+    });
+  });
+
+  describe("the email says the demo is ready (criterion 5)", () => {
+    test("publishing with the email on queues one 'demo is ready' email in the contact's saved language, naming the demo and the organisation, with a link to the project", async () => {
+      const { org, contact } = await organisation("member");
+      w.jobs.jobs.length = 0;
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      const where = await placedIn(view, org.id);
+      expect((await publish(view.id, true)).status).toBe(200);
+      const emails = emailsQueued(w);
+      expect(emails).toHaveLength(1);
+      expect(emails[0]).toMatchObject({
+        to: contact.email,
+        template: "account_demo_ready",
+        // Saved on their profile as German; the demo itself is in English.
+        language: resolveLocale("de-DE"),
+        data: { demo_name: SUBJECT, org_name: org.name },
+      });
+      // The button opens the demo project, through the sign-in as continueUrl wraps a path.
+      const url = String(emails[0]?.data.demo_url);
+      const prefix = "https://dash.test/login?next=";
+      expect(url.startsWith(prefix)).toBe(true);
+      expect(decodeURIComponent(url.slice(prefix.length))).toMatch(
+        new RegExp(`^/[^/]+/w/${where.workspace_id}/projects/${projectOf(view)}(/|$)`),
+      );
+      expect(emails.some((e) => e.template === "account_invite")).toBe(false);
+    });
+
+    test("publishing again after an unpublish sends no second email", async () => {
+      const { org, contact } = await organisation("member");
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      await placedIn(view, org.id);
+      w.jobs.jobs.length = 0;
+      expect((await publish(view.id, true)).status).toBe(200);
+      expect(emailsQueued(w).map((e) => e.template)).toEqual(["account_demo_ready"]);
+      w.jobs.jobs.length = 0;
+      expect((await unpublish(view.id)).status).toBe(200);
+      expect((await publish(view.id, true)).status).toBe(200);
+      expect(emailsQueued(w)).toEqual([]);
+    });
+  });
+
+  describe("nothing shows before publish (criterion 6, the rows and emails)", () => {
+    test("while the demo is a draft the contact has no place in its workspace and no email is queued", async () => {
+      const { org, contact } = await organisation("member");
+      w.jobs.jobs.length = 0;
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      expect(view.status).toBe("draft");
+      const where = await placedIn(view, org.id);
+      expect(await placesIn(w, where.workspace_id as string, contact)).toEqual([]);
+      expect(emailsQueued(w)).toEqual([]);
+    });
+
+    test("a publish with the email off keeps it that way: the link is live, the contact has no place and no email", async () => {
+      const { org, contact } = await organisation("member");
+      w.jobs.jobs.length = 0;
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      const where = await placedIn(view, org.id);
+      const r = await publish(view.id, false);
+      expect(r.status).toBe(200);
+      const published = K.DemoStatus.parse(r.data);
+      expect(published.status).toBe("published");
+      expect(published.links.public[0]?.live).toBe(true);
+      expect(published.invited_at).toBeNull();
+      expect(await placesIn(w, where.workspace_id as string, contact)).toEqual([]);
+      expect(emailsQueued(w)).toEqual([]);
+    });
+  });
+
+  describe("the release staff actions on the organisation call (offer sent, account enabled)", () => {
+    test("while the demo is a draft it hands nothing over and leaves the contact's role; publishing with the email on still does", async () => {
+      const { org, contact } = await organisation("member");
+      w.jobs.jobs.length = 0;
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      const where = await placedIn(view, org.id);
+      const before = await accountOf(w, org.id);
+      await release(org.id);
+      expect(await placesIn(w, where.workspace_id as string, contact)).toEqual([]);
+      expect(await accountOf(w, org.id)).toEqual(before);
+      expect(emailsQueued(w)).toEqual([]);
+      // Only a publish with the email on hands it over, release or not before it.
+      expect((await publish(view.id, true)).status).toBe(200);
+      expect(await placesIn(w, where.workspace_id as string, contact)).toEqual([ADMIN_PLACE]);
+      expect(emailsQueued(w).map((e) => e.template)).toEqual(["account_demo_ready"]);
+      expect((await accountOf(w, org.id)).members).toEqual(before.members);
+    });
+
+    test("it does not bring back a contact who was removed from the organisation", async () => {
+      const { org, contact } = await organisation("member");
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      const where = await placedIn(view, org.id);
+      await setRemovedFromOrganisation(w, org.id, contact, true);
+      const before = await accountOf(w, org.id);
+      await release(org.id);
+      const after = await accountOf(w, org.id);
+      expect(after).toEqual(before);
+      expect(after.members.find((m) => m.user === contact.appUserId)).toMatchObject({
+        role: "member",
+        deleted_at: expect.any(String),
+      });
+      expect(await placesIn(w, where.workspace_id as string, contact)).toEqual([]);
+    });
+  });
+
+  describe("the seed step checks the organisation and the contact again", () => {
+    /** The seed step's error reads as a sentence, not as a code or a stack. */
+    const readable = (error: string | null | undefined) => {
+      expect(typeof error).toBe("string");
+      const text = String(error);
+      expect(text).not.toMatch(/^[a-z_]+\.[a-z_.]+$/);
+      expect(text).not.toMatch(/undefined|null|\[object|at .*\.ts/);
+      expect(text).toContain(" ");
+      return text;
+    };
+    const failedSeed = async (id: string) => {
+      await expect(buildDemo(deps, id, 1)).rejects.toThrow();
+      const failed = await statusOf(id);
+      expect(failed.status).toBe("failed");
+      const seed = failed.steps.find((s) => s.name === "seed");
+      expect(seed?.status).toBe("failed");
+      return readable(seed?.error);
+    };
+    const retryFinishes = async (id: string, orgId: string) => {
+      const retried = await call(w, "POST", `${DEMOS}/${id}/retry`, "staff");
+      expect(retried.status).toBe(200);
+      await buildDemo(deps, id, 2);
+      const view = await statusOf(id);
+      expect(view.status).toBe("draft");
+      await placedIn(view, orgId);
+    };
+
+    test("a contact who is no longer a live member fails the step readably; a retry once they are back finishes", async () => {
+      const { org, contact } = await organisation("member");
+      const organisations = await organisationCount(w);
+      const r = await start(org.id, contact, { sign_in: true });
+      expect(r.status).toBe(201);
+      const id = K.DemoStatus.parse(r.data).id;
+      await setRemovedFromOrganisation(w, org.id, contact, true);
+      expect(await failedSeed(id)).toMatch(/member|no longer in|not in/i);
+      // Nothing was made elsewhere in the meantime.
+      expect(await organisationCount(w)).toBe(organisations);
+      await setRemovedFromOrganisation(w, org.id, contact, false);
+      await retryFinishes(id, org.id);
+    });
+
+    test("a deleted organisation fails the step readably; a retry once it is restored finishes", async () => {
+      const { org, contact } = await organisation("member");
+      const organisations = await organisationCount(w);
+      const r = await start(org.id, contact, { sign_in: true });
+      expect(r.status).toBe(201);
+      const id = K.DemoStatus.parse(r.data).id;
+      await setOrganisationDeleted(w, org.id, true);
+      expect(await failedSeed(id)).toMatch(/delet|removed|no longer exists/i);
+      expect(await organisationCount(w)).toBe(organisations);
+      await setOrganisationDeleted(w, org.id, false);
+      await retryFinishes(id, org.id);
+    });
+  });
+
+  test("the build's popcorn read reaches the hidden project as its owner, the contact, before publish", async () => {
+    // A plain member: the organisation role alone opens no hidden workspace.
+    const { org, contact } = await organisation("member");
+    const view = await draftIn(org.id, contact, { sign_in: true });
+    expect(view.status).toBe("draft");
+    await placedIn(view, org.id);
+    const project = projectOf(view);
+    const [loop] = await w.db
+      .select({ id: schema.agent_loop.id })
+      .from(schema.agent_loop)
+      .where(eq(schema.agent_loop.project_id, project));
+    expect(extracted).toContain(loop?.id as string);
+    const [owner] = await w.db
+      .select({ owner: schema.project.directus_user_id })
+      .from(schema.project)
+      .where(eq(schema.project.id, project));
+    expect(owner?.owner).toBe(contact.directusUserId);
+    const who = { appUserId: contact.appUserId, directusUserId: contact.directusUserId };
+    expect((await resolveProject(demoBuildAccess(w.db), project, who, w.clock.now))?.role).toBe(
+      "admin",
+    );
+  });
+
+  describe("starting a demo in an existing organisation (criterion 9)", () => {
+    const demoCount = async () => (await w.db.select().from(schema.account_demo)).length;
+    /** The fields a 422 names, as the forms read them. */
+    const fieldsOf = (r: { data: unknown }) => {
+      const detail = (r.data as { detail?: unknown }).detail;
+      return Array.isArray(detail) ? detail.map((d) => (d as { loc: string[] }).loc[1]) : [];
+    };
+    const refusedOnOrgId = async (r: { status: number; data: unknown }, before: number) => {
+      expect([r.status, fieldsOf(r)]).toEqual([422, ["org_id"]]);
+      expect(await demoCount()).toBe(before);
+    };
+
+    test("an organisation that does not exist is refused on org_id", async () => {
+      const { contact } = await organisation("member");
+      const before = await demoCount();
+      await refusedOnOrgId(await start(newId(), contact), before);
+    });
+
+    test("a deleted organisation is refused on org_id", async () => {
+      const { org, contact } = await organisation("member");
+      await setOrganisationDeleted(w, org.id, true);
+      const before = await demoCount();
+      await refusedOnOrgId(await start(org.id, contact), before);
+    });
+
+    test("an organisation the contact is not a live member of is refused on org_id", async () => {
+      const { org, contact } = await organisation("member");
+      const before = await demoCount();
+      // Never in it.
+      await refusedOnOrgId(await start(w.otherOrgId, contact), before);
+      // Removed from it.
+      await setRemovedFromOrganisation(w, org.id, contact, true);
+      await refusedOnOrgId(await start(org.id, contact), before);
+    });
+
+    test("a contact without an account is refused on org_id", async () => {
+      const { org } = await organisation("member");
+      const before = await demoCount();
+      const nobody = { email: "nobody-yet@example.test" } as Person;
+      await refusedOnOrgId(await start(org.id, nobody), before);
+    });
+
+    test("an offer together with an org_id is refused", async () => {
+      const { org, contact } = await organisation("member");
+      const before = await demoCount();
+      const r = await start(org.id, contact, {
+        offer: {
+          template: "subscription",
+          language: "en",
+          items: [
+            { description: "Licence", quantity: 12, unit_price_cents: 8600, vat_rate_bps: 2100 },
+          ],
+        },
+      });
+      expect(r.status).toBe(422);
+      expect(fieldsOf(r).some((f) => f === "offer" || f === "org_id")).toBe(true);
+      expect(await demoCount()).toBe(before);
+    });
+
+    test("a valid org_id is accepted, and the demo names the organisation from the first answer on", async () => {
+      const { org, contact } = await organisation("member");
+      w.jobs.jobs.length = 0;
+      const r = await start(org.id, contact);
+      expect(r.status).toBe(201);
+      const first = K.DemoStatus.parse(r.data);
+      expect(first.status).toBe("queued");
+      expect(first.existing_organisation).toEqual({ id: org.id, name: org.name });
+      expect((await statusOf(first.id)).existing_organisation).toEqual({
+        id: org.id,
+        name: org.name,
+      });
+      expect(w.jobs.jobs.map((j) => j.name)).toEqual(["accounts.demo-build"]);
+      // A demo without org_id still answers null.
+      const own = K.DemoStatus.parse((await start(null, contact)).data);
+      expect(own.existing_organisation).toBeNull();
+    });
+  });
+
+  describe("the new demo form's check (POST .../demos/check)", () => {
+    const check = async (body: Record<string, unknown>) => {
+      const r = await call(w, "POST", `${DEMOS}/check`, "staff", body);
+      expect(r.status).toBe(200);
+      return K.DemoCheck.parse(r.data);
+    };
+
+    test("without an email there is no contact", async () => {
+      expect((await check({})).contact).toBeNull();
+      expect((await check({ organisation_name: "Nowhere Council" })).contact).toBeNull();
+    });
+
+    test("an address without an account reads as new: no account and no organisations", async () => {
+      expect((await check({ contact_email: "first-time@nowhere.example" })).contact).toEqual({
+        has_account: false,
+        name: null,
+        organisations: [],
+      });
+    });
+
+    test("a known contact gets their live organisations with role and stage, real organisations before prospects", async () => {
+      const jules = await personWithAccount(w, "jules", { name: "Jules Example" });
+      const at = (name: string, stage: "customer" | "prospect" | null, role: OrgRole) =>
+        existingOrganisation(w, { name, stage, members: [{ person: jules, role }] });
+      // The prospect first, so the order cannot come from the order they were joined.
+      const prospect = await at("Example Water Board", "prospect", "owner");
+      const customer = await at("Provincie Proefland", "customer", "member");
+      const noStage = await at("Stichting Zonder Fase", null, "admin");
+      const left = await at("Verlaten BV", "customer", "admin");
+      await setRemovedFromOrganisation(w, left.id, jules, true);
+      const gone = await at("Opgeheven BV", "customer", "admin");
+      await setOrganisationDeleted(w, gone.id, true);
+
+      const { contact } = await check({ contact_email: "JULES@example.test" });
+      expect(contact?.has_account).toBe(true);
+      expect(contact?.name).toBe("Jules Example");
+      const orgs = contact?.organisations ?? [];
+      expect(orgs).toHaveLength(3);
+      expect(orgs.slice(0, 2).sort((a, b) => a.name.localeCompare(b.name))).toEqual([
+        { id: customer.id, name: customer.name, account_stage: "customer", role: "member" },
+        { id: noStage.id, name: noStage.name, account_stage: null, role: "admin" },
+      ]);
+      expect(orgs[2]).toEqual({
+        id: prospect.id,
+        name: prospect.name,
+        account_stage: "prospect",
+        role: "owner",
+      });
+    });
+
+    test("organisations with the same name match trimmed and case-insensitive, and leave out the contact's own", async () => {
+      const kim = await personWithAccount(w, "kim");
+      const own = await existingOrganisation(w, {
+        name: "Harbour Board",
+        stage: "customer",
+        members: [{ person: kim, role: "member" }],
+      });
+      const named = async (name: string, stage: "customer" | "prospect" | null) =>
+        existingOrganisation(w, { name, stage, members: [] });
+      const same = await named("Harbour Board", "prospect");
+      const lower = await named("harbour board", null);
+      const spaced = await named("  Harbour Board ", "customer");
+      const deleted = await named("HARBOUR BOARD", "customer");
+      await setOrganisationDeleted(w, deleted.id, true);
+      await named("Harbour Boards", "customer");
+
+      const answer = await check({
+        contact_email: kim.email,
+        organisation_name: "  hArBoUr bOaRd ",
+      });
+      expect(answer.contact?.organisations.map((o) => o.id)).toEqual([own.id]);
+      expect(answer.organisations_named.map((o) => o.id).sort()).toEqual(
+        [same.id, lower.id, spaced.id].sort(),
+      );
+      const stageOf = new Map(answer.organisations_named.map((o) => [o.id, o.account_stage]));
+      expect(stageOf.get(same.id)).toBe("prospect");
+      expect(stageOf.get(lower.id)).toBeNull();
+      // Without an email every live organisation of that name is named, theirs included.
+      expect(
+        (await check({ organisation_name: "harbour board" })).organisations_named
+          .map((o) => o.id)
+          .sort(),
+      ).toEqual([own.id, same.id, lower.id, spaced.id].sort());
+    });
+
+    test("earlier demos for the same email or the same name come newest first, at most five, with both flags", async () => {
+      const repeat = await personWithAccount(w, "repeat");
+      const someone = await personWithAccount(w, "someone");
+      const clock = w.clock.now;
+      const made: string[] = [];
+      const demoAt = async (minute: number, who: Person, email: string, name: string) => {
+        w.clock.now = new Date(clock.getTime() + minute * 60_000);
+        const r = await start(null, who, { contact_email: email, organisation_name: name });
+        expect(r.status).toBe(201);
+        made.push(K.DemoStatus.parse(r.data).id);
+      };
+      try {
+        await demoAt(1, repeat, repeat.email, "Somewhere Else"); // same contact, dropped as the sixth
+        await demoAt(2, repeat, repeat.email.toUpperCase(), "Herhaalstad"); // both
+        await demoAt(3, someone, someone.email, "herhaalstad"); // same name
+        await demoAt(4, someone, someone.email, "HERHAALSTAD"); // same name
+        await demoAt(5, repeat, repeat.email, "Anything"); // same contact
+        await demoAt(6, repeat, repeat.email, "Anything Else"); // same contact
+        await demoAt(7, someone, someone.email, "Unrelated Town"); // neither, and the newest
+      } finally {
+        w.clock.now = clock;
+      }
+      const { demos } = await check({
+        contact_email: repeat.email.toUpperCase(),
+        organisation_name: " Herhaalstad ",
+      });
+      expect(
+        demos.map((d) => `${d.id} contact:${d.same_contact} name:${d.same_organisation}`),
+      ).toEqual([
+        `${made[5]} contact:true name:false`,
+        `${made[4]} contact:true name:false`,
+        `${made[3]} contact:false name:true`,
+        `${made[2]} contact:false name:true`,
+        `${made[1]} contact:true name:true`,
+      ]);
+      expect(demos[0]).toMatchObject({
+        organisation_name: "Anything Else",
+        contact_email: repeat.email,
+        status: "queued",
+      });
+    });
+  });
+});
