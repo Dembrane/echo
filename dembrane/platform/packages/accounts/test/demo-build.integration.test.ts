@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { newId } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import { FakeCompleter, fakeCalls, takeUnscopedFakeCalls } from "@dembrane/llm";
-import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, asc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import * as K from "../src/contract";
 import { buildDemo, type DemoBuildDeps, demoSlug } from "../src/demo/build";
 import type { HttpGet } from "../src/demo/fetch";
@@ -749,6 +749,113 @@ run("demos made in echo", () => {
       .from(schema.project)
       .where(eq(schema.project.id, view.links.projects[0]?.project_id as string));
     expect(project?.pin).toBeNull();
+  });
+
+  test("the backfill gives demos released before the workspace row the same row and pin, once", async () => {
+    const backfill = async () => {
+      const file = new URL(
+        "../../db/migrations/0058_expand_demo_workspace_membership.sql",
+        import.meta.url,
+      );
+      for (const statement of (await Bun.file(file).text()).split("--> statement-breakpoint"))
+        if (statement.trim()) await w.db.execute(sql.raw(statement));
+    };
+    const pinOf = async (projectId: string) =>
+      (
+        await w.db
+          .select({ pin: schema.project.pin_order })
+          .from(schema.project)
+          .where(eq(schema.project.id, projectId))
+      )[0]?.pin;
+    const setPin = (projectId: string, pin: number | null) =>
+      w.db.update(schema.project).set({ pin_order: pin }).where(eq(schema.project.id, projectId));
+    /** A demo as one released before this change left it: no workspace row, no pin. */
+    const releasedBefore = async (who: string, opts: { publish?: boolean } = {}) => {
+      const demo = await draftFor(who);
+      if (opts.publish !== false) expect((await publish(demo.id)).status).toBe(200);
+      const { workspace_id } = await seedOf(demo.id);
+      const person = w.people[who as keyof World["people"]];
+      await w.db
+        .delete(schema.workspace_membership)
+        .where(
+          and(
+            eq(schema.workspace_membership.workspace_id, workspace_id),
+            eq(schema.workspace_membership.user_id, person.appUserId as string),
+          ),
+        );
+      const projectId = demo.links.projects[0]?.project_id as string;
+      await setPin(projectId, null);
+      return { demo, workspace_id, person, projectId };
+    };
+    const everyRow = async () =>
+      (
+        await w.db
+          .select({
+            ws: schema.workspace_membership.workspace_id,
+            user: schema.workspace_membership.user_id,
+          })
+          .from(schema.workspace_membership)
+      ).map((r) => `${r.ws}:${r.user}`);
+
+    // Owed a row and a pin.
+    const owed = await releasedBefore("vroeger");
+    // Owed a row; the project was pinned by hand since, and that pin stays.
+    const pinned = await releasedBefore("gepind");
+    await setPin(pinned.projectId, 2);
+    // Still held: never released, so nothing yet.
+    const held = await releasedBefore("vastgehouden", { publish: false });
+    // No longer an admin of the organisation.
+    const left = await releasedBefore("vertrokken");
+    await w.db
+      .update(schema.org_membership)
+      .set({ deleted_at: w.clock.now.toISOString() })
+      .where(
+        and(
+          eq(schema.org_membership.org_id, left.demo.org_id as string),
+          eq(schema.org_membership.user_id, left.person.appUserId as string),
+        ),
+      );
+    // Removed from the workspace since: the removal stands.
+    const removed = await releasedBefore("weggehaald");
+    await w.db.insert(schema.workspace_membership).values({
+      id: newId(),
+      workspace_id: removed.workspace_id,
+      user_id: removed.person.appUserId as string,
+      role: "admin",
+      source: "direct",
+      deleted_at: w.clock.now.toISOString(),
+    });
+    // The workspace itself was deleted.
+    const gone = await releasedBefore("opgeheven");
+    await w.db
+      .update(schema.workspace)
+      .set({ deleted_at: w.clock.now.toISOString() })
+      .where(eq(schema.workspace.id, gone.workspace_id));
+
+    const before = await everyRow();
+    await backfill();
+    await backfill();
+    // Exactly the two owed rows, once each; every other demo here and in the tests above,
+    // the shared staff workspace's among them, is left as it was.
+    const added = (await everyRow()).filter((r) => !before.includes(r));
+    expect(added.sort()).toEqual(
+      [
+        `${owed.workspace_id}:${owed.person.appUserId}`,
+        `${pinned.workspace_id}:${pinned.person.appUserId}`,
+      ].sort(),
+    );
+    expect(await placesIn(owed.workspace_id, owed.person.email)).toEqual([ADMIN_PLACE]);
+    expect(await listed(owed.person.appUserId as string)).toEqual([
+      { workspace_id: owed.workspace_id, pinned: [owed.projectId] },
+    ]);
+    expect(await pinOf(pinned.projectId)).toBe(2);
+    for (const untouched of [held, left, removed, gone])
+      expect(await pinOf(untouched.projectId)).toBeNull();
+    expect(
+      (await placesIn(removed.workspace_id, removed.person.email)).map(
+        (r) => r.deleted_at !== null,
+      ),
+    ).toEqual([true]);
   });
 
   test("a failed step: the demo says which and why; a retry resumes there without repeating the others", async () => {
