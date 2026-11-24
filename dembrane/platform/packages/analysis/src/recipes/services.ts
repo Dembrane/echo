@@ -4,11 +4,13 @@ import {
   type CompletionRequest,
   completerIdentity,
   type Embedder,
+  EmbeddingRouteChanged,
 } from "@dembrane/llm";
 import type { Json } from "../contracts";
 import { q } from "../db";
 import {
   type EmbeddingIdentity,
+  EmbeddingService,
   embedWithRetry,
   INPUT_NORMALIZATION,
   probeIdentity,
@@ -48,6 +50,31 @@ export function producerServices(services: RecipeServices): ProducerServices {
   const found = services[PRODUCERS_KEY];
   if (!found) throw new Error(`services['${PRODUCERS_KEY}'] is not configured`);
   return found as ProducerServices;
+}
+
+/**
+ * Runs one embedding batch for the project's current provider: the identity is probed, then
+ * `run` embeds against it. A project that switches provider while the batch runs makes the
+ * pinned embedder refuse its next vector (EmbeddingRouteChanged), and the batch is dropped and
+ * run once more from a new probe, on the provider the project has now. A second change in a
+ * row fails the step, which the run reports as it does any other failure. Vectors already
+ * stored under the old identity stay under its key.
+ */
+export async function embeddingBatch<T>(
+  store: AnalysisStore,
+  services: Pick<ProducerServices, "probe" | "embed">,
+  run: (service: EmbeddingService, identity: EmbeddingIdentity) => Promise<T>,
+): Promise<T> {
+  const once = async () => {
+    const identity = await services.probe();
+    return run(new EmbeddingService(store, identity, services.embed), identity);
+  };
+  try {
+    return await once();
+  } catch (err) {
+    if (!(err instanceof EmbeddingRouteChanged)) throw err;
+    return once();
+  }
 }
 
 /** Every conversation of a project with transcribed text, oldest first, as Map reads them. */

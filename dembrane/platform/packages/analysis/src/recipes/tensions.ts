@@ -1,5 +1,5 @@
 import type { Json, ObjectRevision, SourceRef } from "../contracts";
-import { EmbeddingService, identityKey, inputHash, refJson } from "../embeddings";
+import { identityKey, inputHash, refJson } from "../embeddings";
 import { type RecipeContext, RecipeFailed, stepResult } from "../executor";
 import { contentHash, sha256Hex } from "../hashing";
 import { textHash } from "../maprecipe";
@@ -21,7 +21,12 @@ import {
   revisionQuotes,
 } from "./arguments";
 import { AnswerDidNotParse, jsonFromText } from "./model";
-import { modelDeployment, type ProducerServices, producerServices } from "./services";
+import {
+  embeddingBatch,
+  modelDeployment,
+  type ProducerServices,
+  producerServices,
+} from "./services";
 import {
   type ArgumentRevision,
   COLLISIONS_SCHEMA,
@@ -559,20 +564,21 @@ async function execute(ctx: RecipeContext): Promise<void> {
         embeddingModels.size === 1 ? ([...embeddingModels][0] as string) : null;
       let computed = 0;
       if (missing.length) {
-        const identity = await services.probe();
-        if (configKey !== null && identityKey(identity) !== configKey)
-          throw new RecipeFailed(
-            "The embedding deployment changed since the arguments were embedded. Refresh the arguments first.",
+        const done = await embeddingBatch(ctx.store, services, async (service, identity) => {
+          if (configKey !== null && identityKey(identity) !== configKey)
+            throw new RecipeFailed(
+              "The embedding deployment changed since the arguments were embedded. Refresh the arguments first.",
+            );
+          const batch = await service.ensure(
+            ctx.projectId,
+            missing.map((h) => texts.get(h) as string),
           );
-        const service = new EmbeddingService(ctx.store, identity, services.embed);
-        const batch = await service.ensure(
-          ctx.projectId,
-          missing.map((h) => texts.get(h) as string),
-        );
-        for (const [h, id] of batch.ids) ids[h] = id;
-        key = service.key;
-        model = identity.model;
-        computed = batch.computed;
+          return { batch, identity, service };
+        });
+        for (const [h, id] of done.batch.ids) ids[h] = id;
+        key = done.service.key;
+        model = done.identity.model;
+        computed = done.batch.computed;
       }
       const unique = [...new Set(Object.values(ids))];
       const durable = await ctx.store.vectorsByIds(ctx.projectId, sortedStrings(unique));

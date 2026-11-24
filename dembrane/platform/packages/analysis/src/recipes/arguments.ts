@@ -5,7 +5,7 @@ import {
   type ObjectRevision,
   type SourceRef,
 } from "../contracts";
-import { EmbeddingService, inputHash, refJson } from "../embeddings";
+import { inputHash, refJson } from "../embeddings";
 import { type RecipeContext, RecipeFailed, RunStopped, stepResult, taskGroup } from "../executor";
 import { CanonicalizationError, contentHash, sha256Hex } from "../hashing";
 import {
@@ -25,7 +25,12 @@ import type { InputRequest, Recipe, StepDef } from "../registry";
 import { normKey } from "../text";
 import { getObjectType } from "../types";
 import { EXTRACTION_PROMPT, extractArguments } from "./model";
-import { modelDeployment, type ProducerServices, producerServices } from "./services";
+import {
+  embeddingBatch,
+  modelDeployment,
+  type ProducerServices,
+  producerServices,
+} from "./services";
 
 /**
  * Arguments: Map's grounded transcript extraction as a recipe. Scope `project`; inputs are
@@ -373,10 +378,15 @@ export async function execute(ctx: RecipeContext): Promise<void> {
         return stepResult({
           output: { ids: {}, configKey: null, model: null, reused: 0, computed: 0 },
         });
-      const identity = await services.probe();
-      const service = new EmbeddingService(ctx.store, identity, services.embed);
-      const batch = await service.ensure(ctx.projectId, texts.values());
-      await service.verifyDurable(ctx.projectId, batch.ids.values());
+      const { batch, identity, service } = await embeddingBatch(
+        ctx.store,
+        services,
+        async (service, identity) => {
+          const batch = await service.ensure(ctx.projectId, texts.values());
+          await service.verifyDurable(ctx.projectId, batch.ids.values());
+          return { batch, identity, service };
+        },
+      );
       return stepResult({
         output: {
           ids: Object.fromEntries(batch.ids),

@@ -1,5 +1,5 @@
 import type { Json, ObjectRevision, SourceRef } from "../contracts";
-import { EmbeddingService, inputHash, refJson } from "../embeddings";
+import { inputHash, refJson } from "../embeddings";
 import { type RecipeContext, RecipeFailed, stepResult } from "../executor";
 import { pyFind, sourceFingerprint, textHash } from "../maprecipe";
 import stakeholdersPrompt from "../prompts/stakeholders-v0.9.md" with { type: "text" };
@@ -31,7 +31,7 @@ import {
   TOKEN_KEYS,
   transcriptMessage,
 } from "./popcorn-shared";
-import { modelDeployment, producerServices } from "./services";
+import { embeddingBatch, modelDeployment, producerServices } from "./services";
 
 /**
  * Stakeholders: who has something at stake, and how they stand to each other. Scope
@@ -323,10 +323,15 @@ export async function execute(ctx: RecipeContext): Promise<void> {
   const embedded = await ctx.step<Json>(
     "embed",
     async () => {
-      const identity = await services.probe();
-      const service = new EmbeddingService(ctx.store, identity, services.embed);
-      const batch = await service.ensure(ctx.projectId, textsByHash.values());
-      await service.verifyDurable(ctx.projectId, batch.ids.values());
+      const { batch, identity, service } = await embeddingBatch(
+        ctx.store,
+        services,
+        async (service, identity) => {
+          const batch = await service.ensure(ctx.projectId, textsByHash.values());
+          await service.verifyDurable(ctx.projectId, batch.ids.values());
+          return { batch, identity, service };
+        },
+      );
       return stepResult({
         output: {
           ids: Object.fromEntries(batch.ids),
