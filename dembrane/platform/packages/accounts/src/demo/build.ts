@@ -1,5 +1,5 @@
 import { HELD_FOR_DEMO } from "@dembrane/access";
-import { ValidationError } from "@dembrane/core";
+import { newId, ValidationError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import type { Completer } from "@dembrane/llm";
@@ -312,11 +312,13 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
   const sharedWorkspace = placed?.ok ? null : d.demo.workspaceId;
   const workspaceId =
     sharedWorkspace ??
-    (await prospectWorkspace(
+    (await demoWorkspace(
       d,
       orgId,
       slug,
-      placed?.ok ? { name: input.organisation_name, heldFor: row.id } : undefined,
+      placed?.ok
+        ? { name: input.organisation_name, heldFor: row.id, createdBy: staffApp?.id ?? null }
+        : undefined,
     ));
   const authored = row.corpus as Authored;
   const language = input.language;
@@ -496,16 +498,32 @@ async function defaultManager(
  * already work in, named after the demo and held back from them (private, and marked with
  * HELD_FOR_DEMO for this demo) until publishing hands it over. Inserted directly with the
  * organisation's billing account, outside the free tier's workspace limit, as the
- * prospect's is.
+ * prospect's is. An organisation people work in may have no pooled billing account yet
+ * (each of its workspaces billed on its own); it gets the one a workspace made there would
+ * get (tenancy's orgAccountForNewWorkspace).
  */
-async function prospectWorkspace(
+async function demoWorkspace(
   d: AccountsDeps,
   orgId: string,
   slug: string,
-  held?: { name: string; heldFor: string },
+  held?: { name: string; heldFor: string; createdBy: string | null },
 ): Promise<string> {
   const id = demoIdentity(slug, "workspace");
-  const billing = await store.billing(d.db, orgId);
+  let billing = (await store.billing(d.db, orgId))?.id ?? null;
+  if (!billing && held) {
+    billing = newId();
+    const at = d.now().toISOString();
+    await store.insertBilling(d.db, {
+      id: billing,
+      org_id: orgId,
+      tier: "free",
+      payment_mode: "none",
+      created_by: held.createdBy,
+      label: "Org billing",
+      created_at: at,
+      updated_at: at,
+    });
+  }
   if (!billing) throw new Error("the demo organisation has no billing account");
   await d.db
     .insert(schema.workspace)
@@ -513,7 +531,7 @@ async function prospectWorkspace(
       id,
       org_id: orgId,
       name: held?.name ?? "dembrane demo",
-      billing_account_id: billing.id,
+      billing_account_id: billing,
       visibility: held ? "private" : "open_to_organisation",
       ...(held && { settings: { [HELD_FOR_DEMO]: held.heldFor } }),
     })

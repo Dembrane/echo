@@ -16,6 +16,7 @@ import {
   emailsQueued,
   existingOrganisation,
   fakeDemoBuild,
+  joinOrganisation,
   type OrgRole,
   organisationCount,
   type Person,
@@ -467,6 +468,30 @@ run("a demo placed in an organisation the contact already works in", () => {
       expect(await heldFor(workspaceId)).toEqual([undefined, "open_to_organisation"]);
       expect(emailsQueued(w).map((e) => e.template)).toEqual(["account_demo_ready"]);
     });
+  });
+
+  test("an organisation without a billing account of its own gets the one a workspace made there would get, and the demo builds", async () => {
+    const contact = await personWithAccount(w, "no-billing-contact");
+    const orgId = newId();
+    await w.db
+      .insert(schema.org)
+      .values({ id: orgId, name: "No billing yet", account_stage: "customer" });
+    await joinOrganisation(w, orgId, contact, "member");
+    const view = await draftIn(orgId, contact, { sign_in: true });
+    expect(view.status).toBe("draft");
+    const where = await placedIn(view, orgId);
+    const accounts = await w.db
+      .select()
+      .from(schema.billing_account)
+      .where(eq(schema.billing_account.org_id, orgId));
+    expect(accounts.map((a) => [a.tier, a.payment_mode, a.label, a.deleted_at])).toEqual([
+      ["free", "none", "Org billing", null],
+    ]);
+    const [ws] = await w.db
+      .select({ account: schema.workspace.billing_account_id })
+      .from(schema.workspace)
+      .where(eq(schema.workspace.id, where.workspace_id as string));
+    expect(ws?.account).toBe(accounts[0]?.id as string);
   });
 
   test("the SQL and the TypeScript held markers agree on every value: only a non-empty string holds", async () => {
