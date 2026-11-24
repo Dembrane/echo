@@ -117,10 +117,10 @@ describe("TemplateRow", () => {
 	it("names its scroll buttons and the way to all formats", () => {
 		const { onSeeAll } = renderRow();
 		expect(
-			screen.getByRole("button", { name: "Earlier formats" }),
+			screen.getByRole("button", { name: "Earlier templates" }),
 		).toBeTruthy();
-		expect(screen.getByRole("button", { name: "More formats" })).toBeTruthy();
-		fireEvent.click(screen.getByRole("button", { name: "See all formats" }));
+		expect(screen.getByRole("button", { name: "More templates" })).toBeTruthy();
+		fireEvent.click(screen.getByRole("button", { name: "See all templates" }));
 		expect(onSeeAll).toHaveBeenCalled();
 	});
 
@@ -140,7 +140,7 @@ describe("TemplateRow", () => {
 		]);
 		expect(screen.getByTestId("template-row-see-all")).toBeTruthy();
 		// One card has nowhere to scroll.
-		expect(screen.queryByRole("button", { name: "More formats" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "More templates" })).toBeNull();
 		fireEvent.click(screen.getByTestId("template-card-blank"));
 		expect(onChoose).toHaveBeenCalledWith("blank", expect.anything());
 	});

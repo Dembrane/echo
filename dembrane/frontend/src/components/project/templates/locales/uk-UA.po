@@ -102,8 +102,12 @@ msgstr "Кожна розмова отримує назву"
 #~ msgstr "Кожен стіл перевіряє власний підсумок"
 
 #: src/components/project/templates/TemplateRow/TemplateRow.tsx:132
-msgid "Earlier formats"
-msgstr "Попередні формати"
+#~ msgid "Earlier formats"
+#~ msgstr "Попередні формати"
+
+#: src/components/project/templates/TemplateRow/TemplateRow.tsx:132
+msgid "Earlier templates"
+msgstr "Попередні шаблони"
 
 #: src/components/project/templates/projectTemplates.ts:316
 #~ msgid "Ends with decisions and actions"
@@ -327,8 +331,12 @@ msgstr "Багато груп одночасно"
 #~ msgstr "Позначає переломні моменти"
 
 #: src/components/project/templates/TemplateRow/TemplateRow.tsx:143
-msgid "More formats"
-msgstr "Більше форматів"
+#~ msgid "More formats"
+#~ msgstr "Більше форматів"
+
+#: src/components/project/templates/TemplateRow/TemplateRow.tsx:143
+msgid "More templates"
+msgstr "Більше шаблонів"
 
 #: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:154
 #~ msgid "Most used. Filter to find more."
@@ -466,8 +474,12 @@ msgid "Scenario session"
 msgstr "Сесія сценаріїв"
 
 #: src/components/project/templates/TemplateRow/TemplateRow.tsx:196
-msgid "See all formats"
-msgstr "Переглянути всі формати"
+#~ msgid "See all formats"
+#~ msgstr "Переглянути всі формати"
+
+#: src/components/project/templates/TemplateRow/TemplateRow.tsx:196
+msgid "See all templates"
+msgstr "Переглянути всі шаблони"
 
 #: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:56
 msgid "Session name"

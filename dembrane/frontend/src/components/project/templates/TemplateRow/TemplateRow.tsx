@@ -28,7 +28,7 @@ interface TemplateRowProps {
 	failed?: boolean;
 	/** A card was pressed: the flow moves on with it. */
 	onChoose: (key: ChoiceKey, context: TemplateChoiceContext) => void;
-	/** "See all formats": skip the row for the full list with its filters. */
+	/** "See all templates": skip the row for the full list with its filters. */
 	onSeeAll: () => void;
 }
 
@@ -129,7 +129,7 @@ export const TemplateRow = ({
 						size="lg"
 						onClick={() => page(-1)}
 						disabled={ends.start}
-						aria-label={t`Earlier formats`}
+						aria-label={t`Earlier templates`}
 						data-testid="template-row-prev"
 					>
 						<CaretLeftIcon size={20} aria-hidden />
@@ -140,7 +140,7 @@ export const TemplateRow = ({
 						size="lg"
 						onClick={() => page(1)}
 						disabled={ends.end}
-						aria-label={t`More formats`}
+						aria-label={t`More templates`}
 						data-testid="template-row-next"
 					>
 						<CaretRightIcon size={20} aria-hidden />
@@ -193,7 +193,7 @@ export const TemplateRow = ({
 				onClick={onSeeAll}
 				data-testid="template-row-see-all"
 			>
-				<Trans>See all formats</Trans>
+				<Trans>See all templates</Trans>
 			</Button>
 		</section>
 	);

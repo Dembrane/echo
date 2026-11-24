@@ -33,8 +33,8 @@ than one workspace, it first asks "Which workspace?".
 
 1. Choose how to start. Under "Start from a template", the first card, "Quick start", makes
    a plain project: nothing is set up for you, and you can change every setting later. The
-   cards after it are formats, such as "Table conversations" or "Focus group", that set the
-   project up for that kind of session. "See all formats" shows every format with filters.
+   cards after it are templates, such as "Table conversations" or "Focus group", that set the
+   project up for that kind of session. "See all templates" shows every template with filters.
    Under the cards you can drop an agenda, invitation or run sheet instead. "Quick project"
    skips this step and starts from "Quick start".
 2. Fill in "Project name" and, if you like, "Project context". The context says what the

@@ -93,7 +93,7 @@ const setVisibility = (projectId: string, visibility: Access) =>
  * the server in the creating transaction.
  *
  * Start: "Start from a template", Quick start (a plain project) and every format in one
- * row of drawn cards: pressing one chooses it and goes to the name. "See all formats" leads
+ * row of drawn cards: pressing one chooses it and goes to the name. "See all templates" leads
  * to the full list with its filters (verbs and setup), Quick start first again, and the
  * quiet "Upload recordings". Under the row, the offer to set up from what the host already
  * has (the context digest, ECHO-1055: drop an agenda, invitation or run sheet, paste text
