@@ -175,8 +175,12 @@ export function heldForDemo(settings: unknown): string | null {
   return typeof value === "string" && value !== "" ? value : null;
 }
 
-/** heldForDemo in SQL, negated: true for a workspace its organisation's people may see. */
-export const shownToOrganisation: SQL = sql`coalesce(${workspace.settings}->>${sql.raw(`'${HELD_FOR_DEMO}'`)}, '') = ''`;
+const heldKey = sql.raw(`'${HELD_FOR_DEMO}'`);
+/**
+ * heldForDemo in SQL, negated: true for a workspace its organisation's people may see. Like
+ * heldForDemo, only a non-empty JSON string holds; `true`, a number or an object does not.
+ */
+export const shownToOrganisation: SQL = sql`not coalesce(json_typeof(${workspace.settings}->${heldKey}) = 'string' and ${workspace.settings}->>${heldKey} <> '', false)`;
 
 /**
  * Tombstones are stored as `{user_id, removed_at, removed_by}` objects by the old API and

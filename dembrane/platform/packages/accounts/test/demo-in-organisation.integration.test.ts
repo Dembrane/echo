@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { resolveProject } from "@dembrane/access";
+import { heldForDemo, resolveProject, shownToOrganisation } from "@dembrane/access";
 import { newId } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import { resolveLocale } from "@dembrane/i18n";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import * as K from "../src/contract";
 import { demoBuildAccess } from "../src/demo/access";
 import { buildDemo, type DemoBuildDeps } from "../src/demo/build";
@@ -467,6 +467,68 @@ run("a demo placed in an organisation the contact already works in", () => {
       expect(await heldFor(workspaceId)).toEqual([undefined, "open_to_organisation"]);
       expect(emailsQueued(w).map((e) => e.template)).toEqual(["account_demo_ready"]);
     });
+  });
+
+  test("the SQL and the TypeScript held markers agree on every value: only a non-empty string holds", async () => {
+    const owner = await personWithAccount(w, "marker-owner");
+    const org = await existingOrganisation(w, {
+      name: "Markers",
+      stage: "customer",
+      members: [{ person: owner, role: "owner" }],
+    });
+    const values: [unknown, boolean][] = [
+      ["a-demo-id", true],
+      ["", false],
+      [null, false],
+      [true, false],
+      [false, false],
+      [1, false],
+      [0, false],
+      [{ id: "x" }, false],
+      [["x"], false],
+    ];
+    const ids: string[] = [];
+    for (const [value] of values) {
+      const id = newId();
+      ids.push(id);
+      await w.db.insert(schema.workspace).values({
+        id,
+        org_id: org.id,
+        name: `Marker ${JSON.stringify(value)}`,
+        billing_account_id: org.billingId,
+        visibility: "private",
+        settings: { held_for_demo: value },
+      });
+    }
+    // A workspace with no settings, and one without the key, are shown too.
+    for (const settings of [null, { other: "x" }]) {
+      const id = newId();
+      ids.push(id);
+      values.push([undefined, false]);
+      await w.db.insert(schema.workspace).values({
+        id,
+        org_id: org.id,
+        name: `Marker ${JSON.stringify(settings)}`,
+        billing_account_id: org.billingId,
+        visibility: "private",
+        settings,
+      });
+    }
+    const shown = new Set(
+      (
+        await w.db
+          .select({ id: schema.workspace.id })
+          .from(schema.workspace)
+          .where(and(inArray(schema.workspace.id, ids), shownToOrganisation))
+      ).map((r) => r.id),
+    );
+    const rows = await w.db
+      .select({ id: schema.workspace.id, settings: schema.workspace.settings })
+      .from(schema.workspace)
+      .where(inArray(schema.workspace.id, ids));
+    const settingsOf = new Map(rows.map((r) => [r.id, r.settings]));
+    const read = ids.map((id) => [!shown.has(id), heldForDemo(settingsOf.get(id)) !== null]);
+    expect(read).toEqual(values.map(([, held]) => [held, held]));
   });
 
   test("the build's popcorn read reaches the hidden project as its owner, the contact, before publish", async () => {
