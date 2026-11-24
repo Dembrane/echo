@@ -9,6 +9,7 @@ import { demoBuildAccess } from "../src/demo/access";
 import { buildDemo, type DemoBuildDeps } from "../src/demo/build";
 import { ensureUser, releaseHeldContacts } from "../src/prospect";
 import { accountsRoutes } from "../src/routes";
+import { store } from "../src/storage";
 import {
   ADMIN_PLACE,
   accountOf,
@@ -509,6 +510,58 @@ run("a demo placed in an organisation the contact already works in", () => {
       .from(schema.workspace)
       .where(eq(schema.workspace.id, where.workspace_id as string));
     expect(ws?.account).toBe(accounts[0]?.id as string);
+  });
+
+  test("with staff's shared demo workspace configured, a demo with an org_id still goes to a workspace of its own in that organisation", async () => {
+    const shared = await organisation("admin");
+    const { org, contact } = await organisation("member");
+    const r = await start(org.id, contact, { sign_in: true });
+    expect(r.status).toBe(201);
+    const id = K.DemoStatus.parse(r.data).id;
+    const withShared = { ...deps, demo: { ...deps.demo, workspaceId: shared.org.workspaceId } };
+    await buildDemo(withShared, id, 1);
+    const view = await statusOf(id);
+    expect(view.status).toBe("draft");
+    const where = await placedIn(view, org.id);
+    expect(where.workspace_id).not.toBe(shared.org.workspaceId);
+    expect(where.workspace_name).toBe(SUBJECT);
+  });
+
+  describe("staff adding onboarding to the organisation", () => {
+    const addOnboarding = (orgId: string) =>
+      call(w, "POST", `/api/v2/admin/accounts/${orgId}/onboarding`, "staff");
+    const tasksOf = async (orgId: string) =>
+      (await store.tasks(w.db, orgId)).map((t) => ({ code: t.code, params: t.params }));
+
+    test("never names a placed demo: no 'explore the demo' task for it, published or not", async () => {
+      const { org, contact } = await organisation("member");
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      const where = await placedIn(view, org.id);
+      expect((await publish(view.id, true)).status).toBe(200);
+      expect((await addOnboarding(org.id)).status).toBe(200);
+      const tasks = await tasksOf(org.id);
+      expect(tasks.map((t) => t.code)).not.toContain("explore_demo");
+      expect(JSON.stringify(tasks)).not.toContain(projectOf(view));
+      expect(JSON.stringify(tasks)).not.toContain(where.workspace_id as string);
+    });
+
+    test("in an organisation whose only workspace is a held demo, no task points at that workspace", async () => {
+      const contact = await personWithAccount(w, "only-held-contact");
+      const orgId = newId();
+      await w.db
+        .insert(schema.org)
+        .values({ id: orgId, name: "Only a demo", account_stage: "customer" });
+      await w.db
+        .insert(schema.billing_account)
+        .values({ id: newId(), org_id: orgId, tier: "free" });
+      await joinOrganisation(w, orgId, contact, "owner");
+      const view = await draftIn(orgId, contact, { sign_in: true });
+      const where = await placedIn(view, orgId);
+      expect((await addOnboarding(orgId)).status).toBe(200);
+      const tasks = await tasksOf(orgId);
+      expect(tasks.length).toBeGreaterThan(0);
+      expect(JSON.stringify(tasks)).not.toContain(where.workspace_id as string);
+    });
   });
 
   test("the SQL and the TypeScript held markers agree on every value: only a non-empty string holds", async () => {

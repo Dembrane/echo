@@ -1,3 +1,4 @@
+import { shownToOrganisation } from "@dembrane/access";
 import { schema } from "@dembrane/db";
 import {
   and,
@@ -1169,12 +1170,15 @@ export const store = {
     return [...(row?.project ? ["create_project"] : []), ...(row?.booking ? ["book_call"] : [])];
   },
 
-  /** The organisation's oldest live workspace: where a first project of its own goes. */
+  /**
+   * The organisation's oldest live workspace its people see: where a first project of its
+   * own goes. A workspace held back for a demo is not one.
+   */
   async firstWorkspace(c: Conn, orgId: string): Promise<string | null> {
     const [row] = await c
       .select({ id: workspace.id })
       .from(workspace)
-      .where(and(eq(workspace.org_id, orgId), isNull(workspace.deleted_at)))
+      .where(and(eq(workspace.org_id, orgId), isNull(workspace.deleted_at), shownToOrganisation))
       .orderBy(asc(workspace.created_at), asc(workspace.id))
       .limit(1);
     return row?.id ?? null;
