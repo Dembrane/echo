@@ -225,6 +225,22 @@ describe("providers on the wire", () => {
     expect(wire.seen.vertex[0]?.url).toContain("/projects/p/locations/eu/");
   });
 
+  test("the organisation label keeps the call's own thinking budget, whichever options key it used", async () => {
+    for (const key of ["google", "vertex", "googleVertex"]) {
+      const { wire, kit } = wired();
+      await inProject(GOOGLE_PROJECT, () =>
+        generateText({
+          model: kit.models.model("multi_modal_pro"),
+          prompt: "hi",
+          providerOptions: { [key]: { thinkingConfig: { thinkingBudget: 2048 } } },
+        }),
+      );
+      const sent = JSON.parse(wire.seen.vertex[0]?.body ?? "{}");
+      expect(sent.labels).toEqual({ organisation_id: "33333333-3333-4333-8333-333333333333" });
+      expect(sent.generationConfig?.thinkingConfig?.thinkingBudget).toBe(2048);
+    }
+  });
+
   test("Scaleway never falls back to Vertex, on a rate limit or a server fault", async () => {
     for (const status of [429, 503]) {
       const { wire, kit } = wired({ compatStatus: status });

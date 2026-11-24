@@ -276,15 +276,24 @@ export class LabelledVertexModel implements LanguageModelV4 {
   private labelled(options: LanguageModelV4CallOptions): LanguageModelV4CallOptions {
     const org = routing()?.organisationId?.toLowerCase();
     if (!org || !LABEL_VALUE.test(org)) return options;
-    const vertex = (options.providerOptions?.vertex ?? {}) as Record<string, unknown>;
+    // The Vertex client reads one options key: googleVertex, else vertex, else google. The
+    // label goes under the key it reads, with whatever the call set under the others (a
+    // thinking budget under `google`), so adding the label never hides the call's own options.
+    const given = options.providerOptions ?? {};
+    const target = given.googleVertex ? "googleVertex" : "vertex";
+    const merged = {
+      ...(given.google ?? {}),
+      ...(given.vertex ?? {}),
+      ...(given.googleVertex ?? {}),
+    } as Record<string, unknown>;
     return {
       ...options,
       providerOptions: {
-        ...options.providerOptions,
-        vertex: {
-          ...vertex,
+        ...given,
+        [target]: {
+          ...merged,
           labels: {
-            ...(vertex.labels as Record<string, string> | undefined),
+            ...(merged.labels as Record<string, string> | undefined),
             organisation_id: org,
           },
         },
