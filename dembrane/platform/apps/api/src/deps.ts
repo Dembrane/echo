@@ -4,9 +4,10 @@ import type { Media } from "@dembrane/audio";
 import type { Auth, IdentityAccount } from "@dembrane/auth";
 import type { Billing } from "@dembrane/billing";
 import type { Config } from "@dembrane/config";
+import type { SpeechRouter } from "@dembrane/conversations";
 import type { Db } from "@dembrane/db";
 import type { Env, Signed } from "@dembrane/http";
-import type { Models } from "@dembrane/llm";
+import type { Completer, Embedder, Models, RoutingPolicy } from "@dembrane/llm";
 import type { Mailer } from "@dembrane/mail";
 import type { Notifier } from "@dembrane/notifications";
 import type { Logger, Tracer } from "@dembrane/observability";
@@ -33,6 +34,21 @@ export interface Deps {
   readonly access: Access;
   readonly db: Db;
   readonly models: Models;
+  /**
+   * The AI the features use, routed per project: one completer and embedder that send each call
+   * to its project's provider, the speech kits, and the provider a new conversation begins on.
+   * Absent (tests): the features run on `models` alone, as a deployment with one provider.
+   */
+  readonly ai?: {
+    /** The providers the deployment has and its default. */
+    readonly policy: RoutingPolicy;
+    readonly completer: Completer;
+    readonly embedder: Embedder;
+    readonly speech: SpeechRouter;
+    readonly providerFor: (projectId: string) => Promise<string | null>;
+    /** Whether any provider the deployment has can ground with Google Search. */
+    readonly groundingPossible: boolean;
+  };
   /** Enqueues jobs; pass a transaction in the options so a job commits with its cause. */
   readonly queue: Pick<Queue, "enqueue">;
   /** Sends outbound webhooks for the test button; a fake in tests. */

@@ -60,7 +60,8 @@ export interface MapRoutesDeps {
   readonly embeddingModel: string;
   readonly embeddingLocation: string;
   /** False refuses fact-checks: they need Google Search grounding. Defaults to true. */
-  readonly factCheck?: boolean;
+  /** Whether the fact check is offered: a flag, or asked per request for the project in scope. */
+  readonly factCheck?: boolean | (() => Promise<boolean>);
   readonly nodeLimitCeiling: number | null;
   readonly edgeLimitCeiling: number | null;
   /** Wakes the screens outside the Map page that show a project's groups. */
@@ -418,7 +419,9 @@ export function mapRoutes(deps: MapRoutesDeps) {
     }
     const t = await target(who, c.req.param("result_id"));
     await projectFor(deps.access, who, service.targetProject(t), "project:update");
-    if (deps.factCheck === false) throw new NotFoundError("analysis.feature_disabled");
+    const offered =
+      typeof deps.factCheck === "function" ? await deps.factCheck() : deps.factCheck !== false;
+    if (!offered) throw new NotFoundError("analysis.feature_disabled");
     await deps.limiter.check(FACT_CHECK_LIMIT, who.directusUserId);
     try {
       return c.json(

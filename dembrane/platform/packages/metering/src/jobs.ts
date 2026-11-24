@@ -3,6 +3,7 @@ import {
   embeddingModelOf,
   groupsOf,
   type LlmSettings,
+  type ProviderId,
   type TranscriptionProfile,
 } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
@@ -30,8 +31,18 @@ export const spendRollup = defineJob("metering.spend-rollup", z.object({}), {
 });
 const SPEND_ROLLUP_CRON = "30 0 * * *";
 
+/** Daily at 04:00 UTC, once across workers: proves yesterday's Google calls were all meant for Google. */
+export const providerCheck = defineJob("metering.provider-check", z.object({}), {
+  policy: "singleton",
+  retryLimit: 2,
+  expireInSeconds: 10 * 60,
+});
+const PROVIDER_CHECK_CRON = "0 4 * * *";
+
 export interface MeteringJobDeps {
   readonly db: Db;
+  /** The deployment's default provider; where it is Google, a call to Google needs no opt-in to be right. */
+  readonly defaultProvider?: ProviderId;
   readonly logger: Logger;
   /** sam's inbox for the alerts; null logs them only. */
   readonly alerts: CostAlertSink | null;
@@ -47,7 +58,7 @@ export function meteringRegistration(d: MeteringJobDeps): {
   register(queue: Queue): Promise<void>;
 } {
   return {
-    jobs: [priceSync, spendRollup],
+    jobs: [priceSync, spendRollup, providerCheck],
     async register(queue) {
       // The table only feeds dashboards: a failed sync never stops the jobs.
       try {
@@ -77,11 +88,58 @@ export function meteringRegistration(d: MeteringJobDeps): {
         });
       });
       await queue.schedule(spendRollup, SPEND_ROLLUP_CRON, {}, "UTC");
+      await queue.work(providerCheck, { concurrency: 1 }, async () => {
+        await runProviderCheck({
+          db: d.db,
+          logger: d.logger,
+          alerts: d.alerts,
+          now: () => new Date(),
+          defaultProvider: d.defaultProvider ?? "scaleway",
+        });
+      });
+      await queue.schedule(providerCheck, PROVIDER_CHECK_CRON, {}, "UTC");
     },
   };
 }
 
 const DAY_MS = 86_400_000;
+
+/**
+ * Counts the Google (Vertex) calls of the last day that the policy did not send there, or whose
+ * organisation did not allow Google when the call was made. It must be zero: anything else
+ * raises the AI cost alert to sam's inbox. Where Google is the deployment's default, a call
+ * there needs no opt-in, so only calls the policy sent elsewhere count.
+ */
+export async function runProviderCheck(d: {
+  db: Db;
+  logger: Logger;
+  alerts: CostAlertSink | null;
+  now: () => Date;
+  defaultProvider: ProviderId;
+}): Promise<{ leaks: number }> {
+  const now = d.now();
+  const since = new Date(now.getTime() - DAY_MS).toISOString();
+  const optInNeeded = d.defaultProvider !== "google";
+  const [row] = await d.db.execute<{ leaks: number; organisations: string[] | null }>(sql`
+    select count(*)::int as leaks,
+      array_agg(distinct organisation_id::text) filter (where organisation_id is not null) as organisations
+    from model_call
+    where started_at >= ${since}::timestamptz and provider = 'vertex'
+      and (routed_provider is distinct from 'google'
+        or (${optInNeeded} and not ('google' = any(coalesce(routing_allowed, '{}'::text[])))))`);
+  const leaks = Number(row?.leaks ?? 0);
+  d.logger.info({ leaks, signal: "metering.provider_check" }, "AI provider check");
+  if (leaks > 0) {
+    const who = (row?.organisations ?? []).slice(0, 5).join(", ");
+    await postCostAlert(
+      d.alerts,
+      `AI provider check: ${leaks} model call${leaks === 1 ? "" : "s"} in the last day went to Google (Vertex) for a project the routing did not send there, or for an organisation that did not allow Google. Organisations: ${who || "none recorded"}. Query: select * from model_call where provider = 'vertex' and routed_provider is distinct from 'google'.`,
+      d.logger,
+      now,
+    );
+  }
+  return { leaks };
+}
 const UNATTRIBUTED_ALERT_SHARE = 0.01;
 /** Complete UTC days each run rolls up, so a missed run is filled by the next. */
 const ROLLUP_DAYS = 3;

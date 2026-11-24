@@ -118,6 +118,14 @@ export const model_call = pgTable(
     cost_micro_eur: bigint("cost_micro_eur", { mode: "number" }),
     /** The ai_price row the cost came from. */
     price_id: bigint("price_id", { mode: "number" }),
+    /** The organisation that owns the project's workspace; null when the call named no project. */
+    organisation_id: uuid("organisation_id"),
+    /** The provider the routing policy resolved to ("scaleway", "google"); `provider` is who answered. */
+    routed_provider: text("routed_provider"),
+    /** Why: project, account-default, environment-default, conversation, only-provider, fail-closed:<cause>. */
+    routing_reason: text("routing_reason"),
+    /** What the organisation allowed when the call was made; null when it was not read. */
+    routing_allowed: text("routing_allowed").array(),
   },
   (t) => [index("model_call_started_at_idx").on(t.started_at)],
 );

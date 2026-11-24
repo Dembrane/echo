@@ -30,6 +30,7 @@ import {
   transcribePiece,
   updateChunk,
   warmTokenCount,
+  withSpeech,
 } from "./steps";
 
 type Retry = Omit<StepConfig, "name">;
@@ -173,125 +174,129 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
       record: boolean;
       hash: string;
     }): Promise<void> {
-      const final = d.final;
-      if (!final) return;
-      const transcriber = final.transcribers[p.provider];
-      let wrote = false;
-      try {
-        // An upload whose first reading is kept: its own sentences, moved to their place in
-        // the merged file; nothing is sent to the speech model again. When the first reading
-        // cannot give the times, the recording is read again as for a recorded conversation.
-        const kind = await step(
-          "final-kind",
-          async () => {
-            const conv = await conversationStore(d.db).conversation(p.conversationId);
-            const treatment = finalTreatment(final, conv?.source);
-            return {
-              treatment,
-              // The first reading's sentences are Whisper's: only a Whisper run keeps them.
-              firstPass:
-                treatment === "first-pass" && p.provider === "whisper"
-                  ? await planFromFirstPass(d, p.conversationId, p.hash)
-                  : null,
-            };
-          },
-          retry.media,
-        );
-        if (kind.treatment === "none") return;
-        let plan: FinalPlan | null = kind.firstPass?.plan ?? null;
-        let parts: FinalPart[] = kind.firstPass ? [...kind.firstPass.parts] : [];
-        if (!plan) {
-          if (!transcriber) return;
-          plan = await step(
-            "final-plan",
-            () => planFinal(d, p.conversationId, p.hash, transcriber),
+      // The kit of the provider the conversation is on now: its final pass, its clean-up.
+      return withSpeech(d, p.conversationId, async (d) => {
+        const final = d.final;
+        if (!final) return;
+        const transcriber = final.transcribers[p.provider];
+        let wrote = false;
+        try {
+          // An upload whose first reading is kept: its own sentences, moved to their place in
+          // the merged file; nothing is sent to the speech model again. When the first reading
+          // cannot give the times, the recording is read again as for a recorded conversation.
+          const kind = await step(
+            "final-kind",
+            async () => {
+              const conv = await conversationStore(d.db).conversation(p.conversationId);
+              const treatment = finalTreatment(final, conv?.source);
+              return {
+                treatment,
+                // The first reading's sentences are Whisper's: only a Whisper run keeps them.
+                firstPass:
+                  treatment === "first-pass" && p.provider === "whisper"
+                    ? await planFromFirstPass(d, p.conversationId, p.hash)
+                    : null,
+              };
+            },
             retry.media,
           );
-          if (!plan) return;
-        }
-        const ctx = await step(
-          "final-context",
-          () => loadFinalContext(d, p.conversationId),
-          retry.db,
-        );
-        if (!kind.firstPass) {
-          parts = [];
-          for (const piece of (plan as FinalPlan).pieces)
-            parts.push(
-              await step(
-                "final-transcribe",
-                () =>
-                  transcribeFinalPiece(
-                    d,
-                    piece,
-                    transcriber as NonNullable<typeof transcriber>,
-                    ctx,
-                  ),
-                retry.transcribe,
-              ),
+          if (kind.treatment === "none") return;
+          let plan: FinalPlan | null = kind.firstPass?.plan ?? null;
+          let parts: FinalPart[] = kind.firstPass ? [...kind.firstPass.parts] : [];
+          if (!plan) {
+            if (!transcriber) return;
+            plan = await step(
+              "final-plan",
+              () => planFinal(d, p.conversationId, p.hash, transcriber),
+              retry.media,
             );
-        }
-        const done = plan as FinalPlan;
-        // The text pass, then redaction, each once over the whole transcript. A failed text
-        // pass leaves Whisper's words; redaction that fails stops the run, since an anonymised
-        // conversation must never show text that was not redacted.
-        const edited = await step(
-          "final-edit",
-          () => editFinal(final, p.provider, parts, ctx),
-          retry.llm,
-        );
-        const assembled = ctx.anonymized
-          ? {
-              sentences: [],
-              text: await step(
-                "final-redact",
-                () => redactFinal(final, edited.sentences, ctx),
-                retry.llm,
-              ),
-              edit: edited.edit,
-              raw: null,
-            }
-          : {
-              sentences: edited.sentences,
-              text: edited.sentences.map((s) => s.text).join(" "),
-              edit: edited.edit,
-              raw: edited.raw,
-            };
-        wrote = await step(
-          "final-store",
-          () =>
-            storeFinal(
-              d,
-              p.conversationId,
-              p.hash,
-              p.provider,
-              p.record,
-              done,
-              parts,
-              assembled,
-              final.profile,
-            ),
-          retry.db,
-        );
-        if (wrote && p.record) await summarizeWithWebhook(d, p.conversationId, retry, true, false);
-      } catch (err) {
-        d.logger.warn(
-          {
-            conversationId: p.conversationId,
-            provider: p.provider,
-            err: (err as Error).message,
-            signal: "conversation.final_transcript_gave_up",
-          },
-          "final transcript gave up; the live text stays",
-        );
-      } finally {
-        if (!wrote && p.record)
-          await step(
-            "final-gave-up",
-            () => markFinalGaveUp(d, p.conversationId, p.hash),
+            if (!plan) return;
+          }
+          const ctx = await step(
+            "final-context",
+            () => loadFinalContext(d, p.conversationId),
             retry.db,
-          ).catch(() => undefined);
-      }
+          );
+          if (!kind.firstPass) {
+            parts = [];
+            for (const piece of (plan as FinalPlan).pieces)
+              parts.push(
+                await step(
+                  "final-transcribe",
+                  () =>
+                    transcribeFinalPiece(
+                      d,
+                      piece,
+                      transcriber as NonNullable<typeof transcriber>,
+                      ctx,
+                    ),
+                  retry.transcribe,
+                ),
+              );
+          }
+          const done = plan as FinalPlan;
+          // The text pass, then redaction, each once over the whole transcript. A failed text
+          // pass leaves Whisper's words; redaction that fails stops the run, since an anonymised
+          // conversation must never show text that was not redacted.
+          const edited = await step(
+            "final-edit",
+            () => editFinal(final, p.provider, parts, ctx),
+            retry.llm,
+          );
+          const assembled = ctx.anonymized
+            ? {
+                sentences: [],
+                text: await step(
+                  "final-redact",
+                  () => redactFinal(final, edited.sentences, ctx),
+                  retry.llm,
+                ),
+                edit: edited.edit,
+                raw: null,
+              }
+            : {
+                sentences: edited.sentences,
+                text: edited.sentences.map((s) => s.text).join(" "),
+                edit: edited.edit,
+                raw: edited.raw,
+              };
+          wrote = await step(
+            "final-store",
+            () =>
+              storeFinal(
+                d,
+                p.conversationId,
+                p.hash,
+                p.provider,
+                p.record,
+                done,
+                parts,
+                assembled,
+                final.profile,
+              ),
+            retry.db,
+          );
+          if (wrote && p.record)
+            await summarizeWithWebhook(d, p.conversationId, retry, true, false);
+        } catch (err) {
+          d.logger.warn(
+            {
+              conversationId: p.conversationId,
+              provider: p.provider,
+              err: (err as Error).message,
+              signal: "conversation.final_transcript_gave_up",
+            },
+            "final transcript gave up; the live text stays",
+          );
+        } finally {
+          if (!wrote && p.record)
+            await step(
+              "final-gave-up",
+              () => markFinalGaveUp(d, p.conversationId, p.hash),
+              retry.db,
+            ).catch(() => undefined);
+        }
+      });
     },
 
     /** conversations.summarize: the catch-up for a summary that failed or was locked. */

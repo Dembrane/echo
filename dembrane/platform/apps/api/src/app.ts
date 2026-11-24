@@ -10,6 +10,7 @@ import {
 } from "@dembrane/accounts";
 import { agentAccessRoutes } from "@dembrane/agent-access";
 import { agenticRoutes } from "@dembrane/agentic";
+import { aiProviderRoutes } from "@dembrane/ai-providers";
 import { analysisRoutes, analysisRuntime, clientOf } from "@dembrane/analysis";
 import { posthogCapture } from "@dembrane/analytics";
 import { AUTH_CLIENT_IP_HEADER } from "@dembrane/auth";
@@ -25,12 +26,14 @@ import {
 } from "@dembrane/conversations";
 import { reportRoutes as feedbackReportRoutes, responseRoutes } from "@dembrane/feedback";
 import {
+  canGround,
   completerConfigOf,
   embedderConfigOf,
   embeddingLocationOf,
   embeddingModelOf,
   improves,
   profileOf,
+  routingPolicyOf,
   searchGroundingOn,
   vertexCompleter,
   vertexEmbedder,
@@ -80,8 +83,9 @@ const EMAIL_CODE_LIMIT = { name: "email_code", capacity: 1, windowSeconds: 60 };
  * or LLM_SEARCH_GROUNDING off). On, the project name and the start of the description go
  * to the search provider.
  */
-export const projectSetupWebSearch = (config: Deps["config"]): boolean =>
-  config.projects.setupWebSearch && searchGroundingOn(config.llm);
+export const projectSetupWebSearch = (config: Deps["config"], routed = false): boolean =>
+  config.projects.setupWebSearch &&
+  (routed ? config.llm.searchGrounding : searchGroundingOn(config.llm));
 
 export function buildApp(deps: Deps) {
   const app = new Hono<Env>();
@@ -201,8 +205,10 @@ export function buildApp(deps: Deps) {
   app.route("/", notificationRoutes(deps));
   app.route("/", reportRoutes(deps));
   // One set of model calls for the analysis, map, canvas and popcorn routes.
-  const completer = vertexCompleter(deps.models, completerConfigOf(deps.config.llm));
-  const embedder = vertexEmbedder(deps.models, embedderConfigOf(deps.config.llm));
+  const completer =
+    deps.ai?.completer ?? vertexCompleter(deps.models, completerConfigOf(deps.config.llm));
+  const embedder =
+    deps.ai?.embedder ?? vertexEmbedder(deps.models, embedderConfigOf(deps.config.llm));
   app.route(
     "/",
     analysisRoutes({
@@ -224,7 +230,10 @@ export function buildApp(deps: Deps) {
       embedder,
       embeddingModel: embeddingModelOf(deps.config.llm),
       embeddingLocation: embeddingLocationOf(deps.config.llm),
-      factCheck: searchGroundingOn(deps.config.llm),
+      // Asked per request, for the project in scope: only a project on Google can ground.
+      factCheck: deps.ai
+        ? async () => deps.ai?.groundingPossible === true && (await canGround(completer))
+        : searchGroundingOn(deps.config.llm),
       nodeLimitCeiling: deps.config.analysis.nodeLimitCeiling ?? null,
       edgeLimitCeiling: deps.config.analysis.edgeLimitCeiling ?? null,
       // The room shows the project's groups and follows its popcorn session's channel.
@@ -242,7 +251,7 @@ export function buildApp(deps: Deps) {
       limiter: deps.limiter,
       logger: deps.logger,
       allowPrivateTargets: deps.config.webhooks.allowPrivateTargets,
-      webSearch: projectSetupWebSearch(deps.config),
+      webSearch: projectSetupWebSearch(deps.config, deps.ai !== undefined),
     }),
   );
   app.route(
@@ -267,7 +276,16 @@ export function buildApp(deps: Deps) {
   );
   app.route("/", billingRoutes(deps));
   app.route("/", mollieWebhookRoutes(deps));
-  app.route("/", staffRoutes(deps));
+  app.route("/", staffRoutes({ ...deps, ...(deps.ai && { aiPolicy: deps.ai.policy }) }));
+  app.route(
+    "/",
+    aiProviderRoutes({
+      db: deps.db,
+      access: deps.access,
+      policy: deps.ai?.policy ?? routingPolicyOf(deps.config.llm),
+      now: () => new Date(),
+    }),
+  );
   app.route("/", trainingRoutes(deps));
   app.route(
     "/",
@@ -288,6 +306,7 @@ export function buildApp(deps: Deps) {
     models: deps.models,
     media: deps.media,
     transcriber: deps.transcriber,
+    ...(deps.ai && { speech: deps.ai.speech, providerFor: deps.ai.providerFor }),
     hub: deps.hub,
     limiter: deps.limiter,
     logger: deps.logger,

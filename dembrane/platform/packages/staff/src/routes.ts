@@ -1,4 +1,5 @@
 import { requireStaff, type StaffAudit, type StaffPolicy, TIERS } from "@dembrane/access";
+import { readOrgForStaff, setOrg } from "@dembrane/ai-providers";
 import {
   accountWorkspaceIds,
   allowanceForWorkspace,
@@ -30,6 +31,7 @@ import {
 import { type Db, schema } from "@dembrane/db";
 import { type Ctx, type Env, requireUser, v } from "@dembrane/http";
 import { directusTime } from "@dembrane/legacy-shape";
+import { type RoutingPolicy, routingPolicyOf } from "@dembrane/llm";
 import type { Mailer } from "@dembrane/mail";
 import type { Logger } from "@dembrane/observability";
 import { inArray } from "drizzle-orm";
@@ -48,6 +50,8 @@ export interface StaffRouteDeps {
   readonly logger: Logger;
   readonly config: { readonly http: { readonly dashboardUrl: string } };
   readonly clock?: () => Date;
+  /** The AI providers this deployment has and its default; staff can only grant what exists. */
+  readonly aiPolicy?: RoutingPolicy;
 }
 
 const MOLLIE_DASHBOARD_LIVE = "https://www.mollie.com/dashboard/payments";
@@ -425,6 +429,37 @@ export function staffRoutes(deps: StaffRouteDeps) {
     if (!org || org.deleted_at) throw new NotFoundError("organisation.not_found");
     await s.updateOrg(id, { is_partner: body.is_partner }, clock());
     return c.json({ status: "ok", org_id: id, is_partner: body.is_partner });
+  });
+
+  // ── AI providers ─────────────────────────────────────────────────────
+  const aiPolicy = deps.aiPolicy ?? routingPolicyOf({ provider: "openai-compatible" });
+
+  app.get(`${A}/orgs/:org_id/ai-providers`, async (c) => {
+    const id = c.req.param("org_id");
+    await staff(c, "staff:workspaces", "org.ai_providers.read", ["org", id]);
+    return c.json(await readOrgForStaff({ db: deps.db, policy: aiPolicy }, id));
+  });
+
+  // The allowed providers and the default, set after a written request: the ticket it was made in.
+  app.put(`${A}/orgs/:org_id/ai-providers`, async (c) => {
+    const raw = await v.rawRequest(c.req);
+    requireUser(c);
+    const { body } = v.validateRaw(raw, {
+      body: {
+        allowed: v.list(v.str(), { min: 1 }),
+        default: v.str(),
+        request_ticket_id: v.str(),
+      },
+    });
+    const id = c.req.param("org_id");
+    const who = await staff(c, "staff:workspaces", "org.ai_providers.set", ["org", id], body);
+    return c.json(
+      await setOrg({ db: deps.db, policy: aiPolicy, now: clock }, who.directusUserId, id, {
+        allowed: body.allowed,
+        default: body.default,
+        requestTicketId: body.request_ticket_id,
+      }),
+    );
   });
 
   app.post(`${A}/billing-accounts/:account_id/grant-trial`, async (c) => {

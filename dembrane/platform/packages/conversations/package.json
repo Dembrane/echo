@@ -43,6 +43,7 @@
     "zod": "^4.1.0"
   },
   "devDependencies": {
-    "@ai-sdk/provider": "*"
+    "@ai-sdk/provider": "*",
+    "@dembrane/metering": "workspace:*"
   }
 }

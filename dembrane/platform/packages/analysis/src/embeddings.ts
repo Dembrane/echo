@@ -77,9 +77,12 @@ export function identityConfig(i: EmbeddingIdentity): Json {
 export async function probeIdentity(embedder: Embedder): Promise<EmbeddingIdentity> {
   const vector = await embedWithRetry(embedder, PROBE_TEXT);
   if (!vector.length) throw new Error("Embedding probe returned no vector.");
+  // Which embedder answers depends on the project's AI provider; its identity keys the
+  // project's stored vectors, so a project that switches embeds again on its next analysis.
+  const { model, endpoint } = (await embedder.identity?.()) ?? embedder;
   return {
-    model: embedder.model,
-    endpoint: embedder.endpoint,
+    model,
+    endpoint,
     dims: vector.length,
     inputNormalization: INPUT_NORMALIZATION,
     taskType: null,

@@ -41,7 +41,19 @@ export interface Completer {
   complete(request: CompletionRequest): Promise<Completion>;
   /** What a group resolves to, as the Python settings named it ("vertex_ai/<model>"). */
   modelIdentity(group: ModelGroup): string;
+  /** The same for the payer in scope, where the provider depends on it; absent where it does not. */
+  identityOf?(group: ModelGroup): Promise<string>;
+  /** Whether a request for Google Search grounding can be answered for the payer in scope. */
+  grounds?(): Promise<boolean>;
 }
+
+/** Whether the payer in scope can have an answer grounded with Google Search. */
+export const canGround = (completer: Completer): Promise<boolean> =>
+  completer.grounds?.() ?? Promise.resolve(true);
+
+/** What a group resolves to for the payer in scope. */
+export const completerIdentity = (completer: Completer, group: ModelGroup): Promise<string> =>
+  completer.identityOf?.(group) ?? Promise.resolve(completer.modelIdentity(group));
 
 export interface Embedder {
   embed(text: string): Promise<number[]>;
@@ -49,6 +61,8 @@ export interface Embedder {
   readonly model: string;
   readonly endpoint: string;
   readonly dimensions: number;
+  /** The identity of the embedder the payer in scope uses, where it depends on the payer. */
+  identity?(): Promise<{ readonly model: string; readonly endpoint: string }>;
 }
 
 const MAX_SOURCES = 5;
@@ -161,6 +175,7 @@ export function vertexCompleter(models: Models, cfg: VertexCompleterConfig): Com
       return completeWith(models.model(request.group), request);
     },
     modelIdentity: (group) => name(cfg.groups[group][0] ?? group),
+    grounds: async () => cfg.searchGrounding !== false,
   };
 }
 

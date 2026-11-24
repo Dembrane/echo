@@ -8,6 +8,7 @@
  * that made it, so a profile is never changed in place once deployed.
  */
 import { withoutTrailingSlashes } from "./compat";
+import { type ProviderId, providerOfKind } from "./providers";
 
 export type SpeechProvider = "whisper" | "gemini";
 
@@ -92,6 +93,24 @@ export function profileOf(s: {
       `TRANSCRIPTION_PROFILE ${name} is not a profile; known: ${PROFILE_NAMES.join(", ")}`,
     );
   return p;
+}
+
+/**
+ * The profile a conversation on this provider is transcribed with. The deployment's default
+ * provider uses the profile the deployment names (TRANSCRIPTION_PROFILE) or its own; any other
+ * provider uses its natural one: Whisper on Scaleway, Gemini on Google.
+ */
+export function profileForProvider(
+  s: {
+    readonly provider: "vertex" | "openai-compatible";
+    readonly transcriptionProfile?: string | undefined;
+  },
+  id: ProviderId,
+): TranscriptionProfile {
+  if (providerOfKind(s.provider) === id) return profileOf(s);
+  return id === "google"
+    ? PROFILES["dembrane-26-10-gemini"]
+    : PROFILES["dembrane-26-10-whisper-eu"];
 }
 
 /** Whether anything runs after a conversation of this kind ends. */

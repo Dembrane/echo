@@ -2,7 +2,7 @@ import type { Access } from "@dembrane/access";
 import { type requireAiBudgetForWorkspace, requireAiRequest } from "@dembrane/allowance";
 import { UnavailableError } from "@dembrane/core";
 import { type Signed, workspaceFor } from "@dembrane/http";
-import { type Completer, modelErrorShape } from "@dembrane/llm";
+import { type Completer, canGround, modelErrorShape } from "@dembrane/llm";
 import { type Logger, withPayer } from "@dembrane/observability";
 import type { Limit, RateLimiter } from "@dembrane/ratelimit";
 import { projectTemplate } from "../project-templates";
@@ -127,7 +127,7 @@ export async function suggestProjectSetup(
   try {
     answer = await withPayer(payer, async () => {
       let background = "";
-      if (d.webSearch && (name || description)) {
+      if (d.webSearch && (name || description) && (await canGround(d.completer))) {
         // A failed look-up never costs the host their suggestions.
         background = await researchTopic(d.completer, { name, description }).catch((err) => {
           d.logger.warn(

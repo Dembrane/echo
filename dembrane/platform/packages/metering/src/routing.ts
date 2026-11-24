@@ -1,0 +1,201 @@
+import type { Db } from "@dembrane/db";
+import {
+  accountProviders,
+  allowedAmong,
+  failClosed,
+  PROVIDERS,
+  type ProviderId,
+  type ProviderResolver,
+  type RouteDecision,
+  type RoutingPolicy,
+} from "@dembrane/llm";
+import { type Payer, type PayerRefKind, payerKey } from "@dembrane/observability";
+import { sql } from "drizzle-orm";
+import { projectOfPayer, validId } from "./resolve";
+
+/**
+ * What the database says about the project a payer leads to, read for one decision. Only the
+ * organisation that owns the project's workspace speaks for the account: the billing
+ * account that pays says nothing here, because a partner can pay for a client's workspace and
+ * the client's allowance still decides where its data goes.
+ */
+export interface RoutingFacts {
+  readonly organisationId: string;
+  /** org.ai_providers; null when staff never set it. */
+  readonly allowed: readonly string[] | null;
+  /** org.ai_default_provider. */
+  readonly accountDefault: string | null;
+  /** project.ai_provider; null follows the account default (always null for a workspace payer). */
+  readonly projectProvider: string | null;
+  /** conversation.ai_provider when the call belongs to a conversation; undefined when it does not. */
+  readonly conversationProvider?: string | null | undefined;
+}
+
+/** Reads the facts; null for a payer that leads to no live project or workspace. */
+export interface RoutingStore {
+  facts(who: Extract<Payer, { ref: PayerRefKind }>): Promise<RoutingFacts | null>;
+}
+
+type FactsRow = {
+  org_id: string;
+  ai_providers: string[] | null;
+  ai_default_provider: string | null;
+  project_provider: string | null;
+};
+
+/** The production store: the project, its workspace's organisation and, for a conversation, its own record. */
+export function dbRoutingStore(db: Db): RoutingStore {
+  const ofProject = async (projectId: string) => {
+    const rows = await db.execute<FactsRow>(sql`
+      select o.id::text as org_id, o.ai_providers, o.ai_default_provider,
+        p.ai_provider as project_provider
+      from project p
+      join workspace w on w.id = p.workspace_id
+      join org o on o.id = w.org_id
+      where p.id = ${projectId}::uuid
+        and p.deleted_at is null and w.deleted_at is null and o.deleted_at is null`);
+    return rows[0] ?? null;
+  };
+  const ofWorkspace = async (workspaceId: string) => {
+    const rows = await db.execute<FactsRow>(sql`
+      select o.id::text as org_id, o.ai_providers, o.ai_default_provider,
+        null::varchar as project_provider
+      from workspace w join org o on o.id = w.org_id
+      where w.id = ${workspaceId}::uuid and w.deleted_at is null and o.deleted_at is null`);
+    return rows[0] ?? null;
+  };
+  const conversationOf = async (who: { ref: PayerRefKind; id: string }) => {
+    const id = who.id.toLowerCase();
+    if (who.ref === "conversation") {
+      const rows = await db.execute<{ project_id: string; ai_provider: string | null }>(
+        sql`select project_id::text as project_id, ai_provider from conversation where id = ${id}::uuid`,
+      );
+      return rows[0] ?? null;
+    }
+    const rows = await db.execute<{ project_id: string; ai_provider: string | null }>(sql`
+      select c.project_id::text as project_id, c.ai_provider
+      from conversation_artifact a join conversation c on c.id = a.conversation_id
+      where a.id = ${id}::uuid`);
+    return rows[0] ?? null;
+  };
+  const toFacts = (r: FactsRow, conversationProvider?: string | null): RoutingFacts => ({
+    organisationId: r.org_id,
+    allowed: r.ai_providers,
+    accountDefault: r.ai_default_provider,
+    projectProvider: r.project_provider,
+    ...(conversationProvider !== undefined && { conversationProvider }),
+  });
+  return {
+    async facts(who) {
+      const id = who.id.toLowerCase();
+      if (!validId(who.ref, id)) return null;
+      if (who.ref === "workspace") {
+        const r = await ofWorkspace(id);
+        return r && toFacts(r);
+      }
+      if (who.ref === "conversation" || who.ref === "verify_artifact") {
+        const conv = await conversationOf(who);
+        if (!conv) return null;
+        const r = await ofProject(conv.project_id);
+        return r && toFacts(r, conv.ai_provider);
+      }
+      const projectId = await projectOfPayer(db, who);
+      if (!projectId) return null;
+      const r = await ofProject(projectId);
+      return r && toFacts(r);
+    },
+  };
+}
+
+export interface ResolverOptions {
+  /** How long a decision for a provider that needs no opt-in may be reused. */
+  readonly ttlMs?: number;
+  readonly now?: () => number;
+  readonly maxCached?: number;
+}
+
+const DEFAULT_TTL_MS = 30_000;
+const DEFAULT_MAX_CACHED = 10_000;
+
+/** The reasons that describe a settled setting, and so may be remembered while they say "no opt-in". */
+const CACHEABLE = new Set(["project", "account-default", "environment-default", "conversation"]);
+
+/**
+ * The routing policy. The deployment's configuration says which providers exist and which is
+ * the default; the account's allowed list and default and the project's choice pick among
+ * those. Anything it cannot read positively resolves to the default.
+ *
+ * Only a decision for a provider that needs no opt-in is remembered, and only briefly: a
+ * decision for Google is read fresh every time, so switching a project or an account back
+ * applies to the very next call. A remembered "no Google" can only delay the start of Google.
+ */
+export function providerResolver(
+  store: RoutingStore,
+  policy: RoutingPolicy,
+  opts: ResolverOptions = {},
+): ProviderResolver {
+  const now = opts.now ?? Date.now;
+  const ttl = opts.ttlMs ?? DEFAULT_TTL_MS;
+  const max = opts.maxCached ?? DEFAULT_MAX_CACHED;
+  const cache = new Map<string, { until: number; decision: RouteDecision }>();
+
+  return async (who) => {
+    if (!who) return failClosed(policy, "no-payer");
+    if (!("ref" in who)) return failClosed(policy, "internal");
+    if (policy.providers.length === 1)
+      return {
+        provider: policy.default,
+        organisationId: null,
+        reason: "only-provider",
+        allowed: null,
+      };
+    const key = payerKey(who);
+    const hit = cache.get(key);
+    if (hit && hit.until > now()) return hit.decision;
+    const facts = await store.facts(who);
+    if (!facts) return failClosed(policy, "unknown-project");
+    const d = resolve(policy, facts);
+    if (!PROVIDERS[d.provider].optIn && CACHEABLE.has(d.reason)) {
+      if (cache.size >= max) cache.clear();
+      cache.set(key, { until: now() + ttl, decision: d });
+    } else cache.delete(key);
+    return d;
+  };
+}
+
+/** The pure decision over what the database said. */
+export function resolve(policy: RoutingPolicy, f: RoutingFacts): RouteDecision {
+  const account = accountProviders(policy, {
+    allowed: f.allowed,
+    accountDefault: f.accountDefault,
+  });
+  const { allowed } = account;
+  const base = { organisationId: f.organisationId, allowed } as const;
+  if (!account.default)
+    return { ...base, provider: policy.default, reason: "fail-closed:nothing-allowed" };
+
+  const chosen = allowedAmong(policy, [f.projectProvider])[0];
+  const picked = chosen && allowed.includes(chosen) ? chosen : null;
+  let provider: ProviderId = picked ?? account.default;
+  let reason = picked ? "project" : account.named ? "account-default" : "environment-default";
+
+  // A conversation's calls reach a provider that needs an opt-in only if the conversation
+  // began there. A conversation that began elsewhere stays out until it ends.
+  if (
+    f.conversationProvider !== undefined &&
+    PROVIDERS[provider].optIn &&
+    f.conversationProvider !== provider
+  ) {
+    const began = allowedAmong(policy, [f.conversationProvider])[0];
+    const safe =
+      (began && allowed.includes(began) && !PROVIDERS[began].optIn ? began : null) ??
+      (allowed.includes(policy.default) && !PROVIDERS[policy.default].optIn
+        ? policy.default
+        : null) ??
+      allowed.find((id) => !PROVIDERS[id].optIn) ??
+      null;
+    provider = safe ?? policy.default;
+    reason = safe ? "conversation" : "fail-closed:conversation";
+  }
+  return { ...base, provider, reason };
+}

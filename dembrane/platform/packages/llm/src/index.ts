@@ -16,7 +16,9 @@ export {
   type Completer,
   type Completion,
   type CompletionRequest,
+  canGround,
   compatName,
+  completerIdentity,
   completeWith,
   type Embedder,
   GroundingUnavailableError,
@@ -49,6 +51,7 @@ export {
 } from "./fallback";
 export {
   createModels,
+  LabelledVertexModel,
   type ModelGroup,
   type Models,
   type ModelsConfig,
@@ -72,10 +75,43 @@ export {
   PROFILE_NAMES,
   PROFILES,
   type ProfileName,
+  profileForProvider,
   profileGaps,
   profileOf,
   type TranscriptionProfile,
 } from "./profiles";
+export {
+  accountProviders,
+  allowedAmong,
+  isProviderId,
+  PROVIDER_IDS,
+  PROVIDERS,
+  type ProviderId,
+  type ProviderInfo,
+  providerOfKind,
+  type RoutingPolicy,
+} from "./providers";
+export {
+  bootGaps,
+  createRegistry,
+  groundingPossible,
+  type ModelHooks,
+  type ProviderKit,
+  type Registry,
+  routedKit,
+  speechModels,
+} from "./registry";
+export {
+  decide,
+  failClosed,
+  onlyProvider,
+  type ProviderResolver,
+  type RouteDecision,
+  routed,
+  routingCompleter,
+  routingEmbedder,
+  routingModels,
+} from "./routing";
 export {
   completerConfigOf,
   embedderConfigOf,
@@ -84,9 +120,13 @@ export {
   groupsOf,
   type LlmSettings,
   modelsConfigOf,
+  providerGaps,
+  routingPolicyOf,
   searchGroundingOn,
+  settingsFor,
 } from "./settings";
 export { retryAfterMs, SpeechGate, type SpeechPriority } from "./speech-gate";
+export { STUB_VERTEX_AUTH, type WireRequest, type WireStubOptions, wireStubs } from "./stubs";
 export {
   LANGUAGE_NAMES,
   TRANSLATION_SCHEMA,

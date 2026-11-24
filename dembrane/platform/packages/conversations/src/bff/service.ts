@@ -7,6 +7,7 @@ import { directusRow, pythonIso } from "@dembrane/legacy-shape";
 import { projectsStorage, sameMoveContext } from "@dembrane/projects";
 import { conversationForBff } from "../access";
 import type { ConversationsDeps } from "../deps";
+import { improvesOf } from "../speech";
 import { type Row, UPLOAD_SOURCE } from "../storage";
 import { NO_TRANSCRIPT_SUMMARY } from "../v1/summary";
 import { conversationLock, enrich, overCapActive, scrubChunk } from "./lock";
@@ -23,7 +24,7 @@ import {
 } from "./storage";
 
 type Deps = Pick<ConversationsDeps, "db" | "access" | "now">;
-type AudioDeps = Deps & Pick<ConversationsDeps, "audio" | "audioUrls" | "settings">;
+type AudioDeps = Deps & Pick<ConversationsDeps, "audio" | "audioUrls" | "settings" | "speech">;
 
 const csv = (v: string | null | undefined) =>
   (v ?? "")
@@ -412,12 +413,11 @@ export async function finalTranscript(d: AudioDeps, who: Signed, conversationId:
     const fresh =
       !a.conversation.is_finished ||
       d.now().getTime() - new Date(a.conversation.created_at ?? 0).getTime() < 24 * 3600_000;
+    // The provider the conversation is on decides whether anything improves it afterwards.
+    const improves =
+      (d.speech ? await improvesOf(d.speech, conversationId) : null) ?? d.settings.improves;
     const expected =
-      Boolean(
-        a.conversation.source === UPLOAD_SOURCE
-          ? d.settings.improves?.uploads
-          : d.settings.improves?.recordings,
-      ) &&
+      Boolean(a.conversation.source === UPLOAD_SOURCE ? improves?.uploads : improves?.recordings) &&
       fresh &&
       (await store.hasAudio(conversationId)) &&
       !(await store.finalGaveUp(conversationId));

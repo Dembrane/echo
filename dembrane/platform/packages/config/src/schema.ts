@@ -161,6 +161,10 @@ export const schema = defineSchema({
       description:
         "Where model calls go. vertex is Google Vertex AI. openai-compatible is any OpenAI-style API (for example Scaleway), with audio turned to text by its speech-to-text endpoint first.",
     }),
+    providers: key("LLM_PROVIDERS", list.optional(), {
+      description:
+        "The AI providers this deployment can call, from scaleway and google, each needing its credentials (scaleway: LLM_BASE_URL and LLM_API_KEY; google: LLM_VERTEX_PROJECT). LLM_PROVIDER stays the default. Unset: only the default provider, which is how every deployment ran before accounts could choose. The database chooses among these, per account and per project, and can never add one: an account the database lets use Google gets nothing where google is not listed.",
+    }),
     baseUrl: key("LLM_BASE_URL", z.url().optional(), {
       description:
         "Base URL of the OpenAI-compatible API, such as https://api.scaleway.ai/v1. Used when LLM_PROVIDER is openai-compatible.",
@@ -220,7 +224,7 @@ export const schema = defineSchema({
     }),
     searchGrounding: key("LLM_SEARCH_GROUNDING", bool.default(true), {
       description:
-        "Lets the map fact-check ground claims with Google Search. Always off when LLM_PROVIDER is not vertex; with it off, fact-check requests are refused.",
+        "Lets the map fact-check ground claims with Google Search, for the projects whose AI provider is Google. A project on any other provider is refused, whatever this says; off here refuses every project.",
     }),
     vertexProject: key("LLM_VERTEX_PROJECT", z.string().default("dembrane-web-previews"), {
       description: "GCP project billed for language model calls.",
@@ -445,7 +449,7 @@ export const schema = defineSchema({
     }),
     setupWebSearch: key("PROJECT_SETUP_WEB_SEARCH", bool.default(false), {
       description:
-        "Lets the project setup suggestions look up the organisation or topic a host names with Google Search grounding, before proposing key terms. Sends the project name and the start of the host's description to the search provider. Only takes effect where LLM_SEARCH_GROUNDING is on and LLM_PROVIDER is vertex.",
+        "Lets the project setup suggestions look up the organisation or topic a host names with Google Search grounding, before proposing key terms. Sends the project name and the start of the host's description to the search provider. Only takes effect where LLM_SEARCH_GROUNDING is on, and per project: only for a project whose AI provider is Google.",
     }),
   },
   canvas: {

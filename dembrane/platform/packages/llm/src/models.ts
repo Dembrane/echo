@@ -1,6 +1,11 @@
 import { createVertex } from "@ai-sdk/google-vertex";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import type { EmbeddingModelV4, LanguageModelV4 } from "@ai-sdk/provider";
+import type {
+  EmbeddingModelV4,
+  LanguageModelV4,
+  LanguageModelV4CallOptions,
+} from "@ai-sdk/provider";
+import { routing } from "@dembrane/observability";
 import {
   CompatEmbeddingModel,
   CompatLanguageModel,
@@ -50,6 +55,20 @@ export interface ModelsConfig {
   /** Embedding models are regional on Vertex (prod: europe-west4); the eu multi-region does not serve them. */
   readonly embeddingLocation: string;
   readonly embeddingDimensions: number;
+  /** Replaces how Vertex requests are sent and signed; tests hand in a stub and no credentials. */
+  readonly vertexClient?: {
+    readonly fetch?: typeof fetch;
+    readonly headers?: Record<string, string>;
+  };
+  /**
+   * Vertex only: models a call falls back to after its Gemini list, on the OpenAI-compatible
+   * provider. The other direction does not exist: a call on the compatible provider never
+   * falls back to Vertex, because its list holds none.
+   */
+  readonly fallbackTo?: {
+    readonly openaiCompatible: OpenAICompatibleConfig;
+    readonly groups: Readonly<Record<ModelGroup, readonly string[]>>;
+  };
 }
 
 export interface Models {
@@ -109,43 +128,38 @@ export function createModels(
   } = {},
 ): Models {
   const configured = cfg.provider === "openai-compatible" ? requireCompat(cfg) : null;
-  // One gate per endpoint and process: the worker builds several Models on the same Whisper
-  // endpoint and they share one limit.
-  const compat = configured && {
-    ...configured,
-    speechGate: speechGateFor(configured.baseUrl, {
-      secondsPerMinute: configured.speechSecondsPerMinute ?? 0,
-      ...(configured.speechConcurrency && { concurrency: configured.speechConcurrency }),
-    }),
-    onSpeechRequest: opts.onSpeechRequest,
-    // Only an answered request is billed; a 429 or a fault costs nothing.
-    onSpeechAnswered: (e: SpeechRequestLog) =>
-      observeSafely(opts.observe, opts.onObserverFault, () => speechCall(e)),
-  };
+  const compat = configured && compatEndpoint(configured, opts);
+  const chat = compat && chatClient(compat);
   const vertex = compat
     ? null
-    : createVertex({ project: cfg.vertexProject, location: cfg.vertexLocation });
-  const chat = compat
-    ? createOpenAICompatible({
-        name: "openai-compatible",
-        baseURL: compat.baseUrl,
-        apiKey: compat.apiKey,
-        supportsStructuredOutputs: true,
-        includeUsage: true,
-        ...(compat.fetch && { fetch: compat.fetch }),
-      })
-    : null;
+    : createVertex({
+        project: cfg.vertexProject,
+        location: cfg.vertexLocation,
+        ...cfg.vertexClient,
+      });
+  // The same models, behind a Vertex call: after its Gemini list a call falls to these.
+  const tailCompat =
+    !compat && cfg.fallbackTo ? compatEndpoint(cfg.fallbackTo.openaiCompatible, opts) : null;
+  const tailChat = tailCompat && chatClient(tailCompat);
   const build = (id: string): LanguageModelV4 =>
     chat && compat
       ? new CompatLanguageModel(chat.languageModel(id) as LanguageModelV4, compat)
-      : ((vertex as NonNullable<typeof vertex>)(id) as LanguageModelV4);
+      : new LabelledVertexModel((vertex as NonNullable<typeof vertex>)(id) as LanguageModelV4);
   const provider = compat ? "openai-compatible" : "vertex";
-  const deployments = (group: ModelGroup): Deployment[] =>
-    cfg.groups[group].map((id, i) => ({
+  const deployments = (group: ModelGroup): Deployment[] => [
+    ...cfg.groups[group].map((id, i) => ({
       label: `${group}[${i}]:${id}`,
       provider,
       model: build(id),
-    }));
+    })),
+    ...(tailChat && tailCompat && cfg.fallbackTo
+      ? cfg.fallbackTo.groups[group].map((id, i) => ({
+          label: `${group}[scaleway ${i}]:${id}`,
+          provider: "openai-compatible",
+          model: new CompatLanguageModel(tailChat.languageModel(id) as LanguageModelV4, tailCompat),
+        }))
+      : []),
+  ];
   const built: Record<ModelGroup, FallbackModel> = {
     text_fast: new FallbackModel(
       "text_fast",
@@ -164,6 +178,7 @@ export function createModels(
       : (createVertex({
           project: cfg.vertexProject,
           location: cfg.embeddingLocation,
+          ...cfg.vertexClient,
         }).textEmbeddingModel(cfg.embeddingModel) as EmbeddingModelV4);
   const embedding = opts.observe
     ? observedEmbedding(
@@ -202,6 +217,87 @@ export function createModels(
       },
     }),
   };
+}
+
+/**
+ * The compatible provider's endpoint as the models use it. One gate per endpoint and process:
+ * the worker builds several Models on the same Whisper endpoint and they share one limit.
+ */
+function compatEndpoint(
+  c: OpenAICompatibleConfig,
+  opts: Partial<FallbackOptions> & { onSpeechRequest?: (e: SpeechRequestLog) => void },
+) {
+  return {
+    ...c,
+    speechGate: speechGateFor(c.baseUrl, {
+      secondsPerMinute: c.speechSecondsPerMinute ?? 0,
+      ...(c.speechConcurrency && { concurrency: c.speechConcurrency }),
+    }),
+    onSpeechRequest: opts.onSpeechRequest,
+    // Only an answered request is billed; a 429 or a fault costs nothing.
+    onSpeechAnswered: (e: SpeechRequestLog) =>
+      observeSafely(opts.observe, opts.onObserverFault, () => speechCall(e)),
+  };
+}
+
+const chatClient = (c: OpenAICompatibleConfig) =>
+  createOpenAICompatible({
+    name: "openai-compatible",
+    baseURL: c.baseUrl,
+    apiKey: c.apiKey,
+    supportsStructuredOutputs: true,
+    includeUsage: true,
+    ...(c.fetch && { fetch: c.fetch }),
+  });
+
+/** Vertex label values are lowercase letters, digits, hyphens and underscores, up to 63. */
+const LABEL_VALUE = /^[a-z0-9_-]{1,63}$/;
+
+/**
+ * A Vertex model whose requests carry the organisation the routing policy named, as a label,
+ * so Google's own billing export lists which organisations Google served. The label is read
+ * where the request is made, from the routing scope the call runs in.
+ */
+export class LabelledVertexModel implements LanguageModelV4 {
+  readonly specificationVersion = "v4";
+
+  constructor(private readonly inner: LanguageModelV4) {}
+
+  get provider() {
+    return this.inner.provider;
+  }
+  get modelId() {
+    return this.inner.modelId;
+  }
+  get supportedUrls() {
+    return this.inner.supportedUrls;
+  }
+
+  private labelled(options: LanguageModelV4CallOptions): LanguageModelV4CallOptions {
+    const org = routing()?.organisationId?.toLowerCase();
+    if (!org || !LABEL_VALUE.test(org)) return options;
+    const vertex = (options.providerOptions?.vertex ?? {}) as Record<string, unknown>;
+    return {
+      ...options,
+      providerOptions: {
+        ...options.providerOptions,
+        vertex: {
+          ...vertex,
+          labels: {
+            ...(vertex.labels as Record<string, string> | undefined),
+            organisation_id: org,
+          },
+        },
+      },
+    };
+  }
+
+  doGenerate(options: LanguageModelV4CallOptions) {
+    return this.inner.doGenerate(this.labelled(options));
+  }
+  doStream(options: LanguageModelV4CallOptions) {
+    return this.inner.doStream(this.labelled(options));
+  }
 }
 
 /** The language sent to Whisper: none lets it listen, which is how a piece that switches language is kept. */

@@ -9,7 +9,7 @@ import {
   recordAssessment,
   snapshotRevision,
 } from "@dembrane/analysis";
-import type { Completer } from "@dembrane/llm";
+import { type Completer, completerIdentity } from "@dembrane/llm";
 import { withPayer } from "@dembrane/observability";
 import { defineJob, step } from "@dembrane/queue";
 import { z } from "zod";
@@ -155,12 +155,12 @@ export async function runFactCheck(
 
   const written = await run(
     "complete",
-    () =>
+    async () =>
       d.store.completeFactCheck(job.factCheckId, job.attempt, {
         verdict: outcome.verdict,
         justification: outcome.justification,
         sources: outcome.sources,
-        model: d.completer.modelIdentity("multi_modal_fast"),
+        model: await withPayer(payer, () => completerIdentity(d.completer, "multi_modal_fast")),
         promptVersion: FACTCHECK_PROMPT_VERSION,
       }),
     60_000,

@@ -7,6 +7,7 @@ import type {
   LanguageModelV4Usage,
   SharedV4ProviderMetadata,
 } from "@ai-sdk/provider";
+import { type RoutingNote, routing } from "@dembrane/observability";
 import type { SpeechRequestLog } from "./compat";
 import { estimateInput, estimateText, reachedProvider } from "./estimate";
 
@@ -44,6 +45,8 @@ export interface ModelCall {
   readonly error: string | null;
   readonly attempt: number;
   readonly fallback: boolean;
+  /** Where the routing policy sent the call, when it ran under one. */
+  readonly routing?: RoutingNote | null | undefined;
 }
 
 export type ModelCallObserver = (call: ModelCall) => void;
@@ -99,6 +102,8 @@ export interface CallMeta {
   readonly model: string;
   readonly attempt: number;
   readonly fallback: boolean;
+  /** The routing scope the call began in; a stream reports after that scope has ended. */
+  readonly routing?: RoutingNote | null;
 }
 
 /** Every unit nothing was counted for: a failed call, or the counts an embedding lacks. */
@@ -191,6 +196,7 @@ function base(meta: CallMeta, kind: ModelCall["kind"], startedAt: Date, t0: numb
     ms: Math.round(performance.now() - t0),
     attempt: meta.attempt,
     fallback: meta.fallback,
+    routing: meta.routing ?? null,
   };
 }
 
@@ -255,6 +261,7 @@ export function speechCall(e: SpeechRequestLog): ModelCall {
     error: null,
     attempt: e.attempt,
     fallback: false,
+    routing: routing() ?? null,
   };
 }
 
@@ -348,11 +355,18 @@ export function observedEmbedding(
   report: Report,
   provider: string = model.provider,
 ): EmbeddingModelV4 {
-  const meta: CallMeta = { group, provider, model: model.modelId, attempt: 1, fallback: false };
   return new Proxy(model, {
     get(target, prop, receiver) {
       if (prop !== "doEmbed") return Reflect.get(target, prop, receiver);
       return async (options: Parameters<EmbeddingModelV4["doEmbed"]>[0]) => {
+        const meta: CallMeta = {
+          group,
+          provider,
+          model: model.modelId,
+          attempt: 1,
+          fallback: false,
+          routing: routing() ?? null,
+        };
         const startedAt = new Date();
         const t0 = performance.now();
         let result: Awaited<ReturnType<EmbeddingModelV4["doEmbed"]>>;

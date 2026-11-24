@@ -161,11 +161,13 @@ async function retranscribe(
     const newConversationId = newId();
     const chunkId = newId();
     const now = d.now().toISOString();
+    const aiProvider = (await d.providerFor?.(original.project_id)) ?? null;
     await transaction(d.db, async (tx) => {
       await tx.db.insert(conversation).values({
         id: newConversationId,
         duration,
         source: "CLONE",
+        ai_provider: aiProvider,
         project_id: original.project_id,
         participant_name: body.new_conversation_name
           ? body.new_conversation_name

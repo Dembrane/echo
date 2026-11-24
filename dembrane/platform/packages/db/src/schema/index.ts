@@ -1151,8 +1151,17 @@ export const conversation = pgTable(
     recording_started_at: timestamp({ withTimezone: true, mode: "string" }),
     // When a live recording first got the AI budget stop; its grace runs from here.
     ai_stopped_at: timestamp({ withTimezone: true, mode: "string" }),
+    /**
+     * The AI provider the project resolved to when the conversation began. A call goes to a
+     * provider that needs an opt-in only while both this and the project's current setting say so.
+     */
+    ai_provider: varchar({ length: 32 }),
   },
   (table): PgTableExtraConfigValue[] => [
+    check(
+      "conversation_ai_provider_check",
+      sql`${table.ai_provider} is null or ${table.ai_provider} in ('scaleway', 'google')`,
+    ),
     foreignKey({
       columns: [table.project_id],
       foreignColumns: [project.id],
@@ -2069,6 +2078,14 @@ export const org = pgTable(
     // Customer accounts: null for organisations dembrane does not manage as an account.
     account_stage: varchar({ length: 32 }),
     origin_pricing_configuration_id: uuid(),
+    /**
+     * The AI providers the account may use, set by dembrane staff after a written request
+     * (packages/llm/src/providers.ts). Null: only the environment's default provider.
+     * The environment still decides which providers exist; this only chooses among them.
+     */
+    ai_providers: text().array(),
+    /** The provider projects use unless they choose another; one of ai_providers. */
+    ai_default_provider: varchar({ length: 32 }),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({
@@ -2076,6 +2093,14 @@ export const org = pgTable(
       foreignColumns: [app_user.id],
       name: "org_created_by_foreign",
     }).onDelete("set null"),
+    check(
+      "org_ai_providers_check",
+      sql`${table.ai_providers} is null or ${table.ai_providers} <@ array['scaleway', 'google']::text[]`,
+    ),
+    check(
+      "org_ai_default_provider_check",
+      sql`${table.ai_default_provider} is null or ${table.ai_default_provider} in ('scaleway', 'google')`,
+    ),
     foreignKey({
       columns: [table.origin_pricing_configuration_id],
       foreignColumns: [pricing_configuration.id],
@@ -2780,8 +2805,14 @@ export const project = pgTable(
      */
     template_key: varchar({ length: 64 }),
     template_version: integer(),
+    /** The AI provider the project chose among those its account allows; null follows the account's default. */
+    ai_provider: varchar({ length: 32 }),
   },
   (table): PgTableExtraConfigValue[] => [
+    check(
+      "project_ai_provider_check",
+      sql`${table.ai_provider} is null or ${table.ai_provider} in ('scaleway', 'google')`,
+    ),
     foreignKey({
       columns: [table.directus_user_id],
       foreignColumns: [directus_users.id],

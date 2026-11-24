@@ -34,6 +34,14 @@ export { pipelineWorkflows, RETRIES, type RetryPolicy } from "./pipeline/workflo
 export { requirePortalAi } from "./portal-ai";
 export { conversationRoutes } from "./routes";
 export {
+  improvesOf,
+  type SpeechKit,
+  type SpeechRouter,
+  speechKit,
+  withTranscriber,
+} from "./speech";
+export { buildSpeechKit } from "./speech-kit";
+export {
   type ChunkRow,
   type ConversationRow,
   type ConversationStore,

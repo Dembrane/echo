@@ -39,8 +39,25 @@ const PROJECT_OF: Partial<Record<PayerRefKind, Lookup>> = {
   analysis_run: byUuid("analysis_run"),
 };
 
-const validId = (kind: PayerRefKind, id: string) =>
+export const validId = (kind: PayerRefKind, id: string) =>
   kind === "report" ? /^\d{1,18}$/.test(id) : isUuid(id);
+
+/**
+ * The project a payer leads to, or null when it names nothing that exists. One read, for the
+ * routing policy, which asks it before every call it cannot answer from its own cache.
+ */
+export async function projectOfPayer(
+  db: Db,
+  p: Extract<Payer, { ref: PayerRefKind }>,
+): Promise<string | null> {
+  const id = p.id.toLowerCase();
+  if (!validId(p.ref, id)) return null;
+  if (p.ref === "project") return id;
+  const lookup = PROJECT_OF[p.ref];
+  if (!lookup) return null;
+  const rows = await db.execute<{ key: string; project_id: string | null }>(lookup([id]));
+  return rows[0]?.project_id ?? null;
+}
 
 /** Who pays for each payer, keyed by payerKey; null when it names nothing that pays. */
 export async function resolvePayers(

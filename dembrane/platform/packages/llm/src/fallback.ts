@@ -4,6 +4,7 @@ import type {
   LanguageModelV4GenerateResult,
   LanguageModelV4StreamResult,
 } from "@ai-sdk/provider";
+import { routing } from "@dembrane/observability";
 import {
   type CallMeta,
   failedCall,
@@ -180,6 +181,7 @@ export class FallbackModel implements LanguageModelV4 {
               model: d.model.modelId,
               attempt: attempts,
               fallback: i > 0,
+              routing: routing() ?? null,
             },
             i === order.length - 1 && attempt === this.opts.attemptsPerDeployment - 1,
           );
