@@ -321,8 +321,13 @@ export function accountsRoutes(d: AccountsDeps) {
   // The answer says whether an address has an account: staff only, and the email is read
   // from the body, never from the URL.
   app.post(R.checkDemo.path, async (c) => {
-    await staff(c, "accounts.demo.check", false);
+    const who = requireUser(c);
     const b = await body(c, K.DemoCheckRequest);
+    // The audit row says which address and name were asked about.
+    await staffCan(d, who, "accounts.demo.check", undefined, c.get("requestId"), {
+      contact_email: b.contact_email?.trim() || null,
+      organisation_name: b.organisation_name?.trim() || null,
+    });
     return c.json(await checkDemo(d, b));
   });
   app.get(R.demoStatus.path, async (c) => {

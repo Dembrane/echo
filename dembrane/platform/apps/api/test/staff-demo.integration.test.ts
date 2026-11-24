@@ -1163,6 +1163,17 @@ run("a staff demo where the deployment is production", () => {
       expect(res.status).toBe(200);
       const answer = K.DemoCheck.parse(await res.json());
       expect(answer.contact?.has_account).toBe(true);
+      // The audit row says which address and name staff asked about.
+      const [audited] = await db
+        .select({ detail: schema.staff_audit_event.detail })
+        .from(schema.staff_audit_event)
+        .where(eq(schema.staff_audit_event.action, "accounts.demo.check"))
+        .orderBy(sql`${schema.staff_audit_event.createdAt} desc`)
+        .limit(1);
+      expect(audited?.detail).toEqual({
+        contact_email: team.contact.email,
+        organisation_name: "Millpond District (sample)",
+      });
       expect(answer.contact?.organisations).toContainEqual({
         id: brook.org,
         name: "Brookside Water (sample)",
