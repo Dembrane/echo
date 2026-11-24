@@ -1,6 +1,9 @@
+import type { RouteDecision } from "@dembrane/llm";
 import { withPayer } from "@dembrane/observability";
 import { type StepConfig, step } from "@dembrane/queue";
+import { FinalRouteMoved } from "../speech";
 import { conversationStore } from "../storage";
+import { finalTranscript } from "./defs";
 import {
   editFinal,
   type FinalPart,
@@ -180,6 +183,8 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
         if (!final) return;
         const transcriber = final.transcribers[p.provider];
         let wrote = false;
+        // Another run took the work over on the kit of the provider the project moved to.
+        let handedOn = false;
         try {
           // An upload whose first reading is kept: its own sentences, moved to their place in
           // the merged file; nothing is sent to the speech model again. When the first reading
@@ -219,20 +224,26 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
           );
           if (!kind.firstPass) {
             parts = [];
-            for (const piece of (plan as FinalPlan).pieces)
-              parts.push(
-                await step(
-                  "final-transcribe",
-                  () =>
+            for (const piece of (plan as FinalPlan).pieces) {
+              const part = await step(
+                "final-transcribe",
+                () =>
+                  unlessMoved(() =>
                     transcribeFinalPiece(
                       d,
                       piece,
                       transcriber as NonNullable<typeof transcriber>,
                       ctx,
                     ),
-                  retry.transcribe,
-                ),
+                  ),
+                retry.transcribe,
               );
+              if ("moved" in part) {
+                handedOn = await step("final-moved", () => moveOn(d, p, part.moved), retry.db);
+                return;
+              }
+              parts.push(part);
+            }
           }
           const done = plan as FinalPlan;
           // The text pass, then redaction, each once over the whole transcript. A failed text
@@ -240,26 +251,40 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
           // conversation must never show text that was not redacted.
           const edited = await step(
             "final-edit",
-            () => editFinal(final, p.provider, parts, ctx),
+            () => unlessMoved(() => editFinal(final, p.provider, parts, ctx)),
             retry.llm,
           );
-          const assembled = ctx.anonymized
-            ? {
-                sentences: [],
-                text: await step(
-                  "final-redact",
-                  () => redactFinal(final, edited.sentences, ctx),
-                  retry.llm,
-                ),
-                edit: edited.edit,
-                raw: null,
-              }
-            : {
-                sentences: edited.sentences,
-                text: edited.sentences.map((s) => s.text).join(" "),
-                edit: edited.edit,
-                raw: edited.raw,
-              };
+          if ("moved" in edited) {
+            handedOn = await step("final-moved", () => moveOn(d, p, edited.moved), retry.db);
+            return;
+          }
+          let redacted: string | null = null;
+          if (ctx.anonymized) {
+            const text = await step(
+              "final-redact",
+              () => unlessMoved(() => redactFinal(final, edited.sentences, ctx)),
+              retry.llm,
+            );
+            if (typeof text !== "string") {
+              handedOn = await step("final-moved", () => moveOn(d, p, text.moved), retry.db);
+              return;
+            }
+            redacted = text;
+          }
+          const assembled =
+            redacted !== null
+              ? {
+                  sentences: [],
+                  text: redacted,
+                  edit: edited.edit,
+                  raw: null,
+                }
+              : {
+                  sentences: edited.sentences,
+                  text: edited.sentences.map((s) => s.text).join(" "),
+                  edit: edited.edit,
+                  raw: edited.raw,
+                };
           wrote = await step(
             "final-store",
             () =>
@@ -289,7 +314,7 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
             "final transcript gave up; the live text stays",
           );
         } finally {
-          if (!wrote && p.record)
+          if (!wrote && p.record && !handedOn)
             await step(
               "final-gave-up",
               () => markFinalGaveUp(d, p.conversationId, p.hash),
@@ -304,6 +329,62 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
       await summarizeWithWebhook(d, p.conversationId, retry);
     },
   };
+}
+
+/**
+ * A call of the final pass that stops because its project left the provider the pass began on.
+ * The stop is a result, not a failure: a failure would be retried by the step, and a result
+ * is what a resumed run reads back instead of calling the old provider again.
+ */
+async function unlessMoved<T>(call: () => Promise<T>): Promise<T | { moved: RouteDecision }> {
+  try {
+    return await call();
+  } catch (err) {
+    if (err instanceof FinalRouteMoved) return { moved: err.to };
+    throw err;
+  }
+}
+
+/**
+ * The final pass began on a provider the project has left, and sent nothing more there. When
+ * the provider it is on now has a final pass for this conversation, that one runs in its own
+ * run (its transcripts say which provider made them) and this run ends; otherwise the live
+ * text stays. Returns whether another run took over.
+ */
+async function moveOn(
+  d: PipelineDeps,
+  p: { conversationId: string; provider: string; record: boolean; hash: string },
+  to: RouteDecision,
+): Promise<boolean> {
+  const router = d.speech;
+  const kit = router ? (router.kits[to.provider] ?? router.kits[router.default]) : undefined;
+  const conv = await conversationStore(d.db).conversation(p.conversationId);
+  const next =
+    kit?.final && finalTreatment(kit.final, conv?.source) !== "none"
+      ? kit.final.providers[0]
+      : undefined;
+  const handOn = next !== undefined && next !== p.provider;
+  d.logger.warn(
+    {
+      conversationId: p.conversationId,
+      provider: p.provider,
+      movedTo: to.provider,
+      continuedBy: handOn ? next : null,
+      signal: "conversation.final_transcript_moved",
+    },
+    handOn
+      ? "the project left this final pass's provider; the rest runs on its new one"
+      : "the project left this final pass's provider and its new one has no final pass; the live text stays",
+  );
+  if (!handOn) return false;
+  await d.jobs.enqueue(
+    finalTranscript,
+    { conversationId: p.conversationId, provider: next, record: p.record, hash: p.hash },
+    {
+      workflowId: `conversations.final-transcript:${p.conversationId}:${next}:${p.hash}`,
+    },
+  );
+  return true;
 }
 
 async function summarizeWithWebhook(

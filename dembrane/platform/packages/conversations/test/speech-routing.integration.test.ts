@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { randomUUID } from "node:crypto";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { Writable } from "node:stream";
 import { connect, createDb, type Db, migrate } from "@dembrane/db";
 import {
@@ -16,6 +18,7 @@ import type postgres from "postgres";
 import { buildSpeechKit, type SpeechRouter } from "../src";
 import { handOver, type PipelineDeps, withSpeech } from "../src/pipeline/steps";
 import { withTranscriber } from "../src/speech";
+import { bursts } from "./final-helpers";
 
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
@@ -236,8 +239,17 @@ run("transcription follows the conversation's provider", () => {
 
   describe("a piece that meets a rate limit on Gemini after its project went back to Scaleway", () => {
     /** Vertex answers 429; the project is set back to Scaleway once its first request has been answered. */
-    function leaving(projectId: string, attemptsPerDeployment: number) {
+    function leaving(projectId: string, attemptsPerDeployment: number, whisperMaxSeconds?: number) {
       const w = wireStubs({ vertexStatus: 429, speech: "whisper heard this" });
+      // The size of every file Whisper is sent.
+      const files: number[] = [];
+      const compatFetch = (async (input: Request | string | URL, init?: RequestInit) => {
+        if (init?.body instanceof FormData) {
+          const file = init.body.get("file");
+          if (file instanceof Blob) files.push(file.size);
+        }
+        return w.compat(input, init);
+      }) as typeof fetch;
       const hooks = {
         attemptsPerDeployment,
         backoffMs: 0,
@@ -251,7 +263,7 @@ run("transcription follows the conversation's provider", () => {
             }) as typeof fetch,
             ...STUB_VERTEX_AUTH,
           },
-          compatFetch: w.compat,
+          compatFetch,
         },
       };
       const resolver = providerResolver(dbRoutingStore(db), policy, { ttlMs: 0 });
@@ -266,6 +278,8 @@ run("transcription follows the conversation's provider", () => {
               hooks,
               logger,
               withFinal: true,
+              ...(id === "scaleway" &&
+                whisperMaxSeconds && { whisperMaxRequestSeconds: whisperMaxSeconds }),
             }),
           ]),
         ),
@@ -278,7 +292,7 @@ run("transcription follows the conversation's provider", () => {
         speech: own,
         transcriber: base?.transcriber,
       } as unknown as PipelineDeps;
-      return { w, own, pipeline, base };
+      return { w, own, pipeline, base, files };
     }
     const whisperRequests = (w: ReturnType<typeof wireStubs>) =>
       w.seen.compat.filter((r) => r.url.endsWith("/audio/transcriptions")).length;
@@ -299,6 +313,59 @@ run("transcription follows the conversation's provider", () => {
         expect(whisperRequests(w)).toBe(1);
       });
     }
+
+    test("a piece cut for Gemini that is too long for Whisper's request is read by Whisper in parts", async () => {
+      const world1 = await world();
+      const p = await world1.project("google");
+      const c = await conversation(p, "google");
+      // Whisper takes ten seconds a request here; the piece is 25 seconds, as Gemini's limits allowed.
+      const { w, pipeline, files } = leaving(p, 1, 10);
+      const path = join(tmpdir(), `route-${randomUUID()}.mp3`);
+      await bursts(path, 6);
+      const whole = new Uint8Array(await Bun.file(path).arrayBuffer());
+      const cut = async (start: number, end: number) => {
+        const out = join(tmpdir(), `route-cut-${randomUUID()}.mp3`);
+        const ff = Bun.spawn(
+          [
+            "ffmpeg",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-ss",
+            String(start),
+            "-t",
+            String(end - start),
+            "-i",
+            path,
+            "-c",
+            "copy",
+            "-y",
+            out,
+          ],
+          { stdout: "ignore", stderr: "pipe" },
+        );
+        if ((await ff.exited) !== 0) throw new Error("cut failed");
+        return new Uint8Array(await Bun.file(out).arrayBuffer());
+      };
+      // Bursts of three seconds with 1.5 seconds of silence between them.
+      const silences = Array.from({ length: 5 }, (_, i) => ({
+        start: i * 4.5 + 3,
+        end: i * 4.5 + 4.5,
+      }));
+      const heard = await withSpeech(pipeline, c, async (d) =>
+        d.transcriber.transcribe({
+          audio: whole,
+          language: "en",
+          cutSpan: cut,
+          pauses: async () => ({ duration: 25.5, silences }),
+        }),
+      );
+      // Vertex was asked once; Whisper was sent parts, none the size of the whole piece.
+      expect(w.seen.vertex).toHaveLength(1);
+      expect(files.length).toBeGreaterThanOrEqual(3);
+      expect(files.every((size) => size < whole.byteLength * 0.6)).toBe(true);
+      expect(heard.transcript.split("whisper heard this")).toHaveLength(files.length + 1);
+    });
 
     test("the stateless transcriber moves to Whisper too", async () => {
       const world1 = await world();

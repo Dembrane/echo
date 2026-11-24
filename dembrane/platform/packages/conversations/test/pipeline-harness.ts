@@ -18,6 +18,7 @@ import { AudioUrls } from "../src/audio-urls";
 import type { PipelineDeps } from "../src/pipeline/steps";
 import { conversationWorker } from "../src/pipeline/worker";
 import type { RetryPolicy } from "../src/pipeline/workflows";
+import type { SpeechRouter } from "../src/speech";
 
 export const admin = process.env.TEST_DATABASE_ADMIN_URL;
 
@@ -118,6 +119,8 @@ export async function startWorker(
     /** Lowers the request limits so small files are cut. */
     requestLimits?: { maxBytes?: number; maxSeconds?: number };
     final?: PipelineDeps["final"];
+    /** One speech kit per AI provider; the conversation's provider picks which one runs. */
+    speech?: SpeechRouter;
     executorId?: string;
     bucketRoot?: string;
   } = {},
@@ -145,6 +148,7 @@ export async function startWorker(
       requestLimits: { ...requestLimits("whisper"), ...opts.requestLimits },
     }),
     ...(opts.final && { final: opts.final }),
+    ...(opts.speech && { speech: opts.speech }),
   };
   const worker = conversationWorker(deps, { retry: FAST });
   await queue.start(worker.jobs);

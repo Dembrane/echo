@@ -27,7 +27,13 @@ import { FREE_LIMIT_SKIPPED, LIVE_CHUNK_BYTES, LIVE_SOURCE, meterLiveChunk } fro
 import { afterResponse, hostEventStore, transcriptReady } from "../host-events";
 import { LIVENESS_TTL_SECONDS } from "../live/presence";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
-import { followingTranscriber, type SpeechRouter, speechKit } from "../speech";
+import {
+  followingFinal,
+  followingTranscriber,
+  kitLimits,
+  type SpeechRouter,
+  speechKit,
+} from "../speech";
 import { type ChunkRow, conversationStore, type Tx, transaction } from "../storage";
 import { NO_TRANSCRIPT_SUMMARY, summarizeAndStore } from "../v1/summary";
 import { computeTokenCount } from "../v1/token-count";
@@ -100,7 +106,8 @@ export async function withSpeech<T>(
       transcriber: followingTranscriber(router, who, decision),
       liveProvider: kit.liveProvider,
       requestLimits: kit.requestLimits,
-      final: kit.final,
+      // The whole final pass decides again before every call to a provider that needs an opt-in.
+      final: kit.final && followingFinal(router, who, decision, kit.final),
     }),
   );
 }
@@ -416,15 +423,24 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
     if (r === "refused") return [];
     metered = r === "counted" || r === "already";
   }
-  const limits = d.requestLimits ?? requestLimits(d.liveProvider ?? "whisper");
+  // The pieces are cut for the provider that will read them: the conversation's provider now,
+  // not the one the step began with, since a conversion can take minutes.
+  const now = d.speech
+    ? (await speechKit(d.speech, { ref: "conversation", id: chunk.conversation_id }))?.kit
+    : undefined;
+  const liveProvider = now ? now.liveProvider : d.liveProvider;
+  const limits = now
+    ? kitLimits(now)
+    : (d.requestLimits ?? requestLimits(d.liveProvider ?? "whisper"));
+  const finalNow = now ? now.final : d.final;
   // An upload whose improved transcript is its own first reading is cut, at pauses, into pieces
   // short enough for Whisper's sentence times; anything else keeps the provider's limits.
   const conv = await conversationStore(d.db).conversation(chunk.conversation_id);
   const timedCap =
-    (d.liveProvider ?? "whisper") === "whisper" &&
+    (liveProvider ?? "whisper") === "whisper" &&
     conv?.source === UPLOAD_SOURCE &&
-    finalTreatment(d.final, conv.source) === "first-pass"
-      ? (d.final?.timedPieceSeconds ?? Number.POSITIVE_INFINITY)
+    finalTreatment(finalNow, conv.source) === "first-pass"
+      ? (finalNow?.timedPieceSeconds ?? Number.POSITIVE_INFINITY)
       : Number.POSITIVE_INFINITY;
   const maxSeconds = Math.min(limits.maxSeconds, timedCap);
   // The recorder cuts a live chunk at 30 seconds, and a small file cannot hold more than
