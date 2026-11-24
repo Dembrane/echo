@@ -9,7 +9,7 @@
  *   bun packages/i18n/src/cli.ts --write         fill when credentials exist
  *   bun packages/i18n/src/cli.ts --write --require-credentials   fail without them
  *
- * Catalogs: the frontend's main, accounts, error messages and digest (ECHO-1055) catalogs, and the platform's own
+ * Catalogs: the frontend's main, accounts, error messages, digest (ECHO-1055) and portal editor catalogs, and the platform's own
  * server-rendered texts (packages/i18n/locales). Run `pnpm messages:compile` in the
  * frontend afterwards so the filled texts reach the bundles.
  */
@@ -29,6 +29,7 @@ const DIRS = [
   path.join(platform, "packages/i18n/locales"),
   path.join(frontend, "src/features/accounts/locales"),
   path.join(frontend, "src/components/project/digest/locales"),
+  path.join(frontend, "src/components/project/portal-editor/locales"),
   path.join(frontend, "src/locales"),
 ].filter((d) => existsSync(path.join(d, "en-US.po")));
 

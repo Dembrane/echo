@@ -667,7 +667,7 @@ msgstr "Anruf gebucht"
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:266
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:329
 #: src/features/accounts/customer/WhoSigns.tsx:460
-#: src/features/accounts/customer/Questions.tsx:253
+#: src/features/accounts/customer/Questions.tsx:267
 #: src/features/accounts/customer/BillingForm.tsx:551
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:100
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:428
@@ -849,7 +849,7 @@ msgid "Close"
 msgstr "Schließen"
 
 #: src/features/accounts/format.ts:98
-#: src/features/accounts/customer/Questions.tsx:277
+#: src/features/accounts/customer/Questions.tsx:278
 msgid "Closed"
 msgstr "Geschlossen"
 
@@ -2848,7 +2848,7 @@ msgstr "Wähle ein Feld aus, um Art, Beschriftung und Pflichtangabe festzulegen.
 
 #: src/features/accounts/staff/EmailCustomerModal.tsx:131
 #: src/features/accounts/staff/AccountCardRoute.tsx:245
-#: src/features/accounts/customer/Questions.tsx:266
+#: src/features/accounts/customer/Questions.tsx:264
 #: src/features/accounts/customer/NextSteps.tsx:672
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:289
 msgid "Send"
@@ -3893,8 +3893,8 @@ msgstr "fällig am {due}"
 msgid "Watch the tutorial"
 msgstr "Das Tutorial ansehen"
 
-#: src/features/accounts/customer/Questions.tsx:278
-#: src/features/accounts/customer/Questions.tsx:280
+#: src/features/accounts/customer/Questions.tsx:279
+#: src/features/accounts/customer/Questions.tsx:281
 msgid "We are on it"
 msgstr "Wir kümmern uns darum"
 
@@ -4011,7 +4011,7 @@ msgstr "Wir haben keine USt-IdNr."
 #~ msgid "We put these on your invoice."
 #~ msgstr "Diese Angaben stehen auf Ihrer Rechnung."
 
-#: src/features/accounts/customer/Questions.tsx:279
+#: src/features/accounts/customer/Questions.tsx:280
 msgid "We replied"
 msgstr "Wir haben geantwortet"
 

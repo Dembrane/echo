@@ -667,7 +667,7 @@ msgstr "Llamada programada"
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:266
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:329
 #: src/features/accounts/customer/WhoSigns.tsx:460
-#: src/features/accounts/customer/Questions.tsx:253
+#: src/features/accounts/customer/Questions.tsx:267
 #: src/features/accounts/customer/BillingForm.tsx:551
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:100
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:428
@@ -849,7 +849,7 @@ msgid "Close"
 msgstr "Cerrar"
 
 #: src/features/accounts/format.ts:98
-#: src/features/accounts/customer/Questions.tsx:277
+#: src/features/accounts/customer/Questions.tsx:278
 msgid "Closed"
 msgstr "Cerrado"
 
@@ -2848,7 +2848,7 @@ msgstr "Selecciona un campo para definir su tipo, etiqueta y si es obligatorio. 
 
 #: src/features/accounts/staff/EmailCustomerModal.tsx:131
 #: src/features/accounts/staff/AccountCardRoute.tsx:245
-#: src/features/accounts/customer/Questions.tsx:266
+#: src/features/accounts/customer/Questions.tsx:264
 #: src/features/accounts/customer/NextSteps.tsx:672
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:289
 msgid "Send"
@@ -3893,8 +3893,8 @@ msgstr "vencía el {due}"
 msgid "Watch the tutorial"
 msgstr "Mira el tutorial"
 
-#: src/features/accounts/customer/Questions.tsx:278
-#: src/features/accounts/customer/Questions.tsx:280
+#: src/features/accounts/customer/Questions.tsx:279
+#: src/features/accounts/customer/Questions.tsx:281
 msgid "We are on it"
 msgstr "Estamos en ello"
 
@@ -4011,7 +4011,7 @@ msgstr "No tenemos número de VAT"
 #~ msgid "We put these on your invoice."
 #~ msgstr "Ponemos estos datos en tu factura."
 
-#: src/features/accounts/customer/Questions.tsx:279
+#: src/features/accounts/customer/Questions.tsx:280
 msgid "We replied"
 msgstr "Hemos respondido"
 
