@@ -1,121 +1,34 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { join } from "node:path";
 import { newId } from "@dembrane/core";
-import {
-  decide,
-  type LlmSettings,
-  PROFILES,
-  profileForProvider,
-  routingPolicyOf,
-  STUB_VERTEX_AUTH,
-  speechModels,
-  type TranscriptionProfile,
-  wireStubs,
-} from "@dembrane/llm";
-import { dbRoutingStore, providerResolver } from "@dembrane/metering";
-import { GeminiFinal } from "@dembrane/transcription";
-import { buildSpeechKit, type SpeechRouter } from "../src";
+import type { SpeechRouter } from "../src";
+import { bffStore } from "../src/bff/storage";
 import { finalTranscript } from "../src/pipeline/defs";
 import { currentChunkHash } from "../src/pipeline/final";
 import { bursts } from "./final-helpers";
-import { admin, freshDatabase, type Harness, quiet, startWorker, until } from "./pipeline-harness";
+import {
+  PLANTED,
+  REDACTED,
+  routedWorker,
+  stubbedRouter,
+  withoutFinal,
+} from "./final-route-helpers";
+import { admin, freshDatabase, type Harness, until } from "./pipeline-harness";
 
 // The final pass of a project on Google, moved to Scaleway while it runs: nothing is sent to
 // Vertex after the move, whichever call of the pass would have gone there next.
 const run = admin && Bun.which("ffmpeg") ? describe : describe.skip;
 
-const SETTINGS: LlmSettings = {
-  provider: "openai-compatible",
-  providers: ["scaleway", "google"],
-  baseUrl: "https://scaleway.final.test/v1",
-  apiKey: "k",
-  searchGrounding: true,
-  textFast: ["gemini-a"],
-  multiModalFast: ["gemini-a"],
-  multiModalPro: ["gemini-a"],
-  compatTextFast: ["glm-5.3"],
-  compatMultiModalFast: ["glm-5.3"],
-  compatMultiModalPro: ["glm-5.3"],
-  vertexProject: "p",
-  vertexLocation: "eu",
-  embeddingModel: "text-embedding-004",
-  compatEmbeddingModel: "qwen3-embedding-8b",
-  embeddingLocation: "europe-west4",
-  embeddingDimensions: 8,
-};
-const policy = routingPolicyOf(SETTINGS);
-// Google's profile with a final pass: Gemini hears the whole recording again after it ends.
-const GOOGLE_WITH_FINAL: TranscriptionProfile = {
-  ...PROFILES["dembrane-26-10-gemini"],
-  recordings: "redo",
-  uploads: "redo",
-  redo: { provider: "gemini", model: "gemini-3.8-flash" },
-};
-// Both parsers read the same answer: the timed sentences and the redacted text.
-const ANSWER = JSON.stringify({
-  segments: [{ start: 0, end: 2, text: "google heard this" }],
-  corrected_transcript: "redacted by whoever answered",
-  note: "",
-});
-
 run("a final pass whose project leaves Google", () => {
   setDefaultTimeout(120_000);
   let h: Harness;
+  const routed = stubbedRouter();
+  const { wire, vertex } = routed;
   let router: SpeechRouter;
-  const wire = wireStubs({ text: ANSWER, speech: "whisper heard this" });
-  // What the next Vertex request does once it has been answered, and the status it answers with.
-  const vertex = {
-    after: (_n: number) => Promise.resolve() as Promise<unknown>,
-    status: null as number | null,
-  };
 
   beforeAll(async () => {
-    const url = await freshDatabase("conv_final_route");
-    const hooks = {
-      attemptsPerDeployment: 2,
-      backoffMs: 0,
-      sleep: async () => {},
-      transport: {
-        vertex: {
-          fetch: (async (...a: Parameters<typeof fetch>) => {
-            const res = await wire.vertex(...a);
-            await vertex.after(wire.seen.vertex.length);
-            return vertex.status ? new Response("{}", { status: vertex.status }) : res;
-          }) as typeof fetch,
-          ...STUB_VERTEX_AUTH,
-        },
-        compatFetch: wire.compat,
-      },
-    };
-    const kit = (id: "scaleway" | "google") => {
-      const profile = id === "google" ? GOOGLE_WITH_FINAL : profileForProvider(SETTINGS, id);
-      const built = buildSpeechKit({
-        settings: SETTINGS,
-        profile,
-        hooks,
-        logger: quiet,
-        withFinal: true,
-      });
-      if (id !== "google" || !built.final) return built;
-      // Pieces of nine seconds, so a short recording is read in several requests.
-      const gemini = new GeminiFinal(speechModels(SETTINGS, profile, "gemini", hooks), quiet, {
-        maxSeconds: 9,
-      });
-      return { ...built, final: { ...built.final, transcribers: { gemini } } };
-    };
-    router = {
-      default: "scaleway",
-      kits: { scaleway: kit("scaleway"), google: kit("google") },
-      decide: async () => {
-        throw new Error("replaced below, once the database is up");
-      },
-    };
-    h = await startWorker(url, {
-      transcriber: router.kits.scaleway?.transcriber as never,
-      speech: router,
-    });
-    const resolver = providerResolver(dbRoutingStore(h.deps.db), policy, { ttlMs: 0 });
-    (router as { decide: SpeechRouter["decide"] }).decide = (who) => decide(resolver, policy, who);
+    ({ router } = routed);
+    h = await routedWorker(router, await freshDatabase("conv_final_route"));
   });
   afterAll(async () => {
     await h?.stop();
@@ -159,7 +72,17 @@ run("a final pass whose project leaves Google", () => {
       hash: await currentChunkHash(h.deps, id),
     });
   const finals = (id: string) =>
-    h.sql`select provider, text from conversation_final_transcript where conversation_id = ${id}`;
+    h.sql`select provider, text, sentences, raw_sentences, usage from conversation_final_transcript where conversation_id = ${id}`;
+  const gaveUp = async (id: string) =>
+    (
+      await h.sql`select 1 from processing_status where conversation_id = ${id} and event = 'task_final_transcript.gave_up'`
+    ).length;
+  /** The dashboard says a final transcript is on its way while a pass is queued or running. */
+  const improving = (id: string) => bffStore(h.deps.db).finalQueued(id);
+  const liveText = async (id: string) =>
+    (await h.sql`select transcript from conversation_chunk where conversation_id = ${id}`).map(
+      (r) => r.transcript,
+    );
   const vertexRequests = () => wire.seen.vertex.length;
   const whisperRequests = () =>
     wire.seen.compat.filter((r) => r.url.endsWith("/audio/transcriptions")).length;
@@ -238,5 +161,31 @@ run("a final pass whose project leaves Google", () => {
     // The pieces went to Vertex; neither the text pass nor the redaction did.
     expect(vertexRequests() - before).toBe(pieces);
     expect(rows.map((r) => r.provider)).toEqual(["whisper"]);
+    // Scaleway redacted what Whisper heard: nothing the speaker said is stored, in the text
+    // or anywhere beside it, and no sentences are kept that would show it.
+    expect(rows[0]?.text).toBe(REDACTED);
+    expect(rows[0]?.sentences).toBeNull();
+    expect(rows[0]?.raw_sentences).toBeNull();
+    for (const secret of PLANTED) expect(JSON.stringify(rows)).not.toContain(secret);
+  });
+
+  test("a move to a provider with no final pass keeps the live text, gives up, and stops saying a transcript is coming", async () => {
+    const restore = withoutFinal(router, "scaleway");
+    try {
+      const c = await conversation(false);
+      const before = vertexRequests();
+      vertex.after = async (n) => {
+        if (n === before + 1) await toScaleway(c.projectId)();
+      };
+      await startFinal(c.id);
+      await until(async () => (await gaveUp(c.id)) && !(await improving(c.id)));
+      vertex.after = () => Promise.resolve();
+      expect(await finals(c.id)).toHaveLength(0);
+      expect(await liveText(c.id)).toEqual(["live", "live"]);
+      expect(vertexRequests() - before).toBe(1);
+      expect(await gaveUp(c.id)).toBe(1);
+    } finally {
+      restore();
+    }
   });
 });
