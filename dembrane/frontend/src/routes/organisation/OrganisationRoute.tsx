@@ -34,6 +34,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { OrgAgentAccessPanel } from "@/components/agent-access/OrgAgentAccessPanel";
+import { OrgAiModelsPanel } from "@/components/ai-models/OrgAiModelsPanel";
 import { OrgBillingTab } from "@/components/billing/BillingManager";
 import { AvatarBubbles, pressable } from "@/components/common/AvatarBubbles";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
@@ -350,6 +351,7 @@ export const OrganisationRoute = () => {
 		...(ENABLE_TRAINING ? (["training"] as const) : []),
 		"billing",
 		"agents",
+		"ai-models",
 	] as const;
 	type TabValue = (typeof allowedTabs)[number];
 	const segments = (splat ?? "").split("/").filter(Boolean);
@@ -365,6 +367,7 @@ export const OrganisationRoute = () => {
 				if (section === "training" && ENABLE_TRAINING) return "training";
 				if (section === "billing") return "billing";
 				if (section === "agents") return "agents";
+				if (section === "ai-models") return "ai-models";
 				// general / anything else → overview (general settings).
 				return "overview";
 			})()
@@ -471,7 +474,7 @@ export const OrganisationRoute = () => {
 	// never an empty panel for them.
 	const view: TabValue =
 		(!canSeeFinancials && (viewRaw === "usage" || viewRaw === "billing")) ||
-		(!isAdmin && viewRaw === "agents")
+		(!isAdmin && (viewRaw === "agents" || viewRaw === "ai-models"))
 			? "members"
 			: viewRaw;
 
@@ -893,6 +896,17 @@ export const OrganisationRoute = () => {
 						<Tabs.Panel value="agents" pt="md">
 							{organisationId && (
 								<OrgAgentAccessPanel
+									orgId={organisationId}
+									orgName={organisation.name}
+								/>
+							)}
+						</Tabs.Panel>
+					)}
+
+					{isAdmin && (
+						<Tabs.Panel value="ai-models" pt="md">
+							{organisationId && (
+								<OrgAiModelsPanel
 									orgId={organisationId}
 									orgName={organisation.name}
 								/>

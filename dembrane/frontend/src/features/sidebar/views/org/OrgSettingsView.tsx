@@ -4,6 +4,7 @@ import {
 	CreditCardIcon,
 	GearIcon,
 	PlugsConnectedIcon,
+	SparkleIcon,
 } from "@phosphor-icons/react";
 import { useParams } from "react-router";
 import { useV2Me } from "@/hooks/useV2Me";
@@ -55,6 +56,13 @@ export const OrgSettingsView = () => {
 					to={`/o/${orgId}/settings/agents`}
 					label={<Trans>MCP access</Trans>}
 					icon={PlugsConnectedIcon}
+				/>
+			)}
+			{isAdmin && (
+				<NavItem
+					to={`/o/${orgId}/settings/ai-models`}
+					label={<Trans>AI models</Trans>}
+					icon={SparkleIcon}
 				/>
 			)}
 		</nav>

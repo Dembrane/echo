@@ -24,6 +24,11 @@ msgstr ""
 #~ msgid "dashboard.dembrane.concrete.beta"
 #~ msgstr "Bêta"
 
+#. placeholder {0}: providerLabel(p)
+#: src/components/project/advanced/ProjectAiModels.tsx:27
+msgid "{0} (account default)"
+msgstr ""
+
 #: src/components/project/portal-editor/sectionLabels.ts:31
 msgid "A question from dembrane, when a group asks for one, to go deeper."
 msgstr "Une question de dembrane pour aller plus loin, quand un groupe en demande une."
@@ -48,7 +53,7 @@ msgstr "À propos d'Essayer"
 msgid "Add topic"
 msgstr "Ajouter un sujet"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:63
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:64
 msgid "Advanced"
 msgstr "Avancé"
 
@@ -59,6 +64,11 @@ msgstr "Avancé (astuces et bonnes pratiques)"
 #: src/components/project/portal-editor/sections/AnonymiseExample.tsx:29
 msgid "After"
 msgstr "Après"
+
+#: src/components/project/advanced/ProjectAiModels.tsx:41
+#: src/components/project/advanced/ProjectAiModels.tsx:46
+msgid "AI models"
+msgstr ""
 
 #: src/components/project/portal-editor/sections/privacy.tsx:97
 msgid "Anonymize transcripts"
@@ -96,7 +106,7 @@ msgstr "Générer automatiquement les titres"
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Générer automatiquement un titre court basé sur le sujet pour chaque conversation après la synthèse. Le titre décrit ce qui a été discuté, pas qui a participé. Le nom original du participant est conservé séparément, s'il a fourni un nom."
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:66
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:67
 msgid "Automation, early features, and moving or deleting this project."
 msgstr "Automatisation, fonctions en avant-première, et déplacer ou supprimer ce projet."
 
@@ -231,7 +241,7 @@ msgstr "Anglais"
 
 #: src/components/project/portal-editor/PortalEditorRoute.tsx:59
 #: src/components/project/brief/ProjectBriefRoute.tsx:83
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:74
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:75
 msgid "Error loading project"
 msgstr "Erreur lors du chargement du projet"
 
@@ -331,6 +341,10 @@ msgstr "Mode"
 msgid "Name and tags"
 msgstr "Nom et étiquettes"
 
+#: src/components/project/advanced/ProjectAiModels.tsx:61
+msgid "New conversations and all analysis in this project go to Google in the EU, billed per use."
+msgstr ""
+
 #: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:223
 msgid "Next"
 msgstr "Suivant"
@@ -402,7 +416,7 @@ msgstr "Une question"
 msgid "One sample cannot show what Explore takes from other conversations."
 msgstr "Un seul exemple ne peut pas montrer ce qu'Explorer reprend d'autres conversations."
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:86
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:87
 msgid "Only workspace admins can manage project automation."
 msgstr "Seuls les administrateurs de l'espace de travail peuvent gérer l'automatisation du projet."
 
@@ -626,6 +640,14 @@ msgstr "Cartes du tutoriel"
 msgid "Ukrainian (only ECHO features, transcription and summaries)"
 msgstr "Ukrainien (fonctionnalités ECHO uniquement, transcription et résumés)"
 
+#: src/components/project/advanced/ProjectAiModels.tsx:66
+msgid "Use Google"
+msgstr ""
+
+#: src/components/project/advanced/ProjectAiModels.tsx:59
+msgid "Use Google Vertex AI for this project?"
+msgstr ""
+
 #. js-lingui-explicit-id
 #: src/components/project/portal-editor/sectionLabels.ts:15
 #: src/components/project/portal-editor/sections/verify.tsx:375
@@ -638,11 +660,11 @@ msgstr "Vérifier"
 msgid "Verify topics"
 msgstr "Vérifier les sujets"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:98
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:99
 msgid "Webhooks"
 msgstr "Webhooks"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:81
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:82
 msgid "Webhooks are not enabled for this environment."
 msgstr "Les webhooks ne sont pas activés pour cet environnement."
 

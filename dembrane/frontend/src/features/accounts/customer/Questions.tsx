@@ -216,13 +216,16 @@ export function AskForm({
 	orgId,
 	side,
 	onDone,
+	initial,
 }: {
 	orgId: string;
 	side: "customer" | "staff";
 	onDone: () => void;
+	/** A request already written, for the person to check and send. */
+	initial?: { subject: string; body: string };
 }) {
-	const [subject, setSubject] = useState("");
-	const [body, setBody] = useState("");
+	const [subject, setSubject] = useState(initial?.subject ?? "");
+	const [body, setBody] = useState(initial?.body ?? "");
 	const mutation = useAccountsMutation(
 		side === "customer" ? "openTicket" : "staffOpenTicket",
 		{ orgId },
