@@ -1,26 +1,31 @@
 import { t } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import {
+	Accordion,
+	Box,
 	Button,
 	Checkbox,
-	Collapse,
 	Group,
-	Paper,
-	Stack,
 	Text,
-	Title,
-	UnstyledButton,
+	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { CaretDownIcon, LockIcon } from "@phosphor-icons/react";
+import { InfoIcon } from "@phosphor-icons/react";
 import { usePostHog } from "@posthog/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
-import { ruleBetween } from "@/components/workspace/ruleBetween";
 import { API_BASE_URL } from "@/config";
+import {
+	PageSection,
+	Row,
+	Rows,
+} from "@/features/accounts/customer/PageSection";
+// The ruled list's grid and its fold, as "Involved in procurement" and "Other members"
+// draw them on the same page: one look for every list of the organisation page.
+import list from "@/features/accounts/customer/room/PeopleList.module.css";
 import { ApiRequestError } from "@/lib/errors/read";
 
 interface DiscoverableWorkspace {
@@ -79,24 +84,22 @@ async function postRequestAccess(workspaceId: string) {
  */
 export const DiscoverableWorkspaces = ({
 	orgId,
-	defaultOpen = false,
+	standalone = false,
 }: {
 	orgId: string;
 	/**
-	 * Open until the viewer folds it. The organisation page passes it when the
-	 * viewer has joined no workspace here, so the count in the header is never
-	 * about rows the page hides.
+	 * The viewer has joined no workspace here, so this list is all the page says
+	 * about workspaces: it gets a section heading and shows its rows, instead of
+	 * folding under the viewer's own workspaces. The count in the page's header is
+	 * then never about rows the page hides.
 	 */
-	defaultOpen?: boolean;
+	standalone?: boolean;
 }) => {
 	const queryClient = useQueryClient();
 	const posthog = usePostHog();
-	// Collapsed by default: the list can be long and most visits are to enter a
-	// workspace you already belong to, not to discover new ones. The viewer's own
-	// toggle wins; until then it follows defaultOpen, which the page only knows
-	// once its own workspace list has loaded.
-	const [toggled, setToggled] = useState<boolean | null>(null);
-	const open = toggled ?? defaultOpen;
+	// Folded by default: the list can be long and most visits are to enter a
+	// workspace you already belong to, not to discover new ones.
+	const [open, setOpen] = useState(false);
 	const [selected, setSelected] = useState<Set<string>>(new Set());
 	const [confirmOpened, confirm] = useDisclosure(false);
 
@@ -247,199 +250,165 @@ export const DiscoverableWorkspaces = ({
 			? (joinRows.find((w) => w.id === selectedIds[0])?.name ?? "")
 			: "";
 
+	const count = (
+		<Text span size="xs" c="dimmed" ml="xs">
+			{joinable.length}
+		</Text>
+	);
+	// What the list is, behind the info icon, as the people list keeps its own note.
+	const about = joinRows.length > 0 && (
+		<Tooltip
+			multiline
+			w={280}
+			label={t`Workspaces in this organisation you haven't joined yet. As an admin you can add yourself to manage them.`}
+		>
+			<InfoIcon size={16} className={list.info} />
+		</Tooltip>
+	);
+	const details = (ws: DiscoverableWorkspace) => (
+		<Text size="xs" lh="20px" c="dimmed">
+			{ws.visibility === "open_to_organisation" ? (
+				<Trans>Everyone in your organisation</Trans>
+			) : ws.visibility === "invite_only" ? (
+				<Trans>Invite only</Trans>
+			) : (
+				<Trans>Private</Trans>
+			)}
+			{" · "}
+			<Plural value={ws.member_count} one="# member" other="# members" />
+		</Text>
+	);
+	// One row per workspace on the list's grid: the box where a person's picture
+	// sits, the name over its details, and what you can ask for beside them. The
+	// row is the box's label, so pressing anywhere on it ticks it.
+	const rows = (
+		<>
+			<Rows>
+				{joinRows.length > 1 && (
+					<Row>
+						<Box component="label" className={list.person}>
+							<div className={list.marker}>
+								<Checkbox
+									checked={allSelected}
+									indeterminate={someSelected}
+									onChange={toggleAll}
+								/>
+							</div>
+							<Text lh="24px" className={list.wide}>
+								<Trans>Select all</Trans>
+							</Text>
+						</Box>
+					</Row>
+				)}
+				{joinRows.map((ws) => (
+					<Row key={ws.id}>
+						<Box component="label" className={list.person}>
+							<div className={list.marker}>
+								<Checkbox
+									checked={selected.has(ws.id)}
+									onChange={() => toggle(ws.id)}
+								/>
+							</div>
+							<div className={`${list.who} ${list.wide}`}>
+								<Text lh="24px">{ws.name}</Text>
+								{details(ws)}
+							</div>
+						</Box>
+					</Row>
+				))}
+				{otherRows.map((ws) => (
+					<Row key={ws.id}>
+						<div className={list.person}>
+							<div />
+							<div className={list.who}>
+								<Text lh="24px">{ws.name}</Text>
+								{details(ws)}
+							</div>
+							<div className={list.tags}>
+								{ws.action === "request-access" && (
+									<Button
+										size="compact-xs"
+										loading={
+											requestMutation.isPending &&
+											requestMutation.variables === ws.id
+										}
+										onClick={() => requestMutation.mutate(ws.id)}
+									>
+										<Trans>Request access</Trans>
+									</Button>
+								)}
+								{ws.action === "pending" && (
+									<Text size="xs" lh="24px" c="dimmed" fs="italic">
+										<Trans>Request sent</Trans>
+									</Text>
+								)}
+							</div>
+							<div />
+						</div>
+					</Row>
+				))}
+			</Rows>
+			{selectedIds.length > 0 && (
+				<Group justify="flex-start" gap="sm" mt="sm">
+					<Button
+						size="compact-sm"
+						variant="filled"
+						onClick={() => {
+							posthog?.capture("workspace_join_started", {
+								count: selectedIds.length,
+								org_id: orgId,
+							});
+							confirm.open();
+						}}
+					>
+						<Trans>Join as admin</Trans> ({selectedIds.length})
+					</Button>
+					<Text size="xs" c="dimmed">
+						<Plural
+							value={selectedIds.length}
+							one="# selected"
+							other="# selected"
+						/>
+					</Text>
+				</Group>
+			)}
+		</>
+	);
+
 	return (
 		<>
-			<Stack gap="sm">
-				<UnstyledButton
-					onClick={() => setToggled(!open)}
-					aria-expanded={open}
-					style={{
-						alignItems: "flex-start",
-						display: "inline-flex",
-						gap: "var(--mantine-spacing-xs)",
-					}}
+			{standalone ? (
+				<PageSection
+					title={
+						<span>
+							{headerLabel}
+							{count}
+							{about}
+						</span>
+					}
 				>
-					{/* The caret keeps to the title's first line, and the count runs on in
-					    the title's own text, so a title that wraps on a phone stays one
-					    paragraph instead of two columns. */}
-					<CaretDownIcon
-						size={16}
-						style={{
-							flexShrink: 0,
-							marginTop: "calc((1lh - 16px) / 2)",
-							transform: open ? "rotate(0deg)" : "rotate(-90deg)",
-							transition: "transform 0.15s ease",
-						}}
-					/>
-					<Title order={5}>
-						{headerLabel}{" "}
-						<Text span size="xs" c="dimmed" fw={400}>
-							<Plural
-								value={joinable.length}
-								one="(# workspace)"
-								other="(# workspaces)"
-							/>
-						</Text>
-					</Title>
-				</UnstyledButton>
-				<Collapse in={open}>
-					<Stack gap="sm">
-						{joinRows.length > 0 && (
-							<>
-								<Text size="xs" c="dimmed">
-									<Trans>
-										Workspaces in this organisation you haven't joined yet. As
-										an admin you can add yourself to manage them.
-									</Trans>
-								</Text>
-								{/* Only when there is more than one to select. Indented like the
-								    rows below, so every box sits in one column. */}
-								{joinRows.length > 1 && (
-									<Checkbox
-										size="xs"
-										pl="sm"
-										checked={allSelected}
-										indeterminate={someSelected}
-										onChange={toggleAll}
-										label={<Trans>Select all</Trans>}
-									/>
-								)}
-								<Paper withBorder>
-									{joinRows.map((ws, i) => (
-										// The row is the checkbox's own label: the box keeps to the
-										// name's line and the whole row can be pressed. On a phone the
-										// details go under the name as one line.
-										<Checkbox
-											key={ws.id}
-											size="xs"
-											p="sm"
-											checked={selected.has(ws.id)}
-											onChange={() => toggle(ws.id)}
-											style={ruleBetween(i, joinRows.length)}
-											styles={{
-												body: { alignItems: "flex-start" },
-												// Centred on the name's line (a small Text), not on the two
-												// lines of a phone row.
-												inner: {
-													marginTop:
-														"calc((var(--mantine-font-size-sm) * var(--mantine-line-height-sm) - 16px) / 2)",
-												},
-												labelWrapper: { flex: 1, minWidth: 0 },
-											}}
-											label={
-												<Group gap="xs" wrap="wrap" style={{ rowGap: 0 }}>
-													<Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
-														{/* A lock beside "Everyone in your organisation"
-														    would say the opposite. */}
-														{ws.visibility !== "open_to_organisation" && (
-															<LockIcon
-																size={16}
-																color="var(--mantine-color-dimmed)"
-																style={{ flexShrink: 0 }}
-															/>
-														)}
-														<Text size="sm" lineClamp={1}>
-															{ws.name}
-														</Text>
-													</Group>
-													<Text size="xs" c="dimmed">
-														{ws.visibility === "open_to_organisation" ? (
-															<Trans>Everyone in your organisation</Trans>
-														) : ws.visibility === "invite_only" ? (
-															<Trans>Invite only</Trans>
-														) : (
-															<Trans>Private</Trans>
-														)}
-														{" · "}
-														<Plural
-															value={ws.member_count}
-															one="# member"
-															other="# members"
-														/>
-													</Text>
-												</Group>
-											}
-										/>
-									))}
-								</Paper>
-								{selectedIds.length > 0 && (
-									<Group justify="flex-start" gap="sm">
-										<Button
-											size="compact-sm"
-											variant="filled"
-											onClick={() => {
-												posthog?.capture("workspace_join_started", {
-													count: selectedIds.length,
-													org_id: orgId,
-												});
-												confirm.open();
-											}}
-										>
-											<Trans>Join as admin</Trans> ({selectedIds.length})
-										</Button>
-										<Text size="xs" c="dimmed">
-											<Plural
-												value={selectedIds.length}
-												one="# selected"
-												other="# selected"
-											/>
-										</Text>
-									</Group>
-								)}
-							</>
-						)}
-						{otherRows.length > 0 && (
-							<Paper withBorder>
-								{otherRows.map((ws, i) => (
-									<Group
-										key={ws.id}
-										justify="space-between"
-										wrap="nowrap"
-										p="sm"
-										style={ruleBetween(i, otherRows.length)}
-									>
-										<Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
-											{ws.visibility === "private" && (
-												<LockIcon
-													size={16}
-													color="var(--mantine-color-dimmed)"
-												/>
-											)}
-											<Text size="sm" lineClamp={1}>
-												{ws.name}
-											</Text>
-											<Text size="xs" c="dimmed">
-												<Plural
-													value={ws.member_count}
-													one="# member"
-													other="# members"
-												/>
-											</Text>
-										</Group>
-										{ws.action === "request-access" && (
-											<Button
-												size="compact-xs"
-												loading={
-													requestMutation.isPending &&
-													requestMutation.variables === ws.id
-												}
-												onClick={() => requestMutation.mutate(ws.id)}
-											>
-												<Trans>Request access</Trans>
-											</Button>
-										)}
-										{ws.action === "pending" && (
-											<Text size="xs" c="dimmed" fs="italic">
-												<Trans>Request sent</Trans>
-											</Text>
-										)}
-									</Group>
-								))}
-							</Paper>
-						)}
-					</Stack>
-				</Collapse>
-			</Stack>
+					{rows}
+				</PageSection>
+			) : (
+				<Accordion
+					chevronPosition="left"
+					classNames={{
+						content: list.foldContent,
+						control: list.foldControl,
+						item: list.foldItem,
+					}}
+					value={open ? "join" : null}
+					onChange={(value) => setOpen(value === "join")}
+				>
+					<Accordion.Item value="join">
+						<Accordion.Control>
+							<Text span>{headerLabel}</Text>
+							{count}
+						</Accordion.Control>
+						<Accordion.Panel>{rows}</Accordion.Panel>
+					</Accordion.Item>
+				</Accordion>
+			)}
 			<ConfirmModal
 				opened={confirmOpened}
 				onClose={confirm.close}
