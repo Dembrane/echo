@@ -226,7 +226,7 @@ msgstr "{0, plural, one {# posto pagato} other {# posti pagati}} per questo peri
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
 #: src/routes/project/ProjectsHome.tsx:514
-#: src/components/workspace/DiscoverableWorkspaces.tsx:367
+#: src/components/workspace/DiscoverableWorkspaces.tsx:370
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# selezionato} other {# selezionati}}"
 
@@ -7896,12 +7896,12 @@ msgstr "Vuoi unirti a {0}?"
 msgid "Join {subjectFromUrl} | dembrane"
 msgstr "Unisciti a {subjectFromUrl} | dembrane"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:364
-#: src/components/workspace/DiscoverableWorkspaces.tsx:430
+#: src/components/workspace/DiscoverableWorkspaces.tsx:367
+#: src/components/workspace/DiscoverableWorkspaces.tsx:433
 msgid "Join as admin"
 msgstr "Entra come amministratore"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:416
+#: src/components/workspace/DiscoverableWorkspaces.tsx:419
 msgid "Join as admin?"
 msgstr "Vuoi unirti come amministratore?"
 
@@ -12816,7 +12816,7 @@ msgid "Request a training"
 msgstr "Richiedi una formazione"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1146
-#: src/components/workspace/DiscoverableWorkspaces.tsx:337
+#: src/components/workspace/DiscoverableWorkspaces.tsx:340
 msgid "Request access"
 msgstr "Richiedi l'accesso"
 
@@ -12853,7 +12853,7 @@ msgstr "Richiedi reimpostazione password | dembrane"
 #~ msgstr "Request Password Reset | dembrane"
 
 #: src/components/workspace/DiscoverableWorkspaces.tsx:238
-#: src/components/workspace/DiscoverableWorkspaces.tsx:342
+#: src/components/workspace/DiscoverableWorkspaces.tsx:345
 msgid "Request sent"
 msgstr "Richiesta inviata"
 
@@ -18893,11 +18893,11 @@ msgid "You were trying to {action}."
 msgstr "Stavi cercando di {action}."
 
 #. placeholder {0}: selectedIds.length
-#: src/components/workspace/DiscoverableWorkspaces.tsx:424
+#: src/components/workspace/DiscoverableWorkspaces.tsx:427
 msgid "You'll be added as an admin to {0} private workspaces. They'll appear in your sidebar right after."
 msgstr "Riceverai l'accesso da amministratore a {0} spazi di lavoro privati. Appariranno subito nella barra laterale."
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:419
+#: src/components/workspace/DiscoverableWorkspaces.tsx:422
 msgid "You'll be added as an admin to {singleName}. It'll appear in your sidebar right after."
 msgstr "Riceverai l'accesso da amministratore a {singleName}. Apparirà subito nella barra laterale."
 

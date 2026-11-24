@@ -226,7 +226,7 @@ msgstr "{0, plural, one {# місце оплачене} few {# місця опл
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
 #: src/routes/project/ProjectsHome.tsx:514
-#: src/components/workspace/DiscoverableWorkspaces.tsx:367
+#: src/components/workspace/DiscoverableWorkspaces.tsx:370
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# вибрано} few {# вибрано} many {# вибрано} other {# вибрано}}"
 
@@ -7896,12 +7896,12 @@ msgstr "Приєднатися до {0}?"
 msgid "Join {subjectFromUrl} | dembrane"
 msgstr "Приєднатися до {subjectFromUrl} | dembrane"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:364
-#: src/components/workspace/DiscoverableWorkspaces.tsx:430
+#: src/components/workspace/DiscoverableWorkspaces.tsx:367
+#: src/components/workspace/DiscoverableWorkspaces.tsx:433
 msgid "Join as admin"
 msgstr "Приєднатися як адміністратор"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:416
+#: src/components/workspace/DiscoverableWorkspaces.tsx:419
 msgid "Join as admin?"
 msgstr "Приєднатися як адміністратор?"
 
@@ -12816,7 +12816,7 @@ msgid "Request a training"
 msgstr "Замовити тренінг"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1146
-#: src/components/workspace/DiscoverableWorkspaces.tsx:337
+#: src/components/workspace/DiscoverableWorkspaces.tsx:340
 msgid "Request access"
 msgstr "Запросити доступ"
 
@@ -12853,7 +12853,7 @@ msgstr "Запит на скидання пароля | dembrane"
 #~ msgstr "Request Password Reset | dembrane"
 
 #: src/components/workspace/DiscoverableWorkspaces.tsx:238
-#: src/components/workspace/DiscoverableWorkspaces.tsx:342
+#: src/components/workspace/DiscoverableWorkspaces.tsx:345
 msgid "Request sent"
 msgstr "Запит надіслано"
 
@@ -18893,11 +18893,11 @@ msgid "You were trying to {action}."
 msgstr "Ви намагалися {action}."
 
 #. placeholder {0}: selectedIds.length
-#: src/components/workspace/DiscoverableWorkspaces.tsx:424
+#: src/components/workspace/DiscoverableWorkspaces.tsx:427
 msgid "You'll be added as an admin to {0} private workspaces. They'll appear in your sidebar right after."
 msgstr "Вас буде додано як адміністратора до {0} приватних робочих просторів. Вони одразу з'являться на вашій бічній панелі."
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:419
+#: src/components/workspace/DiscoverableWorkspaces.tsx:422
 msgid "You'll be added as an admin to {singleName}. It'll appear in your sidebar right after."
 msgstr "Вас буде додано як адміністратора до {singleName}. Він одразу з'явиться на вашій бічній панелі."
 

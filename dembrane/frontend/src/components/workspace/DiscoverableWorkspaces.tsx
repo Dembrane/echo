@@ -10,7 +10,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { InfoIcon } from "@phosphor-icons/react";
+import { FoldersIcon, InfoIcon } from "@phosphor-icons/react";
 import { usePostHog } from "@posthog/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -319,7 +319,10 @@ export const DiscoverableWorkspaces = ({
 				{otherRows.map((ws) => (
 					<Row key={ws.id}>
 						<div className={list.person}>
-							<div />
+							{/* Nothing to tick here, so the column says what the row is. */}
+							<div className={list.marker}>
+								<FoldersIcon size={20} color="var(--app-muted)" aria-hidden />
+							</div>
 							<div className={list.who}>
 								<Text lh="24px">{ws.name}</Text>
 								{details(ws)}
