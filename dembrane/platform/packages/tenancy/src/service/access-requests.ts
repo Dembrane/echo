@@ -1,4 +1,4 @@
-import { resolveWorkspace } from "@dembrane/access";
+import { heldForDemo, resolveWorkspace } from "@dembrane/access";
 import {
   BadRequestError,
   ConflictError,
@@ -65,9 +65,11 @@ export async function isOrgBillingOnly(db: Conn, orgId: string, userId: string) 
 export function accessRequestService(deps: TenancyDeps) {
   const { db } = deps;
 
+  /** A live workspace; one held back for a demo is not there for its organisation yet. */
   async function loadWorkspace(id: string) {
     const ws = await workspaceById(db, id);
-    if (!ws || ws.deleted_at) throw new NotFoundError("workspace.not_found");
+    if (!ws || ws.deleted_at || heldForDemo(ws.settings))
+      throw new NotFoundError("workspace.not_found");
     return ws;
   }
 
@@ -117,8 +119,6 @@ export function accessRequestService(deps: TenancyDeps) {
       if (await activeMembership(db, ws.id, member.appUserId))
         return { status: "already_member", workspace_id: ws.id, role: "admin" };
       const view = derivationView(ws);
-      // A demo staff hold back is not there for the organisation yet, its owner included.
-      if (view.held) throw new NotFoundError("workspace.not_found");
       if (view.stickyRemoved.includes(member.appUserId))
         throw new ForbiddenError("workspace.removed_from");
       if (view.visibility === "private" && role !== "owner")
