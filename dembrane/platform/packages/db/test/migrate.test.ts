@@ -71,6 +71,29 @@ run("migrate", () => {
     // seconds while the rest of the suite runs in parallel against the same server.
   }, 30_000);
 
+  test("the provider constraints are added not validated, and still refuse a bad value", async () => {
+    const db = postgres(`${base}/mig_fresh`, { max: 1, onnotice: () => {} });
+    try {
+      const rows = await db<{ conname: string; convalidated: boolean }[]>`
+        select conname, convalidated from pg_constraint
+        where conname in ('org_ai_providers_check', 'org_ai_default_provider_check',
+          'project_ai_provider_check', 'conversation_ai_provider_check')`;
+      expect(rows.map((r) => r.conname).sort()).toEqual([
+        "conversation_ai_provider_check",
+        "org_ai_default_provider_check",
+        "org_ai_providers_check",
+        "project_ai_provider_check",
+      ]);
+      // Validating scans the table while the release's locks are held: a later migration does it.
+      expect(rows.every((r) => !r.convalidated)).toBe(true);
+      await expect(
+        db`insert into org (id, name, ai_default_provider) values (gen_random_uuid(), 'x', 'nowhere')`,
+      ).rejects.toThrow(/org_ai_default_provider_check/);
+    } finally {
+      await db.end();
+    }
+  }, 30_000);
+
   test("adopts a database that already has the schema without re-running the baseline", async () => {
     // Running the baseline again would fail on its existing tables, and later migrations
     // need the tables it made.

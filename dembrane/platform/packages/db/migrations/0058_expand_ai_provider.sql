@@ -2,8 +2,11 @@
 -- model calls record the account and the provider the policy sent them to. Nullable columns and no
 -- backfill: every existing account, project and conversation reads as "the environment's default",
 -- which is all a deployment with one provider ever offers. The CHECK constraints are added NOT
--- VALID, which takes the table lock only for an instant; 0059 validates them without blocking
--- writes. Safe to run twice.
+-- VALID: they still hold for every insert and update, and the lock is taken only for an instant.
+-- They are not validated here. The migrations of a release run in one transaction, so a VALIDATE
+-- in the same release would hold these locks through its scan of the whole table. Existing rows
+-- have NULL in these columns, which the constraints accept; validating them is a later, separate
+-- migration of its own release. Safe to run twice.
 SET LOCAL lock_timeout = '3s';--> statement-breakpoint
 ALTER TABLE "org" ADD COLUMN IF NOT EXISTS "ai_providers" text[];--> statement-breakpoint
 ALTER TABLE "org" ADD COLUMN IF NOT EXISTS "ai_default_provider" varchar(32);--> statement-breakpoint
