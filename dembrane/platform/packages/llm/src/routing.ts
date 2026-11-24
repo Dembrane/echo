@@ -8,8 +8,9 @@ import type {
 import { type Payer, payer, type RoutingNote, withRouting } from "@dembrane/observability";
 import { echoOptions } from "./compat";
 import type { Completer, Completion, CompletionRequest, Embedder } from "./complete";
+import { FallbackModel, type Recheck } from "./fallback";
 import type { ModelGroup, Models } from "./models";
-import type { ProviderId, RoutingPolicy } from "./providers";
+import { PROVIDERS, type ProviderId, type RoutingPolicy } from "./providers";
 
 /** Where one call goes, and why; what the call log keeps. */
 export interface RouteDecision extends RoutingNote {
@@ -61,17 +62,15 @@ export async function decide(
   return policy.providers.includes(d.provider) ? d : failClosed(policy, "provider-missing");
 }
 
+const noteOf = (d: RouteDecision): RoutingNote => ({
+  organisationId: d.organisationId,
+  provider: d.provider,
+  reason: d.reason,
+  allowed: d.allowed,
+});
+
 /** Runs `fn` as the decision says: inside its routing note, so the call log records it. */
-export const routed = <T>(d: RouteDecision, fn: () => T): T =>
-  withRouting(
-    {
-      organisationId: d.organisationId,
-      provider: d.provider,
-      reason: d.reason,
-      allowed: d.allowed,
-    },
-    fn,
-  );
+export const routed = <T>(d: RouteDecision, fn: () => T): T => withRouting(noteOf(d), fn);
 
 type Registry = Readonly<Partial<Record<ProviderId, Models>>>;
 
@@ -104,14 +103,40 @@ class RoutingLanguageModel implements LanguageModelV4 {
     return models.model(this.group);
   }
 
+  /**
+   * For a call on a provider that needs an opt-in: before every attempt after the first, the
+   * project is asked again, and a call that no longer resolves there moves to its new provider
+   * for the rest of its attempts, its rows recording the new decision.
+   */
+  private recheck(d: RouteDecision, who: Payer | undefined): Recheck | undefined {
+    if (!PROVIDERS[d.provider].optIn) return undefined;
+    return async () => {
+      const now = await decide(this.resolver, this.policy, who);
+      if (now.provider === d.provider) return null;
+      return { model: this.of(now.provider), note: noteOf(now) };
+    };
+  }
+
   async doGenerate(options: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
-    const d = await decide(this.resolver, this.policy);
-    return routed(d, () => this.of(d.provider).doGenerate(options));
+    const who = payer();
+    const d = await decide(this.resolver, this.policy, who);
+    const model = this.of(d.provider);
+    return routed(d, () =>
+      model instanceof FallbackModel
+        ? model.doGenerate(options, this.recheck(d, who))
+        : model.doGenerate(options),
+    );
   }
 
   async doStream(options: LanguageModelV4CallOptions): Promise<LanguageModelV4StreamResult> {
-    const d = await decide(this.resolver, this.policy);
-    return routed(d, () => this.of(d.provider).doStream(options));
+    const who = payer();
+    const d = await decide(this.resolver, this.policy, who);
+    const model = this.of(d.provider);
+    return routed(d, () =>
+      model instanceof FallbackModel
+        ? model.doStream(options, this.recheck(d, who))
+        : model.doStream(options),
+    );
   }
 }
 

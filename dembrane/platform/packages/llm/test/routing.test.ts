@@ -239,6 +239,68 @@ describe("providers on the wire", () => {
     expect(last?.routing?.provider).toBe("google");
   });
 
+  test("a project that moves back to Scaleway during retries finishes on Scaleway, its rows saying so", async () => {
+    const calls: ModelCall[] = [];
+    let moved = false;
+    const wire = wireStubs({ vertexStatus: 429 });
+    // The project leaves Google once its first request has failed.
+    const resolver: ProviderResolver = async () => decision(moved ? "scaleway" : "google");
+    const vertexSeen = () => wire.seen.vertex.length;
+    const registry = createRegistry(SETTINGS, policy, profileOf, {
+      ...quick,
+      observe: (c) => calls.push(c),
+      transport: {
+        vertex: {
+          fetch: (async (...a: Parameters<typeof fetch>) => {
+            const res = await wire.vertex(...a);
+            moved = true;
+            return res;
+          }) as typeof fetch,
+          ...STUB_VERTEX_AUTH,
+        },
+        compatFetch: wire.compat,
+      },
+    });
+    const kit = routedKit(registry, policy, resolver);
+    const out = await inProject(GOOGLE_PROJECT, () =>
+      generateText({ model: kit.models.model("text_fast"), prompt: "hi", maxRetries: 0 }),
+    );
+    expect(out.text).toBe("stub answer");
+    expect(vertexSeen()).toBe(1);
+    expect(wire.seen.compat).toHaveLength(1);
+    expect(calls.map((c) => [c.provider, c.routing?.provider])).toEqual([
+      ["vertex", "google"],
+      ["openai-compatible", "scaleway"],
+    ]);
+  });
+
+  test("a stream that has begun on Google is not moved", async () => {
+    let moved = false;
+    const wire = wireStubs();
+    const resolver: ProviderResolver = async () => decision(moved ? "scaleway" : "google");
+    const registry = createRegistry(SETTINGS, policy, profileOf, {
+      ...quick,
+      transport: {
+        vertex: {
+          fetch: (async (...a: Parameters<typeof fetch>) => {
+            const res = await wire.vertex(...a);
+            moved = true;
+            return res;
+          }) as typeof fetch,
+          ...STUB_VERTEX_AUTH,
+        },
+        compatFetch: wire.compat,
+      },
+    });
+    const kit = routedKit(registry, policy, resolver);
+    const s = inProject(GOOGLE_PROJECT, () =>
+      streamText({ model: kit.models.model("text_fast"), prompt: "hi" }),
+    );
+    for await (const _ of s.textStream) void _;
+    expect(wire.seen.vertex).toHaveLength(1);
+    expect(wire.seen.compat).toEqual([]);
+  });
+
   test("a deployment with only Scaleway builds no Vertex client and routes everything there", async () => {
     const only = { ...SETTINGS, providers: undefined, vertexProject: "" };
     const onlyPolicy = routingPolicyOf(only);
