@@ -98,7 +98,7 @@ msgid "(You)"
 msgstr "(Ви)"
 
 #. placeholder {0}: joinable.length
-#: src/components/workspace/DiscoverableWorkspaces.tsx:257
+#: src/components/workspace/DiscoverableWorkspaces.tsx:271
 msgid "{0, plural, one {(# workspace)} other {(# workspaces)}}"
 msgstr "{0, plural, one {(# робочий простір)} few {(# робочі простори)} many {(# робочих просторів)} other {(# робочих просторів)}}"
 
@@ -165,8 +165,8 @@ msgstr "{0, plural, one {# наживо} few {# наживо} many {# нажив
 #. placeholder {0}: workspace.member_count
 #. placeholder {0}: ws.member_count
 #: src/routes/project/ProjectsHome.tsx:307
-#: src/components/workspace/DiscoverableWorkspaces.tsx:313
-#: src/components/workspace/DiscoverableWorkspaces.tsx:369
+#: src/components/workspace/DiscoverableWorkspaces.tsx:340
+#: src/components/workspace/DiscoverableWorkspaces.tsx:397
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# учасник} few {# учасники} many {# учасників} other {# учасників}}"
 
@@ -228,7 +228,7 @@ msgstr "{0, plural, one {# місце оплачене} few {# місця опл
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
 #: src/routes/project/ProjectsHome.tsx:514
-#: src/components/workspace/DiscoverableWorkspaces.tsx:338
+#: src/components/workspace/DiscoverableWorkspaces.tsx:366
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# вибрано} few {# вибрано} many {# вибрано} other {# вибрано}}"
 
@@ -376,7 +376,7 @@ msgid "{0} accounts, {1} workspaces, {2} active"
 msgstr "{0} акаунтів, {1} робочих просторів, {2} активних"
 
 #. placeholder {0}: displayRole(reached[0].role as string)
-#: src/routes/organisation/OrganisationRoute.tsx:1809
+#: src/routes/organisation/OrganisationRoute.tsx:1812
 msgid "{0} across all"
 msgstr "{0} для всіх"
 
@@ -456,7 +456,7 @@ msgstr "{0} ще не в цьому робочому просторі. Попр�
 #. placeholder {0}: organisation.name
 #. placeholder {0}: workspace.name
 #: src/routes/organisation/OrganisationRoute.tsx:764
-#: src/routes/organisation/OrganisationRoute.tsx:1622
+#: src/routes/organisation/OrganisationRoute.tsx:1625
 msgid "{0} logo"
 msgstr "Логотип {0}"
 
@@ -880,7 +880,7 @@ msgstr "{peopleCount, plural, one {# учасник} few {# учасники} ma
 msgid "{percent}% used"
 msgstr "Використано {percent}%"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1868
+#: src/routes/organisation/OrganisationRoute.tsx:1871
 msgid "{person} will lose access to every workspace in this organisation. Direct-only workspace invites stay intact."
 msgstr "{person} втратить доступ до всіх робочих просторів у цій організації. Прямі запрошення до робочих просторів збережуться."
 
@@ -1503,10 +1503,10 @@ msgstr "Active filters"
 msgid "Activity"
 msgstr "Активність"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2095
-#: src/routes/organisation/OrganisationRoute.tsx:2102
-#: src/routes/organisation/OrganisationRoute.tsx:2115
-#: src/routes/organisation/OrganisationRoute.tsx:2138
+#: src/routes/organisation/OrganisationRoute.tsx:2098
+#: src/routes/organisation/OrganisationRoute.tsx:2105
+#: src/routes/organisation/OrganisationRoute.tsx:2118
+#: src/routes/organisation/OrganisationRoute.tsx:2141
 #: src/portal/routes/ParticipantPostConversation.tsx:199
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:185
 #: src/components/billing/BillingManager.tsx:1392
@@ -1518,8 +1518,8 @@ msgstr "Add"
 #. placeholder {1}: ws.name
 #. placeholder {2}: displayRole("external")
 #. placeholder {2}: displayRole(roleOpt)
-#: src/routes/organisation/OrganisationRoute.tsx:2085
-#: src/routes/organisation/OrganisationRoute.tsx:2126
+#: src/routes/organisation/OrganisationRoute.tsx:2088
+#: src/routes/organisation/OrganisationRoute.tsx:2129
 msgid "Add {0} to {1} as <0>{2}</0>?"
 msgstr "Додати {0} до {1} як <0>{2}</0>?"
 
@@ -1644,8 +1644,8 @@ msgid "Add tip"
 msgstr "Додати пораду"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2098
-#: src/routes/organisation/OrganisationRoute.tsx:2142
+#: src/routes/organisation/OrganisationRoute.tsx:2101
+#: src/routes/organisation/OrganisationRoute.tsx:2145
 msgid "Add to {0}?"
 msgstr "Додати до {0}?"
 
@@ -1728,16 +1728,16 @@ msgstr "Added emails"
 msgid "Added to workspace"
 msgstr "Додано до робочого простору"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:170
+#: src/components/workspace/DiscoverableWorkspaces.tsx:184
 msgid "Added you to {okCount} workspaces"
 msgstr "Вас додано до {okCount} робочих просторів"
 
 #. placeholder {0}: failedIds.length
-#: src/components/workspace/DiscoverableWorkspaces.tsx:178
+#: src/components/workspace/DiscoverableWorkspaces.tsx:192
 msgid "Added you to {okCount}. {0} couldn't be added, try again."
 msgstr "Вас додано до {okCount}. Не вдалося додати: {0}, спробуйте ще раз."
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:169
+#: src/components/workspace/DiscoverableWorkspaces.tsx:183
 msgid "Added you to 1 workspace"
 msgstr "Вас додано до 1 робочого простору"
 
@@ -1806,7 +1806,7 @@ msgstr "Адміністратор"
 msgid "Admin dashboard"
 msgstr "Панель адміністратора"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2020
+#: src/routes/organisation/OrganisationRoute.tsx:2023
 msgid "Admin here via organisation role"
 msgstr "Адміністратор завдяки ролі в організації"
 
@@ -3103,12 +3103,12 @@ msgstr "Запити, яким не вдалося підібрати акаун
 #: src/routes/project/ProjectsHome.tsx:543
 #: src/routes/project/CreateProjectRoute.tsx:478
 #: src/routes/project/report/ProjectReportRoute.tsx:281
-#: src/routes/organisation/OrganisationRoute.tsx:1833
-#: src/routes/organisation/OrganisationRoute.tsx:1856
-#: src/routes/organisation/OrganisationRoute.tsx:1879
-#: src/routes/organisation/OrganisationRoute.tsx:2055
-#: src/routes/organisation/OrganisationRoute.tsx:2095
-#: src/routes/organisation/OrganisationRoute.tsx:2137
+#: src/routes/organisation/OrganisationRoute.tsx:1836
+#: src/routes/organisation/OrganisationRoute.tsx:1859
+#: src/routes/organisation/OrganisationRoute.tsx:1882
+#: src/routes/organisation/OrganisationRoute.tsx:2058
+#: src/routes/organisation/OrganisationRoute.tsx:2098
+#: src/routes/organisation/OrganisationRoute.tsx:2140
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/admin/AdminSettingsRoute.tsx:867
 #: src/routes/admin/AdminSettingsRoute.tsx:1181
@@ -3283,13 +3283,13 @@ msgstr "Змінити"
 
 #. placeholder {0}: displayRole(member.role)
 #. placeholder {1}: displayRole(next)
-#: src/routes/organisation/OrganisationRoute.tsx:1827
+#: src/routes/organisation/OrganisationRoute.tsx:1830
 msgid "Change {person}'s organisation role from <0>{0}</0> to <1>{1}</1>?"
 msgstr "Змінити роль користувача {person} в організації з <0>{0}</0> на <1>{1}</1>?"
 
 #. placeholder {0}: displayRole(currentRole)
 #. placeholder {1}: displayRole(next)
-#: src/routes/organisation/OrganisationRoute.tsx:1850
+#: src/routes/organisation/OrganisationRoute.tsx:1853
 msgid "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 msgstr "Змінити роль користувача {person} у просторі {wsName} з <0>{0}</0> на <1>{1}</1>?"
 
@@ -3297,7 +3297,7 @@ msgstr "Змінити роль користувача {person} у просто�
 msgid "Change anyway"
 msgstr "Все одно змінити"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2019
+#: src/routes/organisation/OrganisationRoute.tsx:2022
 msgid "Change in workspace settings"
 msgstr "Змінити в налаштуваннях робочого простору"
 
@@ -3305,7 +3305,7 @@ msgstr "Змінити в налаштуваннях робочого прост
 msgid "Change language"
 msgstr "Change language"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1835
+#: src/routes/organisation/OrganisationRoute.tsx:1838
 msgid "Change organisation role?"
 msgstr "Змінити роль в організації?"
 
@@ -3322,8 +3322,8 @@ msgstr "Змінити спосіб оплати"
 msgid "change project settings"
 msgstr "змінювати налаштування проєкту"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1833
-#: src/routes/organisation/OrganisationRoute.tsx:1856
+#: src/routes/organisation/OrganisationRoute.tsx:1836
+#: src/routes/organisation/OrganisationRoute.tsx:1859
 msgid "Change role"
 msgstr "Змінити роль"
 
@@ -3338,7 +3338,7 @@ msgstr "Зміни слова, прочитай докази або залиш �
 msgid "Change tier"
 msgstr "Змінити рівень"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1858
+#: src/routes/organisation/OrganisationRoute.tsx:1861
 msgid "Change workspace role?"
 msgstr "Змінити роль у робочому просторі?"
 
@@ -4132,7 +4132,7 @@ msgstr "Продовжити на dembrane.com"
 msgid "Controls how far charge forces act (higher = more global)"
 msgstr "Визначає радіус дії сил заряду (більше значення = глобальніший вплив)"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1662
+#: src/routes/organisation/OrganisationRoute.tsx:1665
 msgid "conversation"
 msgstr "conversation"
 
@@ -4226,7 +4226,7 @@ msgstr "Теги розмов стало легше читати."
 msgid "Conversation transcribed"
 msgstr "Розмову транскрибовано"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1662
+#: src/routes/organisation/OrganisationRoute.tsx:1665
 #: src/components/report/CreateReportForm.tsx:210
 #: src/components/chat/NavigationSuggestionCard.tsx:57
 msgid "conversations"
@@ -5307,7 +5307,7 @@ msgstr "Вступна заява"
 msgid "Discount"
 msgstr "Знижка"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:230
+#: src/components/workspace/DiscoverableWorkspaces.tsx:244
 msgid "Discoverable in this organisation"
 msgstr "Видимий у цій організації"
 
@@ -6041,7 +6041,7 @@ msgstr "Кожен у {0} може знайти та відкрити цей п�
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1908
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:387
-#: src/components/workspace/DiscoverableWorkspaces.tsx:305
+#: src/components/workspace/DiscoverableWorkspaces.tsx:332
 msgid "Everyone in your organisation"
 msgstr "Усі у вашій організації"
 
@@ -6167,7 +6167,7 @@ msgstr "Продовжити на 24 год"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1026
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1318
 #: src/routes/organisation/OrganisationRoute.tsx:1437
-#: src/routes/organisation/OrganisationRoute.tsx:1928
+#: src/routes/organisation/OrganisationRoute.tsx:1931
 #: src/routes/organisation/OrganisationExternalView.tsx:62
 #: src/lib/roles.ts:15
 #: src/features/sidebar/views/user/UserHomeView.tsx:116
@@ -7209,7 +7209,7 @@ msgstr "Hide"
 msgid "Hide data"
 msgstr "Hide data"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1944
+#: src/routes/organisation/OrganisationRoute.tsx:1947
 msgid "Hide detail"
 msgstr "Сховати деталі"
 
@@ -7690,7 +7690,7 @@ msgstr "Запрошуйте учасників для спільної робо
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1927
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:393
-#: src/components/workspace/DiscoverableWorkspaces.tsx:307
+#: src/components/workspace/DiscoverableWorkspaces.tsx:334
 msgid "Invite only"
 msgstr "Лише за запрошенням"
 
@@ -7874,23 +7874,23 @@ msgstr "Тарас"
 msgid "john@doe.com"
 msgstr "taras@shevchenko.com"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2055
-#: src/routes/organisation/OrganisationRoute.tsx:2061
+#: src/routes/organisation/OrganisationRoute.tsx:2058
+#: src/routes/organisation/OrganisationRoute.tsx:2064
 msgid "Join"
 msgstr "Приєднатися"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2049
+#: src/routes/organisation/OrganisationRoute.tsx:2052
 msgid "Join {0} as <0>admin</0>? It'll show in your sidebar right after."
 msgstr "Приєднатися до {0} як <0>адміністратор</0>? Після цього він з'явиться на вашій бічній панелі."
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2067
+#: src/routes/organisation/OrganisationRoute.tsx:2070
 msgid "Join {0} as an admin first to add others."
 msgstr "Спочатку приєднайтеся до {0} як адміністратор, щоб додавати інших."
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2057
+#: src/routes/organisation/OrganisationRoute.tsx:2060
 msgid "Join {0}?"
 msgstr "Приєднатися до {0}?"
 
@@ -7898,16 +7898,16 @@ msgstr "Приєднатися до {0}?"
 msgid "Join {subjectFromUrl} | dembrane"
 msgstr "Приєднатися до {subjectFromUrl} | dembrane"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:335
-#: src/components/workspace/DiscoverableWorkspaces.tsx:418
+#: src/components/workspace/DiscoverableWorkspaces.tsx:363
+#: src/components/workspace/DiscoverableWorkspaces.tsx:446
 msgid "Join as admin"
 msgstr "Приєднатися як адміністратор"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:404
+#: src/components/workspace/DiscoverableWorkspaces.tsx:432
 msgid "Join as admin?"
 msgstr "Приєднатися як адміністратор?"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2072
+#: src/routes/organisation/OrganisationRoute.tsx:2075
 msgid "Join first"
 msgstr "Спочатку приєднайтеся"
 
@@ -9384,7 +9384,7 @@ msgstr "Ніколи не змінювалося"
 msgid "new"
 msgstr "нове"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1695
+#: src/routes/organisation/OrganisationRoute.tsx:1698
 #: src/components/workspace/TierStatusBadge.tsx:38
 msgid "New"
 msgstr "New"
@@ -9501,7 +9501,7 @@ msgstr "Наступна сторінка"
 msgid "No"
 msgstr "Ні"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2154
+#: src/routes/organisation/OrganisationRoute.tsx:2157
 msgid "No access"
 msgstr "Немає доступу"
 
@@ -9812,7 +9812,7 @@ msgstr "Доступ ще нікому не надано"
 msgid "No one's on the workspace yet."
 msgstr "У робочому просторі ще нікого немає."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1923
+#: src/routes/organisation/OrganisationRoute.tsx:1926
 msgid "No organisation role. Access via workspace invites."
 msgstr "Немає ролі в організації. Доступ через запрошення до робочого простору."
 
@@ -10024,7 +10024,7 @@ msgstr "No webhooks found"
 msgid "No webhooks yet. Add a webhook to automatically receive conversation data when events happen."
 msgstr "Вебхуків ще немає. Додайте вебхук, щоб автоматично отримувати дані розмов, коли відбуваються події."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1806
+#: src/routes/organisation/OrganisationRoute.tsx:1809
 msgid "No workspace access yet"
 msgstr "Ще немає доступу до робочого простору"
 
@@ -10032,7 +10032,7 @@ msgstr "Ще немає доступу до робочого простору"
 msgid "No workspace picked. They'll be added to {orgName} and can request workspace access themselves."
 msgstr "Робочий простір не вибрано. Користувача буде додано до {orgName}, і він зможе самостійно запросити доступ."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1988
+#: src/routes/organisation/OrganisationRoute.tsx:1991
 msgid "No workspace role change. Add this person to the organisation, then re-invite from the workspace."
 msgstr "Роль у робочому просторі не змінено. Додайте цю людину до організації, а потім запросіть знову з робочого простору."
 
@@ -11037,7 +11037,7 @@ msgstr "Учасники отримують нагадування про пер
 msgid "Participants will be able to select tags when creating conversations"
 msgstr "Participants will be able to select tags when creating conversations"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1645
+#: src/routes/organisation/OrganisationRoute.tsx:1648
 msgid "partner"
 msgstr "партнер"
 
@@ -11051,7 +11051,7 @@ msgstr "Партнер"
 msgid "Partner organisation"
 msgstr "Організація-партнер"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1641
+#: src/routes/organisation/OrganisationRoute.tsx:1644
 msgid "Partner workspace, billed on its own and not part of the organisation's plan."
 msgstr "Партнерський робочий простір, оплачується окремо та не входить до тарифу організації."
 
@@ -11199,7 +11199,7 @@ msgstr "Люди, групи та те, що для них важливо"
 msgid "Per-recipient results:"
 msgstr "Результати для кожного одержувача:"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1959
+#: src/routes/organisation/OrganisationRoute.tsx:1962
 msgid "Per-workspace access"
 msgstr "Доступ до окремих робочих просторів"
 
@@ -11713,7 +11713,7 @@ msgstr "URL політики конфіденційності"
 #: src/routes/project/CreateProjectRoute.tsx:641
 #: src/routes/project/CreateProjectRoute.tsx:694
 #: src/components/workspace/OrganisationProjectsTable.tsx:246
-#: src/components/workspace/DiscoverableWorkspaces.tsx:309
+#: src/components/workspace/DiscoverableWorkspaces.tsx:336
 #: src/components/sharing/StatusLine.tsx:93
 #: src/components/project/ProjectSharingStrip.tsx:59
 msgid "Private"
@@ -11770,7 +11770,7 @@ msgstr "Processing your retranscription request..."
 msgid "Procurement help"
 msgstr "Допомога із закупівлями"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1655
+#: src/routes/organisation/OrganisationRoute.tsx:1658
 msgid "project"
 msgstr "проєкт"
 
@@ -11906,7 +11906,7 @@ msgstr "Прогнозована місячна сума"
 msgid "Projected yearly total"
 msgstr "Прогнозована річна сума"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1655
+#: src/routes/organisation/OrganisationRoute.tsx:1658
 #: src/routes/organisation/OrganisationExternalView.tsx:105
 msgid "projects"
 msgstr "проєкти"
@@ -12523,7 +12523,7 @@ msgstr "Нагадування надіслано: доступ підтримк
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1665
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1732
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1812
-#: src/routes/organisation/OrganisationRoute.tsx:1879
+#: src/routes/organisation/OrganisationRoute.tsx:1882
 #: src/components/settings/WhitelabelLogoCard.tsx:146
 #: src/components/settings/WhitelabelLogoCard.tsx:180
 #: src/components/settings/AccountSettingsCard.tsx:163
@@ -12581,11 +12581,11 @@ msgstr "Remove file"
 msgid "Remove from chat"
 msgstr "Вилучити з чату"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2172
+#: src/routes/organisation/OrganisationRoute.tsx:2175
 msgid "Remove from organisation"
 msgstr "Вилучити з організації"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1881
+#: src/routes/organisation/OrganisationRoute.tsx:1884
 msgid "Remove from organisation?"
 msgstr "Вилучити з організації?"
 
@@ -12818,7 +12818,7 @@ msgid "Request a training"
 msgstr "Замовити тренінг"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1146
-#: src/components/workspace/DiscoverableWorkspaces.tsx:385
+#: src/components/workspace/DiscoverableWorkspaces.tsx:413
 msgid "Request access"
 msgstr "Запросити доступ"
 
@@ -12854,8 +12854,8 @@ msgstr "Запит на скидання пароля | dembrane"
 #~ msgid "Request Password Reset | dembrane"
 #~ msgstr "Request Password Reset | dembrane"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:221
-#: src/components/workspace/DiscoverableWorkspaces.tsx:390
+#: src/components/workspace/DiscoverableWorkspaces.tsx:235
+#: src/components/workspace/DiscoverableWorkspaces.tsx:418
 msgid "Request sent"
 msgstr "Запит надіслано"
 
@@ -13761,7 +13761,7 @@ msgid "Select a workspace"
 msgstr "Виберіть робочий простір"
 
 #: src/routes/project/ProjectsHome.tsx:520
-#: src/components/workspace/DiscoverableWorkspaces.tsx:279
+#: src/components/workspace/DiscoverableWorkspaces.tsx:293
 #: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all"
 msgstr "Select all"
@@ -14281,7 +14281,7 @@ msgstr "Показати поточні аргументи"
 msgid "Show data"
 msgstr "Show data"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1944
+#: src/routes/organisation/OrganisationRoute.tsx:1947
 msgid "Show detail"
 msgstr "Показати деталі"
 
@@ -16304,11 +16304,11 @@ msgstr "Ця сторінка стосується лише {orgName}. Щоб о
 msgid "This part of the page failed to load. Reloading usually fixes it. If it keeps happening, head back home."
 msgstr "Ця частина сторінки не завантажилася. Зазвичай допомагає перезавантаження. Якщо це повторюється, поверніться на головну."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1823
-#: src/routes/organisation/OrganisationRoute.tsx:1846
-#: src/routes/organisation/OrganisationRoute.tsx:1863
-#: src/routes/organisation/OrganisationRoute.tsx:2089
-#: src/routes/organisation/OrganisationRoute.tsx:2130
+#: src/routes/organisation/OrganisationRoute.tsx:1826
+#: src/routes/organisation/OrganisationRoute.tsx:1849
+#: src/routes/organisation/OrganisationRoute.tsx:1866
+#: src/routes/organisation/OrganisationRoute.tsx:2092
+#: src/routes/organisation/OrganisationRoute.tsx:2133
 msgid "this person"
 msgstr "ця особа"
 
@@ -16736,7 +16736,7 @@ msgstr "Topic-based title describing what was discussed"
 #~ msgid "Topics"
 #~ msgstr "Topics"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1658
+#: src/routes/organisation/OrganisationRoute.tsx:1661
 msgid "total"
 msgstr "total"
 
@@ -17159,7 +17159,7 @@ msgid "Unknown device"
 msgstr "Невідомий пристрій"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:926
-#: src/routes/organisation/OrganisationRoute.tsx:1906
+#: src/routes/organisation/OrganisationRoute.tsx:1909
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:99
 #: src/components/agent-access/AgentGrantsCard.tsx:127
 msgid "Unknown member"
@@ -17234,7 +17234,7 @@ msgstr "До"
 msgid "until {0}"
 msgstr "до {0}"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1681
+#: src/routes/organisation/OrganisationRoute.tsx:1684
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:123
 #: src/components/workspace/OrganisationUsageRollup.tsx:848
 #: src/components/workspace/OrganisationProjectsTable.tsx:242
@@ -18575,7 +18575,7 @@ msgstr "Робочі простори з окремою оплатою"
 msgid "Workspaces in this account"
 msgstr "Робочі простори в цьому акаунті"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:269
+#: src/components/workspace/DiscoverableWorkspaces.tsx:283
 msgid "Workspaces in this organisation you haven't joined yet. As an admin you can add yourself to manage them."
 msgstr "Робочі простори в цій організації, до яких ви ще не приєдналися. Як адміністратор, ви можете додати себе, щоб керувати ними."
 
@@ -18583,7 +18583,7 @@ msgstr "Робочі простори в цій організації, до я�
 msgid "Workspaces shared with you"
 msgstr "Робочі простори, якими з вами поділилися"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:229
+#: src/components/workspace/DiscoverableWorkspaces.tsx:243
 msgid "Workspaces you can join"
 msgstr "Робочі простори, до яких можна приєднатися"
 
@@ -18701,7 +18701,7 @@ msgstr "Тепер можна завантажувати записи з Дик�
 msgid "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 msgstr "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1874
+#: src/routes/organisation/OrganisationRoute.tsx:1877
 msgid "You can re-invite them later from any workspace."
 msgstr "Ви можете запросити їх знову пізніше з будь-якого робочого простору."
 
@@ -18895,11 +18895,11 @@ msgid "You were trying to {action}."
 msgstr "Ви намагалися {action}."
 
 #. placeholder {0}: selectedIds.length
-#: src/components/workspace/DiscoverableWorkspaces.tsx:412
+#: src/components/workspace/DiscoverableWorkspaces.tsx:440
 msgid "You'll be added as an admin to {0} private workspaces. They'll appear in your sidebar right after."
 msgstr "Вас буде додано як адміністратора до {0} приватних робочих просторів. Вони одразу з'являться на вашій бічній панелі."
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:407
+#: src/components/workspace/DiscoverableWorkspaces.tsx:435
 msgid "You'll be added as an admin to {singleName}. It'll appear in your sidebar right after."
 msgstr "Вас буде додано як адміністратора до {singleName}. Він одразу з'явиться на вашій бічній панелі."
 

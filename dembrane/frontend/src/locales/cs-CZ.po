@@ -98,7 +98,7 @@ msgid "(You)"
 msgstr "(You)"
 
 #. placeholder {0}: joinable.length
-#: src/components/workspace/DiscoverableWorkspaces.tsx:257
+#: src/components/workspace/DiscoverableWorkspaces.tsx:271
 msgid "{0, plural, one {(# workspace)} other {(# workspaces)}}"
 msgstr "{0, plural, one {(# workspace)} other {(# workspaces)}}"
 
@@ -165,8 +165,8 @@ msgstr "{0, plural, one {# živě} few {# živě} other {# živě}}"
 #. placeholder {0}: workspace.member_count
 #. placeholder {0}: ws.member_count
 #: src/routes/project/ProjectsHome.tsx:307
-#: src/components/workspace/DiscoverableWorkspaces.tsx:313
-#: src/components/workspace/DiscoverableWorkspaces.tsx:369
+#: src/components/workspace/DiscoverableWorkspaces.tsx:340
+#: src/components/workspace/DiscoverableWorkspaces.tsx:397
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# member} other {# members}}"
 
@@ -228,7 +228,7 @@ msgstr "{0, plural, one {# předplacené místo je} few {# předplacená místa 
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
 #: src/routes/project/ProjectsHome.tsx:514
-#: src/components/workspace/DiscoverableWorkspaces.tsx:338
+#: src/components/workspace/DiscoverableWorkspaces.tsx:366
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# vybrán} few {# vybrány} other {# vybráno}}"
 
@@ -376,7 +376,7 @@ msgid "{0} accounts, {1} workspaces, {2} active"
 msgstr "{0} účtů, {1} pracovních prostorů, {2} aktivních"
 
 #. placeholder {0}: displayRole(reached[0].role as string)
-#: src/routes/organisation/OrganisationRoute.tsx:1809
+#: src/routes/organisation/OrganisationRoute.tsx:1812
 msgid "{0} across all"
 msgstr "{0} across all"
 
@@ -456,7 +456,7 @@ msgstr "{0} v tomto pracovním prostoru ještě není. Požádejte správce prac
 #. placeholder {0}: organisation.name
 #. placeholder {0}: workspace.name
 #: src/routes/organisation/OrganisationRoute.tsx:764
-#: src/routes/organisation/OrganisationRoute.tsx:1622
+#: src/routes/organisation/OrganisationRoute.tsx:1625
 msgid "{0} logo"
 msgstr "{0} logo"
 
@@ -880,7 +880,7 @@ msgstr "{peopleCount, plural, one {# člen} few {# členové} many {# členů} o
 msgid "{percent}% used"
 msgstr "Využito {percent} %"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1868
+#: src/routes/organisation/OrganisationRoute.tsx:1871
 msgid "{person} will lose access to every workspace in this organisation. Direct-only workspace invites stay intact."
 msgstr "{person} will lose access to every workspace in this organisation. Direct-only workspace invites stay intact."
 
@@ -1503,10 +1503,10 @@ msgstr "Active filters"
 msgid "Activity"
 msgstr "Aktivita"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2095
-#: src/routes/organisation/OrganisationRoute.tsx:2102
-#: src/routes/organisation/OrganisationRoute.tsx:2115
-#: src/routes/organisation/OrganisationRoute.tsx:2138
+#: src/routes/organisation/OrganisationRoute.tsx:2098
+#: src/routes/organisation/OrganisationRoute.tsx:2105
+#: src/routes/organisation/OrganisationRoute.tsx:2118
+#: src/routes/organisation/OrganisationRoute.tsx:2141
 #: src/portal/routes/ParticipantPostConversation.tsx:199
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:185
 #: src/components/billing/BillingManager.tsx:1392
@@ -1518,8 +1518,8 @@ msgstr "Add"
 #. placeholder {1}: ws.name
 #. placeholder {2}: displayRole("external")
 #. placeholder {2}: displayRole(roleOpt)
-#: src/routes/organisation/OrganisationRoute.tsx:2085
-#: src/routes/organisation/OrganisationRoute.tsx:2126
+#: src/routes/organisation/OrganisationRoute.tsx:2088
+#: src/routes/organisation/OrganisationRoute.tsx:2129
 msgid "Add {0} to {1} as <0>{2}</0>?"
 msgstr "Add {0} to {1} as <0>{2}</0>?"
 
@@ -1644,8 +1644,8 @@ msgid "Add tip"
 msgstr "Přidat tip"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2098
-#: src/routes/organisation/OrganisationRoute.tsx:2142
+#: src/routes/organisation/OrganisationRoute.tsx:2101
+#: src/routes/organisation/OrganisationRoute.tsx:2145
 msgid "Add to {0}?"
 msgstr "Add to {0}?"
 
@@ -1728,16 +1728,16 @@ msgstr "Added emails"
 msgid "Added to workspace"
 msgstr "Added to workspace"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:170
+#: src/components/workspace/DiscoverableWorkspaces.tsx:184
 msgid "Added you to {okCount} workspaces"
 msgstr "Byli jste přidáni do {okCount} pracovních prostorů"
 
 #. placeholder {0}: failedIds.length
-#: src/components/workspace/DiscoverableWorkspaces.tsx:178
+#: src/components/workspace/DiscoverableWorkspaces.tsx:192
 msgid "Added you to {okCount}. {0} couldn't be added, try again."
 msgstr "Byli jste přidáni do {okCount}. Položek, které se nepodařilo přidat: {0}, zkuste to znovu."
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:169
+#: src/components/workspace/DiscoverableWorkspaces.tsx:183
 msgid "Added you to 1 workspace"
 msgstr "Byli jste přidáni do 1 pracovního prostoru"
 
@@ -1806,7 +1806,7 @@ msgstr "Admin"
 msgid "Admin dashboard"
 msgstr "Admin dashboard"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2020
+#: src/routes/organisation/OrganisationRoute.tsx:2023
 msgid "Admin here via organisation role"
 msgstr "Admin here via organisation role"
 
@@ -3103,12 +3103,12 @@ msgstr "Volání, ke kterým nebyl přiřazen žádný účet"
 #: src/routes/project/ProjectsHome.tsx:543
 #: src/routes/project/CreateProjectRoute.tsx:478
 #: src/routes/project/report/ProjectReportRoute.tsx:281
-#: src/routes/organisation/OrganisationRoute.tsx:1833
-#: src/routes/organisation/OrganisationRoute.tsx:1856
-#: src/routes/organisation/OrganisationRoute.tsx:1879
-#: src/routes/organisation/OrganisationRoute.tsx:2055
-#: src/routes/organisation/OrganisationRoute.tsx:2095
-#: src/routes/organisation/OrganisationRoute.tsx:2137
+#: src/routes/organisation/OrganisationRoute.tsx:1836
+#: src/routes/organisation/OrganisationRoute.tsx:1859
+#: src/routes/organisation/OrganisationRoute.tsx:1882
+#: src/routes/organisation/OrganisationRoute.tsx:2058
+#: src/routes/organisation/OrganisationRoute.tsx:2098
+#: src/routes/organisation/OrganisationRoute.tsx:2140
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/admin/AdminSettingsRoute.tsx:867
 #: src/routes/admin/AdminSettingsRoute.tsx:1181
@@ -3283,13 +3283,13 @@ msgstr "Změnit"
 
 #. placeholder {0}: displayRole(member.role)
 #. placeholder {1}: displayRole(next)
-#: src/routes/organisation/OrganisationRoute.tsx:1827
+#: src/routes/organisation/OrganisationRoute.tsx:1830
 msgid "Change {person}'s organisation role from <0>{0}</0> to <1>{1}</1>?"
 msgstr "Change {person}'s organisation role from <0>{0}</0> to <1>{1}</1>?"
 
 #. placeholder {0}: displayRole(currentRole)
 #. placeholder {1}: displayRole(next)
-#: src/routes/organisation/OrganisationRoute.tsx:1850
+#: src/routes/organisation/OrganisationRoute.tsx:1853
 msgid "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 msgstr "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 
@@ -3297,7 +3297,7 @@ msgstr "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 msgid "Change anyway"
 msgstr "Change anyway"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2019
+#: src/routes/organisation/OrganisationRoute.tsx:2022
 msgid "Change in workspace settings"
 msgstr "Change in workspace settings"
 
@@ -3305,7 +3305,7 @@ msgstr "Change in workspace settings"
 msgid "Change language"
 msgstr "Change language"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1835
+#: src/routes/organisation/OrganisationRoute.tsx:1838
 msgid "Change organisation role?"
 msgstr "Change organisation role?"
 
@@ -3322,8 +3322,8 @@ msgstr "Změnit platební metodu"
 msgid "change project settings"
 msgstr "změnit nastavení projektu"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1833
-#: src/routes/organisation/OrganisationRoute.tsx:1856
+#: src/routes/organisation/OrganisationRoute.tsx:1836
+#: src/routes/organisation/OrganisationRoute.tsx:1859
 msgid "Change role"
 msgstr "Change role"
 
@@ -3338,7 +3338,7 @@ msgstr "Uprav slova, přečti si doklady, nebo nech zjištění mimo tuto prezen
 msgid "Change tier"
 msgstr "Change tier"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1858
+#: src/routes/organisation/OrganisationRoute.tsx:1861
 msgid "Change workspace role?"
 msgstr "Change workspace role?"
 
@@ -4132,7 +4132,7 @@ msgstr "Pokračovat na dembrane.com"
 msgid "Controls how far charge forces act (higher = more global)"
 msgstr "Určuje, jak daleko působí nábojové síly (vyšší = globálnější)"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1662
+#: src/routes/organisation/OrganisationRoute.tsx:1665
 msgid "conversation"
 msgstr "conversation"
 
@@ -4226,7 +4226,7 @@ msgstr "Štítky rozhovorů jsou lépe čitelné."
 msgid "Conversation transcribed"
 msgstr "Rozhovor přepsán"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1662
+#: src/routes/organisation/OrganisationRoute.tsx:1665
 #: src/components/report/CreateReportForm.tsx:210
 #: src/components/chat/NavigationSuggestionCard.tsx:57
 msgid "conversations"
@@ -5307,7 +5307,7 @@ msgstr "Prohlášení"
 msgid "Discount"
 msgstr "Discount"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:230
+#: src/components/workspace/DiscoverableWorkspaces.tsx:244
 msgid "Discoverable in this organisation"
 msgstr "Discoverable in this organisation"
 
@@ -6041,7 +6041,7 @@ msgstr "Everyone in {0} can find and open this project."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1908
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:387
-#: src/components/workspace/DiscoverableWorkspaces.tsx:305
+#: src/components/workspace/DiscoverableWorkspaces.tsx:332
 msgid "Everyone in your organisation"
 msgstr "Všichni ve vaší organizaci"
 
@@ -6167,7 +6167,7 @@ msgstr "Prodloužit o 24 h"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1026
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1318
 #: src/routes/organisation/OrganisationRoute.tsx:1437
-#: src/routes/organisation/OrganisationRoute.tsx:1928
+#: src/routes/organisation/OrganisationRoute.tsx:1931
 #: src/routes/organisation/OrganisationExternalView.tsx:62
 #: src/lib/roles.ts:15
 #: src/features/sidebar/views/user/UserHomeView.tsx:116
@@ -7209,7 +7209,7 @@ msgstr "Hide"
 msgid "Hide data"
 msgstr "Hide data"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1944
+#: src/routes/organisation/OrganisationRoute.tsx:1947
 msgid "Hide detail"
 msgstr "Hide detail"
 
@@ -7690,7 +7690,7 @@ msgstr "Invite members to collaborate on projects and conversations in this work
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1927
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:393
-#: src/components/workspace/DiscoverableWorkspaces.tsx:307
+#: src/components/workspace/DiscoverableWorkspaces.tsx:334
 msgid "Invite only"
 msgstr "Jen na pozvání"
 
@@ -7874,23 +7874,23 @@ msgstr "John"
 msgid "john@doe.com"
 msgstr "john@doe.com"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2055
-#: src/routes/organisation/OrganisationRoute.tsx:2061
+#: src/routes/organisation/OrganisationRoute.tsx:2058
+#: src/routes/organisation/OrganisationRoute.tsx:2064
 msgid "Join"
 msgstr "Join"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2049
+#: src/routes/organisation/OrganisationRoute.tsx:2052
 msgid "Join {0} as <0>admin</0>? It'll show in your sidebar right after."
 msgstr "Připojit se k {0} jako <0>správce</0>? Hned poté se vám zobrazí v bočním panelu."
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2067
+#: src/routes/organisation/OrganisationRoute.tsx:2070
 msgid "Join {0} as an admin first to add others."
 msgstr "Nejprve se k {0} připojte jako správce, abyste mohli přidávat další."
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2057
+#: src/routes/organisation/OrganisationRoute.tsx:2060
 msgid "Join {0}?"
 msgstr "Připojit se k {0}?"
 
@@ -7898,16 +7898,16 @@ msgstr "Připojit se k {0}?"
 msgid "Join {subjectFromUrl} | dembrane"
 msgstr "Join {subjectFromUrl} | dembrane"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:335
-#: src/components/workspace/DiscoverableWorkspaces.tsx:418
+#: src/components/workspace/DiscoverableWorkspaces.tsx:363
+#: src/components/workspace/DiscoverableWorkspaces.tsx:446
 msgid "Join as admin"
 msgstr "Připojit se jako správce"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:404
+#: src/components/workspace/DiscoverableWorkspaces.tsx:432
 msgid "Join as admin?"
 msgstr "Připojit se jako správce?"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2072
+#: src/routes/organisation/OrganisationRoute.tsx:2075
 msgid "Join first"
 msgstr "Nejprve se připojit"
 
@@ -9384,7 +9384,7 @@ msgstr "Nikdy nezměněno"
 msgid "new"
 msgstr "nové"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1695
+#: src/routes/organisation/OrganisationRoute.tsx:1698
 #: src/components/workspace/TierStatusBadge.tsx:38
 msgid "New"
 msgstr "New"
@@ -9501,7 +9501,7 @@ msgstr "Další stránka"
 msgid "No"
 msgstr "Ne"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2154
+#: src/routes/organisation/OrganisationRoute.tsx:2157
 msgid "No access"
 msgstr "No access"
 
@@ -9812,7 +9812,7 @@ msgstr "No one shared yet"
 msgid "No one's on the workspace yet."
 msgstr "No one's on the workspace yet."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1923
+#: src/routes/organisation/OrganisationRoute.tsx:1926
 msgid "No organisation role. Access via workspace invites."
 msgstr "No organisation role. Access via workspace invites."
 
@@ -10024,7 +10024,7 @@ msgstr "No webhooks found"
 msgid "No webhooks yet. Add a webhook to automatically receive conversation data when events happen."
 msgstr "Zatím žádné webhooky. Přidejte webhook a data rozhovorů budete dostávat automaticky, když nastanou události."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1806
+#: src/routes/organisation/OrganisationRoute.tsx:1809
 msgid "No workspace access yet"
 msgstr "No workspace access yet"
 
@@ -10032,7 +10032,7 @@ msgstr "No workspace access yet"
 msgid "No workspace picked. They'll be added to {orgName} and can request workspace access themselves."
 msgstr "No workspace picked. They'll be added to {orgName} and can request workspace access themselves."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1988
+#: src/routes/organisation/OrganisationRoute.tsx:1991
 msgid "No workspace role change. Add this person to the organisation, then re-invite from the workspace."
 msgstr "No workspace role change. Add this person to the organisation, then re-invite from the workspace."
 
@@ -11037,7 +11037,7 @@ msgstr "Účastníkům se před ukončením rozhovoru zobrazí připomínka k ov
 msgid "Participants will be able to select tags when creating conversations"
 msgstr "Participants will be able to select tags when creating conversations"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1645
+#: src/routes/organisation/OrganisationRoute.tsx:1648
 msgid "partner"
 msgstr "partner"
 
@@ -11051,7 +11051,7 @@ msgstr "Partner"
 msgid "Partner organisation"
 msgstr "Partner organisation"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1641
+#: src/routes/organisation/OrganisationRoute.tsx:1644
 msgid "Partner workspace, billed on its own and not part of the organisation's plan."
 msgstr "Partnerský pracovní prostor, účtovaný zvlášť a nezahrnutý v tarifu organizace."
 
@@ -11199,7 +11199,7 @@ msgstr "Lidé, skupiny a to, na čem jim záleží"
 msgid "Per-recipient results:"
 msgstr "Per-recipient results:"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1959
+#: src/routes/organisation/OrganisationRoute.tsx:1962
 msgid "Per-workspace access"
 msgstr "Per-workspace access"
 
@@ -11713,7 +11713,7 @@ msgstr "URL zásad ochrany osobních údajů"
 #: src/routes/project/CreateProjectRoute.tsx:641
 #: src/routes/project/CreateProjectRoute.tsx:694
 #: src/components/workspace/OrganisationProjectsTable.tsx:246
-#: src/components/workspace/DiscoverableWorkspaces.tsx:309
+#: src/components/workspace/DiscoverableWorkspaces.tsx:336
 #: src/components/sharing/StatusLine.tsx:93
 #: src/components/project/ProjectSharingStrip.tsx:59
 msgid "Private"
@@ -11770,7 +11770,7 @@ msgstr "Processing your retranscription request..."
 msgid "Procurement help"
 msgstr "Nákup a fakturace"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1655
+#: src/routes/organisation/OrganisationRoute.tsx:1658
 msgid "project"
 msgstr "project"
 
@@ -11906,7 +11906,7 @@ msgstr "Předpokládaný měsíční součet"
 msgid "Projected yearly total"
 msgstr "Předpokládaný roční součet"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1655
+#: src/routes/organisation/OrganisationRoute.tsx:1658
 #: src/routes/organisation/OrganisationExternalView.tsx:105
 msgid "projects"
 msgstr "projects"
@@ -12523,7 +12523,7 @@ msgstr "Připomínka odeslána: přístup podpory je stále aktivní"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1665
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1732
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1812
-#: src/routes/organisation/OrganisationRoute.tsx:1879
+#: src/routes/organisation/OrganisationRoute.tsx:1882
 #: src/components/settings/WhitelabelLogoCard.tsx:146
 #: src/components/settings/WhitelabelLogoCard.tsx:180
 #: src/components/settings/AccountSettingsCard.tsx:163
@@ -12581,11 +12581,11 @@ msgstr "Remove file"
 msgid "Remove from chat"
 msgstr "Remove from chat"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2172
+#: src/routes/organisation/OrganisationRoute.tsx:2175
 msgid "Remove from organisation"
 msgstr "Remove from organisation"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1881
+#: src/routes/organisation/OrganisationRoute.tsx:1884
 msgid "Remove from organisation?"
 msgstr "Remove from organisation?"
 
@@ -12818,7 +12818,7 @@ msgid "Request a training"
 msgstr "Požádat o školení"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1146
-#: src/components/workspace/DiscoverableWorkspaces.tsx:385
+#: src/components/workspace/DiscoverableWorkspaces.tsx:413
 msgid "Request access"
 msgstr "Request access"
 
@@ -12854,8 +12854,8 @@ msgstr "Požádat o obnovení hesla | dembrane"
 #~ msgid "Request Password Reset | dembrane"
 #~ msgstr "Request Password Reset | dembrane"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:221
-#: src/components/workspace/DiscoverableWorkspaces.tsx:390
+#: src/components/workspace/DiscoverableWorkspaces.tsx:235
+#: src/components/workspace/DiscoverableWorkspaces.tsx:418
 msgid "Request sent"
 msgstr "Request sent"
 
@@ -13761,7 +13761,7 @@ msgid "Select a workspace"
 msgstr "Vyberte pracovní prostor"
 
 #: src/routes/project/ProjectsHome.tsx:520
-#: src/components/workspace/DiscoverableWorkspaces.tsx:279
+#: src/components/workspace/DiscoverableWorkspaces.tsx:293
 #: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all"
 msgstr "Select all"
@@ -14281,7 +14281,7 @@ msgstr "Zobrazit aktuální argumenty"
 msgid "Show data"
 msgstr "Show data"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1944
+#: src/routes/organisation/OrganisationRoute.tsx:1947
 msgid "Show detail"
 msgstr "Show detail"
 
@@ -16303,11 +16303,11 @@ msgstr "Tato stránka se týká pouze organizace {orgName}. Chcete-li získat sv
 msgid "This part of the page failed to load. Reloading usually fixes it. If it keeps happening, head back home."
 msgstr "This part of the page failed to load. Reloading usually fixes it. If it keeps happening, head back home."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1823
-#: src/routes/organisation/OrganisationRoute.tsx:1846
-#: src/routes/organisation/OrganisationRoute.tsx:1863
-#: src/routes/organisation/OrganisationRoute.tsx:2089
-#: src/routes/organisation/OrganisationRoute.tsx:2130
+#: src/routes/organisation/OrganisationRoute.tsx:1826
+#: src/routes/organisation/OrganisationRoute.tsx:1849
+#: src/routes/organisation/OrganisationRoute.tsx:1866
+#: src/routes/organisation/OrganisationRoute.tsx:2092
+#: src/routes/organisation/OrganisationRoute.tsx:2133
 msgid "this person"
 msgstr "this person"
 
@@ -16735,7 +16735,7 @@ msgstr "Topic-based title describing what was discussed"
 #~ msgid "Topics"
 #~ msgstr "Topics"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1658
+#: src/routes/organisation/OrganisationRoute.tsx:1661
 msgid "total"
 msgstr "total"
 
@@ -17158,7 +17158,7 @@ msgid "Unknown device"
 msgstr "Neznámé zařízení"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:926
-#: src/routes/organisation/OrganisationRoute.tsx:1906
+#: src/routes/organisation/OrganisationRoute.tsx:1909
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:99
 #: src/components/agent-access/AgentGrantsCard.tsx:127
 msgid "Unknown member"
@@ -17233,7 +17233,7 @@ msgstr "Do"
 msgid "until {0}"
 msgstr "do {0}"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1681
+#: src/routes/organisation/OrganisationRoute.tsx:1684
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:123
 #: src/components/workspace/OrganisationUsageRollup.tsx:848
 #: src/components/workspace/OrganisationProjectsTable.tsx:242
@@ -18573,7 +18573,7 @@ msgstr "Pracovní prostory účtované zvlášť"
 msgid "Workspaces in this account"
 msgstr "Pracovní prostory v tomto účtu"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:269
+#: src/components/workspace/DiscoverableWorkspaces.tsx:283
 msgid "Workspaces in this organisation you haven't joined yet. As an admin you can add yourself to manage them."
 msgstr "Pracovní prostory v této organizaci, ke kterým jste se ještě nepřipojili. Jako správce se můžete sami přidat a spravovat je."
 
@@ -18581,7 +18581,7 @@ msgstr "Pracovní prostory v této organizaci, ke kterým jste se ještě nepři
 msgid "Workspaces shared with you"
 msgstr "Workspaces shared with you"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:229
+#: src/components/workspace/DiscoverableWorkspaces.tsx:243
 msgid "Workspaces you can join"
 msgstr "Pracovní prostory, ke kterým se můžete připojit"
 
@@ -18699,7 +18699,7 @@ msgstr "Teď můžeš nahrávat záznamy z aplikace Diktafon od Applu (soubory .
 msgid "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 msgstr "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1874
+#: src/routes/organisation/OrganisationRoute.tsx:1877
 msgid "You can re-invite them later from any workspace."
 msgstr "You can re-invite them later from any workspace."
 
@@ -18893,11 +18893,11 @@ msgid "You were trying to {action}."
 msgstr "Pokusili jste se {action}."
 
 #. placeholder {0}: selectedIds.length
-#: src/components/workspace/DiscoverableWorkspaces.tsx:412
+#: src/components/workspace/DiscoverableWorkspaces.tsx:440
 msgid "You'll be added as an admin to {0} private workspaces. They'll appear in your sidebar right after."
 msgstr "Budete přidáni jako správce do {0, plural, one {# soukromého pracovního prostoru} few {# soukromých pracovních prostorů} other {# soukromých pracovních prostorů}}. Hned poté se objeví ve vašem bočním panelu."
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:407
+#: src/components/workspace/DiscoverableWorkspaces.tsx:435
 msgid "You'll be added as an admin to {singleName}. It'll appear in your sidebar right after."
 msgstr "Budete přidáni jako správce do {singleName}. Hned poté se objeví ve vašem bočním panelu."
 

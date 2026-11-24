@@ -310,26 +310,40 @@ export const DiscoverableWorkspaces = ({
 												onChange={() => toggle(ws.id)}
 												aria-label={ws.name}
 											/>
-											<LockIcon size={16} color="var(--mantine-color-dimmed)" />
-											<Text size="sm" lineClamp={1}>
-												{ws.name}
-											</Text>
-											<Text size="xs" c="dimmed">
-												{ws.visibility === "open_to_organisation" ? (
-													<Trans>Everyone in your organisation</Trans>
-												) : ws.visibility === "invite_only" ? (
-													<Trans>Invite only</Trans>
-												) : (
-													<Trans>Private</Trans>
-												)}
-											</Text>
-											<Text size="xs" c="dimmed">
-												<Plural
-													value={ws.member_count}
-													one="# member"
-													other="# members"
+											{/* A lock beside "Everyone in your organisation" would say the opposite. */}
+											{ws.visibility !== "open_to_organisation" && (
+												<LockIcon
+													size={16}
+													color="var(--mantine-color-dimmed)"
 												/>
-											</Text>
+											)}
+											{/* On a phone the details go under the name, so the name is never
+											    squeezed to a few letters beside them. */}
+											<Group
+												gap="xs"
+												wrap="wrap"
+												style={{ minWidth: 0, rowGap: 0 }}
+											>
+												<Text size="sm" lineClamp={1}>
+													{ws.name}
+												</Text>
+												<Text size="xs" c="dimmed">
+													{ws.visibility === "open_to_organisation" ? (
+														<Trans>Everyone in your organisation</Trans>
+													) : ws.visibility === "invite_only" ? (
+														<Trans>Invite only</Trans>
+													) : (
+														<Trans>Private</Trans>
+													)}
+												</Text>
+												<Text size="xs" c="dimmed">
+													<Plural
+														value={ws.member_count}
+														one="# member"
+														other="# members"
+													/>
+												</Text>
+											</Group>
 										</Group>
 									))}
 								</Paper>
