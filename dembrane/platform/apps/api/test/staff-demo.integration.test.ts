@@ -16,10 +16,13 @@ import {
   MemoryJobs,
   onboardingSignals,
 } from "@dembrane/accounts";
+import { billingStorage, createBilling, FakeMollie, workspaceAdmins } from "@dembrane/billing";
 import { newId, PlatformError } from "@dembrane/core";
 import { createDb, migrate, schema } from "@dembrane/db";
 import type { Env, Signed } from "@dembrane/http";
 import { FakeCompleter } from "@dembrane/llm";
+import { MemoryMailer } from "@dembrane/mail";
+import { audiences } from "@dembrane/notifications";
 import { createLogger } from "@dembrane/observability";
 import {
   draftDeckRoutes,
@@ -28,9 +31,10 @@ import {
   popcornRoutes,
   publicRoutes,
 } from "@dembrane/popcorn";
-import { projectRoutes } from "@dembrane/projects";
+import { projectRoutes, projectsStorage } from "@dembrane/projects";
 import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { backfillBestPractices, seedBestPractices } from "@dembrane/samples";
+import { staffRoutes } from "@dembrane/staff";
 import { computeStats, statsStorage } from "@dembrane/stats";
 import { FilesystemStorage } from "@dembrane/storage";
 import { MemoryJobSink, tenancyRoutes } from "@dembrane/tenancy";
@@ -93,6 +97,7 @@ run("a staff demo where the deployment is production", () => {
   let deps: AccountsDeps;
   let build: DemoBuildDeps;
   let access: Access;
+  const mailer = new MemoryMailer();
   const people = {} as Record<"staff" | "customer", Person>;
   const customer = { org: newId(), workspace: newId(), project: newId(), billing: newId() };
   let demo: K.DemoStatusT;
@@ -309,6 +314,24 @@ run("a staff demo where the deployment is production", () => {
       }),
     );
     app.route("/", projectRoutes({ db, access, queue: { enqueue: async () => null } }));
+    const dashboardUrl = deps.settings.dashboardUrl;
+    app.route(
+      "/",
+      staffRoutes({
+        db,
+        staffAudit: deps.staffAudit,
+        billing: createBilling({
+          db,
+          mollie: new FakeMollie(),
+          mailer,
+          logger,
+          billingConfig: { webhookUrl: null, forceReconcileFailure: false, dashboardUrl },
+        }),
+        mailer,
+        logger,
+        config: { http: { dashboardUrl } },
+      }),
+    );
     // The API's handler, as apps/api/src/middleware/errors.ts has it.
     app.onError((err, c) =>
       err instanceof PlatformError
@@ -970,6 +993,62 @@ run("a staff demo where the deployment is production", () => {
         expect(after[who]).toEqual(before[who]);
       }
       expect((deps.jobs as MemoryJobs).of("account.send-email")).toHaveLength(emailsBefore);
+    });
+
+    /** Notification rows that name the held workspace or its project. */
+    const noticesOfPlaced = () =>
+      db
+        .select({ id: schema.notification.id })
+        .from(schema.notification)
+        .where(
+          sql`${schema.notification.ref_workspace_id} = ${placedWorkspace} or ${schema.notification.ref_project_id} = ${placedProject}`,
+        );
+
+    test("while it is a draft, opened by its id, the workspace and the project answer not found to the owner, and an admin's join answers 404", async () => {
+      expect(placedWorkspace).not.toBe("");
+      const send = (who: Person, method: string, path: string) =>
+        app.request(path, { method, headers: as(who) });
+      expect(
+        (await send(team.owner, "GET", `/api/v2/workspaces/${placedWorkspace}/settings`)).status,
+      ).toBe(404);
+      expect((await send(team.owner, "GET", `/api/v2/projects/${placedProject}`)).status).toBe(404);
+      expect(
+        (await send(team.colleague, "POST", `/api/v2/workspaces/${placedWorkspace}/join`)).status,
+      ).toBe(404);
+      expect(await noticesOfPlaced()).toEqual([]);
+    });
+
+    test("while it is a draft, no ladder that sends notices gives the organisation's owner a role in it: billing, notifications, projects", async () => {
+      expect(placedWorkspace).not.toBe("");
+      expect(await workspaceAdmins(billingStorage(db), placedWorkspace)).toEqual([]);
+      expect(await audiences(db).effectiveMembers(placedWorkspace)).toEqual([]);
+      expect(await projectsStorage(db).effectiveMemberIds(placedWorkspace)).toEqual([]);
+      // The organisation's own workspace still has its owner, through every ladder.
+      expect(await workspaceAdmins(billingStorage(db), brook.workspace)).toContain(
+        team.owner.appUserId as string,
+      );
+    });
+
+    test("while it is a draft, staff cannot ask for support access to it, and nobody gets a notification or an email about it", async () => {
+      expect(placedWorkspace).not.toBe("");
+      const sentBefore = mailer.sent.length;
+      const emailsBefore = (deps.jobs as MemoryJobs).of("account.send-email").length;
+      const res = await app.request(
+        `/api/v2/admin/workspaces/${placedWorkspace}/support-access/request`,
+        { method: "POST", headers: as(people.staff), body: JSON.stringify({ message: "Hi" }) },
+      );
+      expect(res.status).toBe(409);
+      const detail = String(((await res.json()) as { detail?: unknown }).detail);
+      expect(detail).toMatch(/demo/i);
+      expect(detail).toContain(" ");
+      expect(await noticesOfPlaced()).toEqual([]);
+      expect(mailer.sent.slice(sentBefore)).toEqual([]);
+      expect((deps.jobs as MemoryJobs).of("account.send-email")).toHaveLength(emailsBefore);
+      const requests = await db
+        .select({ id: schema.support_access_request.id })
+        .from(schema.support_access_request)
+        .where(eq(schema.support_access_request.workspace_id, placedWorkspace));
+      expect(requests).toEqual([]);
     });
 
     test("after a publish with the email on, the contact has its workspace and an admin colleague can join it", async () => {
