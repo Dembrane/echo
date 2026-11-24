@@ -88,6 +88,30 @@ run("AI providers: the account's setting and the project's choice", () => {
     sql<{ actor_kind: string; type: string; detail: Record<string, unknown> }[]>`
       select actor_kind, type, detail from account_event where org_id = ${orgId} order by created_at, id`;
 
+  test("a project's choice waits for staff taking Google away, and is then refused", async () => {
+    const w = await world();
+    await setOrg(d, randomUUID(), w.orgId, {
+      allowed: ["scaleway", "google"],
+      default: "scaleway",
+      requestTicketId: w.ticket,
+    });
+    let choice: Promise<unknown> = Promise.resolve();
+    // Staff's change is written but not yet committed when the project admin chooses Google.
+    await sql.begin(async (tx) => {
+      await tx`update org set ai_providers = ${["scaleway"]}, ai_default_provider = 'scaleway' where id = ${w.orgId}`;
+      choice = setProject(d, w.owner, w.projectId, "google").then(
+        () => "chose",
+        (err: unknown) => err,
+      );
+      await Bun.sleep(500);
+    });
+    expect(await choice).toMatchObject({
+      message: expect.stringContaining("does not allow google"),
+    });
+    const [p] = await sql`select ai_provider from project where id = ${w.projectId}`;
+    expect(p?.ai_provider).toBeNull();
+  });
+
   test("an account nobody set offers only the deployment's default, to owners and admins only", async () => {
     const w = await world();
     expect(await readOrg(d, w.owner, w.orgId)).toMatchObject({

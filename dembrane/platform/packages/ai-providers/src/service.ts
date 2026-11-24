@@ -323,7 +323,15 @@ export async function setProject(
     throw refused(`Not an AI provider: ${provider}`);
   return d.db.transaction(async (tx) => {
     const db = tx as unknown as Db;
-    const row = await projectContext(db, projectId);
+    const context = await projectContext(db, projectId);
+    // The allowance is read under the organisation's row lock, so staff taking Google away
+    // either finish first (and this refuses) or wait for this to commit (and then clear the project).
+    const [locked] = await db
+      .select({ ai_providers: org.ai_providers, ai_default_provider: org.ai_default_provider })
+      .from(org)
+      .where(eq(org.id, context.org_id))
+      .for("update");
+    const row = { ...context, ...(locked ?? {}) };
     const account = describe(d, row);
     if (provider !== null && !account.allowed.includes(provider as ProviderId))
       throw refused(`The account does not allow ${provider}`);
