@@ -77,12 +77,26 @@ async function postRequestAccess(workspaceId: string) {
  * are never auto-added to each other's workspaces). Organisation members get
  * `request-access` / `pending` rows for open workspaces.
  */
-export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
+export const DiscoverableWorkspaces = ({
+	orgId,
+	defaultOpen = false,
+}: {
+	orgId: string;
+	/**
+	 * Open until the viewer folds it. The organisation page passes it when the
+	 * viewer has joined no workspace here, so the count in the header is never
+	 * about rows the page hides.
+	 */
+	defaultOpen?: boolean;
+}) => {
 	const queryClient = useQueryClient();
 	const posthog = usePostHog();
 	// Collapsed by default: the list can be long and most visits are to enter a
-	// workspace you already belong to, not to discover new ones.
-	const [open, setOpen] = useState(false);
+	// workspace you already belong to, not to discover new ones. The viewer's own
+	// toggle wins; until then it follows defaultOpen, which the page only knows
+	// once its own workspace list has loaded.
+	const [toggled, setToggled] = useState<boolean | null>(null);
+	const open = toggled ?? defaultOpen;
 	const [selected, setSelected] = useState<Set<string>>(new Set());
 	const [confirmOpened, confirm] = useDisclosure(false);
 
@@ -237,7 +251,7 @@ export const DiscoverableWorkspaces = ({ orgId }: { orgId: string }) => {
 		<>
 			<Stack gap="sm">
 				<UnstyledButton
-					onClick={() => setOpen((v) => !v)}
+					onClick={() => setToggled(!open)}
 					aria-expanded={open}
 					style={{
 						alignItems: "center",

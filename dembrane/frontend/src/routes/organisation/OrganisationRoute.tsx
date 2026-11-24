@@ -1529,7 +1529,10 @@ function OrganisationOverviewPanel({
 
 			{/* Workspaces in this org the caller isn't a member of but can join or
 			    request access to. Self-hides when there's nothing to surface. */}
-			<DiscoverableWorkspaces orgId={orgId} />
+			<DiscoverableWorkspaces
+				orgId={orgId}
+				defaultOpen={!workspacesLoading && myCards.length === 0}
+			/>
 
 			{hasAccount && (
 				<Suspense fallback={null}>
