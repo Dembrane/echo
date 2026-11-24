@@ -4,8 +4,8 @@ import { DrizzleAccessStore } from "@dembrane/access";
 import {
   type AnalysisRuntime,
   analysisRuntime,
-  EmbeddingService,
   type ExecutorDeps,
+  embeddingBatch,
   embeddingInputHash,
   type JobSink,
   PRODUCERS_KEY,
@@ -176,12 +176,13 @@ function similarFrom(executor: ExecutorDeps): SimilarFor {
   const known = new Map<string, number>();
   const similar: SimilarFor = async (projectId, texts) => {
     const services = executor.services[PRODUCERS_KEY] as ProducerServices;
-    const service = new EmbeddingService(
+    // A project that switches provider mid-read makes its pinned embedder refuse the next
+    // vector; the batch is run once more on the provider it has now instead of failing the read.
+    const batch = await embeddingBatch(
       executor.store,
-      await services.probe(known),
-      services.embed,
+      { probe: () => services.probe(known), embed: services.embed },
+      (service) => service.ensure(projectId, texts),
     );
-    const batch = await service.ensure(projectId, texts);
     const out = new Map<string, number[]>();
     for (const t of texts) {
       const v = batch.vectors.get(embeddingInputHash(t));
