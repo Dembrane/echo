@@ -98,7 +98,7 @@ msgid "(You)"
 msgstr "(Jij)"
 
 #. placeholder {0}: joinable.length
-#: src/components/workspace/DiscoverableWorkspaces.tsx:271
+#: src/components/workspace/DiscoverableWorkspaces.tsx:277
 msgid "{0, plural, one {(# workspace)} other {(# workspaces)}}"
 msgstr "{0, plural, one {(# werkruimte)} other {(# werkruimtes)}}"
 
@@ -165,8 +165,8 @@ msgstr "{0, plural, one {# live} other {# live}}"
 #. placeholder {0}: workspace.member_count
 #. placeholder {0}: ws.member_count
 #: src/routes/project/ProjectsHome.tsx:307
-#: src/components/workspace/DiscoverableWorkspaces.tsx:340
-#: src/components/workspace/DiscoverableWorkspaces.tsx:397
+#: src/components/workspace/DiscoverableWorkspaces.tsx:354
+#: src/components/workspace/DiscoverableWorkspaces.tsx:412
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# lid} other {# leden}}"
 
@@ -228,7 +228,7 @@ msgstr "{0, plural, one {# plek betaald} other {# plekken betaald}} voor deze pe
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
 #: src/routes/project/ProjectsHome.tsx:514
-#: src/components/workspace/DiscoverableWorkspaces.tsx:366
+#: src/components/workspace/DiscoverableWorkspaces.tsx:381
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# geselecteerd} other {# geselecteerd}}"
 
@@ -6038,7 +6038,7 @@ msgstr "Iedereen in {0} kan dit project vinden en openen."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1908
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:387
-#: src/components/workspace/DiscoverableWorkspaces.tsx:332
+#: src/components/workspace/DiscoverableWorkspaces.tsx:347
 msgid "Everyone in your organisation"
 msgstr "Iedereen in je organisatie"
 
@@ -7687,7 +7687,7 @@ msgstr "Nodig leden uit om samen te werken aan projecten en gesprekken in deze w
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1927
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:393
-#: src/components/workspace/DiscoverableWorkspaces.tsx:334
+#: src/components/workspace/DiscoverableWorkspaces.tsx:349
 msgid "Invite only"
 msgstr "Alleen op uitnodiging"
 
@@ -7895,12 +7895,12 @@ msgstr "Lid worden van {0}?"
 msgid "Join {subjectFromUrl} | dembrane"
 msgstr "Word lid van {subjectFromUrl} | dembrane"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:363
-#: src/components/workspace/DiscoverableWorkspaces.tsx:446
+#: src/components/workspace/DiscoverableWorkspaces.tsx:378
+#: src/components/workspace/DiscoverableWorkspaces.tsx:461
 msgid "Join as admin"
 msgstr "Lid worden als admin"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:432
+#: src/components/workspace/DiscoverableWorkspaces.tsx:447
 msgid "Join as admin?"
 msgstr "Lid worden als admin?"
 
@@ -11710,7 +11710,7 @@ msgstr "URL van het privacybeleid"
 #: src/routes/project/CreateProjectRoute.tsx:641
 #: src/routes/project/CreateProjectRoute.tsx:694
 #: src/components/workspace/OrganisationProjectsTable.tsx:246
-#: src/components/workspace/DiscoverableWorkspaces.tsx:336
+#: src/components/workspace/DiscoverableWorkspaces.tsx:351
 #: src/components/sharing/StatusLine.tsx:93
 #: src/components/project/ProjectSharingStrip.tsx:59
 msgid "Private"
@@ -12815,7 +12815,7 @@ msgid "Request a training"
 msgstr "Een training aanvragen"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1146
-#: src/components/workspace/DiscoverableWorkspaces.tsx:413
+#: src/components/workspace/DiscoverableWorkspaces.tsx:428
 msgid "Request access"
 msgstr "Toegang aanvragen"
 
@@ -12852,7 +12852,7 @@ msgstr "Wachtwoordreset aanvragen | dembrane"
 #~ msgstr "Wachtwoord reset aanvragen | dembrane"
 
 #: src/components/workspace/DiscoverableWorkspaces.tsx:235
-#: src/components/workspace/DiscoverableWorkspaces.tsx:418
+#: src/components/workspace/DiscoverableWorkspaces.tsx:433
 msgid "Request sent"
 msgstr "Aanvraag verzonden"
 
@@ -13758,7 +13758,7 @@ msgid "Select a workspace"
 msgstr "Selecteer een werkruimte"
 
 #: src/routes/project/ProjectsHome.tsx:520
-#: src/components/workspace/DiscoverableWorkspaces.tsx:293
+#: src/components/workspace/DiscoverableWorkspaces.tsx:304
 #: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all"
 msgstr "Alles selecteren"
@@ -18568,7 +18568,7 @@ msgstr "Werkruimtes apart gefactureerd"
 msgid "Workspaces in this account"
 msgstr "Werkruimtes in dit account"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:283
+#: src/components/workspace/DiscoverableWorkspaces.tsx:290
 msgid "Workspaces in this organisation you haven't joined yet. As an admin you can add yourself to manage them."
 msgstr "Werkruimtes in deze organisatie waar je nog geen lid van bent. Als admin kun je jezelf toevoegen om ze te beheren."
 
@@ -18888,11 +18888,11 @@ msgid "You were trying to {action}."
 msgstr "Je wilde {action}."
 
 #. placeholder {0}: selectedIds.length
-#: src/components/workspace/DiscoverableWorkspaces.tsx:440
+#: src/components/workspace/DiscoverableWorkspaces.tsx:455
 msgid "You'll be added as an admin to {0} private workspaces. They'll appear in your sidebar right after."
 msgstr "Je wordt als admin toegevoegd aan {0} privéwerkruimtes. Ze verschijnen daarna meteen in je zijbalk."
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:435
+#: src/components/workspace/DiscoverableWorkspaces.tsx:450
 msgid "You'll be added as an admin to {singleName}. It'll appear in your sidebar right after."
 msgstr "Je wordt als admin toegevoegd aan {singleName}. Die verschijnt daarna meteen in je zijbalk."
 

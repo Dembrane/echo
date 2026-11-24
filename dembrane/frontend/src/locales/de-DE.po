@@ -98,7 +98,7 @@ msgid "(You)"
 msgstr "(du)"
 
 #. placeholder {0}: joinable.length
-#: src/components/workspace/DiscoverableWorkspaces.tsx:271
+#: src/components/workspace/DiscoverableWorkspaces.tsx:277
 msgid "{0, plural, one {(# workspace)} other {(# workspaces)}}"
 msgstr "{0, plural, one {(# Arbeitsbereich)} other {(# Arbeitsbereiche)}}"
 
@@ -165,8 +165,8 @@ msgstr "{0, plural, one {# live} other {# live}}"
 #. placeholder {0}: workspace.member_count
 #. placeholder {0}: ws.member_count
 #: src/routes/project/ProjectsHome.tsx:307
-#: src/components/workspace/DiscoverableWorkspaces.tsx:340
-#: src/components/workspace/DiscoverableWorkspaces.tsx:397
+#: src/components/workspace/DiscoverableWorkspaces.tsx:354
+#: src/components/workspace/DiscoverableWorkspaces.tsx:412
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# Mitglied} other {# Mitglieder}}"
 
@@ -228,7 +228,7 @@ msgstr "{0, plural, one {# Sitzplatz} other {# Sitzplätze}} für diesen Zeitrau
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
 #: src/routes/project/ProjectsHome.tsx:514
-#: src/components/workspace/DiscoverableWorkspaces.tsx:366
+#: src/components/workspace/DiscoverableWorkspaces.tsx:381
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# ausgewählt} other {# ausgewählt}}"
 
@@ -6041,7 +6041,7 @@ msgstr "Jeder in {0} kann dieses Projekt finden und öffnen."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1908
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:387
-#: src/components/workspace/DiscoverableWorkspaces.tsx:332
+#: src/components/workspace/DiscoverableWorkspaces.tsx:347
 msgid "Everyone in your organisation"
 msgstr "Alle in deiner Organisation"
 
@@ -7690,7 +7690,7 @@ msgstr "Lade Mitglieder ein, um an Projekten und Gesprächen in diesem Arbeitsbe
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1927
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:393
-#: src/components/workspace/DiscoverableWorkspaces.tsx:334
+#: src/components/workspace/DiscoverableWorkspaces.tsx:349
 msgid "Invite only"
 msgstr "Nur auf Einladung"
 
@@ -7898,12 +7898,12 @@ msgstr "{0} beitreten?"
 msgid "Join {subjectFromUrl} | dembrane"
 msgstr "{subjectFromUrl} beitreten | dembrane"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:363
-#: src/components/workspace/DiscoverableWorkspaces.tsx:446
+#: src/components/workspace/DiscoverableWorkspaces.tsx:378
+#: src/components/workspace/DiscoverableWorkspaces.tsx:461
 msgid "Join as admin"
 msgstr "Als Administrator beitreten"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:432
+#: src/components/workspace/DiscoverableWorkspaces.tsx:447
 msgid "Join as admin?"
 msgstr "Als Administrator beitreten?"
 
@@ -11713,7 +11713,7 @@ msgstr "URL der Datenschutzerklärung"
 #: src/routes/project/CreateProjectRoute.tsx:641
 #: src/routes/project/CreateProjectRoute.tsx:694
 #: src/components/workspace/OrganisationProjectsTable.tsx:246
-#: src/components/workspace/DiscoverableWorkspaces.tsx:336
+#: src/components/workspace/DiscoverableWorkspaces.tsx:351
 #: src/components/sharing/StatusLine.tsx:93
 #: src/components/project/ProjectSharingStrip.tsx:59
 msgid "Private"
@@ -12818,7 +12818,7 @@ msgid "Request a training"
 msgstr "Schulung anfragen"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1146
-#: src/components/workspace/DiscoverableWorkspaces.tsx:413
+#: src/components/workspace/DiscoverableWorkspaces.tsx:428
 msgid "Request access"
 msgstr "Zugriff anfragen"
 
@@ -12855,7 +12855,7 @@ msgstr "Passwort zurücksetzen anfordern | dembrane"
 #~ msgstr "Passwort zurücksetzen anfordern | dembrane"
 
 #: src/components/workspace/DiscoverableWorkspaces.tsx:235
-#: src/components/workspace/DiscoverableWorkspaces.tsx:418
+#: src/components/workspace/DiscoverableWorkspaces.tsx:433
 msgid "Request sent"
 msgstr "Anfrage gesendet"
 
@@ -13761,7 +13761,7 @@ msgid "Select a workspace"
 msgstr "Arbeitsbereich auswählen"
 
 #: src/routes/project/ProjectsHome.tsx:520
-#: src/components/workspace/DiscoverableWorkspaces.tsx:293
+#: src/components/workspace/DiscoverableWorkspaces.tsx:304
 #: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all"
 msgstr "Alle auswählen"
@@ -18573,7 +18573,7 @@ msgstr "Arbeitsbereiche separat abgerechnet"
 msgid "Workspaces in this account"
 msgstr "Arbeitsbereiche in diesem Konto"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:283
+#: src/components/workspace/DiscoverableWorkspaces.tsx:290
 msgid "Workspaces in this organisation you haven't joined yet. As an admin you can add yourself to manage them."
 msgstr "Arbeitsbereiche in dieser Organisation, denen du noch nicht beigetreten bist. Als Administrator kannst du dich selbst hinzufügen, um sie zu verwalten."
 
@@ -18893,11 +18893,11 @@ msgid "You were trying to {action}."
 msgstr "Du wolltest {action}."
 
 #. placeholder {0}: selectedIds.length
-#: src/components/workspace/DiscoverableWorkspaces.tsx:440
+#: src/components/workspace/DiscoverableWorkspaces.tsx:455
 msgid "You'll be added as an admin to {0} private workspaces. They'll appear in your sidebar right after."
 msgstr "Du wirst als Administrator zu {0} privaten Arbeitsbereichen hinzugefügt. Sie erscheinen direkt danach in deiner Seitenleiste."
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:435
+#: src/components/workspace/DiscoverableWorkspaces.tsx:450
 msgid "You'll be added as an admin to {singleName}. It'll appear in your sidebar right after."
 msgstr "Du wirst als Administrator zu {singleName} hinzugefügt. Der Arbeitsbereich erscheint direkt danach in deiner Seitenleiste."
 

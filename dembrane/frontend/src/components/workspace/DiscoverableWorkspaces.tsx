@@ -254,26 +254,33 @@ export const DiscoverableWorkspaces = ({
 					onClick={() => setToggled(!open)}
 					aria-expanded={open}
 					style={{
-						alignItems: "center",
+						alignItems: "flex-start",
 						display: "inline-flex",
 						gap: "var(--mantine-spacing-xs)",
 					}}
 				>
+					{/* The caret keeps to the title's first line, and the count runs on in
+					    the title's own text, so a title that wraps on a phone stays one
+					    paragraph instead of two columns. */}
 					<CaretDownIcon
 						size={16}
 						style={{
+							flexShrink: 0,
+							marginTop: "calc((1lh - 16px) / 2)",
 							transform: open ? "rotate(0deg)" : "rotate(-90deg)",
 							transition: "transform 0.15s ease",
 						}}
 					/>
-					<Title order={5}>{headerLabel}</Title>
-					<Text size="xs" c="dimmed">
-						<Plural
-							value={joinable.length}
-							one="(# workspace)"
-							other="(# workspaces)"
-						/>
-					</Text>
+					<Title order={5}>
+						{headerLabel}{" "}
+						<Text span size="xs" c="dimmed" fw={400}>
+							<Plural
+								value={joinable.length}
+								one="(# workspace)"
+								other="(# workspaces)"
+							/>
+						</Text>
+					</Title>
 				</UnstyledButton>
 				<Collapse in={open}>
 					<Stack gap="sm">
@@ -285,66 +292,74 @@ export const DiscoverableWorkspaces = ({
 										an admin you can add yourself to manage them.
 									</Trans>
 								</Text>
-								<Checkbox
-									size="xs"
-									checked={allSelected}
-									indeterminate={someSelected}
-									onChange={toggleAll}
-									label={<Trans>Select all</Trans>}
-								/>
+								{/* Only when there is more than one to select. Indented like the
+								    rows below, so every box sits in one column. */}
+								{joinRows.length > 1 && (
+									<Checkbox
+										size="xs"
+										pl="sm"
+										checked={allSelected}
+										indeterminate={someSelected}
+										onChange={toggleAll}
+										label={<Trans>Select all</Trans>}
+									/>
+								)}
 								<Paper withBorder>
 									{joinRows.map((ws, i) => (
-										<Group
+										// The row is the checkbox's own label: the box keeps to the
+										// name's line and the whole row can be pressed. On a phone the
+										// details go under the name as one line.
+										<Checkbox
 											key={ws.id}
-											gap="xs"
-											wrap="nowrap"
+											size="xs"
 											p="sm"
-											style={{
-												minWidth: 0,
-												...ruleBetween(i, joinRows.length),
+											checked={selected.has(ws.id)}
+											onChange={() => toggle(ws.id)}
+											style={ruleBetween(i, joinRows.length)}
+											styles={{
+												body: { alignItems: "flex-start" },
+												// Centred on the name's line (a small Text), not on the two
+												// lines of a phone row.
+												inner: {
+													marginTop:
+														"calc((var(--mantine-font-size-sm) * var(--mantine-line-height-sm) - 16px) / 2)",
+												},
+												labelWrapper: { flex: 1, minWidth: 0 },
 											}}
-										>
-											<Checkbox
-												size="xs"
-												checked={selected.has(ws.id)}
-												onChange={() => toggle(ws.id)}
-												aria-label={ws.name}
-											/>
-											{/* A lock beside "Everyone in your organisation" would say the opposite. */}
-											{ws.visibility !== "open_to_organisation" && (
-												<LockIcon
-													size={16}
-													color="var(--mantine-color-dimmed)"
-												/>
-											)}
-											{/* On a phone the details go under the name, so the name is never
-											    squeezed to a few letters beside them. */}
-											<Group
-												gap="xs"
-												wrap="wrap"
-												style={{ minWidth: 0, rowGap: 0 }}
-											>
-												<Text size="sm" lineClamp={1}>
-													{ws.name}
-												</Text>
-												<Text size="xs" c="dimmed">
-													{ws.visibility === "open_to_organisation" ? (
-														<Trans>Everyone in your organisation</Trans>
-													) : ws.visibility === "invite_only" ? (
-														<Trans>Invite only</Trans>
-													) : (
-														<Trans>Private</Trans>
-													)}
-												</Text>
-												<Text size="xs" c="dimmed">
-													<Plural
-														value={ws.member_count}
-														one="# member"
-														other="# members"
-													/>
-												</Text>
-											</Group>
-										</Group>
+											label={
+												<Group gap="xs" wrap="wrap" style={{ rowGap: 0 }}>
+													<Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
+														{/* A lock beside "Everyone in your organisation"
+														    would say the opposite. */}
+														{ws.visibility !== "open_to_organisation" && (
+															<LockIcon
+																size={16}
+																color="var(--mantine-color-dimmed)"
+																style={{ flexShrink: 0 }}
+															/>
+														)}
+														<Text size="sm" lineClamp={1}>
+															{ws.name}
+														</Text>
+													</Group>
+													<Text size="xs" c="dimmed">
+														{ws.visibility === "open_to_organisation" ? (
+															<Trans>Everyone in your organisation</Trans>
+														) : ws.visibility === "invite_only" ? (
+															<Trans>Invite only</Trans>
+														) : (
+															<Trans>Private</Trans>
+														)}
+														{" · "}
+														<Plural
+															value={ws.member_count}
+															one="# member"
+															other="# members"
+														/>
+													</Text>
+												</Group>
+											}
+										/>
 									))}
 								</Paper>
 								{selectedIds.length > 0 && (
