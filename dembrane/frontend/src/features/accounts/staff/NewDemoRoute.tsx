@@ -305,20 +305,30 @@ function NewDemo() {
 				{organisations.length > 0 && (
 					<Stack gap="md">
 						<Divider label={t`Where the demo goes`} labelPosition="left" />
+						{/* The sentence above the choice and the list under it, spaced as the
+						    ownership choice in CreateWorkspaceRoute is. */}
+						<Text size="sm" c="dimmed" data-testid="demo-destination-intro">
+							{subject ? (
+								<Trans>
+									In an organisation they already work in, the demo gets its own
+									workspace, {subject}.
+								</Trans>
+							) : (
+								<Trans>
+									In an organisation they already work in, the demo gets its own
+									workspace.
+								</Trans>
+							)}
+						</Text>
 						<Radio.Group
 							value={destination}
 							onChange={(value) =>
 								check.email && setPicked({ email: check.email, value })
 							}
-							description={
-								subject
-									? t`In one of their organisations, the demo gets its own workspace, ${subject}.`
-									: t`In one of their organisations, the demo gets its own workspace.`
-							}
 							error={fields.org_id}
 							data-testid="demo-destination"
 						>
-							<Stack gap="md">
+							<Stack gap="md" mt="sm">
 								{organisations.map((o) => (
 									<Radio
 										key={o.id}
@@ -485,6 +495,7 @@ function Repeats({ check }: { check: DemoCheckT }) {
 							<Anchor
 								component={I18nLink}
 								to={`/admin/accounts/demos/${d.id}`}
+								className="whitespace-nowrap"
 								inherit
 							>
 								<Trans>Open it</Trans>
@@ -495,7 +506,12 @@ function Repeats({ check }: { check: DemoCheckT }) {
 				{check.organisations_named.map(({ id, name }) => (
 					<Text key={id} size="sm">
 						<Trans>An organisation named {name} already exists.</Trans>{" "}
-						<Anchor component={I18nLink} to={`/admin/accounts/${id}`} inherit>
+						<Anchor
+							component={I18nLink}
+							to={`/admin/accounts/${id}`}
+							className="whitespace-nowrap"
+							inherit
+						>
 							<Trans>Open the account</Trans>
 						</Anchor>
 					</Text>

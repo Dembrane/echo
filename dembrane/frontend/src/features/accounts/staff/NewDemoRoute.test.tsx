@@ -31,6 +31,15 @@ vi.mock("../api/client", async (importOriginal) => ({
 				return fx.demoCheckCustomer;
 			if (body.contact_email === "jules@example-water.example")
 				return fx.demoCheckTwoOrganisations;
+			if (body.contact_email === "sam@example-solo.example")
+				return {
+					...fx.demoCheckNewContact,
+					contact: {
+						has_account: true,
+						name: "Sam Example",
+						organisations: [],
+					},
+				};
 			return fx.demoCheckNewContact;
 		}
 		if (name === "createDemo") return { ...fx.demoRunning };
@@ -119,8 +128,8 @@ it("offers a known contact's organisation, chosen, and sends it with no offer", 
 	expect(existing?.checked).toBe(true);
 	expect(fresh?.checked).toBe(false);
 	expect(choice.textContent).toContain("Example Town Council (sample)");
-	expect(choice.textContent).toContain(
-		"In one of their organisations, the demo gets its own workspace, Example Youth Council (sample).",
+	expect(screen.getByTestId("demo-destination-intro").textContent).toBe(
+		"In an organisation they already work in, the demo gets its own workspace, Example Youth Council (sample).",
 	);
 	expect(choice.textContent).toContain("A new organisation");
 	// The address goes in the body, never the URL; the name goes with it.
@@ -177,6 +186,21 @@ it("says an unknown contact is new to dembrane, with nothing to choose", async (
 	).toBeTruthy();
 	expect(screen.queryByTestId("demo-destination")).toBeNull();
 	expect(screen.getByTestId("demo-with-offer")).toBeTruthy();
+});
+
+it("says a contact with an account but no organisation gets a new one, with nothing to choose", async () => {
+	open();
+	fillForm("sam@example-solo.example");
+	expect(
+		await screen.findByText(
+			"They have an account but no organisation yet. The demo gets a new organisation.",
+			{},
+			LATER,
+		),
+	).toBeTruthy();
+	expect(screen.queryByTestId("demo-destination")).toBeNull();
+	expect(screen.getByTestId("demo-with-offer")).toBeTruthy();
+	expect(screen.getByText("Let them sign in with an email code")).toBeTruthy();
 });
 
 it("asks nothing while the address is half typed", async () => {

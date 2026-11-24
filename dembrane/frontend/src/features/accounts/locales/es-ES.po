@@ -224,7 +224,7 @@ msgstr "{reach, plural, one {{first} también será miembro de # espacio de trab
 #~ msgid "{reach, plural, one {Once {first} joins, they are also in # workspace that every member joins.} other {Once {first} joins, they are also in # workspaces that every member joins.}}"
 #~ msgstr "{reach, plural, one {Cuando {first} se una, también estará en # espacio de trabajo en el que está cada miembro.} other {Cuando {first} se una, también estará en # espacios de trabajo en los que está cada miembro.}}"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:440
+#: src/features/accounts/staff/NewDemoRoute.tsx:450
 msgid "{subject} becomes a prospect in Accounts, with {email} as its admin."
 msgstr "{subject} pasa a ser un cliente potencial en Cuentas, con {email} como administrador."
 
@@ -264,7 +264,7 @@ msgstr "2 preguntas"
 msgid "8 digits"
 msgstr "8 dígitos"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:360
+#: src/features/accounts/staff/NewDemoRoute.tsx:370
 msgid "A draft on their account, for you to send after the demo."
 msgstr "Un borrador en su cuenta, para que lo envíes después de la demo."
 
@@ -276,7 +276,7 @@ msgstr "Un archivo"
 msgid "A KvK number has 8 digits."
 msgstr "Un número KvK tiene 8 dígitos."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:339
+#: src/features/accounts/staff/NewDemoRoute.tsx:349
 msgid "A new organisation"
 msgstr "Una organización nueva"
 
@@ -456,7 +456,7 @@ msgstr "Todas las etapas"
 msgid "Amount"
 msgstr "Importe"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:497
+#: src/features/accounts/staff/NewDemoRoute.tsx:508
 msgid "An organisation named {name} already exists."
 msgstr "Ya existe una organización llamada {name}."
 
@@ -610,7 +610,7 @@ msgstr "Briefing"
 #~ msgid "Bring in someone who would run a session with you."
 #~ msgstr "Suma a alguien que dirigiría una sesión contigo."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:422
+#: src/features/accounts/staff/NewDemoRoute.tsx:432
 msgid "Build the demo"
 msgstr "Crear la demo"
 
@@ -1265,7 +1265,7 @@ msgid "Enter the six-digit code we sent to {email}."
 msgstr "Introduce el código de seis dígitos que enviamos a {email}."
 
 #: src/features/accounts/staff/PushOfferModal.tsx:345
-#: src/features/accounts/staff/NewDemoRoute.tsx:376
+#: src/features/accounts/staff/NewDemoRoute.tsx:386
 msgid "Event"
 msgstr "Evento"
 
@@ -1528,17 +1528,17 @@ msgstr "Si tu equipo financiero utiliza uno"
 msgid "In {link}, as the workspace {workspace}."
 msgstr "En {link}, como el espacio de trabajo {workspace}."
 
+#: src/features/accounts/staff/NewDemoRoute.tsx:312
+msgid "In an organisation they already work in, the demo gets its own workspace, {subject}."
+msgstr "En una organización en la que ya trabajan, la demo tiene su propio espacio de trabajo: {subject}."
+
+#: src/features/accounts/staff/NewDemoRoute.tsx:317
+msgid "In an organisation they already work in, the demo gets its own workspace."
+msgstr "En una organización en la que ya trabajan, la demo tiene su propio espacio de trabajo."
+
 #: src/features/accounts/staff/InvoicePlanFields.tsx:131
 msgid "In instalments"
 msgstr "A plazos"
-
-#: src/features/accounts/staff/NewDemoRoute.tsx:315
-msgid "In one of their organisations, the demo gets its own workspace, {subject}."
-msgstr "En una de sus organizaciones, la demo tiene su propio espacio de trabajo: {subject}."
-
-#: src/features/accounts/staff/NewDemoRoute.tsx:316
-msgid "In one of their organisations, the demo gets its own workspace."
-msgstr "En una de sus organizaciones, la demo tiene su propio espacio de trabajo."
 
 #: src/features/accounts/format.ts:107
 msgid "In progress (call booked)"
@@ -1701,7 +1701,7 @@ msgstr "Implicados en la compra"
 msgid "Is that right?"
 msgstr "¿Es correcto?"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:444
+#: src/features/accounts/staff/NewDemoRoute.tsx:454
 msgid "It becomes a prospect in Accounts, with {email} as its admin."
 msgstr "Pasa a ser un cliente potencial en Cuentas, con {email} como administrador."
 
@@ -2103,7 +2103,7 @@ msgid "Number of months"
 msgstr "Número de meses"
 
 #: src/features/accounts/format.ts:45
-#: src/features/accounts/staff/NewDemoRoute.tsx:355
+#: src/features/accounts/staff/NewDemoRoute.tsx:365
 msgid "Offer"
 msgstr "Oferta"
 
@@ -2116,7 +2116,7 @@ msgstr "Oferta aceptada"
 msgid "Offer drafted"
 msgstr "Oferta en borrador"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:382
+#: src/features/accounts/staff/NewDemoRoute.tsx:392
 msgid "Offer language"
 msgstr "Idioma de la oferta"
 
@@ -2207,7 +2207,7 @@ msgstr "Abrir justificante"
 msgid "Open in your mail app"
 msgstr "Abrir en tu aplicación de correo"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:490
+#: src/features/accounts/staff/NewDemoRoute.tsx:501
 msgid "Open it"
 msgstr "Abrirla"
 
@@ -2224,7 +2224,7 @@ msgstr "Abrir PDF firmado"
 #~ msgid "Open tasks"
 #~ msgstr "Tareas pendientes"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:499
+#: src/features/accounts/staff/NewDemoRoute.tsx:515
 msgid "Open the account"
 msgstr "Abrir la cuenta"
 
@@ -2495,7 +2495,7 @@ msgstr "Número de pedido, de orden o de proyecto"
 msgid "Postal code"
 msgstr "Código postal"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:359
+#: src/features/accounts/staff/NewDemoRoute.tsx:369
 msgid "Prepare an offer"
 msgstr "Preparar una oferta"
 
@@ -3263,7 +3263,7 @@ msgid "Submitted"
 msgstr "Enviado"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:344
-#: src/features/accounts/staff/NewDemoRoute.tsx:375
+#: src/features/accounts/staff/NewDemoRoute.tsx:385
 msgid "Subscription"
 msgstr "Suscripción"
 
@@ -3348,7 +3348,7 @@ msgid "Tell us who signs yearly license offer {number}"
 msgstr "Dinos quién firma la oferta de licencia anual {number}"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:338
-#: src/features/accounts/staff/NewDemoRoute.tsx:369
+#: src/features/accounts/staff/NewDemoRoute.tsx:379
 msgid "Template"
 msgstr "Plantilla"
 
@@ -3550,11 +3550,11 @@ msgstr "Su referencia {0}"
 msgid "their second signatory"
 msgstr "su segundo firmante"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:481
+#: src/features/accounts/staff/NewDemoRoute.tsx:491
 msgid "There is already a demo about {name}, for {email}."
 msgstr "Ya hay una demo sobre {name}, para {email}."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:477
+#: src/features/accounts/staff/NewDemoRoute.tsx:487
 msgid "There is already a demo for {email}: {name}."
 msgstr "Ya hay una demo para {email}: {name}."
 
