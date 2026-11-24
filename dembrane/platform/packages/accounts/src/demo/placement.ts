@@ -39,3 +39,15 @@ export const PLACEMENT_PROBLEM: Record<PlacementProblem, string> = {
   not_member:
     "The contact is no longer a member of the organisation chosen for this demo. Add them back and retry, or start the demo again for another organisation.",
 };
+
+/** What publishing with the email on says when the same check fails then; nothing is published. */
+export const PUBLISH_PROBLEM: Record<PlacementProblem, string> = {
+  organisation_missing:
+    "The organisation chosen for this demo no longer exists, so the demo was not published. Publish with the email off, or start the demo again for another organisation.",
+  organisation_deleted:
+    "The organisation chosen for this demo was deleted after the demo was built, so the demo was not published. Restore it and publish again, or publish with the email off.",
+  no_account:
+    "The contact no longer has a dembrane account, so the demo was not published. Publish with the email off, or start the demo again with a new organisation for them.",
+  not_member:
+    "The contact is no longer a member of the organisation chosen for this demo, so the demo was not published. Add them back and publish again, or publish with the email off.",
+};

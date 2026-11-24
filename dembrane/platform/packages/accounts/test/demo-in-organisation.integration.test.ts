@@ -385,6 +385,90 @@ run("a demo placed in an organisation the contact already works in", () => {
     });
   });
 
+  describe("publishing with the email on checks the organisation and the contact again", () => {
+    /** The workspace still held for the demo, so nothing of it showed. */
+    const heldFor = async (workspaceId: string) => {
+      const [ws] = await w.db
+        .select({ settings: schema.workspace.settings, visibility: schema.workspace.visibility })
+        .from(schema.workspace)
+        .where(eq(schema.workspace.id, workspaceId));
+      return [(ws?.settings as Record<string, unknown> | null)?.held_for_demo, ws?.visibility];
+    };
+    const refusedReadably = async (id: string, match: RegExp) => {
+      const r = await publish(id, true);
+      expect(r.status).toBe(409);
+      const detail = (r.data as { detail?: unknown }).detail;
+      expect(typeof detail).toBe("string");
+      expect(String(detail)).toMatch(match);
+      expect(String(detail)).not.toMatch(/^[a-z_]+\.[a-z_.]+$/);
+    };
+    const nothingChanged = async (id: string, workspaceId: string, contact: Person) => {
+      const view = await statusOf(id);
+      expect([view.status, view.invited_at, view.links.public[0]?.live]).toEqual([
+        "draft",
+        null,
+        false,
+      ]);
+      expect(await placesIn(w, workspaceId, contact)).toEqual([]);
+      expect(await heldFor(workspaceId)).toEqual([id, "private"]);
+      expect(emailsQueued(w)).toEqual([]);
+    };
+
+    test("a contact removed from the organisation since the build is refused readably: nothing is written and no email is queued", async () => {
+      const { org, contact } = await organisation("member");
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      const where = await placedIn(view, org.id);
+      await setRemovedFromOrganisation(w, org.id, contact, true);
+      w.jobs.jobs.length = 0;
+      await refusedReadably(view.id, /member/i);
+      await nothingChanged(view.id, where.workspace_id as string, contact);
+    });
+
+    test("an organisation deleted since the build is refused readably: nothing is written and no email is queued", async () => {
+      const { org, contact } = await organisation("member");
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      const where = await placedIn(view, org.id);
+      await setOrganisationDeleted(w, org.id, true);
+      w.jobs.jobs.length = 0;
+      await refusedReadably(view.id, /delet/i);
+      await nothingChanged(view.id, where.workspace_id as string, contact);
+      await setOrganisationDeleted(w, org.id, false);
+    });
+
+    test("publishing with the email off stays allowed: the link goes live and the workspace stays held", async () => {
+      const { org, contact } = await organisation("member");
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      const where = await placedIn(view, org.id);
+      await setRemovedFromOrganisation(w, org.id, contact, true);
+      w.jobs.jobs.length = 0;
+      const r = await publish(view.id, false);
+      expect(r.status).toBe(200);
+      expect(K.DemoStatus.parse(r.data).links.public[0]?.live).toBe(true);
+      expect(await heldFor(where.workspace_id as string)).toEqual([view.id, "private"]);
+      expect(emailsQueued(w)).toEqual([]);
+    });
+
+    test("email off, unpublish, email on: the hand-over and the one email happen on the last step", async () => {
+      const { org, contact } = await organisation("member");
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      const where = await placedIn(view, org.id);
+      const workspaceId = where.workspace_id as string;
+      w.jobs.jobs.length = 0;
+      expect((await publish(view.id, false)).status).toBe(200);
+      expect(await placesIn(w, workspaceId, contact)).toEqual([]);
+      expect(await heldFor(workspaceId)).toEqual([view.id, "private"]);
+      expect((await unpublish(view.id)).status).toBe(200);
+      expect(await placesIn(w, workspaceId, contact)).toEqual([]);
+      expect(emailsQueued(w)).toEqual([]);
+      const r = await publish(view.id, true);
+      expect(r.status).toBe(200);
+      expect(K.DemoStatus.parse(r.data).invited_at).not.toBeNull();
+      expect(await placesIn(w, workspaceId, contact)).toEqual([ADMIN_PLACE]);
+      expect(await heldFor(workspaceId)).toEqual([undefined, "open_to_organisation"]);
+      expect(emailsQueued(w).map((e) => e.template)).toEqual(["account_demo_ready"]);
+    });
+  });
+
   test("the build's popcorn read reaches the hidden project as its owner, the contact, before publish", async () => {
     // A plain member: the organisation role alone opens no hidden workspace.
     const { org, contact } = await organisation("member");

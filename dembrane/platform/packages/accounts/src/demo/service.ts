@@ -29,7 +29,7 @@ import {
   type Steps,
 } from "./build";
 import { demoBuild, demoWorkflowId } from "./job";
-import { placement } from "./placement";
+import { PUBLISH_PROBLEM, placement } from "./placement";
 
 type Row = typeof schema.account_demo.$inferSelect;
 
@@ -257,6 +257,18 @@ export async function publishDemo(
   if (invite) assertPersonSends(who);
   const now = d.now();
   await d.db.transaction(async (tx) => {
+    // The organisation or the contact may have changed since the build: a hand-over then
+    // would put a workspace in a deleted organisation, or give it to someone who left.
+    if (placed && signIn && row.orgId) {
+      const still = await placement(tx, row.orgId, input.contact_email);
+      if (!still.ok)
+        throw new ConflictError(
+          still.problem === "organisation_missing" || still.problem === "organisation_deleted"
+            ? "demo.organisation_deleted"
+            : "member.not_found",
+          { message: PUBLISH_PROBLEM[still.problem] },
+        );
+    }
     for (const p of seed.projects) {
       await setDeckPublic(tx, p.config_id, true);
       if (signIn) {
