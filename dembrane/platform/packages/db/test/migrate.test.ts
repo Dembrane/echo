@@ -76,13 +76,24 @@ run("migrate", () => {
   // migrated one first.
   test("the provider constraints are added not validated, and still refuse a bad value", async () => {
     const url = `${base}/mig_constraints`;
-    await migrate(url, { appEnv: "test" });
-    const db = postgres(url, { max: 1, onnotice: () => {} });
+    // Each step names itself if it stalls, so a slow server is told apart from a slow query.
+    const within = <T>(step: string, work: Promise<T>) =>
+      Promise.race([
+        work,
+        Bun.sleep(15_000).then(() => {
+          throw new Error(`${step} did not answer in 15 s`);
+        }),
+      ]);
+    await within("the migration", migrate(url, { appEnv: "test" }));
+    const db = postgres(url, { max: 1, onnotice: () => {}, connect_timeout: 10 });
     try {
-      const rows = await db<{ conname: string; convalidated: boolean }[]>`
-        select conname, convalidated from pg_constraint
-        where conname in ('org_ai_providers_check', 'org_ai_default_provider_check',
-          'project_ai_provider_check', 'conversation_ai_provider_check')`;
+      const rows = await within(
+        "the constraint listing",
+        db<{ conname: string; convalidated: boolean }[]>`
+          select conname, convalidated from pg_constraint
+          where conname in ('org_ai_providers_check', 'org_ai_default_provider_check',
+            'project_ai_provider_check', 'conversation_ai_provider_check')`,
+      );
       expect(rows.map((r) => r.conname).sort()).toEqual([
         "conversation_ai_provider_check",
         "org_ai_default_provider_check",
@@ -91,11 +102,16 @@ run("migrate", () => {
       ]);
       // Validating scans the table while the release's locks are held: a later migration does it.
       expect(rows.every((r) => !r.convalidated)).toBe(true);
-      await expect(
-        db`insert into org (id, name, ai_default_provider) values (gen_random_uuid(), 'x', 'nowhere')`,
-      ).rejects.toThrow(/org_ai_default_provider_check/);
+      const bad = await within(
+        "the insert of a bad value",
+        db`insert into org (id, name, ai_default_provider) values (gen_random_uuid(), 'x', 'nowhere')`.then(
+          () => null,
+          (e: unknown) => e as Error,
+        ),
+      );
+      expect(bad?.message).toMatch(/org_ai_default_provider_check/);
     } finally {
-      await db.end();
+      await db.end({ timeout: 5 });
     }
   }, 30_000);
 
