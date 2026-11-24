@@ -97,6 +97,7 @@ run("a staff demo where the deployment is production", () => {
   let deps: AccountsDeps;
   let build: DemoBuildDeps;
   let access: Access;
+  let billing: ReturnType<typeof createBilling>;
   const mailer = new MemoryMailer();
   const people = {} as Record<"staff" | "customer", Person>;
   const customer = { org: newId(), workspace: newId(), project: newId(), billing: newId() };
@@ -315,18 +316,19 @@ run("a staff demo where the deployment is production", () => {
     );
     app.route("/", projectRoutes({ db, access, queue: { enqueue: async () => null } }));
     const dashboardUrl = deps.settings.dashboardUrl;
+    billing = createBilling({
+      db,
+      mollie: new FakeMollie(),
+      mailer,
+      logger,
+      billingConfig: { webhookUrl: null, forceReconcileFailure: false, dashboardUrl },
+    });
     app.route(
       "/",
       staffRoutes({
         db,
         staffAudit: deps.staffAudit,
-        billing: createBilling({
-          db,
-          mollie: new FakeMollie(),
-          mailer,
-          logger,
-          billingConfig: { webhookUrl: null, forceReconcileFailure: false, dashboardUrl },
-        }),
+        billing,
         mailer,
         logger,
         config: { http: { dashboardUrl } },
@@ -1147,6 +1149,127 @@ run("a staff demo where the deployment is production", () => {
         body: JSON.stringify({ name: "Pond Lane two", org_id: pond.org }),
       });
       expect(second.status).toBe(402);
+    });
+
+    test("a demo handed over takes no seat: a contact with no other place adds none and reconcile changes nothing; one with a seat counts once", async () => {
+      const elm = { org: newId(), billing: newId(), workspace: newId() };
+      const nowIso = new Date().toISOString();
+      const elmPeople = {} as Record<"owner" | "fresh" | "seated", Person>;
+      for (const key of ["owner", "fresh", "seated"] as const) {
+        const email = `${key}@elm.example`;
+        const u = await db.transaction((tx) =>
+          ensureUser(tx, { email, name: key, passwordHash: null, nowIso }),
+        );
+        elmPeople[key] = {
+          appUserId: u.appUserId,
+          directusUserId: u.userId,
+          isStaff: false,
+          email,
+        };
+        byId.set(u.userId, elmPeople[key]);
+      }
+      await db
+        .insert(schema.org)
+        .values({ id: elm.org, name: "Elm Street", account_stage: "customer" });
+      // A paid account billed offline: reconcile records the seat count it finds.
+      await db.insert(schema.billing_account).values({
+        id: elm.billing,
+        org_id: elm.org,
+        tier: "innovator",
+        status: "active",
+        payment_mode: "offline",
+        provisioned_seats: 2,
+      });
+      await db.insert(schema.workspace).values({
+        id: elm.workspace,
+        org_id: elm.org,
+        name: "Elm Street",
+        billing_account_id: elm.billing,
+        visibility: "open_to_organisation",
+      });
+      for (const [key, role] of [
+        ["owner", "owner"],
+        ["fresh", "member"],
+        ["seated", "member"],
+      ] as const)
+        await db.insert(schema.org_membership).values({
+          id: newId(),
+          org_id: elm.org,
+          user_id: elmPeople[key].appUserId as string,
+          role,
+        });
+      for (const key of ["owner", "seated"] as const)
+        await db.insert(schema.workspace_membership).values({
+          id: newId(),
+          workspace_id: elm.workspace,
+          user_id: elmPeople[key].appUserId as string,
+          role: key === "owner" ? "admin" : "member",
+          source: "direct",
+        });
+      const seats = () => billing.service.countAccountSeats(elm.billing);
+      const provisioned = async () =>
+        (
+          await db
+            .select({ n: schema.billing_account.provisioned_seats })
+            .from(schema.billing_account)
+            .where(eq(schema.billing_account.id, elm.billing))
+        )[0]?.n;
+      /** Starts, builds and publishes with the email on a demo for `who`; answers its workspace. */
+      const handOver = async (who: Person) => {
+        const res = await app.request("/api/v2/admin/accounts/demos", {
+          method: "POST",
+          headers: as(people.staff),
+          body: JSON.stringify({
+            organisation_name: `Elm demo for ${who.email}`,
+            website_url: SITE,
+            brief: "Participation for the street.",
+            language: "en",
+            contact_name: who.email,
+            contact_email: who.email,
+            org_id: elm.org,
+            sign_in: true,
+          }),
+        });
+        expect(res.status).toBe(201);
+        const started = K.DemoStatus.parse(await res.json());
+        await buildDemo(build, started.id, 1);
+        const published = await app.request(`/api/v2/admin/accounts/demos/${started.id}/publish`, {
+          method: "POST",
+          headers: as(people.staff),
+          body: JSON.stringify({ sign_in: true }),
+        });
+        expect(published.status).toBe(200);
+        const [row] = await db
+          .select({ seed: schema.account_demo.seed })
+          .from(schema.account_demo)
+          .where(eq(schema.account_demo.id, started.id));
+        const workspaceId = (row?.seed as { workspace_id: string }).workspace_id;
+        const [place] = await db
+          .select({ role: schema.workspace_membership.role })
+          .from(schema.workspace_membership)
+          .where(
+            and(
+              eq(schema.workspace_membership.workspace_id, workspaceId),
+              eq(schema.workspace_membership.user_id, who.appUserId as string),
+            ),
+          );
+        // Handed over: the contact is its admin, which would take a seat anywhere else.
+        expect(place?.role).toBe("admin");
+        return workspaceId;
+      };
+
+      expect(await seats()).toBe(2);
+      await handOver(elmPeople.fresh);
+      expect(await seats()).toBe(2);
+      await billing.service.reconcileAccountSeats(elm.billing);
+      expect(await provisioned()).toBe(2);
+      // Someone who holds a seat elsewhere on the account still counts once.
+      await handOver(elmPeople.seated);
+      expect(await seats()).toBe(2);
+      const emails = await billing.service.accountActiveSeatEmails(elm.billing);
+      expect([...emails].sort()).toEqual(["owner@elm.example", "seated@elm.example"]);
+      await billing.service.reconcileAccountSeats(elm.billing);
+      expect(await provisioned()).toBe(2);
     });
 
     test("the check answers staff with what they need, refuses everyone else, and reads the email from the body only", async () => {

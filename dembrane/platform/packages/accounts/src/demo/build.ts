@@ -1,4 +1,4 @@
-import { HELD_FOR_DEMO } from "@dembrane/access";
+import { HELD_FOR_DEMO, MADE_FOR_DEMO } from "@dembrane/access";
 import { newId, ValidationError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
@@ -496,7 +496,8 @@ async function defaultManager(
  * Without a staff demo workspace, the demo lives in a workspace of the organisation: the
  * prospect's "dembrane demo", open to it. `held`: a workspace in an organisation people
  * already work in, named after the demo and held back from them (private, and marked with
- * HELD_FOR_DEMO for this demo) until publishing hands it over. Inserted directly with the
+ * HELD_FOR_DEMO for this demo) until publishing hands it over, and marked for good with
+ * MADE_FOR_DEMO, so it takes no seats. Inserted directly with the
  * organisation's billing account, outside the free tier's workspace limit, as the
  * prospect's is. An organisation people work in may have no pooled billing account yet
  * (each of its workspaces billed on its own); it gets the one a workspace made there would
@@ -533,7 +534,7 @@ async function demoWorkspace(
       name: held?.name ?? "dembrane demo",
       billing_account_id: billing,
       visibility: held ? "private" : "open_to_organisation",
-      ...(held && { settings: { [HELD_FOR_DEMO]: held.heldFor } }),
+      ...(held && { settings: { [HELD_FOR_DEMO]: held.heldFor, [MADE_FOR_DEMO]: held.heldFor } }),
     })
     .onConflictDoNothing();
   return id;

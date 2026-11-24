@@ -1,3 +1,4 @@
+import { madeForDemo } from "@dembrane/access";
 import { withoutTrailingSlashes } from "@dembrane/core";
 import { directusTime, parseTime, pyRound } from "@dembrane/legacy-shape";
 import type { Mailer } from "@dembrane/mail";
@@ -151,10 +152,13 @@ export class BillingService {
 
   // ── Seats ────────────────────────────────────────────────────────────
 
-  /** Distinct direct seat holders of one live workspace. */
+  /**
+   * Distinct direct seat holders of one live workspace. A workspace dembrane made for a demo
+   * (@dembrane/access madeForDemo) has none: its people take a seat only where they work.
+   */
   async workspaceSeatUserIds(workspaceId: string): Promise<Set<string>> {
     const ws = await this.store.workspace(workspaceId);
-    if (!ws || ws.deleted_at) return new Set();
+    if (!ws || ws.deleted_at || madeForDemo(ws.settings)) return new Set();
     const ids = new Set<string>();
     for (const r of await this.store.directMemberships(workspaceId))
       if (r.user_id && r.source !== "staff_support" && SEAT_ROLES.has(r.role ?? ""))

@@ -175,6 +175,23 @@ export function heldForDemo(settings: unknown): string | null {
   return typeof value === "string" && value !== "" ? value : null;
 }
 
+/**
+ * The key in workspace.settings that says a workspace was made by dembrane for a demo staff
+ * placed in an organisation its contact already works in. The value is the demo's id. The
+ * demo build sets it with HELD_FOR_DEMO; unlike that one, the hand-over never clears it.
+ *
+ * Billing reads it: a demo workspace takes no seats, so handing one over adds no seat for
+ * its contact (someone with a seat elsewhere on the account keeps that one seat). A
+ * commercial rule, not an access rule: access, lists and counts do not read it.
+ */
+export const MADE_FOR_DEMO = "made_for_demo";
+
+/** The demo a workspace was made for, or null for every other workspace. */
+export function madeForDemo(settings: unknown): string | null {
+  const value = (settings as Record<string, unknown> | null)?.[MADE_FOR_DEMO];
+  return typeof value === "string" && value !== "" ? value : null;
+}
+
 const heldKey = sql.raw(`'${HELD_FOR_DEMO}'`);
 /**
  * heldForDemo in SQL, negated: true for a workspace its organisation's people may see. Like

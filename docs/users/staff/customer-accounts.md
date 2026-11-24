@@ -99,6 +99,8 @@ picks the first of their own organisations.
   link to the demo."
 - With it off, publishing only makes the public link live. The workspace stays hidden and the
   contact gets nothing; share the link yourself.
+- The demo's workspace takes no seats, before or after publishing: the contact adds none to the
+  organisation's bill, and someone who already has a seat there keeps that one seat.
 - If the contact has left the organisation, or the organisation was deleted, before the build
   reached "Seeding", that step fails and says why. Fix it and select "Retry", or start a new demo.
 
