@@ -7,8 +7,7 @@ import { directusRow, pythonIso } from "@dembrane/legacy-shape";
 import { projectsStorage, sameMoveContext } from "@dembrane/projects";
 import { conversationForBff } from "../access";
 import type { ConversationsDeps } from "../deps";
-import { improvesOf } from "../speech";
-import { type Row, UPLOAD_SOURCE } from "../storage";
+import type { Row } from "../storage";
 import { NO_TRANSCRIPT_SUMMARY } from "../v1/summary";
 import { conversationLock, enrich, overCapActive, scrubChunk } from "./lock";
 import {
@@ -407,20 +406,9 @@ export async function finalTranscript(d: AudioDeps, who: Signed, conversationId:
   );
   const record = await store.recordTranscript(conversationId);
   if (!record) {
-    // Is a final transcript on its way? The profile improves this kind of conversation, it has
-    // audio, and it is not so old that the job has long since given up (a conversation it
-    // failed on must not say "draft" forever).
-    const fresh =
-      !a.conversation.is_finished ||
-      d.now().getTime() - new Date(a.conversation.created_at ?? 0).getTime() < 24 * 3600_000;
-    // The provider the conversation is on decides whether anything improves it afterwards.
-    const improves =
-      (d.speech ? await improvesOf(d.speech, conversationId) : null) ?? d.settings.improves;
-    const expected =
-      Boolean(a.conversation.source === UPLOAD_SOURCE ? improves?.uploads : improves?.recordings) &&
-      fresh &&
-      (await store.hasAudio(conversationId)) &&
-      !(await store.finalGaveUp(conversationId));
+    // On its way only while a final pass is queued or running for this conversation: one
+    // that finished without a pass (it ended on a provider that improves nothing) never gets one.
+    const expected = await store.finalQueued(conversationId);
     return { available: false as const, expected };
   }
   if (locked) return { available: true as const, locked: true as const };
