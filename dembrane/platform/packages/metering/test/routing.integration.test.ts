@@ -381,6 +381,26 @@ run("the routing policy against the database", () => {
       expect(await checkAt("2026-11-02T04:00:00Z", [])).toEqual({ leaks: 1 });
     });
 
+    test("the first run, with no place saved, reads the last 24 hours and not the whole log", async () => {
+      await reset();
+      const a = await setup({});
+      // A row from before the policy recorded anything: no destination, three days old.
+      await sql`insert into model_call (started_at, service, model_group, model, kind, status, attempt, ms, provider, organisation_id, project_id)
+        values ('2026-11-01T10:00:00Z', 'echo-worker', 'text_fast', 'gemini', 'generate', 'ok', 1, 1, 'vertex', ${a.orgId}, ${a.projectId})`;
+      const alerts: string[] = [];
+      expect(await checkAt("2026-11-04T04:00:00Z", alerts)).toEqual({ leaks: 0 });
+      expect(alerts).toEqual([]);
+      // The window is not empty: a real leak of the last day is still found on a first run.
+      await sql`delete from ai_provider_check`;
+      await vertexCall(a, "2026-11-04T02:00:00Z", "scaleway");
+      expect(await checkAt("2026-11-04T04:00:00Z", alerts)).toEqual({ leaks: 1 });
+      expect(alerts[0]).toContain("since 2026-11-03T04:00:00.000Z");
+      const [mark] = await sql<
+        { checked_through: Date }[]
+      >`select checked_through from ai_provider_check`;
+      expect(mark?.checked_through.toISOString()).toBe("2026-11-04T04:00:00.000Z");
+    });
+
     test("a missed day is still covered: the next run reads from where the last stopped", async () => {
       await reset();
       const a = await setup({});

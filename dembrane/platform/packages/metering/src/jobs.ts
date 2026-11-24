@@ -121,7 +121,8 @@ const CHECK_LAG_MS = 15 * 60_000;
  * elsewhere count.
  *
  * It reads from where the last run stopped, so a day the job did not run is covered by the
- * next one; the place is saved only after the alert went out.
+ * next one; the first run, which has no place saved, reads the last 24 hours. The place is
+ * saved only after the alert went out.
  */
 export async function runProviderCheck(d: {
   db: Db;
@@ -137,7 +138,11 @@ export async function runProviderCheck(d: {
   const [mark] = await d.db.execute<{ checked_through: Date }>(
     sql`select checked_through from ai_provider_check where name = ${CHECK_NAME}`,
   );
-  const since = mark ? new Date(mark.checked_through).toISOString() : "-infinity";
+  // With no place saved the check reads the last day only: rows written before the policy
+  // recorded its destination have none, and counting the whole log would call them leaks.
+  const since = new Date(
+    mark ? new Date(mark.checked_through).getTime() : now.getTime() - DAY_MS,
+  ).toISOString();
   const optInNeeded = d.defaultProvider !== "google";
   const defaultIsGoogle = d.defaultProvider === "google";
   const [row] = await d.db.execute<{ leaks: number; organisations: string[] | null }>(sql`
@@ -191,7 +196,7 @@ export async function runProviderCheck(d: {
     const who = (row?.organisations ?? []).slice(0, 5).join(", ");
     await postCostAlert(
       d.alerts,
-      `AI provider check: ${leaks} model call${leaks === 1 ? "" : "s"} since ${since === "-infinity" ? "the start of the log" : since} went to Google (Vertex) for a project the routing did not send there, or that its account's history did not allow Google at that moment. Organisations: ${who || "none recorded"}. Query: select * from model_call where provider = 'vertex' and started_at >= '${since === "-infinity" ? "1970-01-01" : since}' and routed_provider is distinct from 'google'.`,
+      `AI provider check: ${leaks} model call${leaks === 1 ? "" : "s"} since ${since} went to Google (Vertex) for a project the routing did not send there, or that its account's history did not allow Google at that moment. Organisations: ${who || "none recorded"}. Query: select * from model_call where provider = 'vertex' and started_at >= '${since}' and routed_provider is distinct from 'google'.`,
       d.logger,
       now,
     );
