@@ -126,9 +126,17 @@ export const model_call = pgTable(
     routing_reason: text("routing_reason"),
     /** What the organisation allowed when the call was made; null when it was not read. */
     routing_allowed: text("routing_allowed").array(),
+    /** The conversation the call belongs to, when it did; the daily provider check reads its recorded provider. */
+    routing_conversation_id: uuid("routing_conversation_id"),
   },
   (t) => [index("model_call_started_at_idx").on(t.started_at)],
 );
+
+/** How far a daily check has read the model_call log: the next run starts here, so a day it missed is still covered. */
+export const ai_provider_check = pgTable("ai_provider_check", {
+  name: text("name").primaryKey(),
+  checked_through: timestamp("checked_through", { withTimezone: true }).notNull(),
+});
 
 /** Unit prices per model; a new row starts when any price changes, old rows stay for history. */
 export const ai_price = pgTable(

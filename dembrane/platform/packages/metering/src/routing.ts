@@ -29,6 +29,8 @@ export interface RoutingFacts {
   readonly projectProvider: string | null;
   /** conversation.ai_provider when the call belongs to a conversation; undefined when it does not. */
   readonly conversationProvider?: string | null | undefined;
+  /** The conversation the payer is or belongs to; undefined when the payer is not one. */
+  readonly conversationId?: string | undefined;
 }
 
 /** Reads the facts; null for a payer that leads to no live project or workspace. */
@@ -66,24 +68,30 @@ export function dbRoutingStore(db: Db): RoutingStore {
   };
   const conversationOf = async (who: { ref: PayerRefKind; id: string }) => {
     const id = who.id.toLowerCase();
+    type Row = { id: string; project_id: string; ai_provider: string | null };
     if (who.ref === "conversation") {
-      const rows = await db.execute<{ project_id: string; ai_provider: string | null }>(
-        sql`select project_id::text as project_id, ai_provider from conversation where id = ${id}::uuid`,
+      const rows = await db.execute<Row>(
+        sql`select id::text as id, project_id::text as project_id, ai_provider from conversation where id = ${id}::uuid`,
       );
       return rows[0] ?? null;
     }
-    const rows = await db.execute<{ project_id: string; ai_provider: string | null }>(sql`
-      select c.project_id::text as project_id, c.ai_provider
+    const rows = await db.execute<Row>(sql`
+      select c.id::text as id, c.project_id::text as project_id, c.ai_provider
       from conversation_artifact a join conversation c on c.id = a.conversation_id
       where a.id = ${id}::uuid`);
     return rows[0] ?? null;
   };
-  const toFacts = (r: FactsRow, conversationProvider?: string | null): RoutingFacts => ({
+  const toFacts = (
+    r: FactsRow,
+    conversationProvider?: string | null,
+    conversationId?: string,
+  ): RoutingFacts => ({
     organisationId: r.org_id,
     allowed: r.ai_providers,
     accountDefault: r.ai_default_provider,
     projectProvider: r.project_provider,
     ...(conversationProvider !== undefined && { conversationProvider }),
+    ...(conversationId !== undefined && { conversationId }),
   });
   return {
     async facts(who) {
@@ -97,7 +105,7 @@ export function dbRoutingStore(db: Db): RoutingStore {
         const conv = await conversationOf(who);
         if (!conv) return null;
         const r = await ofProject(conv.project_id);
-        return r && toFacts(r, conv.ai_provider);
+        return r && toFacts(r, conv.ai_provider, conv.id);
       }
       const projectId = await projectOfPayer(db, who);
       if (!projectId) return null;
@@ -170,7 +178,11 @@ export function resolve(policy: RoutingPolicy, f: RoutingFacts): RouteDecision {
     accountDefault: f.accountDefault,
   });
   const { allowed } = account;
-  const base = { organisationId: f.organisationId, allowed } as const;
+  const base = {
+    organisationId: f.organisationId,
+    allowed,
+    ...(f.conversationId !== undefined && { conversationId: f.conversationId }),
+  } as const;
   if (!account.default)
     return { ...base, provider: policy.default, reason: "fail-closed:nothing-allowed" };
 

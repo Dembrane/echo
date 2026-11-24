@@ -14,6 +14,8 @@ export interface RoutingNote {
   readonly reason: string;
   /** What the organisation allowed at that moment; null when it was not read. */
   readonly allowed: readonly string[] | null;
+  /** The conversation the call belongs to, when its payer is one (or its artifact); absent otherwise. */
+  readonly conversationId?: string | null;
 }
 
 const storage = new AsyncLocalStorage<RoutingNote>();

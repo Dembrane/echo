@@ -74,6 +74,7 @@ const noteOf = (d: RouteDecision): RoutingNote => ({
   provider: d.provider,
   reason: d.reason,
   allowed: d.allowed,
+  conversationId: d.conversationId ?? null,
 });
 
 /** Runs `fn` as the decision says: inside its routing note, so the call log records it. */

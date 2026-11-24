@@ -364,6 +364,7 @@ export function toRow(
     routed_provider: call.routing?.provider ?? null,
     routing_reason: call.routing?.reason ?? null,
     routing_allowed: call.routing?.allowed ? [...call.routing.allowed] : null,
+    routing_conversation_id: call.routing?.conversationId ?? null,
   };
 }
 

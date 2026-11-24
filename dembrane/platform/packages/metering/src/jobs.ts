@@ -31,7 +31,7 @@ export const spendRollup = defineJob("metering.spend-rollup", z.object({}), {
 });
 const SPEND_ROLLUP_CRON = "30 0 * * *";
 
-/** Daily at 04:00 UTC, once across workers: proves yesterday's Google calls were all meant for Google. */
+/** Daily at 04:00 UTC, once across workers: proves every Google call since the last check was meant for Google. */
 export const providerCheck = defineJob("metering.provider-check", z.object({}), {
   policy: "singleton",
   retryLimit: 2,
@@ -104,11 +104,24 @@ export function meteringRegistration(d: MeteringJobDeps): {
 
 const DAY_MS = 86_400_000;
 
+/** The check's place in ai_provider_check: everything before this instant has been read. */
+const CHECK_NAME = "provider-check";
+/** Rows are written a moment after their call; the check stops this far short of now so none is missed. */
+const CHECK_LAG_MS = 15 * 60_000;
+
 /**
- * Counts the Google (Vertex) calls of the last day that the policy did not send there, or whose
- * organisation did not allow Google when the call was made. It must be zero: anything else
- * raises the AI cost alert to sam's inbox. Where Google is the deployment's default, a call
- * there needs no opt-in, so only calls the policy sent elsewhere count.
+ * Counts the Google (Vertex) calls since the last check that were not meant for Google. It
+ * must be zero: anything else raises the AI cost alert to sam's inbox. A call counts when the
+ * policy recorded a destination other than Google, and, where Google needs an opt-in, when the
+ * account's own history says Google was not allowed at that moment: the account's allowance
+ * and default, the project's choice (and whether a later removal of Google cleared it) from
+ * account_event, and, for a call of a conversation, the provider the conversation began on.
+ * That is read again here, independently of what the call recorded about itself. Where Google
+ * is the deployment's default, a call there needs no opt-in, so only calls the policy sent
+ * elsewhere count.
+ *
+ * It reads from where the last run stopped, so a day the job did not run is covered by the
+ * next one; the place is saved only after the alert went out.
  */
 export async function runProviderCheck(d: {
   db: Db;
@@ -116,28 +129,76 @@ export async function runProviderCheck(d: {
   alerts: CostAlertSink | null;
   now: () => Date;
   defaultProvider: ProviderId;
+  /** How far behind now the check stops; the default leaves time for rows still being written. */
+  lagMs?: number;
 }): Promise<{ leaks: number }> {
   const now = d.now();
-  const since = new Date(now.getTime() - DAY_MS).toISOString();
+  const until = new Date(now.getTime() - (d.lagMs ?? CHECK_LAG_MS)).toISOString();
+  const [mark] = await d.db.execute<{ checked_through: Date }>(
+    sql`select checked_through from ai_provider_check where name = ${CHECK_NAME}`,
+  );
+  const since = mark ? new Date(mark.checked_through).toISOString() : "-infinity";
   const optInNeeded = d.defaultProvider !== "google";
+  const defaultIsGoogle = d.defaultProvider === "google";
   const [row] = await d.db.execute<{ leaks: number; organisations: string[] | null }>(sql`
+    with calls as (
+      select id, started_at, organisation_id, project_id, routing_conversation_id, routed_provider
+      from model_call
+      where started_at >= ${since}::timestamptz and started_at < ${until}::timestamptz
+        and provider = 'vertex'
+    ),
+    judged as (
+      select c.*,
+        -- The account's setting when the call was made; none recorded means the deployment's own.
+        coalesce(
+          (oe.setting -> 'allowed') @> '["google"]'::jsonb,
+          ${defaultIsGoogle}
+        ) as google_allowed,
+        coalesce(oe.setting ->> 'default', ${d.defaultProvider}) as account_default,
+        -- The project's own choice then; a later removal of Google from the account cleared it.
+        case when pe.at is null or (rm.at is not null and rm.at > pe.at) then null else pe.choice end as project_choice,
+        cv.ai_provider as conversation_provider
+      from calls c
+      left join lateral (
+        select e.detail::jsonb -> 'after' as setting from account_event e
+        where e.org_id = c.organisation_id and e.type = 'ai_providers.changed' and e.created_at <= c.started_at
+        order by e.created_at desc limit 1) oe on true
+      left join lateral (
+        select max(e.created_at) as at from account_event e
+        where e.org_id = c.organisation_id and e.type = 'ai_providers.changed' and e.created_at <= c.started_at
+          and (e.detail::jsonb -> 'before' -> 'allowed') @> '["google"]'::jsonb
+          and not ((e.detail::jsonb -> 'after' -> 'allowed') @> '["google"]'::jsonb)) rm on true
+      left join lateral (
+        select e.created_at as at, e.detail::jsonb ->> 'after' as choice from account_event e
+        where e.org_id = c.organisation_id and e.type = 'project.ai_provider.changed'
+          and e.subject_id = c.project_id::text and e.created_at <= c.started_at
+        order by e.created_at desc limit 1) pe on true
+      left join lateral (
+        select v.ai_provider from conversation v where v.id = c.routing_conversation_id) cv on true
+    )
     select count(*)::int as leaks,
       array_agg(distinct organisation_id::text) filter (where organisation_id is not null) as organisations
-    from model_call
-    where started_at >= ${since}::timestamptz and provider = 'vertex'
-      and (routed_provider is distinct from 'google'
-        or (${optInNeeded} and not ('google' = any(coalesce(routing_allowed, '{}'::text[])))))`);
+    from judged
+    where routed_provider is distinct from 'google'
+      or (${optInNeeded} and not (
+        organisation_id is not null
+        and google_allowed
+        and coalesce(project_choice = 'google' or (project_choice is null and account_default = 'google'), false)
+        and (routing_conversation_id is null or coalesce(conversation_provider = 'google', false))))`);
   const leaks = Number(row?.leaks ?? 0);
-  d.logger.info({ leaks, signal: "metering.provider_check" }, "AI provider check");
+  d.logger.info({ leaks, since, until, signal: "metering.provider_check" }, "AI provider check");
   if (leaks > 0) {
     const who = (row?.organisations ?? []).slice(0, 5).join(", ");
     await postCostAlert(
       d.alerts,
-      `AI provider check: ${leaks} model call${leaks === 1 ? "" : "s"} in the last day went to Google (Vertex) for a project the routing did not send there, or for an organisation that did not allow Google. Organisations: ${who || "none recorded"}. Query: select * from model_call where provider = 'vertex' and routed_provider is distinct from 'google'.`,
+      `AI provider check: ${leaks} model call${leaks === 1 ? "" : "s"} since ${since === "-infinity" ? "the start of the log" : since} went to Google (Vertex) for a project the routing did not send there, or that its account's history did not allow Google at that moment. Organisations: ${who || "none recorded"}. Query: select * from model_call where provider = 'vertex' and started_at >= '${since === "-infinity" ? "1970-01-01" : since}' and routed_provider is distinct from 'google'.`,
       d.logger,
       now,
     );
   }
+  await d.db.execute(sql`
+    insert into ai_provider_check (name, checked_through) values (${CHECK_NAME}, ${until}::timestamptz)
+    on conflict (name) do update set checked_through = excluded.checked_through`);
   return { leaks };
 }
 const UNATTRIBUTED_ALERT_SHARE = 0.01;

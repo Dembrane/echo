@@ -609,6 +609,7 @@ describe("model call recorder", () => {
         "request_id",
         "routed_provider",
         "routing_allowed",
+        "routing_conversation_id",
         "routing_reason",
         "search_queries",
         "service",

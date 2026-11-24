@@ -198,6 +198,9 @@ run("the routing policy against the database", () => {
     await sql`update project set ai_provider = 'google' where id = ${a.projectId}`;
     const late = randomUUID();
     await sql`insert into conversation (id, project_id, ai_provider) values (${late}, ${a.projectId}, 'google')`;
+    // The decision names the conversation, so the call log can say whose provider it followed.
+    expect(await ask({ ref: "conversation", id: early })).toMatchObject({ conversationId: early });
+    expect(await ask({ ref: "project", id: a.projectId })).not.toHaveProperty("conversationId");
     expect((await ask({ ref: "conversation", id: early })).provider).toBe("scaleway");
     expect((await ask({ ref: "conversation", id: late })).provider).toBe("google");
     expect((await ask({ ref: "project", id: a.projectId })).provider).toBe("google");
@@ -292,37 +295,108 @@ run("the routing policy against the database", () => {
     });
     // No routing note: the organisation is still the one owning the project's workspace.
     expect(rows[1]).toMatchObject({ organisation_id: b.orgId, routed_provider: null });
+  });
 
-    const sink = async (m: { json: { text: string } }) => void alerts.push(m.json.text);
-    const check = () =>
+  describe("the daily provider check", () => {
+    const events = (orgId: string) => ({
+      org: (before: object | null, after: object, at: string) =>
+        sql`insert into account_event (id, org_id, actor_kind, type, subject_type, subject_id, detail, created_at)
+          values (${randomUUID()}, ${orgId}, 'staff', 'ai_providers.changed', 'org', ${orgId},
+            ${sql.json({ before, after } as never)}, ${at}::timestamptz)`,
+      project: (projectId: string, before: string | null, after: string | null, at: string) =>
+        sql`insert into account_event (id, org_id, actor_kind, type, subject_type, subject_id, detail, created_at)
+          values (${randomUUID()}, ${orgId}, 'customer', 'project.ai_provider.changed', 'project', ${projectId},
+            ${sql.json({ before, after } as never)}, ${at}::timestamptz)`,
+    });
+    const vertexCall = (
+      o: { orgId: string; projectId: string; conversationId?: string },
+      at: string,
+      routed = "google",
+    ) =>
+      sql`insert into model_call (started_at, service, model_group, model, kind, status, attempt, ms, provider, routed_provider, routing_reason, routing_allowed, organisation_id, project_id, routing_conversation_id)
+        values (${at}::timestamptz, 'echo-worker', 'text_fast', 'gemini', 'generate', 'ok', 1, 1, 'vertex', ${routed}, 'project', array['scaleway','google'], ${o.orgId}, ${o.projectId}, ${o.conversationId ?? null})`;
+    const checkAt = (
+      at: string,
+      alerts: string[],
+      defaultProvider: "scaleway" | "google" = "scaleway",
+    ) =>
       runProviderCheck({
         db,
         logger: quiet,
-        alerts: sink as never,
-        now: () => new Date(),
-        defaultProvider: "scaleway",
+        alerts: (async (m: { json: { text: string } }) => void alerts.push(m.json.text)) as never,
+        now: () => new Date(at),
+        lagMs: 0,
+        defaultProvider,
       });
-    expect(await check()).toEqual({ leaks: 0 });
-    expect(alerts).toEqual([]);
-    // Planted: Vertex answered a call the policy sent to Scaleway.
-    await sql`insert into model_call (started_at, service, model_group, model, kind, status, attempt, ms, provider, routed_provider, routing_reason, routing_allowed, organisation_id, project_id)
-      values (now(), 'echo-worker', 'text_fast', 'gemini', 'generate', 'ok', 1, 1, 'vertex', 'scaleway', 'project', array['scaleway'], ${b.orgId}, ${b.projectId})`;
-    // And one the policy sent to Google for an organisation that did not allow it then.
-    await sql`insert into model_call (started_at, service, model_group, model, kind, status, attempt, ms, provider, routed_provider, routing_reason, routing_allowed, organisation_id, project_id)
-      values (now(), 'echo-worker', 'text_fast', 'gemini', 'generate', 'ok', 1, 1, 'vertex', 'google', 'project', array['scaleway'], ${b.orgId}, ${b.projectId})`;
-    expect(await check()).toEqual({ leaks: 2 });
-    expect(alerts).toHaveLength(1);
-    expect(alerts[0]).toContain("2 model calls");
-    expect(alerts[0]).toContain(b.orgId);
-    // Where Google is the deployment's default, only the call sent elsewhere counts.
-    expect(
-      await runProviderCheck({
-        db,
-        logger: quiet,
-        alerts: null,
-        now: () => new Date(),
-        defaultProvider: "google",
-      }),
-    ).toEqual({ leaks: 1 });
+    const reset = async () => {
+      await sql`delete from model_call`;
+      await sql`delete from ai_provider_check`;
+    };
+    const BOTH = { allowed: ["scaleway", "google"], default: "scaleway" };
+    const ONLY_SCALEWAY = { allowed: ["scaleway"], default: "scaleway" };
+
+    test("a call is fine while the history allowed Google and the project chose it, and not when either did not", async () => {
+      await reset();
+      const a = await setup({});
+      const ev = events(a.orgId);
+      await ev.org(ONLY_SCALEWAY, BOTH, "2026-11-01T10:00:00Z");
+      await ev.project(a.projectId, null, "google", "2026-11-01T11:00:00Z");
+      // Google removed from the account at 12:00: the project's choice goes with it.
+      await ev.org(BOTH, ONLY_SCALEWAY, "2026-11-01T12:00:00Z");
+      // Given back at 13:00, but the project has not chosen it again.
+      await ev.org(ONLY_SCALEWAY, BOTH, "2026-11-01T13:00:00Z");
+      await vertexCall(a, "2026-11-01T11:30:00Z"); // allowed, chosen: fine
+      const alerts: string[] = [];
+      expect(await checkAt("2026-11-02T04:00:00Z", alerts)).toEqual({ leaks: 0 });
+      await vertexCall(a, "2026-11-01T09:00:00Z"); // before Google was ever allowed
+      await vertexCall(a, "2026-11-01T12:30:00Z"); // after the removal
+      await vertexCall(a, "2026-11-01T13:30:00Z"); // allowed again, project not chosen
+      // The three are older than the watermark the first run left: a rerun from there ignores them.
+      expect(await checkAt("2026-11-02T05:00:00Z", alerts)).toEqual({ leaks: 0 });
+      await sql`delete from ai_provider_check`;
+      expect(await checkAt("2026-11-02T06:00:00Z", alerts)).toEqual({ leaks: 3 });
+      expect(alerts).toHaveLength(1);
+      expect(alerts[0]).toContain(a.orgId);
+    });
+
+    test("it recomputes instead of trusting what the call recorded about itself", async () => {
+      await reset();
+      const a = await setup({});
+      // The call says Google was allowed; the account's history says it never was.
+      await vertexCall(a, "2026-11-01T10:00:00Z");
+      expect(await checkAt("2026-11-02T04:00:00Z", [])).toEqual({ leaks: 1 });
+    });
+
+    test("a conversation that began on Scaleway may not reach Google, whatever the project chose", async () => {
+      await reset();
+      const a = await setup({});
+      const ev = events(a.orgId);
+      await ev.org(ONLY_SCALEWAY, BOTH, "2026-11-01T10:00:00Z");
+      await ev.project(a.projectId, null, "google", "2026-11-01T10:30:00Z");
+      const onGoogle = randomUUID();
+      const onScaleway = randomUUID();
+      await sql`insert into conversation (id, project_id, ai_provider) values (${onGoogle}, ${a.projectId}, 'google'), (${onScaleway}, ${a.projectId}, 'scaleway')`;
+      await vertexCall({ ...a, conversationId: onGoogle }, "2026-11-01T11:00:00Z");
+      await vertexCall({ ...a, conversationId: onScaleway }, "2026-11-01T11:05:00Z");
+      expect(await checkAt("2026-11-02T04:00:00Z", [])).toEqual({ leaks: 1 });
+    });
+
+    test("a missed day is still covered: the next run reads from where the last stopped", async () => {
+      await reset();
+      const a = await setup({});
+      expect(await checkAt("2026-11-02T04:00:00Z", [])).toEqual({ leaks: 0 });
+      // Three days pass with no run; a leak on the second of them.
+      await vertexCall(a, "2026-11-03T10:00:00Z");
+      expect(await checkAt("2026-11-05T04:00:00Z", [])).toEqual({ leaks: 1 });
+      expect(await checkAt("2026-11-06T04:00:00Z", [])).toEqual({ leaks: 0 });
+    });
+
+    test("where Google is the deployment's default, only a call the policy sent elsewhere counts", async () => {
+      await reset();
+      const a = await setup({});
+      await vertexCall(a, "2026-11-01T10:00:00Z");
+      await vertexCall(a, "2026-11-01T10:05:00Z", "scaleway");
+      expect(await checkAt("2026-11-02T04:00:00Z", [], "google")).toEqual({ leaks: 1 });
+    });
   });
 });
