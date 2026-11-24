@@ -179,6 +179,72 @@ export const store = {
     return row ?? null;
   },
 
+  /**
+   * The live organisations a person is a live member of, with their role there, by name:
+   * where staff may place a demo for them. `orgId` narrows to that one organisation. A
+   * person in more than 50 is cut at 50.
+   */
+  async liveOrganisationsOf(c: Conn, appUserId: string, opts: { orgId?: string } = {}) {
+    const rows = await c
+      .select({
+        id: org.id,
+        name: org.name,
+        account_stage: org.account_stage,
+        role: org_membership.role,
+      })
+      .from(org_membership)
+      .innerJoin(org, eq(org.id, org_membership.org_id))
+      .where(
+        and(
+          eq(org_membership.user_id, appUserId),
+          isNull(org_membership.deleted_at),
+          isNull(org.deleted_at),
+          opts.orgId ? eq(org.id, opts.orgId) : undefined,
+        ),
+      )
+      .orderBy(asc(org.name), asc(org.id), asc(org_membership.created_at))
+      .limit(50);
+    // A second live row for the same organisation is a duplicate: the oldest one counts.
+    return rows.filter((r, i) => rows.findIndex((o) => o.id === r.id) === i);
+  },
+
+  /** Live organisations with this name, trimmed and case-insensitive; at most 10. */
+  async organisationsNamed(c: Conn, name: string) {
+    return c
+      .select({ id: org.id, name: org.name, account_stage: org.account_stage })
+      .from(org)
+      .where(
+        and(isNull(org.deleted_at), sql`lower(trim(${org.name})) = ${name.trim().toLowerCase()}`),
+      )
+      .orderBy(asc(org.name), asc(org.id))
+      .limit(10);
+  },
+
+  /**
+   * Demos for this contact email or this organisation name (either may be null), both
+   * compared trimmed and case-insensitive; newest first, at most `limit`.
+   */
+  async demosLike(c: Conn, email: string | null, name: string | null, limit: number) {
+    const sameEmail = email
+      ? sql`lower(trim(${schema.account_demo.input}->>'contact_email')) = ${email.trim().toLowerCase()}`
+      : undefined;
+    const sameName = name
+      ? sql`lower(trim(${schema.account_demo.input}->>'organisation_name')) = ${name.trim().toLowerCase()}`
+      : undefined;
+    if (!sameEmail && !sameName) return [];
+    return c
+      .select({
+        id: schema.account_demo.id,
+        input: schema.account_demo.input,
+        status: schema.account_demo.status,
+        createdAt: schema.account_demo.createdAt,
+      })
+      .from(schema.account_demo)
+      .where(or(sameEmail, sameName))
+      .orderBy(desc(schema.account_demo.createdAt), desc(schema.account_demo.id))
+      .limit(limit);
+  },
+
   /** Members who run the account (owner, admin, billing), their addresses and languages. */
   async accountPeople(c: Conn, orgId: string) {
     return c
@@ -1114,7 +1180,11 @@ export const store = {
     return row?.id ?? null;
   },
 
-  /** The project of the organisation's synthetic demo, from the demo echo built for it. */
+  /**
+   * The project of the organisation's synthetic demo, from the demo echo built for it. A
+   * demo staff placed in an organisation people already work in is not its onboarding demo
+   * (and may still be held back from them), so it is never the one named here.
+   */
   async demoProject(
     c: Conn,
     orgId: string,
@@ -1122,6 +1192,7 @@ export const store = {
     const [row] = await c.execute<{ project_id: string | null; workspace_id: string | null }>(
       sql`select seed->'projects'->0->>'project_id' as project_id, seed->>'workspace_id' as workspace_id
         from account_demo where org_id = ${orgId} and seed is not null
+          and coalesce(input->>'org_id', '') = ''
         order by created_at desc limit 1`,
     );
     return row?.project_id && row.workspace_id
