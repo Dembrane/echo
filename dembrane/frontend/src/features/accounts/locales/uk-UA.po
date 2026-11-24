@@ -214,11 +214,11 @@ msgstr "{org} запрошує вас підписати"
 
 #: src/features/accounts/staff/AiModelsSection.tsx:44
 msgid "{provider} added"
-msgstr ""
+msgstr "Додано {provider}"
 
 #: src/features/accounts/staff/AiModelsSection.tsx:46
 msgid "{provider} removed"
-msgstr ""
+msgstr "Вилучено {provider}"
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:533
 msgid "{reach, plural, one {{first} will also be a member of # workspace that is open to everyone in your organisation.} other {{first} will also be a member of # workspaces that are open to everyone in your organisation.}}"
@@ -234,11 +234,11 @@ msgstr "{reach, plural, one {{first} також стане учасником # 
 
 #: src/features/accounts/staff/AiModelsSection.tsx:50
 msgid "{what} by {by}, {on}"
-msgstr ""
+msgstr "{what}: {by}, {on}"
 
 #: src/features/accounts/staff/AiModelsSection.tsx:49
 msgid "{what} by {by}, {on}, request of {asked}"
-msgstr ""
+msgstr "{what}: {by}, {on}, на запит {asked}"
 
 #: src/features/accounts/customer/room/copy.ts:83
 msgid "{who} invited you as “{own}”."
@@ -449,15 +449,15 @@ msgstr "Адреса (рядок 2)"
 
 #: src/features/accounts/staff/AiModelsSection.tsx:99
 msgid "AI models"
-msgstr ""
+msgstr "Моделі ШІ"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:919
 msgid "AI models changed"
-msgstr ""
+msgstr "Моделі ШІ змінено"
 
 #: src/features/accounts/staff/AiModelsSection.tsx:85
 msgid "AI models saved"
-msgstr ""
+msgstr "Моделі ШІ збережено"
 
 #: src/features/accounts/staff/AccountsPanel.tsx:78
 #~ msgid "All"
@@ -816,7 +816,7 @@ msgstr "Вибрати когось"
 
 #: src/features/accounts/staff/AiModelsSection.tsx:122
 msgid "Choose the ticket"
-msgstr ""
+msgstr "Оберіть тікет"
 
 #: src/features/accounts/customer/NextSteps.tsx:312
 msgid "Choose who signs"
@@ -1011,11 +1011,11 @@ msgstr "Відхилено"
 
 #: src/features/accounts/staff/AiModelsSection.tsx:114
 msgid "Default"
-msgstr ""
+msgstr "За замовчуванням"
 
 #: src/features/accounts/staff/AiModelsSection.tsx:47
 msgid "Default changed to {provider}"
-msgstr ""
+msgstr "Варіант за замовчуванням змінено на {provider}"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:53
 msgid "dembrane sends no email. You send the email yourself."
@@ -1464,7 +1464,7 @@ msgstr "Буде в рахунку"
 
 #: src/features/accounts/customer/AskForGoogle.tsx:26
 msgid "Google Vertex AI"
-msgstr ""
+msgstr "Google Vertex AI"
 
 #~ msgid "Greeting names"
 #~ msgstr ""
@@ -2470,7 +2470,7 @@ msgstr "Тариф"
 
 #: src/features/accounts/customer/AskForGoogle.tsx:25
 msgid "Please allow Google Vertex AI in the EU, billed per use, for {orgName}."
-msgstr ""
+msgstr "Будь ласка, дозвольте Google Vertex AI в ЄС з оплатою за використання для {orgName}."
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:409
 #: src/features/accounts/staff/AccountCardRoute.tsx:875
@@ -2505,7 +2505,7 @@ msgstr "Прогрес"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:945
 msgid "Project AI model changed"
-msgstr ""
+msgstr "Модель ШІ проєкту змінено"
 
 #. placeholder {0}: p.language.toUpperCase()
 #: src/features/accounts/staff/DemoRoute.tsx:300
@@ -2720,7 +2720,7 @@ msgstr "Представляє працівників чи зацікавлен�
 
 #: src/features/accounts/staff/AiModelsSection.tsx:121
 msgid "Request"
-msgstr ""
+msgstr "Запит"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:414
 msgid "Required"

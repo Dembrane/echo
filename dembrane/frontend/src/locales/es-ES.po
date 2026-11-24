@@ -898,19 +898,19 @@ msgstr "{pickedCount, plural, one {Usando # conversación} other {Usando # conve
 
 #: src/components/ai-models/OrgAiModelsPanel.tsx:30
 msgid "{provider} added by Dembrane, {on}"
-msgstr ""
+msgstr "{provider} añadido por dembrane el {on}"
 
 #: src/components/ai-models/OrgAiModelsPanel.tsx:29
 msgid "{provider} added by Dembrane, {on}, at your request of {asked}"
-msgstr ""
+msgstr "{provider} añadido por dembrane el {on}, según tu solicitud del {asked}"
 
 #: src/components/ai-models/OrgAiModelsPanel.tsx:34
 msgid "{provider} removed by Dembrane, {on}"
-msgstr ""
+msgstr "{provider} eliminado por dembrane el {on}"
 
 #: src/components/ai-models/OrgAiModelsPanel.tsx:33
 msgid "{provider} removed by Dembrane, {on}, at your request of {asked}"
-msgstr ""
+msgstr "{provider} eliminado por dembrane el {on}, según tu solicitud del {asked}"
 
 #: src/components/results/resultContent.ts:262
 msgid "{quotes, plural, one {# quote from {name}} other {# quotes from {name}}}"
@@ -1945,7 +1945,7 @@ msgstr "Las funciones de IA y las nuevas grabaciones están pausadas hasta el pr
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:64
 #: src/components/ai-models/OrgAiModelsPanel.tsx:63
 msgid "AI models"
-msgstr ""
+msgstr "Modelos de IA"
 
 #: src/components/workspace/FreeAllowanceCard.tsx:89
 msgid "AI this month"
@@ -2115,7 +2115,7 @@ msgstr "Permitirle también cambiar los ajustes del proyecto"
 #. placeholder {0}: others.map(providerLabel).join(", ")
 #: src/components/ai-models/OrgAiModelsPanel.tsx:71
 msgid "Also available: {0}, billed per use"
-msgstr ""
+msgstr "También disponible: {0}, con pago por uso"
 
 #: src/components/pricing/questions.ts:160
 msgid "Always on, it lives on our website"
@@ -2577,7 +2577,7 @@ msgstr "¿Pedir el correo electrónico?"
 #: src/components/ai-models/OrgAiModelsPanel.tsx:85
 #: src/components/ai-models/OrgAiModelsPanel.tsx:105
 msgid "Ask for Google Vertex AI"
-msgstr ""
+msgstr "Solicitar Google Vertex AI"
 
 #: src/components/project/PortalSettingsOverview.tsx:113
 msgid "Ask for name?"
@@ -5018,16 +5018,16 @@ msgstr "Por defecto: {defaultNodes}"
 
 #: src/components/ai-models/OrgAiModelsPanel.tsx:37
 msgid "Default changed to {provider} by Dembrane, {on}"
-msgstr ""
+msgstr "Predeterminado cambiado a {provider} por dembrane el {on}"
 
 #: src/components/ai-models/OrgAiModelsPanel.tsx:36
 msgid "Default changed to {provider} by Dembrane, {on}, at your request of {asked}"
-msgstr ""
+msgstr "Predeterminado cambiado a {provider} por dembrane el {on}, según tu solicitud del {asked}"
 
 #. placeholder {0}: providerLabel(data.default)
 #: src/components/ai-models/OrgAiModelsPanel.tsx:67
 msgid "Default: {0}"
-msgstr ""
+msgstr "Predeterminado: {0}"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:271
 msgid "Default: {defaultValue}"
@@ -7151,11 +7151,11 @@ msgstr "Buena respuesta"
 
 #: src/components/ai-models/hooks.ts:104
 msgid "Google Vertex AI"
-msgstr ""
+msgstr "Google Vertex AI"
 
 #: src/components/ai-models/hooks.ts:100
 msgid "Google Vertex AI, EU"
-msgstr ""
+msgstr "Google Vertex AI, UE"
 
 #: src/components/release/ReleaseVideoModal.tsx:356
 msgid "Got it"
@@ -13464,11 +13464,11 @@ msgstr "Cuenta de qué trata la sesión, quién participa y dónde; puedes pegar
 
 #: src/components/ai-models/hooks.ts:104
 msgid "Scaleway"
-msgstr ""
+msgstr "Scaleway"
 
 #: src/components/ai-models/hooks.ts:100
 msgid "Scaleway, Paris"
-msgstr ""
+msgstr "Scaleway, París"
 
 #: src/components/common/FeedbackPortalModal.tsx:125
 msgid "Scan or click the QR code to open the feedback portal"
@@ -18019,7 +18019,7 @@ msgstr "No encontramos la página que buscabas. Puede que se haya movido."
 
 #: src/components/ai-models/OrgAiModelsPanel.tsx:55
 msgid "We couldn't load the AI models."
-msgstr ""
+msgstr "No pudimos cargar los modelos de IA."
 
 #: src/routes/organisation/OrganisationRoute.tsx:694
 msgid "We couldn't load this organisation. Try again in a moment."
