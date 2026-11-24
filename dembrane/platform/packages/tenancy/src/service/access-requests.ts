@@ -117,6 +117,8 @@ export function accessRequestService(deps: TenancyDeps) {
       if (await activeMembership(db, ws.id, member.appUserId))
         return { status: "already_member", workspace_id: ws.id, role: "admin" };
       const view = derivationView(ws);
+      // A demo staff hold back is not there for the organisation yet, its owner included.
+      if (view.held) throw new NotFoundError("workspace.not_found");
       if (view.stickyRemoved.includes(member.appUserId))
         throw new ForbiddenError("workspace.removed_from");
       if (view.visibility === "private" && role !== "owner")

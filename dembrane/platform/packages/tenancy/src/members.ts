@@ -1,4 +1,4 @@
-import { deriveWorkspaceRole, stickyRemovedIds } from "@dembrane/access";
+import { deriveWorkspaceRole, workspaceReach } from "@dembrane/access";
 import type { Conn } from "./db";
 import {
   orgMembers,
@@ -15,19 +15,12 @@ export interface EffectiveMember {
   readonly created_at: string | null;
 }
 
-type Visibility = "open_to_organisation" | "invite_only" | "private";
-
-/** The workspace fields derivation reads, in the shape @dembrane/access decides on. */
+/**
+ * The workspace fields derivation reads, in the shape @dembrane/access decides on, read by
+ * access's own workspaceReach so a held-back demo workspace derives nothing here either.
+ */
 export function derivationView(ws: Pick<WorkspaceRowFull, "visibility" | "settings">) {
-  const settings = (ws.settings ?? {}) as {
-    inherit_organisation_members?: unknown;
-    sticky_removed?: unknown;
-  };
-  return {
-    visibility: (ws.visibility ?? "open_to_organisation") as Visibility,
-    inheritOrgMembers: settings.inherit_organisation_members === true,
-    stickyRemoved: stickyRemovedIds(settings.sticky_removed),
-  };
+  return workspaceReach(ws);
 }
 
 /** True when the org's admins reach this workspace without joining it. */

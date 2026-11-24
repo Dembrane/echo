@@ -1,3 +1,4 @@
+import { shownToOrganisation } from "@dembrane/access";
 import { schema } from "@dembrane/db";
 import { and, asc, desc, eq, gte, inArray, isNull, ne, type SQL, sql } from "drizzle-orm";
 import { type Conn, isUuid } from "../db";
@@ -120,7 +121,12 @@ export async function workspaceById(db: Conn, id: string): Promise<WorkspaceRowF
   return row ?? null;
 }
 
-/** Live workspaces of an org in primary key order, or ordered as the caller asks. */
+/**
+ * Live workspaces of an org as its people may see them, in primary key order or ordered as
+ * the caller asks. A workspace held back for a demo staff have not handed over yet is left
+ * out (shownToOrganisation in @dembrane/access): every list and rollup an organisation's
+ * people get reads its workspaces here.
+ */
 export async function orgWorkspaces(
   db: Conn,
   orgId: string,
@@ -129,7 +135,14 @@ export async function orgWorkspaces(
   return db
     .select()
     .from(workspace)
-    .where(and(eq(workspace.org_id, orgId), isNull(workspace.deleted_at), opts.extra))
+    .where(
+      and(
+        eq(workspace.org_id, orgId),
+        isNull(workspace.deleted_at),
+        shownToOrganisation,
+        opts.extra,
+      ),
+    )
     .orderBy(...(opts.order ?? [asc(workspace.id)]));
 }
 
@@ -147,6 +160,10 @@ export async function workspacesByIds(
     .orderBy(asc(workspace.id));
 }
 
+/**
+ * Every live workspace of an org, one held back for a demo included: what the free tier's
+ * workspace limit counts, so a demo staff placed there never makes room for another.
+ */
 export async function countOrgWorkspaces(db: Conn, orgId: string, billingAccountId?: string) {
   const [row] = await db
     .select({ n: sql<number>`count(${workspace.id})::int` })
@@ -158,6 +175,15 @@ export async function countOrgWorkspaces(db: Conn, orgId: string, billingAccount
         billingAccountId ? eq(workspace.billing_account_id, billingAccountId) : undefined,
       ),
     );
+  return row?.n ?? 0;
+}
+
+/** How many workspaces the org's people see: orgWorkspaces, counted. */
+export async function countShownOrgWorkspaces(db: Conn, orgId: string) {
+  const [row] = await db
+    .select({ n: sql<number>`count(${workspace.id})::int` })
+    .from(workspace)
+    .where(and(eq(workspace.org_id, orgId), isNull(workspace.deleted_at), shownToOrganisation));
   return row?.n ?? 0;
 }
 

@@ -1,6 +1,6 @@
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
-import { and, eq, gt, isNull, or } from "drizzle-orm";
+import { and, eq, gt, isNull, or, type SQL, sql } from "drizzle-orm";
 import type { AccessStore, WorkspaceRow } from "./store";
 
 const {
@@ -136,13 +136,14 @@ export class DrizzleAccessStore implements AccessStore {
 
 /**
  * What a workspace row says about who derives access to it from the organisation: its
- * visibility, the members removed for good, and whether plain members join. Read the same
- * way wherever a rule must count exactly what access grants (deriveWorkspaceRole).
+ * visibility, the members removed for good, whether plain members join, and whether it is
+ * held back for a demo. Read the same way wherever a rule must count exactly what access
+ * grants (deriveWorkspaceRole).
  */
 export function workspaceReach(row: {
   readonly visibility: string | null;
   readonly settings: unknown;
-}): Pick<WorkspaceRow, "visibility" | "stickyRemoved" | "inheritOrgMembers"> {
+}): Pick<WorkspaceRow, "visibility" | "stickyRemoved" | "inheritOrgMembers" | "held"> {
   const settings = (row.settings ?? {}) as {
     sticky_removed?: unknown;
     inherit_organisation_members?: unknown;
@@ -151,8 +152,31 @@ export function workspaceReach(row: {
     visibility: (row.visibility ?? "open_to_organisation") as WorkspaceRow["visibility"],
     stickyRemoved: stickyRemovedIds(settings.sticky_removed),
     inheritOrgMembers: settings.inherit_organisation_members === true,
+    held: heldForDemo(row.settings) !== null,
   };
 }
+
+/**
+ * The key in workspace.settings that holds a workspace back from its own organisation: a
+ * demo staff placed in an organisation its contact already works in (accounts' demo build
+ * sets it, publishing with the email on clears it). The value is the demo's id. Only demo
+ * code writes it.
+ *
+ * While it is set the workspace is not there for the organisation's people: nobody derives
+ * a role in it from the organisation, its owner included (deriveWorkspaceRole), and no list
+ * or count shown to them includes it (`shownToOrganisation`). Limits that guard what an
+ * organisation may create still count it.
+ */
+export const HELD_FOR_DEMO = "held_for_demo";
+
+/** The demo a workspace is held back for, or null for every other workspace. */
+export function heldForDemo(settings: unknown): string | null {
+  const value = (settings as Record<string, unknown> | null)?.[HELD_FOR_DEMO];
+  return typeof value === "string" && value !== "" ? value : null;
+}
+
+/** heldForDemo in SQL, negated: true for a workspace its organisation's people may see. */
+export const shownToOrganisation: SQL = sql`coalesce(${workspace.settings}->>${sql.raw(`'${HELD_FOR_DEMO}'`)}, '') = ''`;
 
 /**
  * Tombstones are stored as `{user_id, removed_at, removed_by}` objects by the old API and

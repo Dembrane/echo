@@ -67,6 +67,15 @@ A request notifies the workspace's admins and the organisation's admins. They an
 Someone an admin removed from a workspace cannot join it again this way, the organisation
 owner included. They need a new [invite](./invites-and-access.md).
 
+## A demo dembrane is preparing for you
+
+When dembrane staff make a demo for someone in your organisation, it gets a workspace of its
+own, named after the demo. While staff are still building it, nobody in the organisation sees
+that workspace or its project, the organisation owner included: it is in no list and no count,
+and nobody can open or join it. When staff publish it and email the person it is for, it
+appears like any new workspace, set to "Everyone in your organisation", with that person as its
+admin. It counts toward your plan's workspace limit from the start.
+
 ## Private projects
 
 Inside a workspace, a project is visible to every member or it is private. A private

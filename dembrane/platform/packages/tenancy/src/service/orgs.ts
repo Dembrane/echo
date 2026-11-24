@@ -69,7 +69,7 @@ import {
   anyOrgMembership,
   billingAccountsByIds,
   countOrgMembers,
-  countOrgWorkspaces,
+  countShownOrgWorkspaces,
   distinctAccountsOf,
   insertMembership,
   insertWorkspace,
@@ -125,7 +125,7 @@ export function orgService(deps: TenancyDeps) {
       logo_url: org.logo_url,
       role,
       member_count: await countOrgMembers(db, orgId),
-      workspace_count: await countOrgWorkspaces(db, orgId),
+      workspace_count: await countShownOrgWorkspaces(db, orgId),
       external_count: await countExternals(db, orgId),
     };
   }
@@ -221,7 +221,7 @@ export function orgService(deps: TenancyDeps) {
           logo_url: o.logo_url,
           role: roleOf.get(o.id) ?? "member",
           member_count: await countOrgMembers(db, o.id),
-          workspace_count: await countOrgWorkspaces(db, o.id),
+          workspace_count: await countShownOrgWorkspaces(db, o.id),
         });
       }
       return out;
