@@ -220,7 +220,7 @@ export async function resolveInputs(request: InputRequest): Promise<Json> {
     phrases: [...source.phrases],
     voice: source.voice ? sha256Hex(source.voice).slice(0, 20) : "",
     prompts: { ...(source.prompts ?? {}) },
-    embedding: { ...services.embeddingSettings() },
+    embedding: { ...(await services.embeddingSettings()) },
   };
 }
 
@@ -346,7 +346,7 @@ export async function execute(ctx: RecipeContext): Promise<void> {
   }
 
   await ctx.progress("emitting", { force: true });
-  const deployment = liveModelDeployment(ctx);
+  const deployment = await liveModelDeployment(ctx);
   const prompts = { ...((ctx.inputManifest.prompts as Json | undefined) ?? {}) };
   const ids = embedded.ids as Record<string, string>;
   for (const phrase of checked) {

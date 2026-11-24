@@ -96,7 +96,7 @@ export async function resolveInputs(request: InputRequest): Promise<Json> {
     sourceFingerprint: sourceFingerprint(transcripts),
     prompt: STAKEHOLDERS_PROMPT,
     budget: MAX_ANALYSIS_CHARS,
-    embedding: { ...services.embeddingSettings() },
+    embedding: { ...(await services.embeddingSettings()) },
   };
 }
 
@@ -194,7 +194,7 @@ const passedGates = (evidence: Json, message: string | null = null) => ({
 
 export async function execute(ctx: RecipeContext): Promise<void> {
   const services = producerServices(ctx.services);
-  const deployment = liveModelDeployment(ctx);
+  const deployment = await liveModelDeployment(ctx);
   const sources = [...((ctx.inputManifest.sources as Json[] | undefined) ?? [])];
   const transcripts = await loadPinnedTranscripts(services, ctx.projectId, sources);
   if (!transcripts.length) {

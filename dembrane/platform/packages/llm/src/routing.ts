@@ -265,7 +265,7 @@ export function routingEmbedder(
     };
     return {
       provider: d.provider,
-      identity: { model: e.model, endpoint: e.endpoint },
+      identity: { model: e.model, endpoint: e.endpoint, baseUrl: e.baseUrl },
       hold: e,
       async embed(text) {
         await same();

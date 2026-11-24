@@ -225,7 +225,7 @@ async function embeddingModel(
 
 async function execute(ctx: RecipeContext): Promise<void> {
   const services = producerServices(ctx.services);
-  const deployment = liveModelDeployment(ctx);
+  const deployment = await liveModelDeployment(ctx);
   const validated = validateAgainst(PARAMETERS, { ...ctx.parameters }, false);
   if (!validated.ok) throw new RecipeFailed("The deduplication parameters are invalid.");
   const parameters = validated.value;

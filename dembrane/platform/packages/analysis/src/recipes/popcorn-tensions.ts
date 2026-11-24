@@ -177,7 +177,7 @@ export async function resolveInputs(request: InputRequest): Promise<Json> {
     // The tensions themselves are the input: the run publishes exactly what the room was shown.
     tensions: source.tensions.map((t) => ({ ...t, quotes: t.quotes.map((x) => ({ ...x })) })),
     textHashes: citedHashes(source),
-    embedding: { ...services.embeddingSettings() },
+    embedding: { ...(await services.embeddingSettings()) },
   };
 }
 
@@ -341,7 +341,7 @@ export async function execute(ctx: RecipeContext): Promise<void> {
   }
 
   await ctx.progress("emitting", { force: true });
-  const deployment = liveModelDeployment(ctx);
+  const deployment = await liveModelDeployment(ctx);
   const ids = embedded.ids as Record<string, string>;
   for (const t of grounded) {
     const payload = rec(t.payload);

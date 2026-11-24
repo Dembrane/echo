@@ -217,7 +217,7 @@ const location = (v: unknown): Json | null =>
 
 async function execute(ctx: RecipeContext): Promise<void> {
   const services = producerServices(ctx.services);
-  const deployment = liveModelDeployment(ctx);
+  const deployment = await liveModelDeployment(ctx);
   const inputSet = String(ctx.parameters.input_set);
   const expectedType = INPUT_TYPES[inputSet];
   const pinned = ctx.dependencies.get("arguments");

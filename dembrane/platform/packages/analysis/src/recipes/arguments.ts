@@ -126,8 +126,8 @@ export function revisionQuotes(r: ObjectRevision): SourceRef[] {
   );
 }
 
-export const liveModelDeployment = (ctx: RecipeContext): Json => ({
-  ...producerServices(ctx.services).modelDeployment(),
+export const liveModelDeployment = async (ctx: RecipeContext): Promise<Json> => ({
+  ...(await producerServices(ctx.services).modelDeployment()),
 });
 
 /** Whether the step just awaited computed, rather than reusing an artifact. */
@@ -147,7 +147,7 @@ export async function resolveInputs(request: InputRequest): Promise<Json> {
   return {
     sources: transcripts.map(source),
     sourceFingerprint: sourceFingerprint(transcripts),
-    embedding: { ...services.embeddingSettings() },
+    embedding: { ...(await services.embeddingSettings()) },
   };
 }
 
@@ -205,7 +205,7 @@ export async function execute(ctx: RecipeContext): Promise<void> {
   const services = producerServices(ctx.services);
   const sources = [...((ctx.inputManifest.sources as Json[] | undefined) ?? [])];
   const embeddingConfig = { ...((ctx.inputManifest.embedding as Json | undefined) ?? {}) };
-  const deployment = liveModelDeployment(ctx);
+  const deployment = await liveModelDeployment(ctx);
 
   await ctx.progress("loading", { force: true });
   const transcripts = await loadPinnedTranscripts(services, ctx.projectId, sources);

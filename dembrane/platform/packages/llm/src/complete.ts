@@ -60,6 +60,8 @@ export interface Embedder {
   /** The deployment identity that keys stored vectors (model, endpoint, dimensions). */
   readonly model: string;
   readonly endpoint: string;
+  /** The provider's base URL: the compatible API's own, or a Vertex region's host. */
+  readonly baseUrl?: string | undefined;
   readonly dimensions: number;
   /** The identity of the embedder the payer in scope uses, where it depends on the payer. */
   identity?(): Promise<{ readonly model: string; readonly endpoint: string }>;
@@ -75,7 +77,12 @@ export interface Embedder {
 export interface PinnedEmbedder {
   /** The provider the batch is pinned to. */
   readonly provider: string;
-  readonly identity: { readonly model: string; readonly endpoint: string };
+  readonly identity: {
+    readonly model: string;
+    readonly endpoint: string;
+    /** The provider's base URL, as the run's pinned settings record it. */
+    readonly baseUrl?: string | undefined;
+  };
   /** What rate-limit pauses are shared by: the provider's own embedder. */
   readonly hold: object;
   embed(text: string): Promise<number[]>;
@@ -226,6 +233,10 @@ export function vertexEmbedder(models: Models, cfg: VertexEmbedderConfig): Embed
       cfg.provider === "openai-compatible"
         ? `openai-compatible:${cfg.baseUrl ?? ""}`
         : `vertex:${cfg.project}:${cfg.location}`,
+    baseUrl:
+      cfg.provider === "openai-compatible"
+        ? (cfg.baseUrl ?? "")
+        : `https://${cfg.location}-aiplatform.googleapis.com`,
     get dimensions() {
       return models.embedding().dimensions;
     },
