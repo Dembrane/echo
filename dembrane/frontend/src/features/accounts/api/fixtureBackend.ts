@@ -246,7 +246,8 @@ function load(): Record<string, Store> {
 function save() {
 	try {
 		sessionStorage.setItem(KEY, JSON.stringify(stores));
-		sessionStorage.setItem(DEMOS_KEY, JSON.stringify(demos ?? {}));
+		// Demos not loaded yet are left alone, so the earlier demo is seeded when they are.
+		if (demos) sessionStorage.setItem(DEMOS_KEY, JSON.stringify(demos));
 	} catch {
 		// Private windows and full storage: the state then lasts until the next reload.
 	}
@@ -322,9 +323,11 @@ const CHECKS: [string, DemoCheckT][] = [
 	["robin@example-town.example", fx.demoCheckCustomer],
 	["jules@example-water.example", fx.demoCheckTwoOrganisations],
 	["kim@example-many.example", CHECK_FIVE],
+	// Robin's organisation again, under a 50-character address, to see one wrap on a phone.
+	["wijkteam.participatie@example-town-council.example", fx.demoCheckCustomer],
 ];
 
-/** Jules's earlier demo, which the check names, so its "Open it" link opens a page. */
+/** Jules's earlier demo, which the check names, so its "Open the demo" link opens a page. */
 function earlierDemos(): Record<string, FixtureDemo> {
 	const earlier = fx.demoCheckTwoOrganisations.demos[0];
 	if (!earlier) return {};
@@ -1214,22 +1217,59 @@ export async function handle(
 	const result = await (async (): Promise<unknown> => {
 		switch (name) {
 			case "checkDemo": {
-				// Keyed on the email typed; the organisation name is not looked at yet.
+				// The contact is keyed on the email typed:
 				// robin@example-town.example: in one organisation, a customer.
 				// jules@example-water.example: in two (a customer and a prospect), with an
-				//   earlier demo and an organisation of the same name.
+				//   earlier demo.
 				// kim@example-many.example: in five, with long names (CHECK_FIVE).
+				// wijkteam.participatie@example-town-council.example: as Robin, with a long
+				//   address.
 				// Any other address, such as new@example-harbour.example: no account.
 				// Any address with "check-fails" in it: the check answers 503.
+				// Earlier demos and organisations of the same name are looked up in the
+				// fixture's own stores, as the API does: "Example Water Board (sample)" has
+				// Jules's earlier demo and an organisation, "Stichting Vrije Proef" an
+				// organisation.
 				const email = String(body.contact_email ?? "").toLowerCase();
-				if (!body.contact_email)
-					return { ...fx.demoCheckNewContact, contact: null };
 				if (email.includes("check-fails"))
 					throw new AccountsApiError(503, "The check is unavailable.");
-				return (
-					CHECKS.find(([address]) => address === email)?.[1] ??
-					fx.demoCheckNewContact
-				);
+				const contact = !email
+					? null
+					: (CHECKS.find(([address]) => address === email)?.[1].contact ??
+						fx.demoCheckNewContact.contact);
+				const name = String(body.organisation_name ?? "")
+					.trim()
+					.toLowerCase();
+				const theirs = new Set(contact?.organisations.map((o) => o.id));
+				return {
+					contact,
+					demos: Object.values(loadDemos())
+						.map((d) => ({
+							contact_email: d.contact_email,
+							created_at: d.created_at,
+							id: d.id,
+							organisation_name: d.organisation_name,
+							same_contact:
+								email !== "" && d.contact_email.toLowerCase() === email,
+							same_organisation:
+								name !== "" && d.organisation_name.toLowerCase() === name,
+							status: d.status,
+						}))
+						.filter((d) => d.same_contact || d.same_organisation)
+						.sort((a, b) => b.created_at.localeCompare(a.created_at))
+						.slice(0, 5),
+					organisations_named: name
+						? Object.values(load())
+								.filter(
+									(o) => o.name.toLowerCase() === name && !theirs.has(o.id),
+								)
+								.map((o) => ({
+									account_stage: o.stage,
+									id: o.id,
+									name: o.name,
+								}))
+						: [],
+				};
 			}
 			case "createDemo": {
 				const created = now();
@@ -2497,5 +2537,6 @@ export function resetFixtures() {
 	room.setFixtureActor("admin");
 	try {
 		sessionStorage.removeItem(KEY);
+		sessionStorage.removeItem(DEMOS_KEY);
 	} catch {}
 }

@@ -12,6 +12,7 @@ import {
 } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
+import type { DemoCheckT } from "../contract/contract.gen";
 import * as fx from "../contract/fixtures.gen";
 
 // The new demo form asks who the contact is once their address is complete, and offers
@@ -19,6 +20,26 @@ import * as fx from "../contract/fixtures.gen";
 // demo and an organisation of the same name, anyone else is new to dembrane.
 
 const calls: { name: string; body: Record<string, unknown> }[] = [];
+
+// A name typed without an address: an earlier demo about it for someone else, and an
+// organisation of that name.
+const EARLIER = fx.demoCheckTwoOrganisations
+	.demos[0] as DemoCheckT["demos"][number];
+const WATER_BOARD = fx.demoCheckTwoOrganisations.contact
+	?.organisations[1] as DemoCheckT["organisations_named"][number] & {
+	role: string;
+};
+const NAME_ONLY: DemoCheckT = {
+	contact: null,
+	demos: [{ ...EARLIER, same_contact: false, same_organisation: true }],
+	organisations_named: [
+		{
+			account_stage: WATER_BOARD.account_stage,
+			id: WATER_BOARD.id,
+			name: WATER_BOARD.name,
+		},
+	],
+};
 const navigate = vi.fn();
 
 vi.mock("../api/client", async (importOriginal) => ({
@@ -27,6 +48,12 @@ vi.mock("../api/client", async (importOriginal) => ({
 		const body = (options.body ?? {}) as Record<string, unknown>;
 		calls.push({ body, name });
 		if (name === "checkDemo") {
+			if (!body.contact_email)
+				return body.organisation_name === "Example Water Board (sample)"
+					? NAME_ONLY
+					: { ...fx.demoCheckNewContact, contact: null };
+			if (String(body.contact_email).includes("check-fails"))
+				throw new Error("The check is unavailable.");
 			if (body.contact_email === "robin@example-town.example")
 				return fx.demoCheckCustomer;
 			if (body.contact_email === "jules@example-water.example")
@@ -129,11 +156,13 @@ it("offers a known contact's organisation, chosen, and sends it with no offer", 
 	expect(fresh?.checked).toBe(false);
 	expect(choice.textContent).toContain("Example Town Council (sample)");
 	expect(screen.getByTestId("demo-destination-intro").textContent).toBe(
-		"In an organisation they already work in, the demo gets its own workspace, Example Youth Council (sample).",
+		"In an organisation they already work in, the demo gets its own workspace: Example Youth Council (sample).",
 	);
 	expect(choice.textContent).toContain("A new organisation");
 	// The address goes in the body, never the URL; the name goes with it.
-	expect(calls.find((c) => c.name === "checkDemo")?.body).toEqual({
+	expect(
+		calls.find((c) => c.name === "checkDemo" && c.body.contact_email)?.body,
+	).toEqual({
 		contact_email: "robin@example-town.example",
 		organisation_name: "Example Youth Council (sample)",
 	});
@@ -146,6 +175,47 @@ it("offers a known contact's organisation, chosen, and sends it with no offer", 
 	const sent = calls.find((c) => c.name === "createDemo")?.body;
 	expect(sent?.org_id).toBe(fx.demoCheckCustomer.contact?.organisations[0]?.id);
 	expect(sent?.offer).toBeNull();
+});
+
+it("does not build before the check has answered, then sends the organisation", async () => {
+	open();
+	fillForm("robin@example-town.example");
+	// Submitted at once: the button waits for the check, and nothing is sent.
+	const submit = screen.getByTestId("demo-submit");
+	expect(submit.hasAttribute("data-loading")).toBe(true);
+	fireEvent.click(submit);
+	expect(calls.some((c) => c.name === "createDemo")).toBe(false);
+
+	await screen.findByTestId("demo-destination", {}, LATER);
+	await waitFor(() =>
+		expect(screen.getByTestId("demo-submit").hasAttribute("data-loading")).toBe(
+			false,
+		),
+	);
+	expect(calls.some((c) => c.name === "createDemo")).toBe(false);
+	fireEvent.click(screen.getByTestId("demo-submit"));
+	await waitFor(() => expect(navigate).toHaveBeenCalled());
+	expect(calls.find((c) => c.name === "createDemo")?.body.org_id).toBe(
+		fx.demoCheckCustomer.contact?.organisations[0]?.id,
+	);
+});
+
+it("lets staff build when the check fails, into a new organisation", async () => {
+	open();
+	fillForm("robin@check-fails.example");
+	await screen.findByText(
+		"Could not check this address. If they already use dembrane, they get a second organisation.",
+		{},
+		LATER,
+	);
+	expect(screen.getByTestId("demo-submit").hasAttribute("data-loading")).toBe(
+		false,
+	);
+	fireEvent.click(screen.getByTestId("demo-submit"));
+	await waitFor(() => expect(navigate).toHaveBeenCalled());
+	expect(calls.find((c) => c.name === "createDemo")?.body).not.toHaveProperty(
+		"org_id",
+	);
 });
 
 it("sends no org_id when staff choose a new organisation, and the offer comes back", async () => {
@@ -161,7 +231,7 @@ it("sends no org_id when staff choose a new organisation, and the offer comes ba
 			(_, el) =>
 				el?.tagName === "P" &&
 				el.textContent ===
-					"Example Youth Council (sample) becomes a prospect in Accounts, with robin@example-town.example as its admin.",
+					"It becomes a prospect in Accounts, with robin@example-town.example as its admin.",
 		),
 	).toBeTruthy();
 	expect(screen.getByTestId("demo-with-offer")).toBeTruthy();
@@ -211,31 +281,62 @@ it("asks nothing while the address is half typed", async () => {
 	expect(screen.queryByTestId("demo-destination")).toBeNull();
 });
 
-it("names an earlier demo and a same-named organisation, each with a link", async () => {
+it("puts the contact's earlier demo under the contact and the same-named organisation under the name", async () => {
 	open();
 	type("organisation_name", "Stichting Vrije Proef");
 	type("contact_email", "jules@example-water.example");
-	const notice = await screen.findByTestId("demo-repeats", {}, LATER);
-	expect(notice.textContent).toContain(
-		"There is already a demo for jules@example-water.example: Example Water Board (sample).",
+	const contactNotice = await screen.findByTestId(
+		"demo-contact-repeats",
+		{},
+		LATER,
 	);
-	expect(notice.textContent).toContain(
-		"An organisation named Stichting Vrije Proef already exists.",
+	expect(contactNotice.textContent).toBe(
+		"There is already a demo for jules@example-water.example: Example Water Board (sample). Open the demo",
 	);
-	const earlier = fx.demoCheckTwoOrganisations.demos[0];
+	expect(contactNotice.querySelector("a")?.getAttribute("href")).toBe(
+		`/en-US/admin/accounts/demos/${EARLIER.id}`,
+	);
+	const nameNotice = screen.getByTestId("demo-name-repeats");
 	const named = fx.demoCheckTwoOrganisations.organisations_named[0];
-	const links = [...notice.querySelectorAll("a")].map((a) => [
-		a.textContent,
-		a.getAttribute("href"),
-	]);
-	expect(links).toEqual([
-		["Open it", `/en-US/admin/accounts/demos/${earlier?.id}`],
-		["Open the account", `/en-US/admin/accounts/${named?.id}`],
-	]);
+	expect(nameNotice.textContent).toBe(
+		"An organisation named Stichting Vrije Proef already exists. Open the account",
+	);
+	expect(nameNotice.querySelector("a")?.getAttribute("href")).toBe(
+		`/en-US/admin/accounts/${named?.id}`,
+	);
 	// Two organisations to choose from, the customer first and chosen.
 	const radios = screen
 		.getByTestId("demo-destination")
 		.querySelectorAll<HTMLInputElement>('input[type="radio"]');
 	expect(radios).toHaveLength(3);
 	expect(radios[0]?.checked).toBe(true);
+});
+
+it("checks a name before there is an address, and says what it found under the name", async () => {
+	open();
+	type("organisation_name", "Example Water Board (sample)");
+	const notice = await screen.findByTestId("demo-name-repeats", {}, LATER);
+	expect(calls.find((c) => c.name === "checkDemo")?.body).toEqual({
+		contact_email: null,
+		organisation_name: "Example Water Board (sample)",
+	});
+	expect(notice.textContent).toContain(
+		"There is already a demo about Example Water Board (sample), for jules@example-water.example.",
+	);
+	expect(notice.textContent).toContain(
+		"An organisation named Example Water Board (sample) already exists.",
+	);
+	expect([...notice.querySelectorAll("a")].map((a) => a.textContent)).toEqual([
+		"Open the demo",
+		"Open the account",
+	]);
+	expect(screen.queryByTestId("demo-contact-repeats")).toBeNull();
+	expect(screen.queryByTestId("demo-destination")).toBeNull();
+});
+
+it("does not ask about a one-letter name", async () => {
+	open();
+	type("organisation_name", "E");
+	await new Promise((r) => setTimeout(r, 600));
+	expect(calls.some((c) => c.name === "checkDemo")).toBe(false);
 });

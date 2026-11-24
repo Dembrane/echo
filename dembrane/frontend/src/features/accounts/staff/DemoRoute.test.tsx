@@ -84,16 +84,12 @@ const organisation = inOrganisation.existing_organisation as {
 	name: string;
 };
 
-it("says which organisation a demo placed there lives in, with a link to its card", async () => {
+it("says which organisation a demo placed there lives in, as plain text", async () => {
 	open({ ...inOrganisation, sign_in: true });
 	await screen.findByTestId("demo-draft");
-	const link = screen.getByTestId("demo-existing-organisation");
-	expect(link.getAttribute("href")).toBe(
-		`/en-US/admin/accounts/${organisation.id}`,
-	);
-	expect(link.closest("p")?.textContent).toBe(
-		`In ${organisation.name}, as the workspace ${inOrganisation.organisation_name}.`,
-	);
+	const line = screen.getByTestId("demo-existing-organisation");
+	expect(line.textContent).toBe(`A workspace in ${organisation.name}.`);
+	expect(line.querySelector("a")).toBeNull();
 	expect(screen.getByText("Email them the demo")).toBeTruthy();
 	expect(
 		screen.getByText(
@@ -104,15 +100,27 @@ it("says which organisation a demo placed there lives in, with a link to its car
 		),
 	).toBeTruthy();
 	expect(document.body.textContent).not.toContain("sign-in invitation");
-	// The account link stays.
-	expect(screen.getByText("The account")).toBeTruthy();
+	// The account link stays, the one way to the organisation's card.
+	expect(
+		screen.getByText("The account").closest("a")?.getAttribute("href"),
+	).toBe(`/en-US/admin/accounts/${inOrganisation.org_id}`);
+});
+
+it("says nobody is added when the email is off", async () => {
+	open({ ...inOrganisation, sign_in: false });
+	await screen.findByTestId("demo-draft");
+	expect(
+		screen.getByText(
+			"Publishing makes the demo live. No email goes out and they are not added.",
+		),
+	).toBeTruthy();
 });
 
 it("says the contact has the email once a demo in their organisation is published", async () => {
 	open(fx.demoPublishedInOrganisation);
 	const notice = await screen.findByTestId("demo-published");
 	expect(notice.textContent).toBe(
-		`Published. ${inOrganisation.contact_email} has the email with the link to the demo.`,
+		`Published. The link was emailed to ${inOrganisation.contact_email}.`,
 	);
 });
 

@@ -18,7 +18,7 @@ msgstr ""
 #~ msgstr ""
 
 #. placeholder {0}: demo.conversations
-#: src/features/accounts/staff/DemoRoute.tsx:352
+#: src/features/accounts/staff/DemoRoute.tsx:335
 msgid "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}"
 msgstr "{0, plural, one {Створено # вигадану розмову.} few {Створено # вигадані розмови.} other {Створено # вигаданих розмов.}}"
 
@@ -44,7 +44,7 @@ msgstr "{0, plural, one {У {name} на Вас чекає # завдання} fe
 #~ msgstr ""
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:419
+#: src/features/accounts/staff/DemoRoute.tsx:400
 msgid "{0} already has the sign-in invitation. Publishing sends no new email."
 msgstr "{0} уже має запрошення для входу. Публікація не надсилає нового листа."
 
@@ -116,7 +116,7 @@ msgstr "{domain} не є твоїм власним поштовим домено
 msgid "{done} of {total} filled"
 msgstr "Заповнено {done} з {total}"
 
-#: src/features/accounts/staff/DemoRoute.tsx:412
+#: src/features/accounts/staff/DemoRoute.tsx:393
 msgid "{email} already has the email with the link to the demo. Publishing sends no new email."
 msgstr "{email} уже має лист із посиланням на демо. Публікація не надсилає нового листа."
 
@@ -224,10 +224,6 @@ msgstr "{reach, plural, one {{first} також стане учасником # 
 #~ msgid "{reach, plural, one {Once {first} joins, they are also in # workspace that every member joins.} other {Once {first} joins, they are also in # workspaces that every member joins.}}"
 #~ msgstr "{reach, plural, one {Щойно {first} приєднається, ця людина також буде в # робочому просторі, де є кожен учасник.} few {Щойно {first} приєднається, ця людина також буде в # робочих просторах, де є кожен учасник.} many {Щойно {first} приєднається, ця людина також буде в # робочих просторах, де є кожен учасник.} other {Щойно {first} приєднається, ця людина також буде в # робочих просторах, де є кожен учасник.}}"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:450
-msgid "{subject} becomes a prospect in Accounts, with {email} as its admin."
-msgstr "{subject} стане потенційним клієнтом в Облікових записах, з {email} як адміністратором."
-
 #: src/features/accounts/help/SignPromptBanner/SignPromptBanner.tsx:32
 #~ msgid "{tasksWaiting, plural, one {You have # thing to do in {orgName}.} other {You have # things to do in {orgName}.}}"
 #~ msgstr ""
@@ -264,7 +260,7 @@ msgstr "2 запитання"
 msgid "8 digits"
 msgstr "8 цифр"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:370
+#: src/features/accounts/staff/NewDemoRoute.tsx:389
 msgid "A draft on their account, for you to send after the demo."
 msgstr "Чернетка в їхньому обліковому записі, яку ви зможете надіслати після демо."
 
@@ -276,7 +272,7 @@ msgstr "Файл"
 msgid "A KvK number has 8 digits."
 msgstr "Номер KvK має 8 цифр."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:349
+#: src/features/accounts/staff/NewDemoRoute.tsx:373
 msgid "A new organisation"
 msgstr "Нова організація"
 
@@ -288,13 +284,17 @@ msgstr "Можливо, його замінило новіше запрошен�
 msgid "A photo or scan of your signature, PNG or JPEG."
 msgstr "Фото чи скан вашого підпису у форматі PNG або JPEG."
 
-#: src/features/accounts/staff/DemoRoute.tsx:149
+#: src/features/accounts/staff/DemoRoute.tsx:146
 msgid "A step failed. Retry it once the cause is fixed."
 msgstr "Крок не вдався. Спробуйте ще раз після виправлення причини."
 
 #: src/features/accounts/staff/TaskModals.tsx:63
 msgid "A text answer"
 msgstr "Текстова відповідь"
+
+#: src/features/accounts/staff/DemoRoute.tsx:192
+msgid "A workspace in {name}."
+msgstr "Робочий простір в організації {name}."
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:923
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:341
@@ -349,7 +349,7 @@ msgstr "Менеджера акаунта попросили зв'язатися
 msgid "Account updated"
 msgstr "Обліковий запис оновлено"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:224
+#: src/features/accounts/staff/NewDemoRoute.tsx:250
 #: src/features/accounts/staff/DemoRoute.tsx:131
 #: src/features/accounts/staff/AccountCardRoute.tsx:123
 msgid "Accounts"
@@ -456,7 +456,7 @@ msgstr "Усі етапи"
 msgid "Amount"
 msgstr "Сума"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:508
+#: src/features/accounts/staff/NewDemoRoute.tsx:511
 msgid "An organisation named {name} already exists."
 msgstr "Організація з назвою {name} уже існує."
 
@@ -603,14 +603,14 @@ msgstr "Запланувати дзвінок"
 msgid "Book a call with us"
 msgstr "Заплануйте дзвінок із нами"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:250
+#: src/features/accounts/staff/NewDemoRoute.tsx:281
 msgid "Brief"
 msgstr "Бриф"
 
 #~ msgid "Bring in someone who would run a session with you."
 #~ msgstr "Залучіть когось, хто проводив би сесію разом із Вами."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:432
+#: src/features/accounts/staff/NewDemoRoute.tsx:451
 msgid "Build the demo"
 msgstr "Зібрати демо"
 
@@ -618,7 +618,7 @@ msgstr "Зібрати демо"
 msgid "building"
 msgstr "створюється"
 
-#: src/features/accounts/staff/DemoRoute.tsx:151
+#: src/features/accounts/staff/DemoRoute.tsx:148
 msgid "Building the demo. This page follows along."
 msgstr "Створюємо демо. Ця сторінка оновлюється автоматично."
 
@@ -853,17 +853,17 @@ msgstr "Далі"
 msgid "Confirm"
 msgstr "Підтвердити"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:291
+#: src/features/accounts/staff/NewDemoRoute.tsx:322
 msgid "Contact"
 msgstr "Контакт"
 
 #: src/features/accounts/staff/NewOrganisationModal.tsx:91
-#: src/features/accounts/staff/NewDemoRoute.tsx:294
+#: src/features/accounts/staff/NewDemoRoute.tsx:325
 msgid "Contact email"
 msgstr "Ел. пошта контакту"
 
 #: src/features/accounts/staff/NewOrganisationModal.tsx:84
-#: src/features/accounts/staff/NewDemoRoute.tsx:293
+#: src/features/accounts/staff/NewDemoRoute.tsx:324
 msgid "Contact name"
 msgstr "Ім'я контакту"
 
@@ -909,9 +909,9 @@ msgstr "Скопіюйте це повідомлення та вставте й�
 msgid "Corpus"
 msgstr "Корпус"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:140
-msgid "Could not check this address. The demo gets a new organisation."
-msgstr "Не вдалося перевірити цю адресу. Демо отримає нову організацію."
+#: src/features/accounts/staff/NewDemoRoute.tsx:165
+msgid "Could not check this address. If they already use dembrane, they get a second organisation."
+msgstr "Не вдалося перевірити цю адресу. Якщо вони вже користуються dembrane, у них з'явиться друга організація."
 
 #: src/features/accounts/staff/OfferExtras.tsx:174
 msgid "Counter-signed"
@@ -1028,7 +1028,7 @@ msgstr "Демо | dembrane"
 msgid "Demo draft"
 msgstr "Чернетка демо"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:276
+#: src/features/accounts/staff/NewDemoRoute.tsx:307
 msgid "Demo language"
 msgstr "Мова демо"
 
@@ -1232,11 +1232,11 @@ msgstr "Лист надіслано"
 msgid "Email the customer"
 msgstr "Написати клієнту"
 
-#: src/features/accounts/staff/DemoRoute.tsx:428
+#: src/features/accounts/staff/DemoRoute.tsx:409
 msgid "Email them the demo"
 msgstr "Надіслати їм демо листом"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:169
+#: src/features/accounts/staff/NewDemoRoute.tsx:194
 msgid "Email them when you publish"
 msgstr "Надіслати лист під час публікації"
 
@@ -1265,11 +1265,11 @@ msgid "Enter the six-digit code we sent to {email}."
 msgstr "Введіть шестизначний код, який ми надіслали на {email}."
 
 #: src/features/accounts/staff/PushOfferModal.tsx:345
-#: src/features/accounts/staff/NewDemoRoute.tsx:386
+#: src/features/accounts/staff/NewDemoRoute.tsx:405
 msgid "Event"
 msgstr "Подія"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:264
+#: src/features/accounts/staff/NewDemoRoute.tsx:295
 msgid "Event or customer example"
 msgstr "Приклад події або клієнта"
 
@@ -1524,15 +1524,11 @@ msgstr "Якщо він у вас є"
 msgid "If your finance team uses one"
 msgstr "Якщо ваша фінансова команда використовує це"
 
-#: src/features/accounts/staff/DemoRoute.tsx:207
-msgid "In {link}, as the workspace {workspace}."
-msgstr "У {link}, як робочий простір {workspace}."
-
-#: src/features/accounts/staff/NewDemoRoute.tsx:312
-msgid "In an organisation they already work in, the demo gets its own workspace, {subject}."
+#: src/features/accounts/staff/NewDemoRoute.tsx:343
+msgid "In an organisation they already work in, the demo gets its own workspace: {subject}."
 msgstr "В організації, де вони вже працюють, демо отримає власний робочий простір: {subject}."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:317
+#: src/features/accounts/staff/NewDemoRoute.tsx:348
 msgid "In an organisation they already work in, the demo gets its own workspace."
 msgstr "В організації, де вони вже працюють, демо отримає власний робочий простір."
 
@@ -1701,7 +1697,7 @@ msgstr "Залучені до закупівлі"
 msgid "Is that right?"
 msgstr "Це так?"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:454
+#: src/features/accounts/staff/NewDemoRoute.tsx:463
 msgid "It becomes a prospect in Accounts, with {email} as its admin."
 msgstr "Вона стане потенційним клієнтом в Облікових записах, з {email} як адміністратором."
 
@@ -1775,7 +1771,7 @@ msgstr "Юридична назва"
 msgid "Legal name of your organisation"
 msgstr "Юридична назва вашої організації"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:177
+#: src/features/accounts/staff/NewDemoRoute.tsx:202
 msgid "Let them sign in with an email code"
 msgstr "Дозволити вхід за кодом з електронної пошти"
 
@@ -1791,7 +1787,7 @@ msgstr "Підсумок рядка"
 msgid "Lines"
 msgstr "Рядки"
 
-#: src/features/accounts/staff/DemoRoute.tsx:322
+#: src/features/accounts/staff/DemoRoute.tsx:305
 msgid "live"
 msgstr "опубліковано"
 
@@ -1876,12 +1872,12 @@ msgstr "Потрібен підпис"
 msgid "Needs form and demo"
 msgstr "Потрібна форма та демо"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:228
+#: src/features/accounts/staff/NewDemoRoute.tsx:254
 #: src/features/accounts/staff/AccountsPanel.tsx:114
 msgid "New demo"
 msgstr "Нове демо"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:99
+#: src/features/accounts/staff/NewDemoRoute.tsx:124
 msgid "New demo | dembrane"
 msgstr "Нове демо | dembrane"
 
@@ -1903,7 +1899,7 @@ msgstr "Новий проєкт"
 msgid "New task"
 msgstr "Нове завдання"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:142
+#: src/features/accounts/staff/NewDemoRoute.tsx:167
 msgid "New to dembrane. The demo gets a new organisation."
 msgstr "Новий у dembrane. Демо отримає нову організацію."
 
@@ -2062,7 +2058,7 @@ msgstr "Ще не вказано."
 msgid "Not in the total"
 msgstr "Не входить у суму"
 
-#: src/features/accounts/staff/DemoRoute.tsx:324
+#: src/features/accounts/staff/DemoRoute.tsx:307
 msgid "not live until you publish"
 msgstr "недоступно, доки ви не опублікуєте"
 
@@ -2103,7 +2099,7 @@ msgid "Number of months"
 msgstr "Кількість місяців"
 
 #: src/features/accounts/format.ts:45
-#: src/features/accounts/staff/NewDemoRoute.tsx:365
+#: src/features/accounts/staff/NewDemoRoute.tsx:384
 msgid "Offer"
 msgstr "Пропозиція"
 
@@ -2116,7 +2112,7 @@ msgstr "Пропозицію прийнято"
 msgid "Offer drafted"
 msgstr "Чернетка пропозиції"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:392
+#: src/features/accounts/staff/NewDemoRoute.tsx:411
 msgid "Offer language"
 msgstr "Мова пропозиції"
 
@@ -2207,10 +2203,6 @@ msgstr "Відкрити підтвердження"
 msgid "Open in your mail app"
 msgstr "Відкрити в поштовій програмі"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:501
-msgid "Open it"
-msgstr "Відкрити"
-
 #: src/features/accounts/staff/AccountCardRoute.tsx:262
 msgid "Open PDF"
 msgstr "Відкрити PDF"
@@ -2224,10 +2216,11 @@ msgstr "Відкрити підписаний PDF"
 #~ msgid "Open tasks"
 #~ msgstr "Відкрити завдання"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:515
+#: src/features/accounts/staff/NewDemoRoute.tsx:518
 msgid "Open the account"
 msgstr "Відкрити обліковий запис"
 
+#: src/features/accounts/staff/NewDemoRoute.tsx:504
 #: src/features/accounts/customer/NextSteps.tsx:535
 msgid "Open the demo"
 msgstr "Відкрити демо"
@@ -2245,7 +2238,7 @@ msgid "Open the DPA (data processing agreement)"
 msgstr "Відкрити DPA (угода про обробку даних)"
 
 #. placeholder {0}: p.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:306
+#: src/features/accounts/staff/DemoRoute.tsx:289
 msgid "Open the draft ({0})"
 msgstr "Відкрити чернетку ({0})"
 
@@ -2331,7 +2324,7 @@ msgstr "Необов'язково"
 msgid "Optional, replaces our DPA"
 msgstr "Необов'язково, замінює нашу DPA"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:265
+#: src/features/accounts/staff/NewDemoRoute.tsx:296
 msgid "Optional. A past event or customer to model the demo on."
 msgstr "Необов'язково. Минула подія або клієнт як основа для демо."
 
@@ -2363,7 +2356,7 @@ msgid "Organisation"
 msgstr "Організація"
 
 #: src/features/accounts/staff/NewOrganisationModal.tsx:76
-#: src/features/accounts/staff/NewDemoRoute.tsx:240
+#: src/features/accounts/staff/NewDemoRoute.tsx:266
 msgid "Organisation name"
 msgstr "Назва організації"
 
@@ -2495,7 +2488,7 @@ msgstr "Номер замовлення, закупівлі або проєкт�
 msgid "Postal code"
 msgstr "Поштовий індекс"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:369
+#: src/features/accounts/staff/NewDemoRoute.tsx:388
 msgid "Prepare an offer"
 msgstr "Підготувати пропозицію"
 
@@ -2509,7 +2502,7 @@ msgid "Progress"
 msgstr "Прогрес"
 
 #. placeholder {0}: p.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:338
+#: src/features/accounts/staff/DemoRoute.tsx:321
 msgid "Project in the dashboard ({0})"
 msgstr "Проєкт на панелі керування ({0})"
 
@@ -2526,54 +2519,57 @@ msgstr "План проєкту"
 #~ msgstr "Потенційні клієнти"
 
 #. placeholder {0}: l.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:318
+#: src/features/accounts/staff/DemoRoute.tsx:301
 msgid "Public demo ({0})"
 msgstr "Публічне демо ({0})"
 
-#: src/features/accounts/staff/DemoRoute.tsx:461
+#: src/features/accounts/staff/DemoRoute.tsx:442
 msgid "Publish"
 msgstr "Опублікувати"
 
 #. placeholder {0}: formatDateTime(demo.published_at, i18n.locale)
-#: src/features/accounts/staff/DemoRoute.tsx:143
+#: src/features/accounts/staff/DemoRoute.tsx:140
 msgid "Published {0}."
 msgstr "Опубліковано {0}."
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:384
+#: src/features/accounts/staff/DemoRoute.tsx:365
 msgid "Published. {0} has the sign-in invitation."
 msgstr "Опубліковано. Запрошення увійти надіслано на {0}."
 
-#: src/features/accounts/staff/DemoRoute.tsx:380
-msgid "Published. {email} has the email with the link to the demo."
-msgstr "Опубліковано. {email} отримав лист із посиланням на демо."
-
-#: src/features/accounts/staff/DemoRoute.tsx:388
+#: src/features/accounts/staff/DemoRoute.tsx:369
 msgid "Published. No email went out; share the demo link yourself."
 msgstr "Опубліковано. Лист не надсилався; поділіться посиланням на демо самостійно."
 
-#: src/features/accounts/staff/DemoRoute.tsx:431
+#: src/features/accounts/staff/DemoRoute.tsx:363
+msgid "Published. The link was emailed to {email}."
+msgstr "Опубліковано. Посилання надіслано листом на {email}."
+
+#: src/features/accounts/staff/DemoRoute.tsx:412
 msgid "Publishing adds {email} to the workspace and emails them the link."
 msgstr "Публікація додає {email} до робочого простору й надсилає посилання листом."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:170
+#: src/features/accounts/staff/NewDemoRoute.tsx:195
 msgid "Publishing adds them to the demo's workspace and emails them the link. Off: no email goes out and they are not added."
 msgstr "Публікація додає їх до робочого простору демо й надсилає посилання листом. Якщо вимкнено: лист не надсилається, і їх не додають."
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:448
+#: src/features/accounts/staff/DemoRoute.tsx:429
 msgid "Publishing emails {0} a sign-in code."
 msgstr "Після публікації на {0} надійде код для входу."
 
-#: src/features/accounts/staff/DemoRoute.tsx:436
-#: src/features/accounts/staff/DemoRoute.tsx:449
+#: src/features/accounts/staff/DemoRoute.tsx:417
+msgid "Publishing makes the demo live. No email goes out and they are not added."
+msgstr "Публікація відкриває доступ до демо. Лист не надсилається, і їх не додають."
+
+#: src/features/accounts/staff/DemoRoute.tsx:430
 msgid "Publishing makes the demo live. No email goes out."
 msgstr "Публікація відкриває доступ до демо. Лист не надсилається."
 
 #~ msgid "Publishing sends {0} a sign-in invitation with an email code."
 #~ msgstr ""
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:178
+#: src/features/accounts/staff/NewDemoRoute.tsx:203
 msgid "Publishing sends them the sign-in invitation. Off: no email goes out."
 msgstr "Публікація надсилає запрошення увійти. Якщо вимкнено: лист не надсилається."
 
@@ -2737,11 +2733,11 @@ msgid "Required"
 msgstr "Обов'язкове"
 
 #: src/features/accounts/staff/DemoRoute.tsx:59
-#: src/features/accounts/staff/DemoRoute.tsx:363
+#: src/features/accounts/staff/DemoRoute.tsx:346
 msgid "Research"
 msgstr "Дослідження"
 
-#: src/features/accounts/staff/DemoRoute.tsx:263
+#: src/features/accounts/staff/DemoRoute.tsx:246
 msgid "Retry"
 msgstr "Повторити"
 
@@ -2894,7 +2890,7 @@ msgstr "Надіслати пропозицію для {org}"
 #~ msgid "Send the link"
 #~ msgstr "Надіслати посилання"
 
-#: src/features/accounts/staff/DemoRoute.tsx:445
+#: src/features/accounts/staff/DemoRoute.tsx:426
 msgid "Send the sign-in invitation"
 msgstr "Надіслати запрошення для входу"
 
@@ -2998,7 +2994,7 @@ msgstr "Поділитися з колегою"
 msgid "Shares add up to {0}%"
 msgstr "Частки разом становлять {0}%"
 
-#: src/features/accounts/staff/DemoRoute.tsx:367
+#: src/features/accounts/staff/DemoRoute.tsx:350
 #: src/features/accounts/staff/AccountCardRoute.tsx:1014
 msgid "Show all"
 msgstr "Показати всі"
@@ -3012,7 +3008,7 @@ msgstr "Показати всіх ({count})"
 msgid "Show finished ({0})"
 msgstr "Показати завершені ({0})"
 
-#: src/features/accounts/staff/DemoRoute.tsx:368
+#: src/features/accounts/staff/DemoRoute.tsx:351
 #: src/features/accounts/staff/AccountCardRoute.tsx:1014
 msgid "Show less"
 msgstr "Показати менше"
@@ -3263,7 +3259,7 @@ msgid "Submitted"
 msgstr "Надіслано"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:344
-#: src/features/accounts/staff/NewDemoRoute.tsx:385
+#: src/features/accounts/staff/NewDemoRoute.tsx:404
 msgid "Subscription"
 msgstr "Підписка"
 
@@ -3275,7 +3271,7 @@ msgstr "Проміжний підсумок"
 msgid "System"
 msgstr "Система"
 
-#: src/features/accounts/staff/DemoRoute.tsx:404
+#: src/features/accounts/staff/DemoRoute.tsx:385
 msgid "Takes the public link down until you publish again."
 msgstr "Публічне посилання не працюватиме, доки ви не опублікуєте знову."
 
@@ -3348,7 +3344,7 @@ msgid "Tell us who signs yearly license offer {number}"
 msgstr "Повідомте, хто підписує пропозицію річної ліцензії {number}"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:338
-#: src/features/accounts/staff/NewDemoRoute.tsx:379
+#: src/features/accounts/staff/NewDemoRoute.tsx:398
 msgid "Template"
 msgstr "Шаблон"
 
@@ -3380,7 +3376,7 @@ msgstr "Не вдалося зчитати зображення. Спробуй�
 msgid "That PDF is over 10 MB."
 msgstr "Цей PDF-файл перевищує 10 МБ."
 
-#: src/features/accounts/staff/DemoRoute.tsx:347
+#: src/features/accounts/staff/DemoRoute.tsx:330
 msgid "The account"
 msgstr "Акаунт"
 
@@ -3436,7 +3432,7 @@ msgstr "DPA підписуємо завжди"
 msgid "The draft is not ready yet."
 msgstr "Чернетка ще не готова."
 
-#: src/features/accounts/staff/DemoRoute.tsx:147
+#: src/features/accounts/staff/DemoRoute.tsx:144
 msgid "The draft is ready. Check it, then publish."
 msgstr "Чернетка готова. Перевірте її та опублікуйте."
 
@@ -3550,11 +3546,11 @@ msgstr "Їхній номер {0}"
 msgid "their second signatory"
 msgstr "їхнього другого підписанта"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:491
+#: src/features/accounts/staff/NewDemoRoute.tsx:494
 msgid "There is already a demo about {name}, for {email}."
 msgstr "Уже є демо про {name}, для {email}."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:487
+#: src/features/accounts/staff/NewDemoRoute.tsx:490
 msgid "There is already a demo for {email}: {name}."
 msgstr "Уже є демо для {email}: {name}."
 
@@ -3571,7 +3567,7 @@ msgstr "Ця особа може підписати пропозицію"
 msgid "They chose"
 msgstr "Вони вибрали"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:144
+#: src/features/accounts/staff/NewDemoRoute.tsx:169
 msgid "They have an account but no organisation yet. The demo gets a new organisation."
 msgstr "Має обліковий запис, але ще не має організації. Демо отримає нову організацію."
 
@@ -3751,7 +3747,7 @@ msgstr "Ціна за одиницю ({currency})"
 #~ msgid "Unit price (EUR)"
 #~ msgstr "Ціна за одиницю (EUR)"
 
-#: src/features/accounts/staff/DemoRoute.tsx:401
+#: src/features/accounts/staff/DemoRoute.tsx:382
 msgid "Unpublish"
 msgstr "Скасувати публікацію"
 
@@ -3927,7 +3923,7 @@ msgstr "Ми працюємо над цим."
 msgid "We asked for a change: {0}"
 msgstr "Ми попросили про зміну: {0}"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:231
+#: src/features/accounts/staff/NewDemoRoute.tsx:257
 msgid "We build a synthetic demo from their website and your brief. Nothing reaches them until you publish."
 msgstr "Ми створимо синтетичне демо на основі їхнього вебсайту та вашого опису. Вони нічого не отримають, доки ви не опублікуєте."
 
@@ -4061,7 +4057,7 @@ msgstr "Ми налаштуємо це разом із вами."
 msgid "We will set up with you how you get invoices. Our answer appears under Talk to us, on the Overview page."
 msgstr "Ми разом із вами налаштуємо, як ви отримуватимете рахунки. Наша відповідь з’явиться в розділі «Зв’язатися з нами» на сторінці Overview."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:243
+#: src/features/accounts/staff/NewDemoRoute.tsx:269
 #: src/features/accounts/staff/DemoRoute.tsx:58
 msgid "Website"
 msgstr "Вебсайт"
@@ -4087,7 +4083,7 @@ msgstr "Що кожна з ваших організацій ще має зро�
 msgid "What it changes"
 msgstr "Що змінює"
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:251
+#: src/features/accounts/staff/NewDemoRoute.tsx:282
 msgid "What they want to hear from whom, and why now."
 msgstr "Що саме вони хочуть почути, від кого і чому саме зараз."
 
@@ -4111,7 +4107,7 @@ msgstr "Коли"
 msgid "When you have sent it, reply sent in the offer's thread in Slack so sam marks the offer as sent."
 msgstr "Коли надішлете лист, напишіть \"sent\" у гілці пропозиції в Slack, щоб sam позначив пропозицію як надіслану."
 
-#: src/features/accounts/staff/NewDemoRoute.tsx:307
+#: src/features/accounts/staff/NewDemoRoute.tsx:338
 msgid "Where the demo goes"
 msgstr "Куди потрапить демо"
 

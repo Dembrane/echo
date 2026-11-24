@@ -133,10 +133,7 @@ function Demo() {
 					</Anchor>
 					<Title order={3}>{demo.organisation_name}</Title>
 					{demo.existing_organisation && (
-						<Placement
-							organisation={demo.existing_organisation}
-							workspace={demo.organisation_name}
-						/>
+						<Placement organisation={demo.existing_organisation} />
 					)}
 					<Text size="sm" c="dimmed">
 						{demo.status === "published" ? (
@@ -184,29 +181,15 @@ function Demo() {
 	);
 }
 
-/** Where a demo placed in an organisation the contact already works in lives. */
-function Placement({
-	organisation,
-	workspace,
-}: {
-	organisation: { id: string; name: string };
-	workspace: string;
-}) {
-	const link = (
-		<Anchor
-			component={I18nLink}
-			to={`/admin/accounts/${organisation.id}`}
-			inherit
-			data-testid="demo-existing-organisation"
-		>
-			{organisation.name}
-		</Anchor>
-	);
+/**
+ * Where a demo placed in an organisation the contact already works in lives. The name is
+ * plain text: "The account" below is the way to its card.
+ */
+function Placement({ organisation }: { organisation: { name: string } }) {
+	const name = organisation.name;
 	return (
-		<Text size="sm" c="dimmed">
-			<Trans>
-				In {link}, as the workspace {workspace}.
-			</Trans>
+		<Text size="sm" c="dimmed" data-testid="demo-existing-organisation">
+			<Trans>A workspace in {name}.</Trans>
 		</Text>
 	);
 }
@@ -377,9 +360,7 @@ function Draft({
 				<Stack gap="xs">
 					<Alert color="green" variant="light" data-testid="demo-published">
 						{demo.invited_at && inOrganisation ? (
-							<Trans>
-								Published. {email} has the email with the link to the demo.
-							</Trans>
+							<Trans>Published. The link was emailed to {email}.</Trans>
 						) : demo.invited_at ? (
 							<Trans>
 								Published. {demo.contact_email} has the sign-in invitation.
@@ -433,7 +414,7 @@ function Draft({
 										link.
 									</Trans>
 								) : (
-									t`Publishing makes the demo live. No email goes out.`
+									t`Publishing makes the demo live. No email goes out and they are not added.`
 								)
 							}
 							data-testid="demo-publish-sign-in"

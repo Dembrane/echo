@@ -9,6 +9,7 @@ import {
 	Container,
 	Divider,
 	Group,
+	Input,
 	Radio,
 	SegmentedControl,
 	SimpleGrid,
@@ -21,15 +22,14 @@ import {
 } from "@mantine/core";
 import { useDebouncedValue, useDocumentTitle } from "@mantine/hooks";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { useQuery } from "@tanstack/react-query";
-import { Fragment, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { displayRole } from "@/lib/roles";
 import { AccountsApiError, call } from "../api/client";
 import { DemoCheckRequest, type DemoCheckT } from "../contract/contract.gen";
-import { stageLabel } from "../format";
 import { AccountsI18n } from "../i18n";
 import { Whole } from "../ui";
 import { StaffOnly } from "./AccountCardRoute";
@@ -60,38 +60,63 @@ const checkableEmail = (value: string): string | null => {
 };
 
 /**
- * What the form knows about the contact, once their address is complete: whether they
- * have an account, the organisations the demo could go to, and earlier demos or
- * organisations under the same name. The answer stands only for the address it was asked
- * about, so changing the address hides it at once and resets the choice. Nothing is drawn
- * while the check runs; a new organisation name re-asks with the previous answer kept on
- * screen, so the section never closes and reopens.
+ * What the form knows before staff build, asked as soon as there is something to ask
+ * with: an organisation name of two characters or more, a complete address, or both.
+ * The name brings earlier demos and organisations under that name; the address brings
+ * whether they have an account, the organisations the demo could go to, and their earlier
+ * demos. Nothing is drawn while the check runs, and the previous answer stays on screen
+ * until the next one lands. What it says about the contact stands only for the address it
+ * was asked about, so changing the address hides that at once and resets the choice.
  */
 function useDemoCheck(email: string, organisationName: string) {
 	const [debouncedEmail] = useDebouncedValue(email, 400);
 	const [debouncedName] = useDebouncedValue(organisationName.trim(), 400);
-	const asked = checkableEmail(debouncedEmail);
-	const typed = checkableEmail(email);
+	const askedEmail = checkableEmail(debouncedEmail);
+	const askedName = debouncedName.length >= 2 ? debouncedName : null;
 	const check = useQuery({
-		enabled: asked !== null,
-		placeholderData: (previous, previousQuery) =>
-			previousQuery?.queryKey[3] === asked ? previous : undefined,
-		queryFn: () =>
-			call("checkDemo", {
+		enabled: askedEmail !== null || askedName !== null,
+		placeholderData: keepPreviousData,
+		queryFn: async () => ({
+			answer: await call("checkDemo", {
 				body: {
-					contact_email: asked,
-					organisation_name: debouncedName || undefined,
+					contact_email: askedEmail,
+					organisation_name: askedName ?? undefined,
 				},
 			}),
-		queryKey: ["accounts", "staff", "demo-check", asked, debouncedName],
+			email: askedEmail,
+			name: askedName,
+		}),
+		queryKey: ["accounts", "staff", "demo-check", askedEmail, askedName],
 		retry: false,
 		staleTime: 60_000,
 	});
-	const current = asked !== null && typed === asked;
+	const typedEmail = checkableEmail(email);
+	const typedName = organisationName.trim();
+	const aboutContact =
+		typedEmail !== null && typedEmail === askedEmail && !check.isError;
+	const answer = check.data;
+	const forContact =
+		aboutContact && answer?.email === typedEmail ? answer.answer : undefined;
+	const forName =
+		typedName.length >= 2 && answer?.name && !check.isError
+			? answer.answer
+			: undefined;
 	return {
-		answer: current ? check.data : undefined,
-		email: asked,
-		failed: current && check.isError && !check.data,
+		contact: forContact?.contact ?? null,
+		contactDemos: forContact?.demos.filter((d) => d.same_contact) ?? [],
+		email: askedEmail,
+		failed: check.isError && typedEmail !== null && typedEmail === askedEmail,
+		nameDemos:
+			forName?.demos.filter((d) => d.same_organisation && !d.same_contact) ??
+			[],
+		organisationsNamed: forName?.organisations_named ?? [],
+		// Something checkable is typed and its answer is not in: building now could put
+		// the demo in a new organisation for someone who already has one. A failed check
+		// stops the wait.
+		waiting:
+			!check.isError &&
+			((typedEmail !== null && answer?.email !== typedEmail) ||
+				(typedName.length >= 2 && answer?.name !== typedName)),
 	};
 }
 
@@ -119,7 +144,7 @@ function NewDemo() {
 	const fields = error instanceof AccountsApiError ? error.fields : {};
 
 	const check = useDemoCheck(form.contact_email, form.organisation_name);
-	const contact = check.answer?.contact ?? null;
+	const contact = check.contact;
 	const organisations = contact?.organisations ?? [];
 	// The choice belongs to the address it was made for; a new address starts from the
 	// first of its organisations again.
@@ -137,7 +162,7 @@ function NewDemo() {
 	const subject = form.organisation_name.trim();
 
 	const contactLine = check.failed
-		? t`Could not check this address. The demo gets a new organisation.`
+		? t`Could not check this address. If they already use dembrane, they get a second organisation.`
 		: contact && !contact.has_account
 			? t`New to dembrane. The demo gets a new organisation.`
 			: contact && organisations.length === 0
@@ -181,6 +206,7 @@ function NewDemo() {
 	);
 
 	const submit = async () => {
+		if (check.waiting) return;
 		setPending(true);
 		setError(null);
 		try {
@@ -246,6 +272,11 @@ function NewDemo() {
 							type: "url",
 						})}
 					</SimpleGrid>
+					<Repeats
+						demos={check.nameDemos}
+						organisations={check.organisationsNamed}
+						testId="demo-name-repeats"
+					/>
 					<Textarea
 						label={t`Brief`}
 						description={t`What they want to hear from whom, and why now.`}
@@ -298,20 +329,20 @@ function NewDemo() {
 							type: "email",
 						})}
 					</SimpleGrid>
-					{check.answer && <Repeats check={check.answer} />}
+					<Repeats demos={check.contactDemos} testId="demo-contact-repeats" />
 					{organisations.length === 0 && signInSwitch}
 				</Stack>
 
 				{organisations.length > 0 && (
 					<Stack gap="md">
 						<Divider label={t`Where the demo goes`} labelPosition="left" />
-						{/* The sentence above the choice and the list under it, spaced as the
-						    ownership choice in CreateWorkspaceRoute is. */}
-						<Text size="sm" c="dimmed" data-testid="demo-destination-intro">
+						{/* The sentence that introduces the choice, in the form's own description
+						    style; the options sit closer to each other than to it or the switch. */}
+						<Input.Description data-testid="demo-destination-intro">
 							{subject ? (
 								<Trans>
 									In an organisation they already work in, the demo gets its own
-									workspace, {subject}.
+									workspace: {subject}.
 								</Trans>
 							) : (
 								<Trans>
@@ -319,7 +350,7 @@ function NewDemo() {
 									workspace.
 								</Trans>
 							)}
-						</Text>
+						</Input.Description>
 						<Radio.Group
 							value={destination}
 							onChange={(value) =>
@@ -328,31 +359,19 @@ function NewDemo() {
 							error={fields.org_id}
 							data-testid="demo-destination"
 						>
-							<Stack gap="md" mt="sm">
+							<Stack gap="sm">
 								{organisations.map((o) => (
 									<Radio
 										key={o.id}
 										value={o.id}
 										label={o.name}
-										description={
-											<Terms
-												terms={[
-													displayRole(o.role),
-													o.account_stage ? stageLabel(o.account_stage) : null,
-												]}
-											/>
-										}
+										description={<Whole>{displayRole(o.role)}</Whole>}
 									/>
 								))}
 								<Radio
 									value={NEW_ORGANISATION}
 									label={t`A new organisation`}
-									description={
-										<NewOrganisationLine
-											subject={subject}
-											address={check.email}
-										/>
-									}
+									description={<NewOrganisationLine address={check.email} />}
 								/>
 							</Stack>
 						</Radio.Group>
@@ -419,7 +438,7 @@ function NewDemo() {
 					<Button
 						size="md"
 						onClick={submit}
-						loading={pending}
+						loading={pending || check.waiting}
 						disabled={
 							!form.organisation_name.trim() ||
 							!form.website_url.trim() ||
@@ -437,48 +456,32 @@ function NewDemo() {
 	);
 }
 
-/** What "A new organisation" makes, with the name staff typed when there is one. */
-function NewOrganisationLine({
-	subject,
-	address,
-}: {
-	subject: string;
-	address: string | null;
-}) {
+/** What "A new organisation" makes; the name is in the sentence above the choice. */
+function NewOrganisationLine({ address }: { address: string | null }) {
 	const email = <Whole>{address ?? ""}</Whole>;
-	return subject ? (
-		<Trans>
-			{subject} becomes a prospect in Accounts, with {email} as its admin.
-		</Trans>
-	) : (
+	return (
 		<Trans>It becomes a prospect in Accounts, with {email} as its admin.</Trans>
 	);
 }
 
 /**
- * Short labels in one line of context, apart by a middle dot. Each keeps its words
- * together, so on a phone the line breaks between labels, never inside one.
+ * Earlier demos and organisations already called this: a notice to look before building,
+ * never a stop. Each is a sentence with a link to it, set next to the field it is about.
  */
-const Terms = ({ terms }: { terms: (string | null)[] }) =>
-	terms
-		.filter((term): term is string => Boolean(term))
-		.map((term, i) => (
-			<Fragment key={term}>
-				{i > 0 && " · "}
-				<Whole>{term}</Whole>
-			</Fragment>
-		));
-
-/**
- * Earlier demos for this contact or this name, and organisations already called that: a
- * notice to look before building, never a stop. Each is a sentence with a link to it.
- */
-function Repeats({ check }: { check: DemoCheckT }) {
-	if (!check.demos.length && !check.organisations_named.length) return null;
+function Repeats({
+	demos,
+	organisations = [],
+	testId,
+}: {
+	demos: DemoCheckT["demos"];
+	organisations?: DemoCheckT["organisations_named"];
+	testId: string;
+}) {
+	if (!demos.length && !organisations.length) return null;
 	return (
-		<Alert color="gray" data-testid="demo-repeats">
+		<Alert color="gray" data-testid={testId}>
 			<Stack gap="xs">
-				{check.demos.map((d) => {
+				{demos.map((d) => {
 					const email = <Whole>{d.contact_email}</Whole>;
 					const name = d.organisation_name;
 					return (
@@ -498,12 +501,12 @@ function Repeats({ check }: { check: DemoCheckT }) {
 								className="whitespace-nowrap"
 								inherit
 							>
-								<Trans>Open it</Trans>
+								<Trans>Open the demo</Trans>
 							</Anchor>
 						</Text>
 					);
 				})}
-				{check.organisations_named.map(({ id, name }) => (
+				{organisations.map(({ id, name }) => (
 					<Text key={id} size="sm">
 						<Trans>An organisation named {name} already exists.</Trans>{" "}
 						<Anchor

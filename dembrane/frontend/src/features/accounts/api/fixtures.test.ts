@@ -521,7 +521,17 @@ describe("the fixture backend, through the client", () => {
 		]);
 		const jules = await check("jules@example-water.example");
 		expect(jules.contact?.organisations).toHaveLength(2);
-		expect(jules.organisations_named).toHaveLength(1);
+		// Organisations of the same name come with the name typed, as from the API.
+		expect(jules.organisations_named).toEqual([]);
+		const named = await client.call("checkDemo", {
+			body: {
+				contact_email: "jules@example-water.example",
+				organisation_name: "stichting vrije proef",
+			},
+		});
+		expect(named.organisations_named.map((o) => o.name)).toEqual([
+			"Stichting Vrije Proef",
+		]);
 		expect(jules.demos[0]?.same_contact).toBe(true);
 		const placed = await client.call("createDemo", {
 			body: fx.demoCreateInOrganisationRequest,
