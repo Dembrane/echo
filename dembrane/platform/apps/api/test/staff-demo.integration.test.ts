@@ -1243,7 +1243,8 @@ run("a staff demo where the deployment is production", () => {
           .select({ seed: schema.account_demo.seed })
           .from(schema.account_demo)
           .where(eq(schema.account_demo.id, started.id));
-        const workspaceId = (row?.seed as { workspace_id: string }).workspace_id;
+        const workspaceId =
+          (row?.seed as { workspace_id?: string } | undefined)?.workspace_id ?? "";
         const [place] = await db
           .select({ role: schema.workspace_membership.role })
           .from(schema.workspace_membership)
