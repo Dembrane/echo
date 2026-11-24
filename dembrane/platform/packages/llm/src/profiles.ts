@@ -117,10 +117,20 @@ export function profileForProvider(
 export const improves = (p: TranscriptionProfile, upload: boolean) =>
   (upload ? p.uploads : p.recordings) !== "none";
 
-/** Providers the profile calls, for the boot check. */
-function needs(p: TranscriptionProfile) {
+/** Every speech provider the profile calls, wherever in the pipeline. */
+export function speechProvidersOf(p: TranscriptionProfile): SpeechProvider[] {
   const speech = new Set<SpeechProvider>([p.live.provider]);
   if (p.redo && (p.recordings === "redo" || p.uploads === "redo")) speech.add(p.redo.provider);
+  return [...speech];
+}
+
+/** The speech provider that belongs to an AI provider: Whisper is Scaleway's, Gemini is Google's. */
+export const ownSpeech = (id: ProviderId): SpeechProvider =>
+  id === "google" ? "gemini" : "whisper";
+
+/** Providers the profile calls, for the boot check. */
+function needs(p: TranscriptionProfile) {
+  const speech = new Set(speechProvidersOf(p));
   return { compatible: speech.has("whisper") || p.cleanUp !== null, vertex: speech.has("gemini") };
 }
 

@@ -1,7 +1,7 @@
 import { type Completer, type Embedder, vertexCompleter, vertexEmbedder } from "./complete";
 import type { FallbackOptions } from "./fallback";
 import { createModels, type Models, type ModelsConfig } from "./models";
-import { profileGaps, type TranscriptionProfile } from "./profiles";
+import { ownSpeech, profileGaps, speechProvidersOf, type TranscriptionProfile } from "./profiles";
 import { PROVIDERS, type ProviderId, type RoutingPolicy } from "./providers";
 import { type ProviderResolver, routingCompleter, routingEmbedder, routingModels } from "./routing";
 import {
@@ -145,7 +145,14 @@ export function bootGaps(
     const gap = providerGaps(s, id);
     const profile = profileOf(id);
     const pgap = profileGaps(profile, s);
-    return [...(gap ? [gap] : []), ...(pgap ? [pgap] : [])];
+    // A provider's audio goes only to its own speech provider: Scaleway's to Whisper, Google's to Gemini.
+    const foreign = speechProvidersOf(profile).filter((sp) => sp !== ownSpeech(id));
+    const mismatch = foreign.length
+      ? [
+          `transcription profile ${profile.name} uses ${foreign.join(" and ")}, which is not provider ${id}'s own speech provider (${ownSpeech(id)})`,
+        ]
+      : [];
+    return [...(gap ? [gap] : []), ...(pgap ? [pgap] : []), ...mismatch];
   });
 }
 

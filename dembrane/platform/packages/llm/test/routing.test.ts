@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { type Payer, withPayer } from "@dembrane/observability";
 import { generateText, streamText } from "ai";
 import {
+  bootGaps,
   createRegistry,
   FakeCompleter,
   FakeEmbedder,
@@ -269,4 +270,36 @@ test("settings for a provider carry its own kind", () => {
   expect(() => routingPolicyOf({ provider: "vertex", providers: ["orai"] })).toThrow(
     /not a provider/,
   );
+});
+
+describe("boot refuses a speech provider that is not the provider's own", () => {
+  const withProfile = (transcriptionProfile: string): LlmSettings => ({
+    ...SETTINGS,
+    transcriptionProfile,
+  });
+  const gapsOf = (s: LlmSettings) =>
+    bootGaps(s, routingPolicyOf(s), (id) => profileForProvider(s, id));
+
+  test("Scaleway as the default with the Gemini profile is a boot failure naming both", () => {
+    const gaps = gapsOf(withProfile("dembrane-26-10-gemini"));
+    expect(gaps).toEqual([
+      "transcription profile dembrane-26-10-gemini uses gemini, which is not provider scaleway's own speech provider (whisper)",
+    ]);
+  });
+
+  test("Google as the default with the Whisper profile is a boot failure too", () => {
+    const s: LlmSettings = {
+      ...withProfile("dembrane-26-10-whisper-eu"),
+      provider: "vertex",
+      providers: ["google", "scaleway"],
+    };
+    expect(gapsOf(s)).toEqual([
+      "transcription profile dembrane-26-10-whisper-eu uses whisper, which is not provider google's own speech provider (gemini)",
+    ]);
+  });
+
+  test("each provider with its own profile boots", () => {
+    expect(gapsOf(SETTINGS)).toEqual([]);
+    expect(gapsOf(withProfile("dembrane-26-10-whisper-eu"))).toEqual([]);
+  });
 });
