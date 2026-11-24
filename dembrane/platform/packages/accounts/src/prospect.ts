@@ -164,6 +164,55 @@ async function makeAdmin(tx: Conn, orgId: string, appUserId: string, nowIso: str
 }
 
 /**
+ * The contact as admin of the demo's workspace, the role "Join as admin" gives. Admin of
+ * the organisation already reaches it, but the workspace list and the organisation page
+ * show direct memberships only, so without this row the demo is hidden once its onboarding
+ * step is done. Only a live workspace of this organisation: a shared staff demo workspace
+ * is not theirs to join. Any row at all, a removed one included, means the person was
+ * there and someone decided about it, so it is left as it is and nothing is revived.
+ */
+async function joinDemoWorkspace(
+  tx: Conn,
+  orgId: string,
+  workspaceId: string,
+  appUserId: string,
+  nowIso: string,
+) {
+  const [ws] = await tx
+    .select({ id: schema.workspace.id })
+    .from(schema.workspace)
+    .where(
+      and(
+        eq(schema.workspace.id, workspaceId),
+        eq(schema.workspace.org_id, orgId),
+        isNull(schema.workspace.deleted_at),
+      ),
+    )
+    .limit(1);
+  if (!ws) return;
+  const [row] = await tx
+    .select({ id: schema.workspace_membership.id })
+    .from(schema.workspace_membership)
+    .where(
+      and(
+        eq(schema.workspace_membership.workspace_id, workspaceId),
+        eq(schema.workspace_membership.user_id, appUserId),
+      ),
+    )
+    .limit(1);
+  if (row) return;
+  await tx.insert(schema.workspace_membership).values({
+    id: newId(),
+    workspace_id: workspaceId,
+    user_id: appUserId,
+    role: "admin",
+    source: "direct",
+    created_at: nowIso,
+    updated_at: nowIso,
+  });
+}
+
+/**
  * The identity rows Better Auth's own signup would make (auth_user, the directus_users row
  * foreign keys still point at, the app_user memberships use), for someone we add rather
  * than someone who signs up. Existing rows are reused; a password is only ever added.
@@ -282,9 +331,10 @@ export function codeSignInGate(d: Pick<AccountsDeps, "db" | "now">) {
 
 /**
  * Gives the contacts held by this organisation's demos what they wait for: the admin
- * membership and, for someone new, the sign-in. Called when staff publish a demo with
- * sign-in, send something the customer must act on, or enable the account, so each of
- * those leaves the contact able to open the organisation. Sends nothing: the invitation,
+ * membership, a place in the demo's workspace and, for someone new, the sign-in. Called
+ * when staff publish a demo with sign-in, send something the customer must act on, or
+ * enable the account, so each of those leaves the contact able to open the organisation
+ * and find the demo in it. Sends nothing: the invitation,
  * the document or the staff who enabled the account is what tells them. A contact is let
  * in once; a second call changes nothing.
  */
@@ -301,9 +351,13 @@ export async function releaseHeldContacts(c: Conn, orgId: string, now: Date): Pr
     )
     .for("update");
   for (const demo of demos) {
-    const seed = demo.seed as { contact_user_id: string };
+    const seed = demo.seed as { contact_user_id: string; workspace_id?: string };
     const contact = await store.appUserByDirectusId(c, seed.contact_user_id);
-    if (contact) await makeAdmin(c, orgId, contact.id, now.toISOString());
+    if (contact) {
+      await makeAdmin(c, orgId, contact.id, now.toISOString());
+      if (seed.workspace_id)
+        await joinDemoWorkspace(c, orgId, seed.workspace_id, contact.id, now.toISOString());
+    }
     await c
       .update(schema.account_demo)
       .set({ seed: { ...seed, contact_held: false }, updatedAt: now })

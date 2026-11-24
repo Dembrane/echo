@@ -14,6 +14,7 @@ import {
   ensureUser,
   contract as K,
   MemoryJobs,
+  onboardingSignals,
 } from "@dembrane/accounts";
 import { newId, PlatformError } from "@dembrane/core";
 import { createDb, migrate, schema } from "@dembrane/db";
@@ -33,7 +34,7 @@ import { backfillBestPractices, seedBestPractices } from "@dembrane/samples";
 import { computeStats, statsStorage } from "@dembrane/stats";
 import { FilesystemStorage } from "@dembrane/storage";
 import { MemoryJobSink, tenancyRoutes } from "@dembrane/tenancy";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import postgres from "postgres";
 
@@ -535,6 +536,41 @@ run("a staff demo where the deployment is production", () => {
     expect((deps.jobs as MemoryJobs).of("account.send-email")).toMatchObject([
       { to: "robin@harbourtown.example", template: "account_invite" },
     ]);
+  });
+
+  test("the contact's second visit: the demo's workspace is theirs, with the demo pinned on its card", async () => {
+    // The first visit opens the demo, which settles the onboarding step that led there.
+    await onboardingSignals(deps).projectOpened(demoProject, contact.appUserId);
+    const [step] = await db
+      .select({ status: schema.account_task.status })
+      .from(schema.account_task)
+      .where(
+        and(
+          eq(schema.account_task.orgId, demo.org_id as string),
+          eq(schema.account_task.code, "explore_demo"),
+        ),
+      );
+    expect(step?.status).toBe("done");
+    // Signing in again: the sidebar's and the organisation page's list carries the workspace.
+    const mine = (await get(contact, "/api/v2/workspaces")).data as {
+      workspaces: { id: string; org_id: string; role: string }[];
+    };
+    expect(mine.workspaces.map((w) => [w.id, w.org_id, w.role])).toEqual([
+      [demoWorkspace, demo.org_id as string, "admin"],
+    ]);
+    // Its card leads to the demo in one click.
+    const cards = (await get(contact, `/api/v2/orgs/${demo.org_id}/workspaces`))
+      .data as unknown as {
+      id: string;
+      pinned_projects: { id: string }[];
+    }[];
+    expect(cards.map((c) => [c.id, c.pinned_projects.map((p) => p.id)])).toEqual([
+      [demoWorkspace, [demoProject]],
+    ]);
+    // And it is no longer among the workspaces to join.
+    const joinable = (await get(contact, `/api/v2/orgs/${demo.org_id}/discoverable-workspaces`))
+      .data as { workspaces: { id: string; action: string }[] };
+    expect(joinable.workspaces.map((w) => [w.id, w.action])).toEqual([[demoWorkspace, "member"]]);
   });
 
   test("staff unpublish: the link goes down, the demo is a draft again, and publishing again invites nobody twice", async () => {

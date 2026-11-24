@@ -1,13 +1,15 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
+import { newId } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import { FakeCompleter, fakeCalls, takeUnscopedFakeCalls } from "@dembrane/llm";
-import { eq } from "drizzle-orm";
+import { and, asc, eq, isNotNull, isNull } from "drizzle-orm";
 import * as K from "../src/contract";
 import { buildDemo, type DemoBuildDeps, demoSlug } from "../src/demo/build";
 import type { HttpGet } from "../src/demo/fetch";
 import { SALES_PORTAL } from "../src/demo/sales-portal";
 import { createDemo } from "../src/demo/service";
 import { accountManagerPayload } from "../src/events";
+import { onboardingSignals } from "../src/onboarding";
 import { ensureUser } from "../src/prospect";
 import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
@@ -142,6 +144,27 @@ run("demos made in echo", () => {
   };
   const load = async (id: string) =>
     (await w.db.select().from(schema.account_demo).where(eq(schema.account_demo.id, id)))[0];
+  const seedOf = async (id: string) =>
+    (await load(id))?.seed as { workspace_id: string; contact_user_id: string };
+  /** Every row a person has in a workspace, a removed one included. */
+  const placesIn = async (workspaceId: string, email: string) => {
+    const user = await store.identityByEmail(w.db, email);
+    const app = await store.appUserByDirectusId(w.db, user?.id as string);
+    return w.db
+      .select({
+        role: schema.workspace_membership.role,
+        source: schema.workspace_membership.source,
+        deleted_at: schema.workspace_membership.deleted_at,
+      })
+      .from(schema.workspace_membership)
+      .where(
+        and(
+          eq(schema.workspace_membership.workspace_id, workspaceId),
+          eq(schema.workspace_membership.user_id, app?.id as string),
+        ),
+      );
+  };
+  const ADMIN_PLACE = { role: "admin", source: "direct", deleted_at: null };
 
   test("starting: staff only, validated, on production too, queued as a workflow run", async () => {
     expect((await call(w, "POST", "/api/v2/admin/accounts/demos", "admin", {})).status).toBe(403);
@@ -241,6 +264,8 @@ run("demos made in echo", () => {
     // A sample: out of usage, limits and numbers, and no copy of a fixture.
     expect(proj?.is_sample).toBe(true);
     expect(proj?.sample_version).toBeNull();
+    // Pinned first in the prospect's own workspace, so its card there opens it in one click.
+    expect(proj?.pin_order).toBe(1);
     // The contact owns it: the popcorn read acts as the owner.
     const [contact] = await w.db
       .select()
@@ -381,6 +406,9 @@ run("demos made in echo", () => {
     expect(published.links.public[0]?.live).toBe(true);
     expect(published.invited_at).toBeTruthy();
     expect(await store.mayReceiveCode(w.db, "piet@voorbeeldstad.example", w.clock.now)).toBe(true);
+    // A place of their own in the demo's workspace, so their workspace list carries it.
+    const { workspace_id } = await seedOf(status.id);
+    expect(await placesIn(workspace_id, "piet@voorbeeldstad.example")).toEqual([ADMIN_PLACE]);
     expect(w.jobs.of("account.send-email")[0]).toMatchObject({
       to: "piet@voorbeeldstad.example",
       template: "account_invite",
@@ -404,6 +432,7 @@ run("demos made in echo", () => {
     w.jobs.jobs.length = 0;
     await call(w, "POST", `/api/v2/admin/accounts/demos/${status.id}/publish`, "staff", {});
     expect(w.jobs.jobs).toHaveLength(0);
+    expect(await placesIn(workspace_id, "piet@voorbeeldstad.example")).toEqual([ADMIN_PLACE]);
   });
 
   test("publishing without sign-in keeps the contact from signing in; the offer stays a draft", async () => {
@@ -419,6 +448,9 @@ run("demos made in echo", () => {
     expect(published.invited_at).toBeNull();
     expect(w.jobs.of("account.send-email")).toHaveLength(0);
     expect(await store.mayReceiveCode(w.db, "kees@voorbeeldstad.example", w.clock.now)).toBe(false);
+    expect(
+      await placesIn((await seedOf(status.id)).workspace_id, "kees@voorbeeldstad.example"),
+    ).toEqual([]);
     expect(
       (
         await store.document(
@@ -609,6 +641,114 @@ run("demos made in echo", () => {
     expect(await has("tweemaal", first)).toEqual(NOTHING);
     expect((await publish(first.id)).status).toBe(200);
     expect(await has("tweemaal", first)).toEqual(ADMIN);
+  });
+
+  /**
+   * The workspaces a person's workspace list and organisation page show, with the projects
+   * pinned on each card: their live rows on live workspaces, as tenancy's membershipsOfUser
+   * and workspacesByIds read them, and the pins as its pinnedProjects reads them. accounts
+   * may not import tenancy; apps/api's staff demo test reads the real GET /api/v2/workspaces.
+   */
+  const listed = async (appUserId: string) => {
+    const rows = await w.db
+      .select({ workspace_id: schema.workspace.id })
+      .from(schema.workspace_membership)
+      .innerJoin(
+        schema.workspace,
+        eq(schema.workspace.id, schema.workspace_membership.workspace_id),
+      )
+      .where(
+        and(
+          eq(schema.workspace_membership.user_id, appUserId),
+          isNull(schema.workspace_membership.deleted_at),
+          isNull(schema.workspace.deleted_at),
+        ),
+      );
+    return Promise.all(
+      rows.map(async (r) => ({
+        workspace_id: r.workspace_id,
+        pinned: (
+          await w.db
+            .select({ id: schema.project.id })
+            .from(schema.project)
+            .where(
+              and(
+                eq(schema.project.workspace_id, r.workspace_id),
+                isNull(schema.project.deleted_at),
+                isNotNull(schema.project.pin_order),
+              ),
+            )
+            .orderBy(asc(schema.project.pin_order))
+        ).map((p) => p.id),
+      })),
+    );
+  };
+
+  test("on a later visit, with the onboarding step long done, the contact still finds the demo", async () => {
+    const demo = await draftFor("terug");
+    expect((await publish(demo.id)).status).toBe(200);
+    const person = w.people["terug" as keyof World["people"]];
+    const projectId = demo.links.projects[0]?.project_id as string;
+    const { workspace_id } = await seedOf(demo.id);
+    // The first visit: opening the demo settles the step that led there, and it leaves the list.
+    await onboardingSignals(w.deps).projectOpened(projectId, person.appUserId);
+    const tasks = await store.tasks(w.db, demo.org_id as string);
+    expect(tasks.find((t) => t.code === "explore_demo")?.status).toBe("done");
+    // The next visit: the workspace is theirs, with the demo pinned on its card.
+    expect(await listed(person.appUserId as string)).toEqual([
+      { workspace_id, pinned: [projectId] },
+    ]);
+  });
+
+  test("a contact removed from the demo's workspace is not put back when they are released", async () => {
+    const demo = await draftFor("verwijderd");
+    const person = w.people["verwijderd" as keyof World["people"]];
+    const { workspace_id } = await seedOf(demo.id);
+    await w.db.insert(schema.workspace_membership).values({
+      id: newId(),
+      workspace_id,
+      user_id: person.appUserId as string,
+      role: "member",
+      source: "direct",
+      deleted_at: w.clock.now.toISOString(),
+    });
+    expect((await publish(demo.id)).status).toBe(200);
+    const rows = await placesIn(workspace_id, person.email);
+    expect(rows.map((r) => [r.role, r.deleted_at !== null])).toEqual([["member", true]]);
+    expect(await listed(person.appUserId as string)).toEqual([]);
+  });
+
+  test("a demo in staff's shared workspace gives its contact no place there and pins nothing", async () => {
+    // Staff's demo workspace belongs to an organisation of staff's own.
+    const staffOrg = newId();
+    const billing = newId();
+    const shared = newId();
+    await w.db.insert(schema.org).values({ id: staffOrg, name: "dembrane demos" });
+    await w.db
+      .insert(schema.billing_account)
+      .values({ id: billing, org_id: staffOrg, tier: "free" });
+    await w.db.insert(schema.workspace).values({
+      id: shared,
+      org_id: staffOrg,
+      name: "Demos",
+      billing_account_id: billing,
+      visibility: "invite_only",
+    });
+    const status = K.DemoStatus.parse(
+      (await start({ contact_email: "gedeeld@voorbeeldstad.example" })).data,
+    );
+    await buildDemo({ ...deps, demo: { ...deps.demo, workspaceId: shared } }, status.id, 1);
+    expect((await publish(status.id)).status).toBe(200);
+    expect((await seedOf(status.id)).workspace_id).toBe(shared);
+    expect(await placesIn(shared, "gedeeld@voorbeeldstad.example")).toEqual([]);
+    const view = K.DemoStatus.parse(
+      (await call(w, "GET", `/api/v2/admin/accounts/demos/${status.id}`, "staff")).data,
+    );
+    const [project] = await w.db
+      .select({ pin: schema.project.pin_order })
+      .from(schema.project)
+      .where(eq(schema.project.id, view.links.projects[0]?.project_id as string));
+    expect(project?.pin).toBeNull();
   });
 
   test("a failed step: the demo says which and why; a retry resumes there without repeating the others", async () => {
