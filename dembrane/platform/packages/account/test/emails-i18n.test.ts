@@ -232,6 +232,6 @@ test("the demo ready email has its own words in every language", () => {
       const text = words(locale).get(id);
       expect(text, `${locale} ${id}`).toBeTruthy();
       expect(text, `${locale} ${id}`).not.toBe(english.get(id));
-      expect(text, `${locale} ${id}`).not.toContain("—");
+      expect(text, `${locale} ${id}`).not.toContain("\u2014");
     }
 });
