@@ -316,6 +316,13 @@ export function accountsRoutes(d: AccountsDeps) {
     requireDemoSettings();
     return c.json(await createDemo(d, who, b), 201);
   });
+  // Before the /:demoId routes, though no POST matches /demos/:demoId alone.
+  app.post(R.checkDemo.path, async (c) => {
+    await staff(c, "accounts.demo.check", false);
+    await body(c, K.DemoCheckRequest);
+    // Not answered yet: the form reads a 503 as "the check did not run" and builds as before.
+    throw new UnavailableError("internal.unavailable");
+  });
   app.get(R.demoStatus.path, async (c) => {
     await staffCan(d, requireUser(c), "accounts.demo.read", demo(c), c.get("requestId"));
     return c.json(await demoStatus(d, p(c, "demoId")));

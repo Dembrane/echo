@@ -41,6 +41,8 @@ export function demoView(d: Pick<AccountsDeps, "settings">, row: Row) {
     contact_email: input.contact_email,
     sign_in: input.sign_in,
     org_id: row.orgId,
+    // Placing a demo in an existing organisation is not built yet: every demo has its own.
+    existing_organisation: null,
     slug: row.slug,
     steps: DEMO_STEPS.map((name) => ({ name, ...steps[name] })),
     links: {

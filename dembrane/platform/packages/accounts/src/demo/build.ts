@@ -40,6 +40,8 @@ export type DemoStep = (typeof DEMO_STEPS)[number];
 export interface DemoInput extends DemoBrief {
   readonly contact_name: string;
   readonly contact_email: string;
+  /** The existing organisation staff chose; absent on demos made before the choice. */
+  readonly org_id?: string | null;
   readonly sign_in: boolean;
   readonly offer: {
     template: OfferTemplate;

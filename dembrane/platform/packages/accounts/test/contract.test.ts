@@ -29,6 +29,13 @@ const cases: [string, z.ZodType, unknown][] = [
   ["demoFailed", C.DemoStatus, F.demoFailed],
   ["demoDraft", C.DemoStatus, F.demoDraft],
   ["demoPublished", C.DemoStatus, F.demoPublished],
+  ["demoCheckRequest", C.DemoCheckRequest, F.demoCheckRequest],
+  ["demoCheckNewContact", C.DemoCheck, F.demoCheckNewContact],
+  ["demoCheckCustomer", C.DemoCheck, F.demoCheckCustomer],
+  ["demoCheckTwoOrganisations", C.DemoCheck, F.demoCheckTwoOrganisations],
+  ["demoCreateInOrganisationRequest", C.DemoCreateRequest, F.demoCreateInOrganisationRequest],
+  ["demoDraftInOrganisation", C.DemoStatus, F.demoDraftInOrganisation],
+  ["demoPublishedInOrganisation", C.DemoStatus, F.demoPublishedInOrganisation],
 ];
 
 describe("contract fixtures", () => {

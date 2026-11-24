@@ -32,6 +32,29 @@ describe("the demo fixtures parse against the contract", () => {
 		["demoFailed", fx.demoFailed, contract.DemoStatus],
 		["demoDraft", fx.demoDraft, contract.DemoStatus],
 		["demoPublished", fx.demoPublished, contract.DemoStatus],
+		["demoCheckRequest", fx.demoCheckRequest, contract.DemoCheckRequest],
+		["demoCheckNewContact", fx.demoCheckNewContact, contract.DemoCheck],
+		["demoCheckCustomer", fx.demoCheckCustomer, contract.DemoCheck],
+		[
+			"demoCheckTwoOrganisations",
+			fx.demoCheckTwoOrganisations,
+			contract.DemoCheck,
+		],
+		[
+			"demoCreateInOrganisationRequest",
+			fx.demoCreateInOrganisationRequest,
+			contract.DemoCreateRequest,
+		],
+		[
+			"demoDraftInOrganisation",
+			fx.demoDraftInOrganisation,
+			contract.DemoStatus,
+		],
+		[
+			"demoPublishedInOrganisation",
+			fx.demoPublishedInOrganisation,
+			contract.DemoStatus,
+		],
 		["accountCard", fx.accountCard, contract.AccountCard],
 		["pushOfferRequest", fx.pushOfferRequest, contract.PushOfferRequest],
 		["pushOfferResponse", fx.pushOfferResponse, contract.PushOfferResponse],
@@ -482,5 +505,30 @@ describe("the fixture backend, through the client", () => {
 			card.documents.find((x) => x.id === d.offer_document_id)?.status,
 		).toBe("draft");
 		vi.useRealTimers();
+	});
+
+	it("checks a demo's contact by the three fixture addresses", async () => {
+		const check = (contact_email: string) =>
+			client.call("checkDemo", { body: { contact_email } });
+		expect((await check("new@example-harbour.example")).contact).toEqual({
+			has_account: false,
+			name: null,
+			organisations: [],
+		});
+		const robin = await check("robin@example-town.example");
+		expect(robin.contact?.organisations.map((o) => o.account_stage)).toEqual([
+			"customer",
+		]);
+		const jules = await check("jules@example-water.example");
+		expect(jules.contact?.organisations).toHaveLength(2);
+		expect(jules.organisations_named).toHaveLength(1);
+		expect(jules.demos[0]?.same_contact).toBe(true);
+		const placed = await client.call("createDemo", {
+			body: fx.demoCreateInOrganisationRequest,
+		});
+		expect(placed.existing_organisation).toEqual({
+			id: fx.accountPage.organisation.id,
+			name: fx.accountPage.organisation.name,
+		});
 	});
 });

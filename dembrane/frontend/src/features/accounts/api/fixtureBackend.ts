@@ -1099,12 +1099,34 @@ export async function handle(
 	}
 	const result = await (async (): Promise<unknown> => {
 		switch (name) {
+			case "checkDemo": {
+				// Keyed on the email typed; the organisation name is not looked at yet.
+				// robin@example-town.example: in one organisation, a customer.
+				// jules@example-water.example: in two (a customer and a prospect), with an
+				//   earlier demo and an organisation of the same name.
+				// Any other address, such as new@example-harbour.example: no account.
+				const email = String(body.contact_email ?? "").toLowerCase();
+				if (!body.contact_email)
+					return { ...fx.demoCheckNewContact, contact: null };
+				if (email === "robin@example-town.example") return fx.demoCheckCustomer;
+				if (email === "jules@example-water.example")
+					return fx.demoCheckTwoOrganisations;
+				return fx.demoCheckNewContact;
+			}
 			case "createDemo": {
 				const created = now();
+				const chosen = body.org_id
+					? fx.demoCheckCustomer.contact?.organisations
+							.concat(fx.demoCheckTwoOrganisations.contact?.organisations ?? [])
+							.find((o) => o.id === body.org_id)
+					: undefined;
 				const d: FixtureDemo = {
 					contact_email: String(body.contact_email),
 					conversations: null,
 					created_at: created,
+					existing_organisation: chosen
+						? { id: chosen.id, name: chosen.name }
+						: null,
 					failOnce: String(body.website_url).includes("fail"),
 					id: uuid(),
 					invited_at: null,
