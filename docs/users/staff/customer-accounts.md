@@ -73,6 +73,35 @@ select "Open the draft (EN)" to look through the demo, then select "Publish".
   When you publish again the same link is live, and a contact who already has the sign-in
   invitation gets no second email.
 
+### A demo for someone who already uses dembrane
+
+Once you type the contact's email, the form checks it. "New to dembrane. The demo gets a new
+organisation." means they have no account, and the demo goes as above. When they have one, the
+form lists their organisations under "Where the demo goes", next to "A new organisation", and
+picks the first of their own organisations.
+
+- Choose one of their organisations and the demo gets a workspace of its own there, named after
+  the "Organisation name" you typed (for example "Brent Council"), with the demo project pinned on
+  it. No organisation is created, no "Get started" steps are added, and the organisation's account
+  manager, stage, billing details and the contact's role in it stay as they are. "Prepare an offer"
+  is not offered: push an offer from the account card instead.
+- Choose "A new organisation" and everything goes as above, the "Your dembrane account for
+  {org_name}" email included.
+- If there is already a demo for that email or that name, or an organisation with that name the
+  contact is not in, the form says so with a link to it ("Open it", "Open the account"). It never
+  stops you from building.
+- While the demo builds and while it is a draft, nobody in that organisation sees the workspace or
+  the project, its owner included, and nobody gets an email.
+- "Email them the demo" on: publishing adds the contact to the workspace as an admin, opens the
+  workspace to the organisation like any new workspace, and sends them "Your demo is ready:
+  {demo_name}" in their own language, with a button that opens the demo project (they sign in
+  first if they are signed out). The page then says "Published. {email} has the email with the
+  link to the demo."
+- With it off, publishing only makes the public link live. The workspace stays hidden and the
+  contact gets nothing; share the link yourself.
+- If the contact has left the organisation, or the organisation was deleted, before the build
+  reached "Seeding", that step fails and says why. Fix it and select "Retry", or start a new demo.
+
 ## Send an offer
 
 1. On the account card, select "Push offer".
@@ -136,6 +165,7 @@ from your side.
 | Email subject | When |
 |---|---|
 | "Your dembrane account for {org_name}" | You publish a demo with the sign-in invitation on. |
+| "Your demo is ready: {demo_name}" | You publish a demo in an organisation they already work in, with "Email them the demo" on. |
 | "Your offer from dembrane is ready to sign" | You send an offer. |
 | "Still open for {org_name}: {task_title}" | You select "Remind" on a task and send it. |
 | "{document_title} has been withdrawn" | You select "Email the customer" on a withdrawn document and send it. |
