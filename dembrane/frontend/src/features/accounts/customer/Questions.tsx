@@ -248,11 +248,9 @@ export function AskForm({
 					data-testid="question-body"
 				/>
 				{mutation.error && <ErrorNotice error={mutation.error} />}
-				<Group justify="flex-end" gap="xs">
-					<Button variant="default" onClick={onDone}>
-						<Trans>Cancel</Trans>
-					</Button>
+				<Group gap="sm">
 					<Button
+						variant="filled"
 						disabled={!subject.trim() || !body.trim()}
 						loading={mutation.isPending}
 						onClick={() =>
@@ -264,6 +262,9 @@ export function AskForm({
 						data-testid="question-send"
 					>
 						<Trans>Send</Trans>
+					</Button>
+					<Button variant="subtle" color="gray" onClick={onDone}>
+						<Trans>Cancel</Trans>
 					</Button>
 				</Group>
 			</Stack>

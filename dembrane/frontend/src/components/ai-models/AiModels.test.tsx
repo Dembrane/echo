@@ -81,6 +81,24 @@ it("an account with only Scaleway shows its default and the way to ask for Googl
 	expect(screen.queryByText(/Also available/)).toBeNull();
 });
 
+it("the request dialog's Send is the filled button and comes before Cancel, as in the project's confirm", async () => {
+	org = {
+		allowed: ["scaleway"],
+		available: ["scaleway", "google"],
+		default: "scaleway",
+		environment_default: "scaleway",
+		history: [],
+	};
+	wrap(<OrgAiModelsPanel orgId="o" orgName="Acme" />);
+	fireEvent.click(screen.getByTestId("ask-google-vertex"));
+	const send = await screen.findByTestId("question-send");
+	const cancel = screen.getByText("Cancel").closest("button") as HTMLElement;
+	expect(send.getAttribute("data-variant")).toBe("filled");
+	expect(
+		send.compareDocumentPosition(cancel) & Node.DOCUMENT_POSITION_FOLLOWING,
+	).toBeTruthy();
+});
+
 it("an account with Google shows both and each change with who asked when", () => {
 	org = {
 		allowed: ["scaleway", "google"],
