@@ -1,10 +1,11 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import type {
   LanguageModelV4,
   LanguageModelV4CallOptions,
   LanguageModelV4GenerateResult,
   LanguageModelV4StreamResult,
 } from "@ai-sdk/provider";
-import { type RoutingNote, routing, withRouting } from "@dembrane/observability";
+import { routing } from "@dembrane/observability";
 import {
   type CallMeta,
   failedCall,
@@ -39,13 +40,27 @@ export interface FallbackOptions {
 }
 
 /**
- * Asked before every attempt after a call's first. Answers where the call goes now when that
- * is no longer where it began (the model and the routing note of the new route), else null.
+ * Asked before every attempt that follows another, on any model of the scope it was set for.
+ * It throws when the call no longer belongs where it began; the scope's owner catches that
+ * and runs the call again on the new route (see `rerouted`).
  */
-export type Recheck = () => Promise<{
-  readonly model: LanguageModelV4;
-  readonly note: RoutingNote;
-} | null>;
+export type Recheck = () => Promise<void>;
+
+interface Watch {
+  readonly recheck: Recheck;
+  /** Whether an attempt has been made in this scope: the first is never rechecked. */
+  started: boolean;
+}
+
+const watching = new AsyncLocalStorage<Watch | null>();
+
+/**
+ * Runs `fn` so that every FallbackModel call inside it asks `recheck` before each attempt
+ * after the first of the scope: a retry, the next deployment, the next model group and a
+ * second pass over the same audio all count. A null `recheck` clears an outer scope.
+ */
+export const watched = <T>(recheck: Recheck | null, fn: () => T): T =>
+  watching.run(recheck ? { recheck, started: false } : null, fn);
 
 /** Per-call providerOptions: a refused answer moves on to the next deployment. */
 export const FALL_BACK_ON_REFUSAL = { fallback: { onRefusal: true } };
@@ -117,98 +132,77 @@ export class FallbackModel implements LanguageModelV4 {
   private readonly report: Report = (make) =>
     observeSafely(this.opts.observe, this.opts.onObserverFault, make);
 
-  doGenerate(
-    options: LanguageModelV4CallOptions,
-    recheck?: Recheck,
-  ): Promise<LanguageModelV4GenerateResult> {
+  doGenerate(options: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
     const onRefusal = options.providerOptions?.fallback?.onRefusal === true;
     const bound = (v: unknown) => (typeof v === "number" && v > 0 ? v : null);
     const limit = bound(options.providerOptions?.fallback?.attemptTimeoutMs);
     const finalLimit = bound(options.providerOptions?.fallback?.finalAttemptTimeoutMs) ?? limit;
-    return this.run(
-      async (d, meta, last) => {
-        const attemptMs = last ? finalLimit : limit;
-        const startedAt = new Date();
-        const t0 = performance.now();
-        let result: LanguageModelV4GenerateResult;
-        try {
-          result = await d.model.doGenerate(
-            attemptMs === null
-              ? options
-              : {
-                  ...options,
-                  abortSignal: options.abortSignal
-                    ? AbortSignal.any([options.abortSignal, AbortSignal.timeout(attemptMs)])
-                    : AbortSignal.timeout(attemptMs),
-                },
-          );
-        } catch (err) {
-          this.report(() => failedCall(meta, "generate", startedAt, t0, err, options.prompt));
-          throw err;
-        }
-        this.report(() => generateCall(meta, startedAt, t0, result));
-        if (onRefusal && result.finishReason.unified === "content-filter") {
-          const raw = result.finishReason.raw ?? result.finishReason.unified;
-          throw new Refused(String(raw).toLowerCase());
-        }
-        return result;
-      },
-      options.abortSignal,
-      recheck && {
-        recheck,
-        handover: (r) => withRouting(r.note, () => r.model.doGenerate(options)),
-      },
-    );
+    return this.run(async (d, meta, last) => {
+      const attemptMs = last ? finalLimit : limit;
+      const startedAt = new Date();
+      const t0 = performance.now();
+      let result: LanguageModelV4GenerateResult;
+      try {
+        result = await d.model.doGenerate(
+          attemptMs === null
+            ? options
+            : {
+                ...options,
+                abortSignal: options.abortSignal
+                  ? AbortSignal.any([options.abortSignal, AbortSignal.timeout(attemptMs)])
+                  : AbortSignal.timeout(attemptMs),
+              },
+        );
+      } catch (err) {
+        this.report(() => failedCall(meta, "generate", startedAt, t0, err, options.prompt));
+        throw err;
+      }
+      this.report(() => generateCall(meta, startedAt, t0, result));
+      if (onRefusal && result.finishReason.unified === "content-filter") {
+        const raw = result.finishReason.raw ?? result.finishReason.unified;
+        throw new Refused(String(raw).toLowerCase());
+      }
+      return result;
+    }, options.abortSignal);
   }
 
-  doStream(
-    options: LanguageModelV4CallOptions,
-    recheck?: Recheck,
-  ): Promise<LanguageModelV4StreamResult> {
-    return this.run(
-      async (d, meta) => {
-        const startedAt = new Date();
-        const t0 = performance.now();
-        let result: LanguageModelV4StreamResult;
-        try {
-          result = await d.model.doStream(options);
-        } catch (err) {
-          this.report(() => failedCall(meta, "stream", startedAt, t0, err, options.prompt));
-          throw err;
-        }
-        if (!this.opts.observe) return result;
-        return {
-          ...result,
-          stream: observedStream(result.stream, meta, startedAt, t0, this.report, options.prompt),
-        };
-      },
-      options.abortSignal,
-      recheck && { recheck, handover: (r) => withRouting(r.note, () => r.model.doStream(options)) },
-    );
+  doStream(options: LanguageModelV4CallOptions): Promise<LanguageModelV4StreamResult> {
+    return this.run(async (d, meta) => {
+      const startedAt = new Date();
+      const t0 = performance.now();
+      let result: LanguageModelV4StreamResult;
+      try {
+        result = await d.model.doStream(options);
+      } catch (err) {
+        this.report(() => failedCall(meta, "stream", startedAt, t0, err, options.prompt));
+        throw err;
+      }
+      if (!this.opts.observe) return result;
+      return {
+        ...result,
+        stream: observedStream(result.stream, meta, startedAt, t0, this.report, options.prompt),
+      };
+    }, options.abortSignal);
   }
 
   /**
-   * `again.recheck` is asked before each attempt after the first, never during one, so a
-   * stream that has begun is not moved; when the call's route changed, `again.handover` runs
-   * the call on the new route instead.
+   * The scope's recheck is asked before each attempt after the scope's first, never during
+   * one, so a stream that has begun is not moved.
    */
   private async run<T>(
     call: (d: Deployment, meta: CallMeta, last: boolean) => PromiseLike<T>,
     signal?: AbortSignal,
-    again?: {
-      readonly recheck: Recheck;
-      readonly handover: (route: NonNullable<Awaited<ReturnType<Recheck>>>) => PromiseLike<T>;
-    },
   ): Promise<T> {
+    const watch = watching.getStore();
     const order = this.healthyFirst();
     let last: unknown;
     let attempts = 0;
     for (const [i, d] of order.entries()) {
       for (let attempt = 0; attempt < this.opts.attemptsPerDeployment; attempt++) {
         if (signal?.aborted) throw signal.reason ?? new Error("aborted");
-        if (attempts > 0 && again) {
-          const route = await again.recheck();
-          if (route) return await again.handover(route);
+        if (watch) {
+          if (watch.started) await watch.recheck();
+          watch.started = true;
         }
         attempts++;
         try {

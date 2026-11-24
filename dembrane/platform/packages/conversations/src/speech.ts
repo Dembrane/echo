@@ -1,4 +1,4 @@
-import { type ProviderId, type RouteDecision, routed } from "@dembrane/llm";
+import { type ProviderId, type RouteDecision, rerouted, routed } from "@dembrane/llm";
 import type { Payer } from "@dembrane/observability";
 import type { RequestLimits, SpeechProvider, Transcriber } from "@dembrane/transcription";
 import type { FinalSettings } from "./pipeline/final";
@@ -38,6 +38,35 @@ export async function speechKit(
   return kit ? { kit, decision } : null;
 }
 
+/**
+ * A transcriber for a payer's calls: each runs on the kit of `first`'s provider and, while that
+ * provider needs an opt-in, decides again before every attempt after the first (a retry, the
+ * next deployment, the next model group, the redaction pass). A payer that no longer resolves
+ * to that provider has the call run again from the start on the kit of its new provider, with
+ * the new decision in the call log: a piece that began on Gemini and meets a rate limit after
+ * the project moved back to Scaleway is transcribed by Whisper.
+ */
+export function followingTranscriber(
+  router: SpeechRouter,
+  who: Payer,
+  first: RouteDecision,
+): Transcriber {
+  const via = <T>(call: (t: Transcriber) => Promise<T>) =>
+    rerouted(
+      first,
+      () => router.decide(who),
+      async (at) => {
+        const kit = router.kits[at.provider] ?? router.kits[router.default];
+        if (!kit) throw new Error(`no speech kit for provider ${at.provider}`);
+        return call(kit.transcriber);
+      },
+    );
+  return {
+    transcribe: (input) => via((t) => t.transcribe(input)),
+    redactText: (input) => via((t) => t.redactText(input)),
+  };
+}
+
 /** Runs `fn` with the transcriber of the payer's provider, inside the routing scope the call log reads. */
 export async function withTranscriber<T>(
   router: SpeechRouter | undefined,
@@ -46,7 +75,9 @@ export async function withTranscriber<T>(
   fn: (transcriber: Transcriber) => Promise<T>,
 ): Promise<T> {
   const picked = router ? await speechKit(router, who) : null;
-  return picked ? routed(picked.decision, () => fn(picked.kit.transcriber)) : fn(fallback);
+  return router && picked
+    ? routed(picked.decision, () => fn(followingTranscriber(router, who, picked.decision)))
+    : fn(fallback);
 }
 
 /** What the conversation's own provider improves once it ends. */

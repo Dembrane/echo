@@ -15,6 +15,7 @@ import { createLogger, routing } from "@dembrane/observability";
 import type postgres from "postgres";
 import { buildSpeechKit, type SpeechRouter } from "../src";
 import { handOver, type PipelineDeps, withSpeech } from "../src/pipeline/steps";
+import { withTranscriber } from "../src/speech";
 
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
@@ -231,5 +232,87 @@ run("transcription follows the conversation's provider", () => {
       "whisper",
       "fail-closed:unknown-project",
     ]);
+  });
+
+  describe("a piece that meets a rate limit on Gemini after its project went back to Scaleway", () => {
+    /** Vertex answers 429; the project is set back to Scaleway once its first request has been answered. */
+    function leaving(projectId: string, attemptsPerDeployment: number) {
+      const w = wireStubs({ vertexStatus: 429, speech: "whisper heard this" });
+      const hooks = {
+        attemptsPerDeployment,
+        backoffMs: 0,
+        sleep: async () => {},
+        transport: {
+          vertex: {
+            fetch: (async (...a: Parameters<typeof fetch>) => {
+              const res = await w.vertex(...a);
+              await sql`update project set ai_provider = 'scaleway' where id = ${projectId}`;
+              return res;
+            }) as typeof fetch,
+            ...STUB_VERTEX_AUTH,
+          },
+          compatFetch: w.compat,
+        },
+      };
+      const resolver = providerResolver(dbRoutingStore(db), policy, { ttlMs: 0 });
+      const own: SpeechRouter = {
+        default: "scaleway",
+        kits: Object.fromEntries(
+          policy.providers.map((id) => [
+            id,
+            buildSpeechKit({
+              settings: SETTINGS,
+              profile: profileForProvider(SETTINGS, id),
+              hooks,
+              logger,
+              withFinal: true,
+            }),
+          ]),
+        ),
+        decide: (who) => decide(resolver, policy, who),
+      };
+      const base = own.kits.scaleway;
+      const pipeline = {
+        db,
+        logger,
+        speech: own,
+        transcriber: base?.transcriber,
+      } as unknown as PipelineDeps;
+      return { w, own, pipeline, base };
+    }
+    const whisperRequests = (w: ReturnType<typeof wireStubs>) =>
+      w.seen.compat.filter((r) => r.url.endsWith("/audio/transcriptions")).length;
+
+    for (const attempts of [2, 1]) {
+      test(`the pipeline's transcriber moves to Whisper, with ${attempts} attempt(s) per deployment`, async () => {
+        const world1 = await world();
+        const p = await world1.project("google");
+        const c = await conversation(p, "google");
+        const { w, pipeline } = leaving(p, attempts);
+        const heard = await withSpeech(pipeline, c, async (d) => ({
+          text: (await d.transcriber.transcribe({ audio: mp3, language: "en" })).transcript,
+          provider: routing()?.provider,
+        }));
+        expect(heard.text).toBe("whisper heard this");
+        // Nothing after the first request, for the retry or for the next model group.
+        expect(w.seen.vertex).toHaveLength(1);
+        expect(whisperRequests(w)).toBe(1);
+      });
+    }
+
+    test("the stateless transcriber moves to Whisper too", async () => {
+      const world1 = await world();
+      const p = await world1.project("google");
+      const { w, own, base } = leaving(p, 2);
+      const text = await withTranscriber(
+        own,
+        { ref: "project", id: p },
+        base?.transcriber as never,
+        async (t) => (await t.transcribe({ audio: mp3, language: "en" })).transcript,
+      );
+      expect(text).toBe("whisper heard this");
+      expect(w.seen.vertex).toHaveLength(1);
+      expect(whisperRequests(w)).toBe(1);
+    });
   });
 });

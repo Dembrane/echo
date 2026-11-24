@@ -4,7 +4,7 @@ import { PaymentRequiredError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import { type Models, routed } from "@dembrane/llm";
-import type { Logger } from "@dembrane/observability";
+import type { Logger, Payer } from "@dembrane/observability";
 import { isFinalAttempt } from "@dembrane/queue";
 import type { ObjectStorage } from "@dembrane/storage";
 import {
@@ -27,7 +27,7 @@ import { FREE_LIMIT_SKIPPED, LIVE_CHUNK_BYTES, LIVE_SOURCE, meterLiveChunk } fro
 import { afterResponse, hostEventStore, transcriptReady } from "../host-events";
 import { LIVENESS_TTL_SECONDS } from "../live/presence";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
-import { type SpeechRouter, speechKit } from "../speech";
+import { followingTranscriber, type SpeechRouter, speechKit } from "../speech";
 import { type ChunkRow, conversationStore, type Tx, transaction } from "../storage";
 import { NO_TRANSCRIPT_SUMMARY, summarizeAndStore } from "../v1/summary";
 import { computeTokenCount } from "../v1/token-count";
@@ -89,15 +89,15 @@ export async function withSpeech<T>(
   conversationId: string,
   fn: (d: PipelineDeps) => Promise<T>,
 ): Promise<T> {
-  const picked = d.speech
-    ? await speechKit(d.speech, { ref: "conversation", id: conversationId })
-    : null;
-  if (!picked) return fn(d);
+  const who: Payer = { ref: "conversation", id: conversationId };
+  const router = d.speech;
+  const picked = router ? await speechKit(router, who) : null;
+  if (!router || !picked) return fn(d);
   const { kit, decision } = picked;
   return routed(decision, () =>
     fn({
       ...d,
-      transcriber: kit.transcriber,
+      transcriber: followingTranscriber(router, who, decision),
       liveProvider: kit.liveProvider,
       requestLimits: kit.requestLimits,
       final: kit.final,

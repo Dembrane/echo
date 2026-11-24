@@ -109,6 +109,8 @@ export {
   onlyProvider,
   type ProviderResolver,
   type RouteDecision,
+  RouteMoved,
+  rerouted,
   routed,
   routingCompleter,
   routingEmbedder,

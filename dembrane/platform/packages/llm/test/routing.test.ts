@@ -313,6 +313,61 @@ describe("providers on the wire", () => {
     ]);
   });
 
+  /** A registry on the wire where Vertex answers 429 and the project leaves Google after its first request. */
+  function leavingGoogle() {
+    const calls: ModelCall[] = [];
+    let moved = false;
+    const wire = wireStubs({ vertexStatus: 429 });
+    const resolver: ProviderResolver = async () => decision(moved ? "scaleway" : "google");
+    const registry = createRegistry(SETTINGS, policy, profileOf, {
+      ...quick,
+      observe: (c) => calls.push(c),
+      transport: {
+        vertex: {
+          fetch: (async (...a: Parameters<typeof fetch>) => {
+            const res = await wire.vertex(...a);
+            moved = true;
+            return res;
+          }) as typeof fetch,
+          ...STUB_VERTEX_AUTH,
+        },
+        compatFetch: wire.compat,
+      },
+    });
+    return { calls, wire, kit: routedKit(registry, policy, resolver) };
+  }
+
+  test("the completer decides again before its second attempt: a project that went back to Scaleway finishes there", async () => {
+    const { calls, wire, kit } = leavingGoogle();
+    const out = await inProject(GOOGLE_PROJECT, () =>
+      kit.completer.complete({ group: "text_fast", user: "hi" }),
+    );
+    expect(out.text).toBe("stub answer");
+    // Not the second attempt on Vertex, and not its next deployment.
+    expect(wire.seen.vertex).toHaveLength(1);
+    expect(wire.seen.compat).toHaveLength(1);
+    expect(calls.map((c) => [c.provider, c.routing?.provider])).toEqual([
+      ["vertex", "google"],
+      ["openai-compatible", "scaleway"],
+    ]);
+  });
+
+  test("a completer call that stays on Google keeps retrying there", async () => {
+    const wire = wireStubs({ vertexStatus: 503 });
+    const registry = createRegistry(SETTINGS, policy, profileOf, {
+      ...quick,
+      transport: { vertex: { fetch: wire.vertex, ...STUB_VERTEX_AUTH }, compatFetch: wire.compat },
+    });
+    const kit = routedKit(registry, policy, byProject);
+    const out = await inProject(GOOGLE_PROJECT, () =>
+      kit.completer.complete({ group: "text_fast", user: "hi" }),
+    );
+    expect(out.text).toBe("stub answer");
+    // Both Gemini models twice, then Scaleway as Google's own fallback.
+    expect(wire.seen.vertex).toHaveLength(4);
+    expect(wire.seen.compat).toHaveLength(1);
+  });
+
   test("a stream that has begun on Google is not moved", async () => {
     let moved = false;
     const wire = wireStubs();

@@ -15,7 +15,7 @@ import {
   EmbeddingRouteChanged,
   type PinnedEmbedder,
 } from "./complete";
-import { FallbackModel, type Recheck } from "./fallback";
+import { watched } from "./fallback";
 import type { ModelGroup, Models } from "./models";
 import { PROVIDERS, type ProviderId, type RoutingPolicy } from "./providers";
 
@@ -80,6 +80,53 @@ const noteOf = (d: RouteDecision): RoutingNote => ({
 /** Runs `fn` as the decision says: inside its routing note, so the call log records it. */
 export const routed = <T>(d: RouteDecision, fn: () => T): T => withRouting(noteOf(d), fn);
 
+/** The project of a call left its provider while the call was retrying; `rerouted` runs it again where it belongs now. */
+export class RouteMoved extends Error {
+  override name = "RouteMoved";
+  readonly isRetryable = false;
+  constructor(
+    readonly scope: object,
+    readonly to: RouteDecision,
+  ) {
+    super(`the call's provider changed to ${to.provider} while it was retrying`);
+  }
+}
+
+/** How many times one call may be moved before it fails instead. */
+const MAX_MOVES = 3;
+
+/**
+ * Runs a call as `first` decided, and for a provider that needs an opt-in decides again before
+ * every attempt after the first (a retry, the next deployment, the next model group, the second
+ * pass over the same audio). When the call no longer resolves there it is run again from the
+ * start on the new decision, which its rows record: a project that moved back to Scaleway never
+ * sends the next attempt to Google. Every path that retries a call for a Google-routed payer
+ * goes through here; `run` is the one call, made for the decision it is given.
+ */
+export async function rerouted<T>(
+  first: RouteDecision,
+  decideNow: () => Promise<RouteDecision>,
+  run: (decision: RouteDecision) => PromiseLike<T>,
+): Promise<T> {
+  let at = first;
+  for (let moves = 0; ; moves++) {
+    const here = at;
+    const scope = {};
+    const recheck = PROVIDERS[here.provider].optIn
+      ? async () => {
+          const now = await decideNow();
+          if (now.provider !== here.provider) throw new RouteMoved(scope, now);
+        }
+      : null;
+    try {
+      return await routed(here, () => watched(recheck, () => run(here)));
+    } catch (err) {
+      if (!(err instanceof RouteMoved) || err.scope !== scope || moves >= MAX_MOVES) throw err;
+      at = err.to;
+    }
+  }
+}
+
 type Registry = Readonly<Partial<Record<ProviderId, Models>>>;
 
 /**
@@ -111,39 +158,23 @@ class RoutingLanguageModel implements LanguageModelV4 {
     return models.model(this.group);
   }
 
-  /**
-   * For a call on a provider that needs an opt-in: before every attempt after the first, the
-   * project is asked again, and a call that no longer resolves there moves to its new provider
-   * for the rest of its attempts, its rows recording the new decision.
-   */
-  private recheck(d: RouteDecision, who: Payer | undefined): Recheck | undefined {
-    if (!PROVIDERS[d.provider].optIn) return undefined;
-    return async () => {
-      const now = await decide(this.resolver, this.policy, who);
-      if (now.provider === d.provider) return null;
-      return { model: this.of(now.provider), note: noteOf(now) };
-    };
-  }
-
   async doGenerate(options: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
     const who = payer();
     const d = await decide(this.resolver, this.policy, who);
-    const model = this.of(d.provider);
-    return routed(d, () =>
-      model instanceof FallbackModel
-        ? model.doGenerate(options, this.recheck(d, who))
-        : model.doGenerate(options),
+    return rerouted(
+      d,
+      () => decide(this.resolver, this.policy, who),
+      (at) => this.of(at.provider).doGenerate(options),
     );
   }
 
   async doStream(options: LanguageModelV4CallOptions): Promise<LanguageModelV4StreamResult> {
     const who = payer();
     const d = await decide(this.resolver, this.policy, who);
-    const model = this.of(d.provider);
-    return routed(d, () =>
-      model instanceof FallbackModel
-        ? model.doStream(options, this.recheck(d, who))
-        : model.doStream(options),
+    return rerouted(
+      d,
+      () => decide(this.resolver, this.policy, who),
+      (at) => this.of(at.provider).doStream(options),
     );
   }
 }
@@ -224,8 +255,13 @@ export function routingCompleter(
   };
   return {
     async complete(request: CompletionRequest): Promise<Completion> {
-      const d = await decide(resolver, policy);
-      return routed(d, () => of(d.provider).complete(request));
+      const who = payer();
+      const d = await decide(resolver, policy, who);
+      return rerouted(
+        d,
+        () => decide(resolver, policy, who),
+        (at) => of(at.provider).complete(request),
+      );
     },
     modelIdentity: (group) => of(policy.default).modelIdentity(group),
     async identityOf(group) {
