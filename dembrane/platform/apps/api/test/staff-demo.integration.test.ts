@@ -1077,6 +1077,78 @@ run("a staff demo where the deployment is production", () => {
       expect(emails).toMatchObject([{ to: team.contact.email, template: "account_demo_ready" }]);
     });
 
+    test("a free organisation with a held demo workspace and none of its own can still create its first workspace", async () => {
+      const pond = { org: newId(), billing: newId() };
+      const nowIso = new Date().toISOString();
+      const pondPeople = {} as Record<"owner" | "contact", Person>;
+      for (const [key, email] of [
+        ["owner", "otto@pond.example"],
+        ["contact", "cleo@pond.example"],
+      ] as const) {
+        const u = await db.transaction((tx) =>
+          ensureUser(tx, { email, name: key, passwordHash: null, nowIso }),
+        );
+        pondPeople[key] = {
+          appUserId: u.appUserId,
+          directusUserId: u.userId,
+          isStaff: false,
+          email,
+        };
+        byId.set(u.userId, pondPeople[key]);
+      }
+      await db
+        .insert(schema.org)
+        .values({ id: pond.org, name: "Pond Lane", account_stage: "customer" });
+      await db
+        .insert(schema.billing_account)
+        .values({ id: pond.billing, org_id: pond.org, tier: "free" });
+      for (const [key, role] of [
+        ["owner", "owner"],
+        ["contact", "member"],
+      ] as const)
+        await db.insert(schema.org_membership).values({
+          id: newId(),
+          org_id: pond.org,
+          user_id: pondPeople[key].appUserId as string,
+          role,
+        });
+      const res = await app.request("/api/v2/admin/accounts/demos", {
+        method: "POST",
+        headers: as(people.staff),
+        body: JSON.stringify({
+          organisation_name: "Pond Lane demo (sample)",
+          website_url: SITE,
+          brief: "Participation for the pond.",
+          language: "en",
+          contact_name: "Cleo",
+          contact_email: pondPeople.contact.email,
+          org_id: pond.org,
+          sign_in: true,
+        }),
+      });
+      expect(res.status).toBe(201);
+      const started = K.DemoStatus.parse(await res.json());
+      await buildDemo(build, started.id, 1);
+      const held = await db
+        .select({ id: schema.workspace.id })
+        .from(schema.workspace)
+        .where(eq(schema.workspace.org_id, pond.org));
+      expect(held).toHaveLength(1);
+      const created = await app.request("/api/v2/workspaces", {
+        method: "POST",
+        headers: as(pondPeople.owner),
+        body: JSON.stringify({ name: "Pond Lane", org_id: pond.org }),
+      });
+      expect(created.status).toBe(200);
+      // That one is the limit: a second of their own is refused as before.
+      const second = await app.request("/api/v2/workspaces", {
+        method: "POST",
+        headers: as(pondPeople.owner),
+        body: JSON.stringify({ name: "Pond Lane two", org_id: pond.org }),
+      });
+      expect(second.status).toBe(402);
+    });
+
     test("the check answers staff with what they need, refuses everyone else, and reads the email from the body only", async () => {
       const check = (who: Person | null, body: unknown, query = "") =>
         app.request(`/api/v2/admin/accounts/demos/check${query}`, {

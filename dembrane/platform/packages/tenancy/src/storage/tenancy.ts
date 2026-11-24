@@ -161,8 +161,9 @@ export async function workspacesByIds(
 }
 
 /**
- * Every live workspace of an org, one held back for a demo included: what the free tier's
- * workspace limit counts, so a demo staff placed there never makes room for another.
+ * The live workspaces of an org that its people see: what the overview counts and what the
+ * free tier's workspace limit counts. A workspace held back for a demo is dembrane's until
+ * it is handed over, so it neither shows nor takes the organisation's one free workspace.
  */
 export async function countOrgWorkspaces(db: Conn, orgId: string, billingAccountId?: string) {
   const [row] = await db
@@ -172,18 +173,10 @@ export async function countOrgWorkspaces(db: Conn, orgId: string, billingAccount
       and(
         eq(workspace.org_id, orgId),
         isNull(workspace.deleted_at),
+        shownToOrganisation,
         billingAccountId ? eq(workspace.billing_account_id, billingAccountId) : undefined,
       ),
     );
-  return row?.n ?? 0;
-}
-
-/** How many workspaces the org's people see: orgWorkspaces, counted. */
-export async function countShownOrgWorkspaces(db: Conn, orgId: string) {
-  const [row] = await db
-    .select({ n: sql<number>`count(${workspace.id})::int` })
-    .from(workspace)
-    .where(and(eq(workspace.org_id, orgId), isNull(workspace.deleted_at), shownToOrganisation));
   return row?.n ?? 0;
 }
 

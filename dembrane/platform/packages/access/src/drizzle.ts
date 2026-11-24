@@ -164,8 +164,8 @@ export function workspaceReach(row: {
  *
  * While it is set the workspace is not there for the organisation's people: nobody derives
  * a role in it from the organisation, its owner included (deriveWorkspaceRole), and no list
- * or count shown to them includes it (`shownToOrganisation`). Limits that guard what an
- * organisation may create still count it.
+ * or count shown to them includes it (`shownToOrganisation`), the free tier's workspace
+ * limit included: until it is handed over it is not the organisation's.
  */
 export const HELD_FOR_DEMO = "held_for_demo";
 

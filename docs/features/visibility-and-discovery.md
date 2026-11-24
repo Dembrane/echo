@@ -74,7 +74,7 @@ own, named after the demo. While staff are still building it, nobody in the orga
 that workspace or its project, the organisation owner included: it is in no list and no count,
 and nobody can open or join it. When staff publish it and email the person it is for, it
 appears like any new workspace, set to "Everyone in your organisation", with that person as its
-admin. It counts toward your plan's workspace limit from the start.
+admin.
 
 ## Private projects
 
