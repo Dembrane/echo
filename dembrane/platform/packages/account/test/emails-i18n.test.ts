@@ -176,3 +176,62 @@ test("the offer sent email has its own words in every language", () => {
       expect(text, `${locale} ${id}`).not.toBe(english.get(id));
     }
 });
+
+const demoReady = {
+  template: "account_demo_ready",
+  data: {
+    demo_name: "Brent <Council>",
+    org_name: "Demos & Co",
+    demo_url: "https://d/login?next=%2Fen-US%2Fw%2F1%2Fprojects%2F2%2Foverview",
+  },
+} as const;
+
+test("the demo ready email names the demo and the organisation and opens the demo, never the account invitation", () => {
+  expect(subjectOf(demoReady)).toBe("Your demo is ready: Brent <Council>");
+  const { html, text } = render(demoReady);
+  expect(text).toStartWith(
+    "Your demo is ready\n\nWe made a demo about Brent <Council> for you. It is in Demos & Co on dembrane, in a workspace of its own.\n\nThe conversations in it are invented, so you can try everything freely.\n\n",
+  );
+  expect(text).toContain(`Open the demo:\n${demoReady.data.demo_url}\n\n`);
+  expect(html).toContain("Brent &lt;Council&gt;");
+  expect(html).toContain("Demos &amp; Co");
+  expect(html).toContain(`href="${demoReady.data.demo_url}"`);
+  expect(html).toContain("made a demo for you in Demos &amp; Co");
+  expect(html).not.toContain("Your account is ready");
+  expect(text).not.toContain("Sign in");
+});
+
+test("the demo ready email speaks Dutch informally", () => {
+  expect(subjectOf(demoReady, "nl-NL")).toBe("Je demo staat klaar: Brent <Council>");
+  const { html, text } = render(demoReady, "nl");
+  expect(text).toStartWith(
+    "Je demo staat klaar\n\nWe hebben een demo over Brent <Council> voor je gemaakt. Je vindt hem in Demos & Co op dembrane, in een eigen werkruimte.\n\n",
+  );
+  expect(text).toContain("Open de demo:\n");
+  expect(html).toContain('<html lang="nl-NL">');
+  expect(text).not.toMatch(/\b(u|uw)\b/i);
+});
+
+test("the demo ready email has its own words in every language", () => {
+  const ids = [
+    "subject",
+    "preview",
+    "heading",
+    "body",
+    "invented",
+    "cta",
+    "text_cta",
+    "footer",
+  ].map((k) => `email.account_demo_ready.${k}`);
+  const words = (locale: string) =>
+    catalogEntries(readFileSync(assetPath("i18n", "locales", `${locale}.po`), "utf8"));
+  const english = words("en-US");
+  for (const id of ids) expect(english.get(id), id).toBeTruthy();
+  for (const locale of LOCALES.filter((l) => l !== "en-US"))
+    for (const id of ids) {
+      const text = words(locale).get(id);
+      expect(text, `${locale} ${id}`).toBeTruthy();
+      expect(text, `${locale} ${id}`).not.toBe(english.get(id));
+      expect(text, `${locale} ${id}`).not.toContain("—");
+    }
+});
