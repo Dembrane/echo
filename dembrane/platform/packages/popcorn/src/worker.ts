@@ -164,22 +164,23 @@ export function leaseToken(workflowId: string): number {
   return createHash("sha1").update(workflowId).digest().readInt32BE(0) & 0x7fffffff;
 }
 
-// One per executor, so the embedding deployment is probed once per worker, not once per read.
+// One per executor, so each embedding provider is probed once per worker, not once per read.
 const similarByExecutor = new WeakMap<ExecutorDeps, SimilarFor>();
 
 /** Vectors for position texts through the analysis embeddings, stored per project. */
 function similarFrom(executor: ExecutorDeps): SimilarFor {
   const held = similarByExecutor.get(executor);
   if (held) return held;
-  // A failed probe is tried again by the next read.
-  let identity: ReturnType<ProducerServices["probe"]> | null = null;
+  // The dimensions each provider returns, learnt once: which provider a read embeds with
+  // depends on its project, so the identity is taken per read and only the probe's request is kept.
+  const known = new Map<string, number>();
   const similar: SimilarFor = async (projectId, texts) => {
     const services = executor.services[PRODUCERS_KEY] as ProducerServices;
-    identity ??= services.probe().catch((err) => {
-      identity = null;
-      throw err;
-    });
-    const service = new EmbeddingService(executor.store, await identity, services.embed);
+    const service = new EmbeddingService(
+      executor.store,
+      await services.probe(known),
+      services.embed,
+    );
     const batch = await service.ensure(projectId, texts);
     const out = new Map<string, number[]>();
     for (const t of texts) {

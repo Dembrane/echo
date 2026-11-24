@@ -63,6 +63,33 @@ export interface Embedder {
   readonly dimensions: number;
   /** The identity of the embedder the payer in scope uses, where it depends on the payer. */
   identity?(): Promise<{ readonly model: string; readonly endpoint: string }>;
+  /**
+   * One decision for a whole batch, where the embedder depends on the payer: the identity and
+   * every embed of the pin come from the same provider, so the vectors stored under the
+   * identity's key were made by it. An embed after the payer's provider changed fails with
+   * EmbeddingRouteChanged and the batch is dropped to be run again.
+   */
+  pinned?(): Promise<PinnedEmbedder>;
+}
+
+export interface PinnedEmbedder {
+  /** The provider the batch is pinned to. */
+  readonly provider: string;
+  readonly identity: { readonly model: string; readonly endpoint: string };
+  /** What rate-limit pauses are shared by: the provider's own embedder. */
+  readonly hold: object;
+  embed(text: string): Promise<number[]>;
+}
+
+/** The payer's provider changed while a batch was being embedded; nothing of the batch is kept. */
+export class EmbeddingRouteChanged extends Error {
+  override name = "EmbeddingRouteChanged";
+  constructor(
+    readonly from: string,
+    readonly to: string,
+  ) {
+    super(`the embedding provider changed from ${from} to ${to} during a batch`);
+  }
 }
 
 const MAX_SOURCES = 5;

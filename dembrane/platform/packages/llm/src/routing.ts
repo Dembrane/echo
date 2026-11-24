@@ -7,7 +7,14 @@ import type {
 } from "@ai-sdk/provider";
 import { type Payer, payer, type RoutingNote, withRouting } from "@dembrane/observability";
 import { echoOptions } from "./compat";
-import type { Completer, Completion, CompletionRequest, Embedder } from "./complete";
+import {
+  type Completer,
+  type Completion,
+  type CompletionRequest,
+  type Embedder,
+  EmbeddingRouteChanged,
+  type PinnedEmbedder,
+} from "./complete";
 import { FallbackModel, type Recheck } from "./fallback";
 import type { ModelGroup, Models } from "./models";
 import { PROVIDERS, type ProviderId, type RoutingPolicy } from "./providers";
@@ -245,6 +252,28 @@ export function routingEmbedder(
     return e;
   };
   const base = of(policy.default);
+  const pinned = async (): Promise<PinnedEmbedder> => {
+    const who = payer();
+    const d = await decide(resolver, policy, who);
+    const e = of(d.provider);
+    // Checked on both sides of the call: nothing is sent to the old provider after the
+    // project moved, and nothing the old provider made is kept after it.
+    const same = async () => {
+      const now = await decide(resolver, policy, who);
+      if (now.provider !== d.provider) throw new EmbeddingRouteChanged(d.provider, now.provider);
+    };
+    return {
+      provider: d.provider,
+      identity: { model: e.model, endpoint: e.endpoint },
+      hold: e,
+      async embed(text) {
+        await same();
+        const vector = await routed(d, () => e.embed(text));
+        await same();
+        return vector;
+      },
+    };
+  };
   return {
     model: base.model,
     endpoint: base.endpoint,
@@ -252,9 +281,9 @@ export function routingEmbedder(
       return base.dimensions;
     },
     async identity() {
-      const e = of((await decide(resolver, policy)).provider);
-      return { model: e.model, endpoint: e.endpoint };
+      return (await pinned()).identity;
     },
+    pinned,
     async embed(text) {
       const d = await decide(resolver, policy);
       return routed(d, () => of(d.provider).embed(text));

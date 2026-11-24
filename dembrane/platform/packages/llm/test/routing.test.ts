@@ -1,9 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { type Payer, withPayer } from "@dembrane/observability";
+import { withPayer } from "@dembrane/observability";
 import { generateText, streamText } from "ai";
 import {
   bootGaps,
   createRegistry,
+  EmbeddingRouteChanged,
   FakeCompleter,
   FakeEmbedder,
   fakeCalls,
@@ -146,6 +147,28 @@ describe("routing models", () => {
     expect(embedders.scaleway.calls).toEqual([]);
     // Search grounding exists for a project on Google and for no other.
     expect(await inProject(SCALEWAY_PROJECT, () => completer.grounds?.())).toBe(true);
+  });
+});
+
+describe("an embedding batch is pinned to one decision", () => {
+  test("identity and every embed follow it, and a change drops the batch before the next call", async () => {
+    let now: "scaleway" | "google" = "scaleway";
+    const resolver: ProviderResolver = async () => decision(now);
+    const embedders = {
+      scaleway: new FakeEmbedder(8, "scaleway/embedding"),
+      google: new FakeEmbedder(8, "google/embedding"),
+    };
+    const embedder = routingEmbedder(embedders, policy, resolver);
+    await inProject(GOOGLE_PROJECT, async () => {
+      const pin = await embedder.pinned?.();
+      expect(pin?.identity.model).toBe("scaleway/embedding");
+      await pin?.embed("one");
+      now = "google";
+      // The first key was Scaleway's: a vector from Google under it would mix the two.
+      await expect(pin?.embed("two")).rejects.toBeInstanceOf(EmbeddingRouteChanged);
+    });
+    expect(embedders.scaleway.calls).toEqual(["one"]);
+    expect(embedders.google.calls).toEqual([]);
   });
 });
 

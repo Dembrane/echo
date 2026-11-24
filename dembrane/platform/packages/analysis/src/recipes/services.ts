@@ -26,7 +26,8 @@ export const MODEL_GROUP = "MULTI_MODAL_FAST";
 export interface ProducerServices {
   readonly transcripts: (projectId: string) => Promise<Transcript[]>;
   readonly completer: Completer;
-  readonly probe: () => Promise<EmbeddingIdentity>;
+  /** The identity of the embedder this project's calls reach; `known` remembers dimensions per provider across calls. */
+  readonly probe: (known?: Map<string, number>) => Promise<EmbeddingIdentity>;
   readonly embed: (text: string) => Promise<number[]>;
   /** The embedding deployment as configured, without a network call: what a run pins first. */
   readonly embeddingSettings: () => Json;
@@ -124,7 +125,7 @@ export function defaultProducerServices(cfg: ProducerConfig): ProducerServices {
   return {
     transcripts: (projectId) => loadTranscripts(cfg.store, projectId),
     completer,
-    probe: () => probeIdentity(cfg.embedder),
+    probe: (known) => probeIdentity(cfg.embedder, known),
     embed: (text) => embedWithRetry(cfg.embedder, text),
     embeddingSettings: () => ({
       model: cfg.embeddingModel,
