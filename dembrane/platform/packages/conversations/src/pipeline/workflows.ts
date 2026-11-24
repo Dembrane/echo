@@ -8,6 +8,7 @@ import {
   editFinal,
   type FinalPart,
   type FinalPlan,
+  type FinalSettings,
   finalTreatment,
   loadFinalContext,
   markFinalGaveUp,
@@ -180,11 +181,28 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
       // The kit of the provider the conversation is on now: its final pass, its clean-up.
       return withSpeech(d, p.conversationId, async (d) => {
         const final = d.final;
-        if (!final) return;
-        const transcriber = final.transcribers[p.provider];
+        if (!d.speech && !final) return;
+        // The kit is picked outside any step, so a run recovered after the project moved holds
+        // the kit of the provider it moved to, not the one this pass began on. Every call below
+        // runs inside its own step and, on a kit that is not this pass's own, ends as a move
+        // instead of calling it: what a step recorded is replayed, the rest is decided afresh
+        // and recorded, so the steps come in the same order on every recovery.
+        const foreign = d.speech !== undefined && final?.providers.includes(p.provider) !== true;
+        const movedNow = async () => ({
+          moved: await (d.speech as NonNullable<typeof d.speech>).decide({
+            ref: "conversation",
+            id: p.conversationId,
+          }),
+        });
+        const onKit = <T>(call: (own: FinalSettings) => Promise<T>) =>
+          foreign ? movedNow() : unlessMoved(() => call(final as FinalSettings));
+        const transcriber = final?.transcribers[p.provider];
         let wrote = false;
         // Another run took the work over on the kit of the provider the project moved to.
         let handedOn = false;
+        const handOn = async (to: RouteDecision) => {
+          handedOn = await step("final-moved", () => moveOn(d, p, to), retry.db);
+        };
         try {
           // An upload whose first reading is kept: its own sentences, moved to their place in
           // the merged file; nothing is sent to the speech model again. When the first reading
@@ -192,8 +210,10 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
           const kind = await step(
             "final-kind",
             async () => {
+              if (foreign) return movedNow();
+              const own = final as FinalSettings;
               const conv = await conversationStore(d.db).conversation(p.conversationId);
-              const treatment = finalTreatment(final, conv?.source);
+              const treatment = finalTreatment(own, conv?.source);
               return {
                 treatment,
                 // The first reading's sentences are Whisper's: only a Whisper run keeps them.
@@ -205,16 +225,29 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
             },
             retry.media,
           );
+          if ("moved" in kind) {
+            await handOn(kind.moved);
+            return;
+          }
           if (kind.treatment === "none") return;
           let plan: FinalPlan | null = kind.firstPass?.plan ?? null;
           let parts: FinalPart[] = kind.firstPass ? [...kind.firstPass.parts] : [];
           if (!plan) {
-            if (!transcriber) return;
-            plan = await step(
+            const planned = await step(
               "final-plan",
-              () => planFinal(d, p.conversationId, p.hash, transcriber),
+              async (): Promise<FinalPlan | { moved: RouteDecision } | null> =>
+                foreign
+                  ? movedNow()
+                  : transcriber
+                    ? planFinal(d, p.conversationId, p.hash, transcriber)
+                    : null,
               retry.media,
             );
+            if (planned && "moved" in planned) {
+              await handOn(planned.moved);
+              return;
+            }
+            plan = planned;
             if (!plan) return;
           }
           const ctx = await step(
@@ -228,7 +261,7 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
               const part = await step(
                 "final-transcribe",
                 () =>
-                  unlessMoved(() =>
+                  onKit(() =>
                     transcribeFinalPiece(
                       d,
                       piece,
@@ -239,7 +272,7 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
                 retry.transcribe,
               );
               if ("moved" in part) {
-                handedOn = await step("final-moved", () => moveOn(d, p, part.moved), retry.db);
+                await handOn(part.moved);
                 return;
               }
               parts.push(part);
@@ -251,22 +284,22 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
           // conversation must never show text that was not redacted.
           const edited = await step(
             "final-edit",
-            () => unlessMoved(() => editFinal(final, p.provider, parts, ctx)),
+            () => onKit((own) => editFinal(own, p.provider, parts, ctx)),
             retry.llm,
           );
           if ("moved" in edited) {
-            handedOn = await step("final-moved", () => moveOn(d, p, edited.moved), retry.db);
+            await handOn(edited.moved);
             return;
           }
           let redacted: string | null = null;
           if (ctx.anonymized) {
             const text = await step(
               "final-redact",
-              () => unlessMoved(() => redactFinal(final, edited.sentences, ctx)),
+              () => onKit((own) => redactFinal(own, edited.sentences, ctx)),
               retry.llm,
             );
             if (typeof text !== "string") {
-              handedOn = await step("final-moved", () => moveOn(d, p, text.moved), retry.db);
+              await handOn(text.moved);
               return;
             }
             redacted = text;
@@ -285,22 +318,29 @@ export function pipelineWorkflows(d: PipelineDeps, retry: RetryPolicy = RETRIES)
                   edit: edited.edit,
                   raw: edited.raw,
                 };
-          wrote = await step(
+          const stored = await step(
             "final-store",
             () =>
-              storeFinal(
-                d,
-                p.conversationId,
-                p.hash,
-                p.provider,
-                p.record,
-                done,
-                parts,
-                assembled,
-                final.profile,
+              onKit((own) =>
+                storeFinal(
+                  d,
+                  p.conversationId,
+                  p.hash,
+                  p.provider,
+                  p.record,
+                  done,
+                  parts,
+                  assembled,
+                  own.profile,
+                ),
               ),
             retry.db,
           );
+          if (typeof stored !== "boolean") {
+            await handOn(stored.moved);
+            return;
+          }
+          wrote = stored;
           if (wrote && p.record)
             await summarizeWithWebhook(d, p.conversationId, retry, true, false);
         } catch (err) {
