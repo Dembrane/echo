@@ -396,9 +396,11 @@ run("a demo placed in an organisation the contact already works in", () => {
         .where(eq(schema.workspace.id, workspaceId));
       return [(ws?.settings as Record<string, unknown> | null)?.held_for_demo, ws?.visibility];
     };
-    const refusedReadably = async (id: string, match: RegExp) => {
+    /** Refused with a code the staff screen has a sentence for, and a readable detail. */
+    const refusedReadably = async (id: string, match: RegExp, code: string) => {
       const r = await publish(id, true);
       expect(r.status).toBe(409);
+      expect((r.data as { code?: unknown }).code).toBe(code);
       const detail = (r.data as { detail?: unknown }).detail;
       expect(typeof detail).toBe("string");
       expect(String(detail)).toMatch(match);
@@ -422,7 +424,7 @@ run("a demo placed in an organisation the contact already works in", () => {
       const where = await placedIn(view, org.id);
       await setRemovedFromOrganisation(w, org.id, contact, true);
       w.jobs.jobs.length = 0;
-      await refusedReadably(view.id, /member/i);
+      await refusedReadably(view.id, /member/i, "demo.contact_not_in_organisation");
       await nothingChanged(view.id, where.workspace_id as string, contact);
     });
 
@@ -432,7 +434,7 @@ run("a demo placed in an organisation the contact already works in", () => {
       const where = await placedIn(view, org.id);
       await setOrganisationDeleted(w, org.id, true);
       w.jobs.jobs.length = 0;
-      await refusedReadably(view.id, /delet/i);
+      await refusedReadably(view.id, /delet/i, "demo.organisation_deleted");
       await nothingChanged(view.id, where.workspace_id as string, contact);
       await setOrganisationDeleted(w, org.id, false);
     });
@@ -462,7 +464,7 @@ run("a demo placed in an organisation the contact already works in", () => {
         .where(eq(schema.workspace.id, where.workspace_id as string));
       expect(left).toEqual([]);
       w.jobs.jobs.length = 0;
-      await refusedReadably(view.id, /no longer exists/i);
+      await refusedReadably(view.id, /no longer exists/i, "demo.organisation_deleted");
       expect((await statusOf(view.id)).status).toBe("draft");
       expect(emailsQueued(w)).toEqual([]);
     });

@@ -39,7 +39,10 @@ import { cssVariablesResolver, theme } from "@/theme";
 // page (a path ending in /account/join) takes the invitation's real token from
 // ?join=open|accepted|closed: Noor's waiting invitation, Sam's taken up, Noor's lapsed.
 // The staff demo screens are here too: /en-US/admin/accounts/new-demo, which goes on to
-// /en-US/admin/accounts/demos/:demoId when the form is sent.
+// /en-US/admin/accounts/demos/:demoId when the form is sent. Two drafts in an organisation
+// whose publish with the email on is refused open directly by their ids in
+// PUBLISH_REFUSALS (fixtureBackend.ts): one whose contact left the organisation, one
+// whose organisation was deleted.
 const queryClient = new QueryClient({
 	defaultOptions: { queries: { retry: false } },
 });

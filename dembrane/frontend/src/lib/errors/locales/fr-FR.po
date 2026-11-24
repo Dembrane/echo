@@ -729,6 +729,11 @@ msgid "error.map.selection_other_snapshot"
 msgstr "La carte a été mise à jour depuis votre sélection. Rechargez la carte et sélectionnez à nouveau."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/demo.ts:12
+msgid "error.demo.organisation_deleted"
+msgstr "L'organisation de cette démo a été supprimée, rien n'a donc été fait. Restaurez-la et réessayez, ou publiez sans envoyer l'e-mail."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:54
 msgid "error.offer.invoice_shares_total"
 msgstr "Les échéances totalisent {total}. Elles doivent totaliser 100%."
@@ -787,6 +792,11 @@ msgstr "Aucun moyen de paiement à mettre à jour pour l'instant. Choisissez d'a
 #: src/lib/errors/messages/room.ts:30
 msgid "error.room.no_labels_question"
 msgstr "Il n’y a rien à répondre ici."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/demo.ts:7
+msgid "error.demo.contact_not_in_organisation"
+msgstr "Cette personne ne fait plus partie de cette organisation, la démo n'a donc pas été publiée. Ajoutez-la de nouveau ou publiez sans envoyer l'e-mail."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9

@@ -40,6 +40,18 @@ export const PLACEMENT_PROBLEM: Record<PlacementProblem, string> = {
     "The contact is no longer a member of the organisation chosen for this demo. Add them back and retry, or start the demo again for another organisation.",
 };
 
+/**
+ * The code publishing with the email on answers when the check fails then: the organisation
+ * is gone, or the contact is not in it any more (an account removed counts as not in it).
+ */
+export function publishRefusal(
+  problem: PlacementProblem,
+): "demo.organisation_deleted" | "demo.contact_not_in_organisation" {
+  return problem === "organisation_missing" || problem === "organisation_deleted"
+    ? "demo.organisation_deleted"
+    : "demo.contact_not_in_organisation";
+}
+
 /** What publishing with the email on says when the same check fails then; nothing is published. */
 export const PUBLISH_PROBLEM: Record<PlacementProblem, string> = {
   organisation_missing:

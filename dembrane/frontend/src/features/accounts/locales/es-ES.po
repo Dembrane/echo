@@ -18,7 +18,7 @@ msgstr ""
 #~ msgstr ""
 
 #. placeholder {0}: demo.conversations
-#: src/features/accounts/staff/DemoRoute.tsx:335
+#: src/features/accounts/staff/DemoRoute.tsx:333
 msgid "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}"
 msgstr "{0, plural, one {# conversación ficticia creada.} other {# conversaciones ficticias creadas.}}"
 
@@ -44,7 +44,7 @@ msgstr "{0, plural, one {Tienes # cosa por hacer en {name}} other {Tienes # cosa
 #~ msgstr ""
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:400
+#: src/features/accounts/staff/DemoRoute.tsx:398
 msgid "{0} already has the sign-in invitation. Publishing sends no new email."
 msgstr "{0} ya tiene la invitación para iniciar sesión. Al publicar no se envía ningún correo nuevo."
 
@@ -116,7 +116,7 @@ msgstr "{domain} no es tu propio dominio de correo. Comprueba que la dirección 
 msgid "{done} of {total} filled"
 msgstr "{done} de {total} completados"
 
-#: src/features/accounts/staff/DemoRoute.tsx:393
+#: src/features/accounts/staff/DemoRoute.tsx:391
 msgid "{email} already has the email with the link to the demo. Publishing sends no new email."
 msgstr "{email} ya tiene el correo con el enlace a la demo. Al publicar no se envía un correo nuevo."
 
@@ -292,7 +292,7 @@ msgstr "Un paso ha fallado. Reinténtalo una vez solucionada la causa."
 msgid "A text answer"
 msgstr "Una respuesta de texto"
 
-#: src/features/accounts/staff/DemoRoute.tsx:192
+#: src/features/accounts/staff/DemoRoute.tsx:190
 msgid "A workspace in {name}."
 msgstr "Un espacio de trabajo en {name}."
 
@@ -1232,7 +1232,7 @@ msgstr "Correo enviado"
 msgid "Email the customer"
 msgstr "Escribir al cliente"
 
-#: src/features/accounts/staff/DemoRoute.tsx:409
+#: src/features/accounts/staff/DemoRoute.tsx:407
 msgid "Email them the demo"
 msgstr "Enviarles la demo por correo"
 
@@ -1787,7 +1787,7 @@ msgstr "Total de la línea"
 msgid "Lines"
 msgstr "Líneas"
 
-#: src/features/accounts/staff/DemoRoute.tsx:305
+#: src/features/accounts/staff/DemoRoute.tsx:303
 msgid "live"
 msgstr "activa"
 
@@ -2058,7 +2058,7 @@ msgstr "Aún no se ha indicado."
 msgid "Not in the total"
 msgstr "Fuera del total"
 
-#: src/features/accounts/staff/DemoRoute.tsx:307
+#: src/features/accounts/staff/DemoRoute.tsx:305
 msgid "not live until you publish"
 msgstr "no estará activa hasta que la publiques"
 
@@ -2238,7 +2238,7 @@ msgid "Open the DPA (data processing agreement)"
 msgstr "Abrir el DPA (acuerdo de tratamiento de datos)"
 
 #. placeholder {0}: p.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:289
+#: src/features/accounts/staff/DemoRoute.tsx:287
 msgid "Open the draft ({0})"
 msgstr "Abrir el borrador ({0})"
 
@@ -2502,7 +2502,7 @@ msgid "Progress"
 msgstr "Progreso"
 
 #. placeholder {0}: p.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:321
+#: src/features/accounts/staff/DemoRoute.tsx:319
 msgid "Project in the dashboard ({0})"
 msgstr "Proyecto en el panel ({0})"
 
@@ -2519,11 +2519,11 @@ msgstr "Plan del proyecto"
 #~ msgstr "Clientes potenciales"
 
 #. placeholder {0}: l.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:301
+#: src/features/accounts/staff/DemoRoute.tsx:299
 msgid "Public demo ({0})"
 msgstr "Demo pública ({0})"
 
-#: src/features/accounts/staff/DemoRoute.tsx:442
+#: src/features/accounts/staff/DemoRoute.tsx:440
 msgid "Publish"
 msgstr "Publicar"
 
@@ -2533,19 +2533,19 @@ msgid "Published {0}."
 msgstr "Publicado el {0}."
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:365
+#: src/features/accounts/staff/DemoRoute.tsx:363
 msgid "Published. {0} has the sign-in invitation."
 msgstr "Publicado. {0} ha recibido la invitación para iniciar sesión."
 
-#: src/features/accounts/staff/DemoRoute.tsx:369
+#: src/features/accounts/staff/DemoRoute.tsx:367
 msgid "Published. No email went out; share the demo link yourself."
 msgstr "Publicado. No se envió ningún correo; comparte el enlace de la demo tú mismo."
 
-#: src/features/accounts/staff/DemoRoute.tsx:363
+#: src/features/accounts/staff/DemoRoute.tsx:361
 msgid "Published. The link was emailed to {email}."
 msgstr "Publicado. El enlace se envió por correo a {email}."
 
-#: src/features/accounts/staff/DemoRoute.tsx:412
+#: src/features/accounts/staff/DemoRoute.tsx:410
 msgid "Publishing adds {email} to the workspace and emails them the link."
 msgstr "Al publicar, {email} entra en el espacio de trabajo y recibe el enlace por correo."
 
@@ -2554,15 +2554,15 @@ msgid "Publishing adds them to the demo's workspace and emails them the link. Of
 msgstr "Al publicar, entran en el espacio de trabajo de la demo y reciben el enlace por correo. Desactivado: no se envía ningún correo y no se les añade."
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:429
+#: src/features/accounts/staff/DemoRoute.tsx:427
 msgid "Publishing emails {0} a sign-in code."
 msgstr "Al publicar, se envía un código de inicio de sesión a {0} por correo."
 
-#: src/features/accounts/staff/DemoRoute.tsx:417
+#: src/features/accounts/staff/DemoRoute.tsx:415
 msgid "Publishing makes the demo live. No email goes out and they are not added."
 msgstr "Al publicar, la demo queda activa. No se envía ningún correo y no se les añade."
 
-#: src/features/accounts/staff/DemoRoute.tsx:430
+#: src/features/accounts/staff/DemoRoute.tsx:428
 msgid "Publishing makes the demo live. No email goes out."
 msgstr "Al publicar, la demo queda activa. No se envía ningún correo."
 
@@ -2733,11 +2733,11 @@ msgid "Required"
 msgstr "Obligatorio"
 
 #: src/features/accounts/staff/DemoRoute.tsx:59
-#: src/features/accounts/staff/DemoRoute.tsx:346
+#: src/features/accounts/staff/DemoRoute.tsx:344
 msgid "Research"
 msgstr "Investigación"
 
-#: src/features/accounts/staff/DemoRoute.tsx:246
+#: src/features/accounts/staff/DemoRoute.tsx:244
 msgid "Retry"
 msgstr "Reintentar"
 
@@ -2890,7 +2890,7 @@ msgstr "Enviar oferta a {org}"
 #~ msgid "Send the link"
 #~ msgstr "Enviar el enlace"
 
-#: src/features/accounts/staff/DemoRoute.tsx:426
+#: src/features/accounts/staff/DemoRoute.tsx:424
 msgid "Send the sign-in invitation"
 msgstr "Enviar la invitación para iniciar sesión"
 
@@ -2994,7 +2994,7 @@ msgstr "Compartir con un compañero"
 msgid "Shares add up to {0}%"
 msgstr "Las partes suman {0}%"
 
-#: src/features/accounts/staff/DemoRoute.tsx:350
+#: src/features/accounts/staff/DemoRoute.tsx:348
 #: src/features/accounts/staff/AccountCardRoute.tsx:1014
 msgid "Show all"
 msgstr "Mostrar todo"
@@ -3008,7 +3008,7 @@ msgstr "Mostrar los {count}"
 msgid "Show finished ({0})"
 msgstr "Mostrar terminadas ({0})"
 
-#: src/features/accounts/staff/DemoRoute.tsx:351
+#: src/features/accounts/staff/DemoRoute.tsx:349
 #: src/features/accounts/staff/AccountCardRoute.tsx:1014
 msgid "Show less"
 msgstr "Mostrar menos"
@@ -3271,7 +3271,7 @@ msgstr "Subtotal"
 msgid "System"
 msgstr "Sistema"
 
-#: src/features/accounts/staff/DemoRoute.tsx:385
+#: src/features/accounts/staff/DemoRoute.tsx:383
 msgid "Takes the public link down until you publish again."
 msgstr "Desactiva el enlace público hasta que vuelvas a publicar."
 
@@ -3376,7 +3376,7 @@ msgstr "No se pudo leer esa imagen. Prueba con un PNG o JPEG."
 msgid "That PDF is over 10 MB."
 msgstr "Ese PDF supera los 10 MB."
 
-#: src/features/accounts/staff/DemoRoute.tsx:330
+#: src/features/accounts/staff/DemoRoute.tsx:328
 msgid "The account"
 msgstr "La cuenta"
 
@@ -3747,7 +3747,7 @@ msgstr "Precio unitario ({currency})"
 #~ msgid "Unit price (EUR)"
 #~ msgstr "Precio unitario (EUR)"
 
-#: src/features/accounts/staff/DemoRoute.tsx:382
+#: src/features/accounts/staff/DemoRoute.tsx:380
 msgid "Unpublish"
 msgstr "Retirar la publicación"
 

@@ -18,7 +18,7 @@ msgstr ""
 #~ msgstr ""
 
 #. placeholder {0}: demo.conversations
-#: src/features/accounts/staff/DemoRoute.tsx:335
+#: src/features/accounts/staff/DemoRoute.tsx:333
 msgid "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}"
 msgstr "{0, plural, one {Створено # вигадану розмову.} few {Створено # вигадані розмови.} other {Створено # вигаданих розмов.}}"
 
@@ -44,7 +44,7 @@ msgstr "{0, plural, one {У {name} на Вас чекає # завдання} fe
 #~ msgstr ""
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:400
+#: src/features/accounts/staff/DemoRoute.tsx:398
 msgid "{0} already has the sign-in invitation. Publishing sends no new email."
 msgstr "{0} уже має запрошення для входу. Публікація не надсилає нового листа."
 
@@ -116,7 +116,7 @@ msgstr "{domain} не є твоїм власним поштовим домено
 msgid "{done} of {total} filled"
 msgstr "Заповнено {done} з {total}"
 
-#: src/features/accounts/staff/DemoRoute.tsx:393
+#: src/features/accounts/staff/DemoRoute.tsx:391
 msgid "{email} already has the email with the link to the demo. Publishing sends no new email."
 msgstr "{email} уже має лист із посиланням на демо. Публікація не надсилає нового листа."
 
@@ -292,7 +292,7 @@ msgstr "Крок не вдався. Спробуйте ще раз після в
 msgid "A text answer"
 msgstr "Текстова відповідь"
 
-#: src/features/accounts/staff/DemoRoute.tsx:192
+#: src/features/accounts/staff/DemoRoute.tsx:190
 msgid "A workspace in {name}."
 msgstr "Робочий простір в організації {name}."
 
@@ -1232,7 +1232,7 @@ msgstr "Лист надіслано"
 msgid "Email the customer"
 msgstr "Написати клієнту"
 
-#: src/features/accounts/staff/DemoRoute.tsx:409
+#: src/features/accounts/staff/DemoRoute.tsx:407
 msgid "Email them the demo"
 msgstr "Надіслати їм демо листом"
 
@@ -1787,7 +1787,7 @@ msgstr "Підсумок рядка"
 msgid "Lines"
 msgstr "Рядки"
 
-#: src/features/accounts/staff/DemoRoute.tsx:305
+#: src/features/accounts/staff/DemoRoute.tsx:303
 msgid "live"
 msgstr "опубліковано"
 
@@ -2058,7 +2058,7 @@ msgstr "Ще не вказано."
 msgid "Not in the total"
 msgstr "Не входить у суму"
 
-#: src/features/accounts/staff/DemoRoute.tsx:307
+#: src/features/accounts/staff/DemoRoute.tsx:305
 msgid "not live until you publish"
 msgstr "недоступно, доки ви не опублікуєте"
 
@@ -2238,7 +2238,7 @@ msgid "Open the DPA (data processing agreement)"
 msgstr "Відкрити DPA (угода про обробку даних)"
 
 #. placeholder {0}: p.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:289
+#: src/features/accounts/staff/DemoRoute.tsx:287
 msgid "Open the draft ({0})"
 msgstr "Відкрити чернетку ({0})"
 
@@ -2502,7 +2502,7 @@ msgid "Progress"
 msgstr "Прогрес"
 
 #. placeholder {0}: p.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:321
+#: src/features/accounts/staff/DemoRoute.tsx:319
 msgid "Project in the dashboard ({0})"
 msgstr "Проєкт на панелі керування ({0})"
 
@@ -2519,11 +2519,11 @@ msgstr "План проєкту"
 #~ msgstr "Потенційні клієнти"
 
 #. placeholder {0}: l.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:301
+#: src/features/accounts/staff/DemoRoute.tsx:299
 msgid "Public demo ({0})"
 msgstr "Публічне демо ({0})"
 
-#: src/features/accounts/staff/DemoRoute.tsx:442
+#: src/features/accounts/staff/DemoRoute.tsx:440
 msgid "Publish"
 msgstr "Опублікувати"
 
@@ -2533,19 +2533,19 @@ msgid "Published {0}."
 msgstr "Опубліковано {0}."
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:365
+#: src/features/accounts/staff/DemoRoute.tsx:363
 msgid "Published. {0} has the sign-in invitation."
 msgstr "Опубліковано. Запрошення увійти надіслано на {0}."
 
-#: src/features/accounts/staff/DemoRoute.tsx:369
+#: src/features/accounts/staff/DemoRoute.tsx:367
 msgid "Published. No email went out; share the demo link yourself."
 msgstr "Опубліковано. Лист не надсилався; поділіться посиланням на демо самостійно."
 
-#: src/features/accounts/staff/DemoRoute.tsx:363
+#: src/features/accounts/staff/DemoRoute.tsx:361
 msgid "Published. The link was emailed to {email}."
 msgstr "Опубліковано. Посилання надіслано листом на {email}."
 
-#: src/features/accounts/staff/DemoRoute.tsx:412
+#: src/features/accounts/staff/DemoRoute.tsx:410
 msgid "Publishing adds {email} to the workspace and emails them the link."
 msgstr "Публікація додає {email} до робочого простору й надсилає посилання листом."
 
@@ -2554,15 +2554,15 @@ msgid "Publishing adds them to the demo's workspace and emails them the link. Of
 msgstr "Публікація додає їх до робочого простору демо й надсилає посилання листом. Якщо вимкнено: лист не надсилається, і їх не додають."
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:429
+#: src/features/accounts/staff/DemoRoute.tsx:427
 msgid "Publishing emails {0} a sign-in code."
 msgstr "Після публікації на {0} надійде код для входу."
 
-#: src/features/accounts/staff/DemoRoute.tsx:417
+#: src/features/accounts/staff/DemoRoute.tsx:415
 msgid "Publishing makes the demo live. No email goes out and they are not added."
 msgstr "Публікація відкриває доступ до демо. Лист не надсилається, і їх не додають."
 
-#: src/features/accounts/staff/DemoRoute.tsx:430
+#: src/features/accounts/staff/DemoRoute.tsx:428
 msgid "Publishing makes the demo live. No email goes out."
 msgstr "Публікація відкриває доступ до демо. Лист не надсилається."
 
@@ -2733,11 +2733,11 @@ msgid "Required"
 msgstr "Обов'язкове"
 
 #: src/features/accounts/staff/DemoRoute.tsx:59
-#: src/features/accounts/staff/DemoRoute.tsx:346
+#: src/features/accounts/staff/DemoRoute.tsx:344
 msgid "Research"
 msgstr "Дослідження"
 
-#: src/features/accounts/staff/DemoRoute.tsx:246
+#: src/features/accounts/staff/DemoRoute.tsx:244
 msgid "Retry"
 msgstr "Повторити"
 
@@ -2890,7 +2890,7 @@ msgstr "Надіслати пропозицію для {org}"
 #~ msgid "Send the link"
 #~ msgstr "Надіслати посилання"
 
-#: src/features/accounts/staff/DemoRoute.tsx:426
+#: src/features/accounts/staff/DemoRoute.tsx:424
 msgid "Send the sign-in invitation"
 msgstr "Надіслати запрошення для входу"
 
@@ -2994,7 +2994,7 @@ msgstr "Поділитися з колегою"
 msgid "Shares add up to {0}%"
 msgstr "Частки разом становлять {0}%"
 
-#: src/features/accounts/staff/DemoRoute.tsx:350
+#: src/features/accounts/staff/DemoRoute.tsx:348
 #: src/features/accounts/staff/AccountCardRoute.tsx:1014
 msgid "Show all"
 msgstr "Показати всі"
@@ -3008,7 +3008,7 @@ msgstr "Показати всіх ({count})"
 msgid "Show finished ({0})"
 msgstr "Показати завершені ({0})"
 
-#: src/features/accounts/staff/DemoRoute.tsx:351
+#: src/features/accounts/staff/DemoRoute.tsx:349
 #: src/features/accounts/staff/AccountCardRoute.tsx:1014
 msgid "Show less"
 msgstr "Показати менше"
@@ -3271,7 +3271,7 @@ msgstr "Проміжний підсумок"
 msgid "System"
 msgstr "Система"
 
-#: src/features/accounts/staff/DemoRoute.tsx:385
+#: src/features/accounts/staff/DemoRoute.tsx:383
 msgid "Takes the public link down until you publish again."
 msgstr "Публічне посилання не працюватиме, доки ви не опублікуєте знову."
 
@@ -3376,7 +3376,7 @@ msgstr "Не вдалося зчитати зображення. Спробуй�
 msgid "That PDF is over 10 MB."
 msgstr "Цей PDF-файл перевищує 10 МБ."
 
-#: src/features/accounts/staff/DemoRoute.tsx:330
+#: src/features/accounts/staff/DemoRoute.tsx:328
 msgid "The account"
 msgstr "Акаунт"
 
@@ -3747,7 +3747,7 @@ msgstr "Ціна за одиницю ({currency})"
 #~ msgid "Unit price (EUR)"
 #~ msgstr "Ціна за одиницю (EUR)"
 
-#: src/features/accounts/staff/DemoRoute.tsx:382
+#: src/features/accounts/staff/DemoRoute.tsx:380
 msgid "Unpublish"
 msgstr "Скасувати публікацію"
 

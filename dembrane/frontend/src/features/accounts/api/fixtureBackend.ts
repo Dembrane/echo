@@ -325,13 +325,58 @@ const CHECKS: [string, DemoCheckT][] = [
 	["kim@example-many.example", CHECK_FIVE],
 	// Robin's organisation again, under a 50-character address, to see one wrap on a phone.
 	["wijkteam.participatie@example-town-council.example", fx.demoCheckCustomer],
+	// Robin's organisation again, for demos whose publish is refused (PUBLISH_REFUSALS).
+	["robin.left@example-town.example", fx.demoCheckCustomer],
+	["robin.gone@example-town.example", fx.demoCheckCustomer],
 ];
+
+/**
+ * Publishing with the email on checks the organisation and the contact again on the
+ * server. A demo placed in an organisation for one of these contacts is refused there, as
+ * if the contact left the organisation or the organisation was deleted since the build.
+ */
+const PUBLISH_REFUSALS: Record<
+	string,
+	{ code: string; detail: string; demoId: string }
+> = {
+	"robin.gone@example-town.example": {
+		code: "demo.organisation_deleted",
+		demoId: "0199a2c0-0000-7000-8000-0000000000d2",
+		detail:
+			"The organisation chosen for this demo was deleted after the demo was built, so the demo was not published. Restore it and publish again, or publish with the email off.",
+	},
+	"robin.left@example-town.example": {
+		code: "demo.contact_not_in_organisation",
+		demoId: "0199a2c0-0000-7000-8000-0000000000d1",
+		detail:
+			"The contact is no longer a member of the organisation chosen for this demo, so the demo was not published. Add them back and publish again, or publish with the email off.",
+	},
+};
+
+/** A finished draft in Robin's organisation for each refusal, so the harness opens one. */
+function refusedDrafts(): Record<string, FixtureDemo> {
+	return Object.fromEntries(
+		Object.entries(PUBLISH_REFUSALS).map(([email, { demoId }]) => [
+			demoId,
+			{
+				...clone(fx.demoDraftInOrganisation),
+				contact_email: email,
+				failOnce: false,
+				id: demoId,
+				offer: null,
+				org_id: fx.demoDraftInOrganisation.existing_organisation?.id ?? null,
+				sign_in: true,
+			},
+		]),
+	);
+}
 
 /** Jules's earlier demo, which the check names, so its "Open the demo" link opens a page. */
 function earlierDemos(): Record<string, FixtureDemo> {
 	const earlier = fx.demoCheckTwoOrganisations.demos[0];
-	if (!earlier) return {};
+	if (!earlier) return refusedDrafts();
 	return {
+		...refusedDrafts(),
 		[earlier.id]: {
 			...clone(fx.demoPublished),
 			contact_email: earlier.contact_email,
@@ -1224,6 +1269,8 @@ export async function handle(
 				// kim@example-many.example: in five, with long names (CHECK_FIVE).
 				// wijkteam.participatie@example-town-council.example: as Robin, with a long
 				//   address.
+				// robin.left@ and robin.gone@example-town.example: as Robin; publishing a
+				//   demo for them with the email on is refused (PUBLISH_REFUSALS).
 				// Any other address, such as new@example-harbour.example: no account.
 				// Any address with "check-fails" in it: the check answers 503.
 				// Earlier demos and organisations of the same name are looked up in the
@@ -1353,6 +1400,19 @@ export async function handle(
 						throw new AccountsApiError(409, "The draft is not ready yet.");
 					const signIn =
 						typeof body.sign_in === "boolean" ? body.sign_in : d.sign_in;
+					const refusal = PUBLISH_REFUSALS[d.contact_email.toLowerCase()];
+					if (signIn && d.existing_organisation && refusal)
+						throw new AccountsApiError(
+							409,
+							refusal.detail,
+							{},
+							{
+								action: "none",
+								code: refusal.code,
+								detail: refusal.detail,
+								params: {},
+							},
+						);
 					// The invitation goes out once, as on the server.
 					const invite = signIn && !d.invited_at;
 					d.sign_in = signIn;

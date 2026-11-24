@@ -18,7 +18,7 @@ msgstr ""
 #~ msgstr "{0, plural, one {{1} of # step done} other {{2} of # steps done}}"
 
 #. placeholder {0}: demo.conversations
-#: src/features/accounts/staff/DemoRoute.tsx:335
+#: src/features/accounts/staff/DemoRoute.tsx:333
 msgid "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}"
 msgstr "{0, plural, one {# fictional conversation authored.} other {# fictional conversations authored.}}"
 
@@ -44,7 +44,7 @@ msgstr "{0, plural, one {You have # thing to do in {name}} other {You have # thi
 #~ msgstr "{0} (you)"
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:400
+#: src/features/accounts/staff/DemoRoute.tsx:398
 msgid "{0} already has the sign-in invitation. Publishing sends no new email."
 msgstr "{0} already has the sign-in invitation. Publishing sends no new email."
 
@@ -116,7 +116,7 @@ msgstr "{domain} is not your own email domain. Check that the address is right."
 msgid "{done} of {total} filled"
 msgstr "{done} of {total} filled"
 
-#: src/features/accounts/staff/DemoRoute.tsx:393
+#: src/features/accounts/staff/DemoRoute.tsx:391
 msgid "{email} already has the email with the link to the demo. Publishing sends no new email."
 msgstr "{email} already has the email with the link to the demo. Publishing sends no new email."
 
@@ -292,7 +292,7 @@ msgstr "A step failed. Retry it once the cause is fixed."
 msgid "A text answer"
 msgstr "A text answer"
 
-#: src/features/accounts/staff/DemoRoute.tsx:192
+#: src/features/accounts/staff/DemoRoute.tsx:190
 msgid "A workspace in {name}."
 msgstr "A workspace in {name}."
 
@@ -1232,7 +1232,7 @@ msgstr "Email sent"
 msgid "Email the customer"
 msgstr "Email the customer"
 
-#: src/features/accounts/staff/DemoRoute.tsx:409
+#: src/features/accounts/staff/DemoRoute.tsx:407
 msgid "Email them the demo"
 msgstr "Email them the demo"
 
@@ -1787,7 +1787,7 @@ msgstr "Line total"
 msgid "Lines"
 msgstr "Lines"
 
-#: src/features/accounts/staff/DemoRoute.tsx:305
+#: src/features/accounts/staff/DemoRoute.tsx:303
 msgid "live"
 msgstr "live"
 
@@ -2058,7 +2058,7 @@ msgstr "Not given yet."
 msgid "Not in the total"
 msgstr "Not in the total"
 
-#: src/features/accounts/staff/DemoRoute.tsx:307
+#: src/features/accounts/staff/DemoRoute.tsx:305
 msgid "not live until you publish"
 msgstr "not live until you publish"
 
@@ -2238,7 +2238,7 @@ msgid "Open the DPA (data processing agreement)"
 msgstr "Open the DPA (data processing agreement)"
 
 #. placeholder {0}: p.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:289
+#: src/features/accounts/staff/DemoRoute.tsx:287
 msgid "Open the draft ({0})"
 msgstr "Open the draft ({0})"
 
@@ -2502,7 +2502,7 @@ msgid "Progress"
 msgstr "Progress"
 
 #. placeholder {0}: p.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:321
+#: src/features/accounts/staff/DemoRoute.tsx:319
 msgid "Project in the dashboard ({0})"
 msgstr "Project in the dashboard ({0})"
 
@@ -2519,11 +2519,11 @@ msgstr "Project plan"
 #~ msgstr "Prospects"
 
 #. placeholder {0}: l.language.toUpperCase()
-#: src/features/accounts/staff/DemoRoute.tsx:301
+#: src/features/accounts/staff/DemoRoute.tsx:299
 msgid "Public demo ({0})"
 msgstr "Public demo ({0})"
 
-#: src/features/accounts/staff/DemoRoute.tsx:442
+#: src/features/accounts/staff/DemoRoute.tsx:440
 msgid "Publish"
 msgstr "Publish"
 
@@ -2533,19 +2533,19 @@ msgid "Published {0}."
 msgstr "Published {0}."
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:365
+#: src/features/accounts/staff/DemoRoute.tsx:363
 msgid "Published. {0} has the sign-in invitation."
 msgstr "Published. {0} has the sign-in invitation."
 
-#: src/features/accounts/staff/DemoRoute.tsx:369
+#: src/features/accounts/staff/DemoRoute.tsx:367
 msgid "Published. No email went out; share the demo link yourself."
 msgstr "Published. No email went out; share the demo link yourself."
 
-#: src/features/accounts/staff/DemoRoute.tsx:363
+#: src/features/accounts/staff/DemoRoute.tsx:361
 msgid "Published. The link was emailed to {email}."
 msgstr "Published. The link was emailed to {email}."
 
-#: src/features/accounts/staff/DemoRoute.tsx:412
+#: src/features/accounts/staff/DemoRoute.tsx:410
 msgid "Publishing adds {email} to the workspace and emails them the link."
 msgstr "Publishing adds {email} to the workspace and emails them the link."
 
@@ -2554,15 +2554,15 @@ msgid "Publishing adds them to the demo's workspace and emails them the link. Of
 msgstr "Publishing adds them to the demo's workspace and emails them the link. Off: no email goes out and they are not added."
 
 #. placeholder {0}: demo.contact_email
-#: src/features/accounts/staff/DemoRoute.tsx:429
+#: src/features/accounts/staff/DemoRoute.tsx:427
 msgid "Publishing emails {0} a sign-in code."
 msgstr "Publishing emails {0} a sign-in code."
 
-#: src/features/accounts/staff/DemoRoute.tsx:417
+#: src/features/accounts/staff/DemoRoute.tsx:415
 msgid "Publishing makes the demo live. No email goes out and they are not added."
 msgstr "Publishing makes the demo live. No email goes out and they are not added."
 
-#: src/features/accounts/staff/DemoRoute.tsx:430
+#: src/features/accounts/staff/DemoRoute.tsx:428
 msgid "Publishing makes the demo live. No email goes out."
 msgstr "Publishing makes the demo live. No email goes out."
 
@@ -2733,11 +2733,11 @@ msgid "Required"
 msgstr "Required"
 
 #: src/features/accounts/staff/DemoRoute.tsx:59
-#: src/features/accounts/staff/DemoRoute.tsx:346
+#: src/features/accounts/staff/DemoRoute.tsx:344
 msgid "Research"
 msgstr "Research"
 
-#: src/features/accounts/staff/DemoRoute.tsx:246
+#: src/features/accounts/staff/DemoRoute.tsx:244
 msgid "Retry"
 msgstr "Retry"
 
@@ -2890,7 +2890,7 @@ msgstr "Send offer to {org}"
 #~ msgid "Send the link"
 #~ msgstr "Send the link"
 
-#: src/features/accounts/staff/DemoRoute.tsx:426
+#: src/features/accounts/staff/DemoRoute.tsx:424
 msgid "Send the sign-in invitation"
 msgstr "Send the sign-in invitation"
 
@@ -2994,7 +2994,7 @@ msgstr "Share with a colleague"
 msgid "Shares add up to {0}%"
 msgstr "Shares add up to {0}%"
 
-#: src/features/accounts/staff/DemoRoute.tsx:350
+#: src/features/accounts/staff/DemoRoute.tsx:348
 #: src/features/accounts/staff/AccountCardRoute.tsx:1014
 msgid "Show all"
 msgstr "Show all"
@@ -3008,7 +3008,7 @@ msgstr "Show all {count}"
 msgid "Show finished ({0})"
 msgstr "Show finished ({0})"
 
-#: src/features/accounts/staff/DemoRoute.tsx:351
+#: src/features/accounts/staff/DemoRoute.tsx:349
 #: src/features/accounts/staff/AccountCardRoute.tsx:1014
 msgid "Show less"
 msgstr "Show less"
@@ -3271,7 +3271,7 @@ msgstr "Subtotal"
 msgid "System"
 msgstr "System"
 
-#: src/features/accounts/staff/DemoRoute.tsx:385
+#: src/features/accounts/staff/DemoRoute.tsx:383
 msgid "Takes the public link down until you publish again."
 msgstr "Takes the public link down until you publish again."
 
@@ -3376,7 +3376,7 @@ msgstr "That image could not be read. Try a PNG or JPEG."
 msgid "That PDF is over 10 MB."
 msgstr "That PDF is over 10 MB."
 
-#: src/features/accounts/staff/DemoRoute.tsx:330
+#: src/features/accounts/staff/DemoRoute.tsx:328
 msgid "The account"
 msgstr "The account"
 
@@ -3747,7 +3747,7 @@ msgstr "Unit price ({currency})"
 #~ msgid "Unit price (EUR)"
 #~ msgstr "Unit price (EUR)"
 
-#: src/features/accounts/staff/DemoRoute.tsx:382
+#: src/features/accounts/staff/DemoRoute.tsx:380
 msgid "Unpublish"
 msgstr "Unpublish"
 

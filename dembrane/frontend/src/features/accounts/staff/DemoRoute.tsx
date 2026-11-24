@@ -27,7 +27,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
-import { presentError } from "@/lib/errors/present";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { call } from "../api/client";
 import { accountKeys } from "../api/hooks";
 import type { DemoStatusT } from "../contract/contract.gen";
@@ -74,7 +74,7 @@ function Demo() {
 	const [busy, setBusy] = useState<"retry" | "publish" | "unpublish" | null>(
 		null,
 	);
-	const [error, setError] = useState<string | null>(null);
+	const [error, setError] = useState<unknown>(null);
 	const { data: demo, isLoading } = useQuery({
 		enabled: Boolean(demoId),
 		queryFn: () => call("demoStatus", { params: { demoId: demoId as string } }),
@@ -108,7 +108,7 @@ function Demo() {
 			queryClient.setQueryData(demoKey(demoId), next);
 			await queryClient.invalidateQueries({ queryKey: accountKeys.all });
 		} catch (e) {
-			setError((await presentError(e, i18n)).message);
+			setError(e);
 		} finally {
 			setBusy(null);
 		}
@@ -171,11 +171,9 @@ function Demo() {
 						onUnpublish={() => act("unpublish")}
 					/>
 				)}
-				{error && (
-					<Text size="sm" c="red">
-						{error}
-					</Text>
-				)}
+				{/* Under Publish: why a publish, unpublish or retry was refused, in the screen's
+				    language. */}
+				{error != null && <ErrorNotice error={error} />}
 			</Stack>
 		</Container>
 	);

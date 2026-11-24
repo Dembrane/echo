@@ -29,7 +29,7 @@ import {
   type Steps,
 } from "./build";
 import { demoBuild, demoWorkflowId } from "./job";
-import { PUBLISH_PROBLEM, placement } from "./placement";
+import { PUBLISH_PROBLEM, placement, publishRefusal } from "./placement";
 
 type Row = typeof schema.account_demo.$inferSelect;
 
@@ -265,12 +265,9 @@ export async function publishDemo(
         ? await placement(tx, row.orgId, input.contact_email)
         : ({ ok: false, problem: "organisation_missing" } as const);
       if (!still.ok)
-        throw new ConflictError(
-          still.problem === "organisation_missing" || still.problem === "organisation_deleted"
-            ? "demo.organisation_deleted"
-            : "member.not_found",
-          { message: PUBLISH_PROBLEM[still.problem] },
-        );
+        throw new ConflictError(publishRefusal(still.problem), {
+          message: PUBLISH_PROBLEM[still.problem],
+        });
     }
     for (const p of seed.projects) {
       await setDeckPublic(tx, p.config_id, true);

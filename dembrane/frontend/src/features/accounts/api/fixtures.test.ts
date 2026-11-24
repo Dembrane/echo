@@ -507,6 +507,28 @@ describe("the fixture backend, through the client", () => {
 		vi.useRealTimers();
 	});
 
+	it("refuses to publish the two placed drafts with the email on, each with its code", async () => {
+		for (const [demoId, code] of [
+			[
+				"0199a2c0-0000-7000-8000-0000000000d1",
+				"demo.contact_not_in_organisation",
+			],
+			["0199a2c0-0000-7000-8000-0000000000d2", "demo.organisation_deleted"],
+		]) {
+			await expect(
+				client.call("publishDemo", {
+					body: { sign_in: true },
+					params: { demoId: demoId as string },
+				}),
+			).rejects.toMatchObject({ body: { code }, status: 409 });
+			const off = await client.call("publishDemo", {
+				body: { sign_in: false },
+				params: { demoId: demoId as string },
+			});
+			expect([off.status, off.invited_at]).toEqual(["published", null]);
+		}
+	});
+
 	it("checks a demo's contact by the three fixture addresses", async () => {
 		const check = (contact_email: string) =>
 			client.call("checkDemo", { body: { contact_email } });

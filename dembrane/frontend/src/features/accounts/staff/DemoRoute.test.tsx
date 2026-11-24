@@ -3,7 +3,13 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen } from "@testing-library/react";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, beforeAll, expect, it, vi } from "vitest";
 import type { DemoStatusT } from "../contract/contract.gen";
@@ -13,14 +19,31 @@ import * as fx from "../contract/fixtures.gen";
 // with a new organisation of its own: where it lives, and what publishing sends.
 
 let current: DemoStatusT = fx.demoDraft;
+/** The code publishing answers with, as the API refuses it; null publishes. */
+let refusal: string | null = null;
 
-vi.mock("../api/client", async (importOriginal) => ({
-	...(await importOriginal<typeof import("../api/client")>()),
-	call: vi.fn(async (name: string) => {
-		if (name === "demoStatus") return current;
-		throw new Error(`unexpected call ${name}`);
-	}),
-}));
+vi.mock("../api/client", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("../api/client")>();
+	return {
+		...actual,
+		call: vi.fn(async (name: string) => {
+			if (name === "demoStatus") return current;
+			if (name === "publishDemo" && refusal)
+				throw new actual.AccountsApiError(
+					409,
+					"The detail staff never read",
+					{},
+					{
+						action: "none",
+						code: refusal,
+						detail: "The detail staff never read",
+						params: {},
+					},
+				);
+			throw new Error(`unexpected call ${name}`);
+		}),
+	};
+});
 vi.mock("../i18n", () => ({
 	AccountsI18n: ({ children }: { children: React.ReactNode }) => children,
 	useAccountsCatalog: () => true,
@@ -133,3 +156,39 @@ it("shows a demo with a new organisation of its own as before", async () => {
 		screen.getByText("The draft is ready. Check it, then publish."),
 	).toBeTruthy();
 });
+
+// Publishing with the email on checks again that the contact is in the organisation and
+// that it still exists; a refusal says why, and nothing on the page moves.
+for (const [code, sentence] of [
+	[
+		"demo.contact_not_in_organisation",
+		"They are no longer in this organisation, so the demo was not published. Add them back, or publish with the email off.",
+	],
+	[
+		"demo.organisation_deleted",
+		"The organisation for this demo was deleted, so nothing was done. Restore it and try again, or publish with the email off.",
+	],
+] as const) {
+	it(`says why publishing was refused: ${code}`, async () => {
+		refusal = code;
+		try {
+			open({ ...inOrganisation, sign_in: true });
+			await screen.findByTestId("demo-draft");
+			fireEvent.click(screen.getByTestId("demo-publish"));
+			await waitFor(() => expect(screen.getByText(sentence)).toBeTruthy());
+			expect(document.body.textContent).not.toContain("Something went wrong");
+			expect(document.body.textContent).not.toContain(
+				"The detail staff never read",
+			);
+			expect(
+				screen.getByTestId("demo-screen").getAttribute("data-status"),
+			).toBe("draft");
+			expect(
+				(screen.getByTestId("demo-publish-sign-in") as HTMLInputElement)
+					.checked,
+			).toBe(true);
+		} finally {
+			refusal = null;
+		}
+	});
+}
