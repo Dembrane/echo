@@ -10,6 +10,7 @@ import type {
 	AccountCard,
 	AccountListItem,
 	BillingDetails,
+	DemoCheckT,
 	DemoStatusT,
 	DocumentDetailT,
 	DocumentFieldInput,
@@ -273,6 +274,76 @@ interface FixtureDemo extends DemoStatusT {
 }
 let demos: Record<string, FixtureDemo> | null = null;
 
+/**
+ * A contact in five organisations with long names, to see the choice wrap on a phone:
+ * kim@example-many.example. Built from the two-organisation answer's shapes; the last one
+ * is the Water Board, a prospect, as the API puts prospects last.
+ */
+const CHECK_FIVE: DemoCheckT = {
+	contact: {
+		has_account: true,
+		name: "Kim Example",
+		organisations: [
+			{
+				account_stage: "customer",
+				id: "0199a2c0-0000-7000-8000-0000000000f1",
+				name: "Gemeente Súdwest-Fryslân, afdeling Participatie en Dienstverlening",
+				role: "admin",
+			},
+			{
+				account_stage: "customer",
+				id: "0199a2c0-0000-7000-8000-0000000000f2",
+				name: "Hoogheemraadschap van Schieland en de Krimpenerwaard",
+				role: "member",
+			},
+			{
+				account_stage: null,
+				id: "0199a2c0-0000-7000-8000-0000000000f3",
+				name: "Jongerenparticipatieadviesraad Westerkwartier",
+				role: "owner",
+			},
+			{
+				account_stage: null,
+				id: "0199a2c0-0000-7000-8000-0000000000f4",
+				name: "Stichting Samenwerkende Wijkcentra Zuidoost-Brabant en Omstreken",
+				role: "billing",
+			},
+			...(fx.demoCheckTwoOrganisations.contact?.organisations ?? []).filter(
+				(o) => o.account_stage === "prospect",
+			),
+		],
+	},
+	demos: [],
+	organisations_named: [],
+};
+
+/** The check's answer per magic address (see the checkDemo handler). */
+const CHECKS: [string, DemoCheckT][] = [
+	["robin@example-town.example", fx.demoCheckCustomer],
+	["jules@example-water.example", fx.demoCheckTwoOrganisations],
+	["kim@example-many.example", CHECK_FIVE],
+];
+
+/** Jules's earlier demo, which the check names, so its "Open it" link opens a page. */
+function earlierDemos(): Record<string, FixtureDemo> {
+	const earlier = fx.demoCheckTwoOrganisations.demos[0];
+	if (!earlier) return {};
+	return {
+		[earlier.id]: {
+			...clone(fx.demoPublished),
+			contact_email: earlier.contact_email,
+			created_at: earlier.created_at,
+			failOnce: false,
+			id: earlier.id,
+			offer: null,
+			offer_document_id: null,
+			org_id: "0199a2c0-0000-7000-8000-000000000001",
+			organisation_name: earlier.organisation_name,
+			slug: "example-water-board-sample",
+		},
+	};
+}
+
 function loadDemos(): Record<string, FixtureDemo> {
 	if (demos) return demos;
 	try {
@@ -281,9 +352,10 @@ function loadDemos(): Record<string, FixtureDemo> {
 		) {
 			sessionStorage.removeItem(DEMOS_KEY);
 		}
-		demos = JSON.parse(sessionStorage.getItem(DEMOS_KEY) ?? "{}");
+		const stored = sessionStorage.getItem(DEMOS_KEY);
+		demos = stored ? JSON.parse(stored) : earlierDemos();
 	} catch {
-		demos = {};
+		demos = earlierDemos();
 	}
 	return demos ?? {};
 }
@@ -331,19 +403,27 @@ async function advance(d: FixtureDemo) {
 		step.status = "done";
 		step.finished_at = new Date(t).toISOString();
 		if (step.name === "author") d.conversations = 6;
-		if (step.name === "research") d.research = fx.demoDraft.research;
+		if (step.name === "research")
+			d.research = (
+				d.existing_organisation ? fx.demoDraftInOrganisation : fx.demoDraft
+			).research;
 		if (step.name === "seed") await seedOrg(d);
 	}
 	d.status = "draft";
+	const shape = d.existing_organisation
+		? fx.demoDraftInOrganisation
+		: fx.demoDraft;
 	d.links = {
-		...fx.demoDraft.links,
+		...shape.links,
 		account: `/api/v2/admin/accounts/${d.org_id}`,
-		continue_url: `/login?next=${encodeURIComponent(`/o/${d.org_id}/account`)}`,
-		projects: fx.demoDraft.links.projects.map((l) => ({
+		continue_url: d.existing_organisation
+			? shape.links.continue_url
+			: `/login?next=${encodeURIComponent(`/o/${d.org_id}/account`)}`,
+		projects: shape.links.projects.map((l) => ({
 			...l,
 			language: d.language,
 		})),
-		public: fx.demoDraft.links.public.map((l) => ({
+		public: shape.links.public.map((l) => ({
 			...l,
 			language: d.language,
 			live: false,
@@ -352,6 +432,8 @@ async function advance(d: FixtureDemo) {
 }
 
 async function seedOrg(d: FixtureDemo) {
+	if (d.existing_organisation)
+		return seedInOrganisation(d, d.existing_organisation);
 	const org = uuid();
 	const created = now();
 	const base = otherStores()[0] as Store;
@@ -390,6 +472,38 @@ async function seedOrg(d: FixtureDemo) {
 		)) as { document: { id: string } };
 		d.offer_document_id = res.document.id;
 	}
+}
+
+/**
+ * A demo in an organisation the contact already works in: no new organisation, stage or
+ * tasks; the demo gets a workspace of its own there, hidden until it is published. The
+ * long-named organisations of CHECK_FIVE get a store here, so their card opens.
+ */
+function seedInOrganisation(
+	d: FixtureDemo,
+	organisation: { id: string; name: string },
+) {
+	const stores = load();
+	if (!stores[organisation.id]) {
+		const ref = CHECKS.flatMap(([, c]) => c.contact?.organisations ?? []).find(
+			(o) => o.id === organisation.id,
+		);
+		stores[organisation.id] = {
+			...(otherStores()[0] as Store),
+			id: organisation.id,
+			name: organisation.name,
+			stage: ref?.account_stage ?? null,
+			timeline: [],
+		};
+	}
+	event(
+		stores[organisation.id] as Store,
+		"demo.seeded",
+		"staff",
+		{},
+		{ slug: d.slug },
+	);
+	d.org_id = organisation.id;
 }
 
 /** Unknown org ids are the signed-in customer's own org in the dev shell: the demo. */
@@ -1104,22 +1218,30 @@ export async function handle(
 				// robin@example-town.example: in one organisation, a customer.
 				// jules@example-water.example: in two (a customer and a prospect), with an
 				//   earlier demo and an organisation of the same name.
+				// kim@example-many.example: in five, with long names (CHECK_FIVE).
 				// Any other address, such as new@example-harbour.example: no account.
+				// Any address with "check-fails" in it: the check answers 503.
 				const email = String(body.contact_email ?? "").toLowerCase();
 				if (!body.contact_email)
 					return { ...fx.demoCheckNewContact, contact: null };
-				if (email === "robin@example-town.example") return fx.demoCheckCustomer;
-				if (email === "jules@example-water.example")
-					return fx.demoCheckTwoOrganisations;
-				return fx.demoCheckNewContact;
+				if (email.includes("check-fails"))
+					throw new AccountsApiError(503, "The check is unavailable.");
+				return (
+					CHECKS.find(([address]) => address === email)?.[1] ??
+					fx.demoCheckNewContact
+				);
 			}
 			case "createDemo": {
 				const created = now();
 				const chosen = body.org_id
-					? fx.demoCheckCustomer.contact?.organisations
-							.concat(fx.demoCheckTwoOrganisations.contact?.organisations ?? [])
-							.find((o) => o.id === body.org_id)
+					? CHECKS.flatMap(([, c]) => c.contact?.organisations ?? []).find(
+							(o) => o.id === body.org_id,
+						)
 					: undefined;
+				if (body.org_id && !chosen)
+					throw new AccountsApiError(422, "Validation failed", {
+						org_id: "The contact is not a member of this organisation.",
+					});
 				const d: FixtureDemo = {
 					contact_email: String(body.contact_email),
 					conversations: null,
@@ -1139,7 +1261,7 @@ export async function handle(
 					},
 					offer: (body.offer as Record<string, unknown> | null) ?? null,
 					offer_document_id: null,
-					org_id: null,
+					org_id: chosen?.id ?? null,
 					organisation_name: String(body.organisation_name),
 					published_at: null,
 					research: null,

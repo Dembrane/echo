@@ -29,3 +29,11 @@ export const Section = ({
 		{children}
 	</Box>
 );
+
+/**
+ * Keeps an email address or a short label on one line inside a sentence: the line breaks
+ * around it, never inside it (an address would otherwise split at its hyphen on a phone).
+ */
+export const Whole = ({ children }: { children: string }) => (
+	<span className="whitespace-nowrap">{children}</span>
+);

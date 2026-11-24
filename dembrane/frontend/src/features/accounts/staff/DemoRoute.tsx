@@ -33,6 +33,7 @@ import { accountKeys } from "../api/hooks";
 import type { DemoStatusT } from "../contract/contract.gen";
 import { formatDateTime } from "../format";
 import { AccountsI18n } from "../i18n";
+import { Whole } from "../ui";
 import { StaffOnly } from "./AccountCardRoute";
 
 type Step = DemoStatusT["steps"][number];
@@ -131,6 +132,12 @@ function Demo() {
 						</Group>
 					</Anchor>
 					<Title order={3}>{demo.organisation_name}</Title>
+					{demo.existing_organisation && (
+						<Placement
+							organisation={demo.existing_organisation}
+							workspace={demo.organisation_name}
+						/>
+					)}
 					<Text size="sm" c="dimmed">
 						{demo.status === "published" ? (
 							<Trans>
@@ -174,6 +181,33 @@ function Demo() {
 				)}
 			</Stack>
 		</Container>
+	);
+}
+
+/** Where a demo placed in an organisation the contact already works in lives. */
+function Placement({
+	organisation,
+	workspace,
+}: {
+	organisation: { id: string; name: string };
+	workspace: string;
+}) {
+	const link = (
+		<Anchor
+			component={I18nLink}
+			to={`/admin/accounts/${organisation.id}`}
+			inherit
+			data-testid="demo-existing-organisation"
+		>
+			{organisation.name}
+		</Anchor>
+	);
+	return (
+		<Text size="sm" c="dimmed">
+			<Trans>
+				In {link}, as the workspace {workspace}.
+			</Trans>
+		</Text>
 	);
 }
 
@@ -252,6 +286,10 @@ function Draft({
 }) {
 	const [signIn, setSignIn] = useState(demo.sign_in);
 	const published = demo.status === "published";
+	// In an organisation the contact already works in, publishing with the email on adds
+	// them to the demo's workspace and emails them the link; there is no sign-in invitation.
+	const inOrganisation = demo.existing_organisation !== null;
+	const email = <Whole>{demo.contact_email}</Whole>;
 	return (
 		<Stack gap="md" data-testid="demo-draft">
 			<Stack gap={6}>
@@ -338,7 +376,11 @@ function Draft({
 			{published ? (
 				<Stack gap="xs">
 					<Alert color="green" variant="light" data-testid="demo-published">
-						{demo.invited_at ? (
+						{demo.invited_at && inOrganisation ? (
+							<Trans>
+								Published. {email} has the email with the link to the demo.
+							</Trans>
+						) : demo.invited_at ? (
 							<Trans>
 								Published. {demo.contact_email} has the sign-in invitation.
 							</Trans>
@@ -365,13 +407,37 @@ function Draft({
 				</Stack>
 			) : (
 				<Stack gap="sm">
-					{demo.invited_at ? (
+					{demo.invited_at && inOrganisation ? (
+						<Text size="sm" data-testid="demo-already-invited">
+							<Trans>
+								{email} already has the email with the link to the demo.
+								Publishing sends no new email.
+							</Trans>
+						</Text>
+					) : demo.invited_at ? (
 						<Text size="sm" data-testid="demo-already-invited">
 							<Trans>
 								{demo.contact_email} already has the sign-in invitation.
 								Publishing sends no new email.
 							</Trans>
 						</Text>
+					) : inOrganisation ? (
+						<Switch
+							checked={signIn}
+							onChange={(e) => setSignIn(e.currentTarget.checked)}
+							label={t`Email them the demo`}
+							description={
+								signIn ? (
+									<Trans>
+										Publishing adds {email} to the workspace and emails them the
+										link.
+									</Trans>
+								) : (
+									t`Publishing makes the demo live. No email goes out.`
+								)
+							}
+							data-testid="demo-publish-sign-in"
+						/>
 					) : (
 						<Switch
 							checked={signIn}

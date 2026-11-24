@@ -26,7 +26,9 @@ import { AccountsI18n } from "@/features/accounts/i18n";
 import { RoomJoinGate } from "@/features/accounts/signing/SignGate";
 import { SignRoute } from "@/features/accounts/signing/SignRoute";
 import { AccountCardRoute } from "@/features/accounts/staff/AccountCardRoute";
+import { DemoRoute } from "@/features/accounts/staff/DemoRoute";
 import { DocumentRoute } from "@/features/accounts/staff/DocumentRoute";
+import { NewDemoRoute } from "@/features/accounts/staff/NewDemoRoute";
 import { storeLanguage } from "@/lib/language";
 import { cssVariablesResolver, theme } from "@/theme";
 
@@ -36,6 +38,8 @@ import { cssVariablesResolver, theme } from "@/theme";
 // unfilled how full the room is; ?visit=0|1|3 the labels a colleague was given. The join
 // page (a path ending in /account/join) takes the invitation's real token from
 // ?join=open|accepted|closed: Noor's waiting invitation, Sam's taken up, Noor's lapsed.
+// The staff demo screens are here too: /en-US/admin/accounts/new-demo, which goes on to
+// /en-US/admin/accounts/demos/:demoId when the form is sent.
 const queryClient = new QueryClient({
 	defaultOptions: { queries: { retry: false } },
 });
@@ -192,6 +196,14 @@ const router = createMemoryRouter(
 		{
 			element: <RoomJoinGate />,
 			path: "/:language/o/:organisationId/account/join",
+		},
+		{
+			element: <NewDemoRoute />,
+			path: "/:language/admin/accounts/new-demo",
+		},
+		{
+			element: <DemoRoute />,
+			path: "/:language/admin/accounts/demos/:demoId",
 		},
 		{ element: <AccountCardRoute />, path: "/:language/admin/accounts/:orgId" },
 		{
