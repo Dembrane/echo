@@ -35,6 +35,7 @@ run("migrate", () => {
   beforeAll(async () => {
     for (const db of [
       "mig_fresh",
+      "mig_constraints",
       "mig_adopt",
       "mig_hold",
       "mig_guard",
@@ -71,8 +72,12 @@ run("migrate", () => {
     // seconds while the rest of the suite runs in parallel against the same server.
   }, 30_000);
 
+  // Builds its own database, like the tests below: it must not depend on another test having
+  // migrated one first.
   test("the provider constraints are added not validated, and still refuse a bad value", async () => {
-    const db = postgres(`${base}/mig_fresh`, { max: 1, onnotice: () => {} });
+    const url = `${base}/mig_constraints`;
+    await migrate(url, { appEnv: "test" });
+    const db = postgres(url, { max: 1, onnotice: () => {} });
     try {
       const rows = await db<{ conname: string; convalidated: boolean }[]>`
         select conname, convalidated from pg_constraint
