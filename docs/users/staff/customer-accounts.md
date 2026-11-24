@@ -91,7 +91,8 @@ picks the first of their own organisations.
   contact is not in, the form says so with a link to it ("Open it", "Open the account"). It never
   stops you from building.
 - While the demo builds and while it is a draft, nobody in that organisation sees the workspace or
-  the project, its owner included, and nobody gets an email.
+  the project, its owner included, and nobody gets an email or a notification about it. You
+  cannot ask for support access to it either: open the draft from the demo's page.
 - "Email them the demo" on: publishing adds the contact to the workspace as an admin, opens the
   workspace to the organisation like any new workspace, and sends them "Your demo is ready:
   {demo_name}" in their own language, with a button that opens the demo project (they sign in
@@ -103,6 +104,12 @@ picks the first of their own organisations.
   organisation's bill, and someone who already has a seat there keeps that one seat.
 - If the contact has left the organisation, or the organisation was deleted, before the build
   reached "Seeding", that step fails and says why. Fix it and select "Retry", or start a new demo.
+  Publishing with the email on checks the same again: if either changed since, nothing is
+  published and the page says why. Publishing with the email off still works.
+- A draft never published, or published with the email off, leaves its workspace hidden from
+  the organisation. There is no button to discard it yet. When an organisation is deleted its
+  hidden demo workspace goes with it: it is not one of the workspaces the customer has to empty
+  and delete first, and they could not see it to do so.
 
 ## Send an offer
 

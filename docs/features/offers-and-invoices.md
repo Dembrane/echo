@@ -154,6 +154,17 @@ step: "Check out the demo we made for you", "Watch the tutorial", "Create a proj
 withdrawn. An organisation that signed up by itself does not get these tasks, unless
 dembrane adds them.
 
+### A demo in an organisation you already work in
+
+If you already use dembrane, the demo can go into your organisation instead. It gets a
+workspace of its own there, named after the demo. While dembrane is still preparing it,
+nobody in the organisation sees that workspace or its project, the organisation owner
+included: it is in no list and no count, and nobody can open or join it. When dembrane
+publishes it and emails you "Your demo is ready: {demo_name}", it appears like any new
+workspace, set to "Everyone in your organisation", with you as its admin. The button in the
+email opens the demo project. No new organisation is made and no "Get started" tasks are
+added.
+
 ## Talk to us
 
 "Talk to us" on the "Overview" page has three options:
@@ -168,6 +179,7 @@ dembrane adds them.
 | Subject | Sent when |
 |---|---|
 | "Your dembrane account for {org_name}" | dembrane publishes a demo for you with sign-in |
+| "Your demo is ready: {demo_name}" | dembrane publishes a demo for you in an organisation you already work in |
 | "Your offer from dembrane is ready to sign" | An offer is sent. One to each organisation admin and Billing member |
 | "{inviter_name} asked you to sign {document_title}" | A colleague names you to sign, or reminds you |
 | "{document_title} has been withdrawn" | Your account manager at dembrane tells you a document was withdrawn |
