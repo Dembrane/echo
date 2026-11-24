@@ -15,14 +15,6 @@ export interface EffectiveMember {
   readonly created_at: string | null;
 }
 
-/**
- * The workspace fields derivation reads, in the shape @dembrane/access decides on, read by
- * access's own workspaceReach so a held-back demo workspace derives nothing here either.
- */
-export function derivationView(ws: Pick<WorkspaceRowFull, "visibility" | "settings">) {
-  return workspaceReach(ws);
-}
-
 /** True when the org's admins reach this workspace without joining it. */
 export function followsOrgAdmins(ws: Pick<WorkspaceRowFull, "visibility">): boolean {
   return ws.visibility === "open_to_organisation";
@@ -48,7 +40,8 @@ export async function effectiveMembers(db: Conn, workspaceId: string): Promise<E
       created_at: row.created_at,
     });
   }
-  const view = derivationView(ws);
+  // access's own reading of the workspace, so a held demo workspace derives nothing here.
+  const view = workspaceReach(ws);
   const inScope = followsOrgAdmins(ws)
     ? view.inheritOrgMembers
       ? ["owner", "admin", "member"]

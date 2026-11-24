@@ -1,4 +1,4 @@
-import { heldForDemo, resolveWorkspace } from "@dembrane/access";
+import { heldForDemo, resolveWorkspace, workspaceReach } from "@dembrane/access";
 import {
   BadRequestError,
   ConflictError,
@@ -11,7 +11,7 @@ import { isoTimestamp } from "@dembrane/legacy-shape";
 import { requireOnboarded, WorkspaceContext } from "../context";
 import { type Conn, iso } from "../db";
 import { clock, type TenancyDeps } from "../deps";
-import { derivationView, workspaceAdmins } from "../members";
+import { workspaceAdmins } from "../members";
 import { emit, emitToAll, orgAdmins } from "../notify";
 import {
   accessRequestById,
@@ -118,7 +118,7 @@ export function accessRequestService(deps: TenancyDeps) {
         });
       if (await activeMembership(db, ws.id, member.appUserId))
         return { status: "already_member", workspace_id: ws.id, role: "admin" };
-      const view = derivationView(ws);
+      const view = workspaceReach(ws);
       if (view.stickyRemoved.includes(member.appUserId))
         throw new ForbiddenError("workspace.removed_from");
       if (view.visibility === "private" && role !== "owner")
