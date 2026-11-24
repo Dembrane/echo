@@ -103,6 +103,8 @@ describe("routing models", () => {
       throw new Error("database is down");
     };
     const models = routingModels({ scaleway, google }, policy, throwing);
+    // Only this test's calls: the list is shared by every test of the file.
+    const before = fakeCalls().length;
     await inProject(GOOGLE_PROJECT, () =>
       generateText({ model: models.model("text_fast"), prompt: "x" }),
     );
@@ -114,7 +116,11 @@ describe("routing models", () => {
     await inProject(GOOGLE_PROJECT, () =>
       generateText({ model: onlyScaleway.model("text_fast"), prompt: "x" }),
     );
-    expect(fakeCalls().map((c) => c.model)).toEqual(["scaleway-model", "scaleway-model"]);
+    expect(
+      fakeCalls()
+        .slice(before)
+        .map((c) => c.model),
+    ).toEqual(["scaleway-model", "scaleway-model"]);
   });
 
   test("the completer and the embedder follow the project too, and identity says which", async () => {
