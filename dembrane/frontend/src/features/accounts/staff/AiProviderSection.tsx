@@ -49,20 +49,92 @@ const key = (orgId: string) => ["v2", "ai-providers", "staff", orgId] as const;
 
 const SHOWN = 3;
 
-export const historyLine = (h: AiHistoryLine, locale: string) => {
-	const provider = providerName(h.provider);
-	const by = h.by ?? t`Staff`;
-	const on = formatDay(h.at, locale);
+const isProvider = (p: unknown): p is AiProvider =>
+	p === "scaleway" || p === "google";
+
+/** What one change was, in the short form the history and the timeline share. */
+export const changeText = (kind: AiHistoryLine["kind"], p: AiProvider) => {
+	const provider = providerName(p);
+	return kind === "added"
+		? t`${provider} added`
+		: kind === "removed"
+			? t`${provider} removed`
+			: t`Default changed to ${provider}`;
+};
+
+/** "Google Vertex AI added · 25 Nov 2026"; Show all adds who made the change. */
+export const historyLine = (
+	h: AiHistoryLine,
+	locale: string,
+	withWho = false,
+) => {
+	const line = `${changeText(h.kind, h.provider)} · ${formatDay(h.at, locale)}`;
+	return withWho && h.by ? `${line} · ${h.by}` : line;
+};
+
+/** On hover: who made the change and the request it answers. */
+export const historyTitle = (h: AiHistoryLine, locale: string) => {
 	const asked = h.request_at ? formatDay(h.request_at, locale) : null;
-	const what =
-		h.kind === "added"
-			? t`${provider} added`
-			: h.kind === "removed"
-				? t`${provider} removed`
-				: t`Default changed to ${provider}`;
-	return asked
-		? t`${what} by ${by}, ${on}, request of ${asked}`
-		: t`${what} by ${by}, ${on}`;
+	return [h.by ?? t`Staff`, asked ? t`Request of ${asked}` : null]
+		.filter(Boolean)
+		.join(" · ");
+};
+
+interface AiSetting {
+	allowed?: unknown;
+	default?: unknown;
+}
+
+/**
+ * What a timeline event of an AI provider change says, one line per change: an account's
+ * change from the setting before and after, a project's move with the project's name.
+ */
+export const aiEventLines = (e: {
+	type: string;
+	detail: unknown;
+}): string[] => {
+	const d = (e.detail ?? {}) as {
+		before?: AiSetting | null;
+		after?: AiSetting | string | null;
+		project_name?: string;
+	};
+	if (e.type === "project.ai_provider.changed") {
+		const name = d.project_name;
+		const to =
+			typeof d.after === "string" && isProvider(d.after) ? d.after : null;
+		if (to) {
+			const provider = providerName(to);
+			return [
+				name
+					? t`Project ${name} moved to ${provider}`
+					: t`A project moved to ${provider}`,
+			];
+		}
+		return [
+			name
+				? t`Project ${name} back on the account default`
+				: t`A project back on the account default`,
+		];
+	}
+	const after = d.after && typeof d.after === "object" ? d.after : null;
+	if (!after) return [];
+	const had = new Set(
+		(Array.isArray(d.before?.allowed) ? d.before.allowed : []).filter(
+			isProvider,
+		),
+	);
+	const has = new Set(
+		(Array.isArray(after.allowed) ? after.allowed : []).filter(isProvider),
+	);
+	return [
+		...[...has].filter((p) => !had.has(p)).map((p) => changeText("added", p)),
+		...[...had].filter((p) => !has.has(p)).map((p) => changeText("removed", p)),
+		...(d.before &&
+		isProvider(after.default) &&
+		d.before.default !== after.default
+			? [changeText("default", after.default)]
+			: []),
+	];
 };
 
 /** Staff: the AI providers an account has and its default, changed after a written request. */
@@ -113,8 +185,9 @@ export function AiProviderSection({ orgId }: { orgId: string }) {
 								size="xs"
 								c="dimmed"
 								key={`${h.at}-${h.kind}-${h.provider}`}
+								title={historyTitle(h, i18n.locale)}
 							>
-								{historyLine(h, i18n.locale)}
+								{historyLine(h, i18n.locale, all)}
 							</Text>
 						))}
 						{data.history.length > SHOWN && !all && (

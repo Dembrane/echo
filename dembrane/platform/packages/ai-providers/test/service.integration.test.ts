@@ -165,6 +165,21 @@ run("AI providers: the account's setting and the project's choice", () => {
     expect(forStaff.models).toEqual({ scaleway: ["whisper-large-v3", "glm-5.3"] });
   });
 
+  test("staff read who made a change by display name, never by email", async () => {
+    const w = await world();
+    const staff = randomUUID();
+    await sql`insert into auth_user (id, name, email) values (${staff}, 'sam.staff', ${`${staff}@example.com`})`;
+    await sql`insert into app_user (id, directus_user_id, display_name) values (${randomUUID()}, ${staff}, 'Sam Example')`;
+    await setOrg(d, staff, w.orgId, {
+      allowed: ["scaleway", "google"],
+      default: "scaleway",
+      requestTicketId: w.ticket,
+    });
+    const { history } = await readOrgForStaff(d, w.orgId);
+    expect(history).toMatchObject([{ kind: "added", provider: "google", by: "Sam Example" }]);
+    expect(JSON.stringify(history)).not.toContain("@example.com");
+  });
+
   test("staff cannot grant what the deployment lacks, name no request, or cite another account's ticket", async () => {
     const w = await world();
     const other = await world();

@@ -8,7 +8,7 @@ import {
 } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull } from "drizzle-orm";
 import { assertPersonSends, staffOrg } from "./access";
 import { renderOffer } from "./annex";
 import { type BillToInput, checkBillTo } from "./bill-to";
@@ -159,6 +159,7 @@ export async function accountCard(d: AccountsDeps, orgId: string) {
     d.db,
     events.flatMap((e) => (e.actorKind === "staff" && e.actorUserId ? [e.actorUserId] : [])),
   );
+  const projectNames = await projectNamesOf(d.db, events);
   const stageFacts = {
     isAccount: org.account_stage !== null,
     documents: docs,
@@ -225,9 +226,32 @@ export async function accountCard(d: AccountsDeps, orgId: string) {
       : [],
     tasks: tasks.map((t) => taskView(t, docs)),
     tickets: tickets.map((t) => ticketView(t, messages)),
-    timeline: events.map((e) => eventView(e, staffNames)),
+    timeline: events.map((e) => {
+      const view = eventView(e, staffNames);
+      const name =
+        e.subjectType === "project" && e.subjectId ? projectNames.get(e.subjectId) : null;
+      return name
+        ? { ...view, detail: { ...(view.detail as object | null), project_name: name } }
+        : view;
+    }),
     dembrane_signer: await defaultSigner(d),
   };
+}
+
+/** The names of the projects the events are about, so a project's change reads with its name. */
+async function projectNamesOf(
+  db: Conn,
+  events: readonly { subjectType: string | null; subjectId: string | null }[],
+): Promise<Map<string, string>> {
+  const ids = events.flatMap((e) =>
+    e.subjectType === "project" && e.subjectId && isUuid(e.subjectId) ? [e.subjectId] : [],
+  );
+  if (!ids.length) return new Map();
+  const rows = await db
+    .select({ id: schema.project.id, name: schema.project.name })
+    .from(schema.project)
+    .where(inArray(schema.project.id, [...new Set(ids)]));
+  return new Map(rows.flatMap((r) => (r.name?.trim() ? [[r.id, r.name.trim()] as const] : [])));
 }
 
 /** Who signs a new offer for dembrane unless staff choose another: the configured signatory. */

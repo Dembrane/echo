@@ -896,19 +896,19 @@ msgstr "{pickedCount, plural, one {Usando # conversación} other {Usando # conve
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:21
 msgid "{provider} added by Dembrane, {on}"
-msgstr ""
+msgstr "{provider} añadido por dembrane el {on}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:20
 msgid "{provider} added by Dembrane, {on}, at your request of {asked}"
-msgstr ""
+msgstr "{provider} añadido por dembrane el {on}, según tu solicitud del {asked}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:25
 msgid "{provider} removed by Dembrane, {on}"
-msgstr ""
+msgstr "{provider} eliminado por dembrane el {on}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:24
 msgid "{provider} removed by Dembrane, {on}, at your request of {asked}"
-msgstr ""
+msgstr "{provider} eliminado por dembrane el {on}, según tu solicitud del {asked}"
 
 #: src/components/results/resultContent.ts:262
 msgid "{quotes, plural, one {# quote from {name}} other {# quotes from {name}}}"
@@ -1943,7 +1943,7 @@ msgstr "Las funciones de IA y las nuevas grabaciones están pausadas hasta el pr
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:64
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:46
 msgid "AI provider"
-msgstr ""
+msgstr "Proveedor de IA"
 
 #: src/components/workspace/FreeAllowanceCard.tsx:89
 msgid "AI this month"
@@ -2970,9 +2970,9 @@ msgstr "Facturación mensual"
 msgid "Billed on its own plan, not your organisation's. Manage it from this workspace's billing."
 msgstr "Se factura con su propio plan, no con el de tu organización. Adminístralo desde la facturación de este espacio de trabajo."
 
-#: src/components/ai-provider/ProviderCard.tsx:90
+#: src/components/ai-provider/ProviderCard.tsx:92
 msgid "Billed per use"
-msgstr ""
+msgstr "Facturado por uso"
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:375
 msgid "Billed separately"
@@ -3816,9 +3816,9 @@ msgstr "Cerrar e ir a dembrane"
 #~ msgid "Close results review"
 #~ msgstr "Cerrar la revisión de resultados"
 
-#: src/components/ai-provider/ProviderCard.tsx:89
+#: src/components/ai-provider/ProviderCard.tsx:91
 msgid "Closed models: Gemini"
-msgstr ""
+msgstr "Modelos cerrados: Gemini"
 
 #: src/lib/tiers.ts:106
 msgid "Cloud Act Safe"
@@ -5020,11 +5020,11 @@ msgstr "Por defecto: {defaultNodes}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:28
 msgid "Default changed to {provider} by Dembrane, {on}"
-msgstr ""
+msgstr "Predeterminado cambiado a {provider} por dembrane el {on}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:27
 msgid "Default changed to {provider} by Dembrane, {on}, at your request of {asked}"
-msgstr ""
+msgstr "Predeterminado cambiado a {provider} por dembrane el {on}, según tu solicitud del {asked}"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:271
 msgid "Default: {defaultValue}"
@@ -6013,9 +6013,9 @@ msgstr "Coste estimado"
 msgid "Estimated total: €{estimated}"
 msgstr "Total estimado: {estimated} €"
 
-#: src/components/ai-provider/ProviderCard.tsx:82
+#: src/components/ai-provider/ProviderCard.tsx:84
 msgid "EU"
-msgstr ""
+msgstr "UE"
 
 #: src/lib/tiers.ts:104
 msgid "EU hosted LLMs included"
@@ -7147,9 +7147,9 @@ msgstr "Objetivo guardado"
 msgid "Good finding"
 msgstr "Buen hallazgo"
 
-#: src/components/ai-provider/ProviderCard.tsx:96
+#: src/components/ai-provider/ProviderCard.tsx:98
 msgid "Good for English and Dutch"
-msgstr ""
+msgstr "Bueno para inglés y neerlandés"
 
 #: src/components/feedback/ResponseFeedbackControls.tsx:148
 msgid "Good response"
@@ -7157,7 +7157,7 @@ msgstr "Buena respuesta"
 
 #: src/components/ai-provider/hooks.ts:104
 msgid "Google Vertex AI"
-msgstr ""
+msgstr "Google Vertex AI"
 
 #: src/components/release/ReleaseVideoModal.tsx:356
 msgid "Got it"
@@ -10147,7 +10147,7 @@ msgstr "No disponible ahora mismo"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:59
 msgid "Not enabled"
-msgstr ""
+msgstr "No habilitado"
 
 #. placeholder {0}: org.name
 #: src/routes/settings/AgentConsentRoute.tsx:82
@@ -10606,9 +10606,9 @@ msgstr "Abrir mapa"
 msgid "Open menu"
 msgstr "Abrir menú"
 
-#: src/components/ai-provider/ProviderCard.tsx:95
+#: src/components/ai-provider/ProviderCard.tsx:97
 msgid "Open models: {names}"
-msgstr ""
+msgstr "Modelos abiertos: {names}"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2745
 msgid "Open Mollie dashboard"
@@ -10977,9 +10977,9 @@ msgstr "Plan de pago"
 #~ msgid "Panel settings"
 #~ msgstr "Ajustes del panel"
 
-#: src/components/ai-provider/ProviderCard.tsx:82
+#: src/components/ai-provider/ProviderCard.tsx:84
 msgid "Paris"
-msgstr ""
+msgstr "París"
 
 #: src/components/training/StaffTrainingPanel.tsx:53
 msgid "partially completed"
@@ -12883,9 +12883,9 @@ msgstr "Informes"
 msgid "Reports publish, schedule and notify as expected."
 msgstr "Los informes se publican, se programan y notifican como se espera."
 
-#: src/components/ai-provider/ProviderCard.tsx:206
+#: src/components/ai-provider/ProviderCard.tsx:208
 msgid "Request"
-msgstr ""
+msgstr "Solicitar"
 
 #. placeholder {0}: product.name
 #: src/components/training/RequestTrainingModal.tsx:55
@@ -13362,10 +13362,10 @@ msgstr "En ejecución"
 msgid "Runs"
 msgstr "Ejecuciones"
 
-#: src/components/ai-provider/ProviderCard.tsx:87
-#: src/components/ai-provider/ProviderCard.tsx:94
+#: src/components/ai-provider/ProviderCard.tsx:89
+#: src/components/ai-provider/ProviderCard.tsx:96
 msgid "Runs in the EU"
-msgstr ""
+msgstr "Se ejecuta en la UE"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2970
 msgid "Sales invoice issued."
@@ -13500,7 +13500,7 @@ msgstr "Cuenta de qué trata la sesión, quién participa y dónde; puedes pegar
 
 #: src/components/ai-provider/hooks.ts:104
 msgid "Scaleway"
-msgstr ""
+msgstr "Scaleway"
 
 #: src/components/common/FeedbackPortalModal.tsx:125
 msgid "Scan or click the QR code to open the feedback portal"
@@ -14586,9 +14586,9 @@ msgstr "Omitidas porque la selección era demasiado grande."
 msgid "Slack community"
 msgstr "Comunidad de Slack"
 
-#: src/components/ai-provider/ProviderCard.tsx:88
+#: src/components/ai-provider/ProviderCard.tsx:90
 msgid "Slightly better quality"
-msgstr ""
+msgstr "Calidad ligeramente mejor"
 
 #: src/components/release/releaseHistory.ts:85
 msgid "Smoother recording and quicker questions"
@@ -18055,7 +18055,7 @@ msgstr "No encontramos la página que buscabas. Puede que se haya movido."
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:39
 msgid "We couldn't load the AI provider."
-msgstr ""
+msgstr "No pudimos cargar el proveedor de IA."
 
 #: src/routes/organisation/OrganisationRoute.tsx:694
 msgid "We couldn't load this organisation. Try again in a moment."

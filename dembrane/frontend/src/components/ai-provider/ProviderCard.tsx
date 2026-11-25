@@ -58,13 +58,14 @@ export const ProviderLogo = ({
 		data-testid={`provider-logo-${provider}`}
 		style={{
 			alignItems: "center",
-			background: "var(--mantine-color-white)",
-			border: "var(--app-stroke) solid var(--app-quiet)",
+			// Always light: the marks are drawn for a white ground, and the purple one
+			// loses its contrast on the dark surface.
+			background: "#ffffff",
+			border: "var(--app-stroke) solid #d9d9d6",
 			display: "flex",
 			flexShrink: 0,
 			height: size,
 			justifyContent: "center",
-			opacity: muted ? 0.5 : 1,
 			width: size,
 		}}
 	>
@@ -73,7 +74,7 @@ export const ProviderLogo = ({
 			alt=""
 			width={size * 0.6}
 			height={size * 0.6}
-			style={{ display: "block" }}
+			style={{ display: "block", opacity: muted ? 0.5 : 1 }}
 		/>
 	</Box>
 );

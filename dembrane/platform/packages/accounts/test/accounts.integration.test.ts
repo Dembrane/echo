@@ -1700,6 +1700,30 @@ run("accounts routes against Postgres", () => {
     expect(nameOf(rows.customer)).toBeNull();
   });
 
+  test("the staff card gives a project's change the project's name", async () => {
+    const projectId = newId();
+    await w.db
+      .insert(schema.project)
+      .values({ id: projectId, name: "Example town", is_conversation_allowed: true });
+    const eventId = newId();
+    await store.insertEvent(w.db, {
+      id: eventId,
+      orgId: w.orgId,
+      type: "project.ai_provider.changed",
+      actorKind: "customer",
+      subjectType: "project",
+      subjectId: projectId,
+      detail: { before: null, after: "google" },
+      createdAt: w.clock.now,
+    });
+    const card = K.AccountCard.parse((await call(w, "GET", S(), "staff")).data);
+    expect(card.timeline.find((e) => e.id === eventId)?.detail).toEqual({
+      before: null,
+      after: "google",
+      project_name: "Example town",
+    });
+  });
+
   test("reminding the named signer sends the same link again and keeps the wait", async () => {
     const pushed = K.PushOfferResponse.parse(
       (await call(w, "POST", `${S()}/offers`, "staff", offerBody())).data,

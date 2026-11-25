@@ -60,7 +60,7 @@ import {
 	outsideViaLabel,
 	VoidAcceptanceModal,
 } from "./AcceptedOutsideModals";
-import { AiProviderSection } from "./AiProviderSection";
+import { AiProviderSection, aiEventLines } from "./AiProviderSection";
 import { EmailCustomerModal, type EmailSubject } from "./EmailCustomerModal";
 import { PushOfferModal } from "./PushOfferModal";
 import { NewTaskModal, SendBackModal } from "./TaskModals";
@@ -958,6 +958,12 @@ const eventLabel = (type: string): string =>
 		"ticket.replied": t`Question answered`,
 	})[type] ?? type;
 
+/** An AI provider change says what changed, one line per change; the rest have a fixed label. */
+const eventText = (e: { type: string; detail: unknown }): string =>
+	(e.type === "ai_providers.changed" || e.type === "project.ai_provider.changed"
+		? aiEventLines(e).join(", ")
+		: "") || eventLabel(e.type);
+
 /** An invoice part's subject is its offer's id and the part's number: the offer's id. */
 const subjectDocument = (id: string | null) => id?.split(":")[0] ?? null;
 
@@ -989,7 +995,7 @@ function Timeline({ card }: { card: AccountCardT }) {
 											(e.detail as { waits_for?: string[] } | null)
 												?.waits_for ?? [],
 										)
-									: eventLabel(e.type)}
+									: eventText(e)}
 								{title(subjectDocument(e.subject_id)) ? (
 									<Text span c="dimmed" size="sm">
 										{" "}

@@ -233,12 +233,12 @@ msgstr "{reach, plural, one {{first} wordt ook lid van # werkruimte die openstaa
 #~ msgstr ""
 
 #: src/features/accounts/staff/AiProviderSection.tsx:65
-msgid "{what} by {by}, {on}"
-msgstr "{what} door {by}, {on}"
+#~ msgid "{what} by {by}, {on}"
+#~ msgstr "{what} door {by}, {on}"
 
 #: src/features/accounts/staff/AiProviderSection.tsx:64
-msgid "{what} by {by}, {on}, request of {asked}"
-msgstr "{what} door {by}, {on}, op verzoek van {asked}"
+#~ msgid "{what} by {by}, {on}, request of {asked}"
+#~ msgstr "{what} door {by}, {on}, op verzoek van {asked}"
 
 #: src/features/accounts/customer/room/copy.ts:83
 msgid "{who} invited you as “{own}”."
@@ -291,6 +291,14 @@ msgstr "Misschien is er een nieuwere uitnodiging verstuurd. Vraag degene die je 
 #: src/features/accounts/signing/SignatureCapture.tsx:362
 msgid "A photo or scan of your signature, PNG or JPEG."
 msgstr "Een foto of scan van je handtekening, PNG of JPEG."
+
+#: src/features/accounts/staff/AiProviderSection.tsx:115
+msgid "A project back on the account default"
+msgstr "Een project teruggezet naar de accountstandaard"
+
+#: src/features/accounts/staff/AiProviderSection.tsx:109
+msgid "A project moved to {provider}"
+msgstr "Een project verplaatst naar {provider}"
 
 #: src/features/accounts/staff/DemoRoute.tsx:142
 msgid "A step failed. Retry it once the cause is fixed."
@@ -447,8 +455,8 @@ msgstr "Adresregel 2"
 #~ msgid "Admin"
 #~ msgstr "Beheerder"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:82
-#: src/features/accounts/staff/AiProviderSection.tsx:159
+#: src/features/accounts/staff/AiProviderSection.tsx:149
+#: src/features/accounts/staff/AiProviderSection.tsx:227
 msgid "AI provider"
 msgstr "AI-provider"
 
@@ -456,7 +464,7 @@ msgstr "AI-provider"
 msgid "AI provider changed"
 msgstr "AI-provider gewijzigd"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:197
+#: src/features/accounts/staff/AiProviderSection.tsx:265
 msgid "AI provider saved"
 msgstr "AI-provider opgeslagen"
 
@@ -665,7 +673,7 @@ msgstr "Gesprek gepland"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:71
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
-#: src/features/accounts/staff/AiProviderSection.tsx:271
+#: src/features/accounts/staff/AiProviderSection.tsx:339
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:266
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:329
 #: src/features/accounts/customer/WhoSigns.tsx:460
@@ -816,7 +824,7 @@ msgstr "Kies er een."
 msgid "Choose someone"
 msgstr "Kies iemand"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:251
+#: src/features/accounts/staff/AiProviderSection.tsx:319
 msgid "Choose the ticket"
 msgstr "Kies het ticket"
 
@@ -961,7 +969,7 @@ msgid "Custom"
 msgstr "Maatwerk"
 
 #: src/features/accounts/format.ts:122
-#: src/features/accounts/staff/AccountCardRoute.tsx:1004
+#: src/features/accounts/staff/AccountCardRoute.tsx:1010
 #: src/features/accounts/customer/Questions.tsx:171
 msgid "Customer"
 msgstr "Klant"
@@ -1011,8 +1019,8 @@ msgstr "Datum van ondertekening"
 msgid "Declined"
 msgstr "Geweigerd"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:103
-#: src/features/accounts/staff/AiProviderSection.tsx:213
+#: src/features/accounts/staff/AiProviderSection.tsx:170
+#: src/features/accounts/staff/AiProviderSection.tsx:281
 msgid "Default"
 msgstr "Standaard"
 
@@ -1223,7 +1231,7 @@ msgstr "Te betalen vóór {due}"
 msgid "Dutch VAT"
 msgstr "Nederlandse btw"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:91
+#: src/features/accounts/staff/AiProviderSection.tsx:158
 #: src/features/accounts/customer/BillingForm.tsx:308
 msgid "Edit"
 msgstr "Bewerken"
@@ -1276,7 +1284,7 @@ msgstr "Leeg: die van de sjabloon. Een lege regel begint een nieuwe alinea."
 #~ msgid "Enable it to push offers and tasks. They get an Account page with a billing details step."
 #~ msgstr "Schakel het in om offertes en taken te sturen. Ze krijgen een accountpagina met een stap voor factuurgegevens."
 
-#: src/features/accounts/staff/AiProviderSection.tsx:217
+#: src/features/accounts/staff/AiProviderSection.tsx:285
 msgid "Enabled"
 msgstr "Ingeschakeld"
 
@@ -1829,7 +1837,7 @@ msgstr "Log in met het e-mailadres waar de offerte naartoe is gestuurd."
 msgid "Lost"
 msgstr "Verloren"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:240
+#: src/features/accounts/staff/AiProviderSection.tsx:308
 msgid "Make default"
 msgstr "Als standaard instellen"
 
@@ -2414,7 +2422,7 @@ msgstr "Geparkeerd"
 
 #. placeholder {0}: d.part
 #. placeholder {1}: d.of
-#: src/features/accounts/staff/AccountCardRoute.tsx:967
+#: src/features/accounts/staff/AccountCardRoute.tsx:973
 msgid "part {0} of {1}"
 msgstr "deel {0} van {1}"
 
@@ -2506,6 +2514,14 @@ msgstr "Prijs"
 #: src/features/accounts/customer/AccountPickerRoute.tsx:82
 msgid "Progress"
 msgstr "Voortgang"
+
+#: src/features/accounts/staff/AiProviderSection.tsx:114
+msgid "Project {name} back on the account default"
+msgstr "Project {name} teruggezet naar de accountstandaard"
+
+#: src/features/accounts/staff/AiProviderSection.tsx:108
+msgid "Project {name} moved to {provider}"
+msgstr "Project {name} verplaatst naar {provider}"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:945
 msgid "Project AI provider changed"
@@ -2722,9 +2738,13 @@ msgstr "de achterban te vertegenwoordigen"
 msgid "Represents staff or stakeholders"
 msgstr "Vertegenwoordigt de achterban"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:250
+#: src/features/accounts/staff/AiProviderSection.tsx:318
 msgid "Request"
 msgstr "Verzoek"
+
+#: src/features/accounts/staff/AiProviderSection.tsx:78
+msgid "Request of {asked}"
+msgstr "Verzoek van {asked}"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:414
 msgid "Required"
@@ -2790,7 +2810,7 @@ msgid "run the rollout"
 msgstr "de invoering te leiden"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:281
-#: src/features/accounts/staff/AiProviderSection.tsx:268
+#: src/features/accounts/staff/AiProviderSection.tsx:336
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:91
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:278
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:287
@@ -2994,8 +3014,8 @@ msgid "Shares add up to {0}%"
 msgstr "De delen tellen op tot {0}%"
 
 #: src/features/accounts/staff/DemoRoute.tsx:329
-#: src/features/accounts/staff/AiProviderSection.tsx:127
-#: src/features/accounts/staff/AccountCardRoute.tsx:1018
+#: src/features/accounts/staff/AiProviderSection.tsx:195
+#: src/features/accounts/staff/AccountCardRoute.tsx:1024
 msgid "Show all"
 msgstr "Alles tonen"
 
@@ -3009,7 +3029,7 @@ msgid "Show finished ({0})"
 msgstr "Afgerond tonen ({0})"
 
 #: src/features/accounts/staff/DemoRoute.tsx:330
-#: src/features/accounts/staff/AccountCardRoute.tsx:1018
+#: src/features/accounts/staff/AccountCardRoute.tsx:1024
 msgid "Show less"
 msgstr "Minder tonen"
 
@@ -3194,8 +3214,8 @@ msgstr "Iemand die voor je organisatie verwerkingsafspraken mag maken, onderteke
 msgid "Something went wrong"
 msgstr "Er ging iets mis"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:54
-#: src/features/accounts/staff/AccountCardRoute.tsx:1006
+#: src/features/accounts/staff/AiProviderSection.tsx:78
+#: src/features/accounts/staff/AccountCardRoute.tsx:1012
 msgid "Staff"
 msgstr "Medewerker"
 
@@ -3260,7 +3280,7 @@ msgstr "Abonnement"
 msgid "Subtotal"
 msgstr "Subtotaal"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:1007
+#: src/features/accounts/staff/AccountCardRoute.tsx:1013
 msgid "System"
 msgstr "Systeem"
 
@@ -3643,7 +3663,7 @@ msgstr "Via Peppol"
 msgid "Tick the box"
 msgstr "Vink het vakje aan"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:981
+#: src/features/accounts/staff/AccountCardRoute.tsx:987
 msgid "Timeline"
 msgstr "Tijdlijn"
 

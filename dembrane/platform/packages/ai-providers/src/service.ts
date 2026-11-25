@@ -8,11 +8,11 @@ import {
   type ProviderId,
   type RoutingPolicy,
 } from "@dembrane/llm";
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 
 const refused = (message: string) => new BadRequestError("request.invalid", { message });
 
-const { account_event, account_ticket, directus_users, org, project, workspace } = schema;
+const { account_event, account_ticket, app_user, auth_user, org, project, workspace } = schema;
 
 export interface AiProvidersDeps {
   readonly db: Db;
@@ -108,10 +108,13 @@ export async function orgHistory(
     .select({
       createdAt: account_event.createdAt,
       detail: account_event.detail,
-      by: directus_users.email,
+      by: sql<
+        string | null
+      >`nullif(trim(coalesce(${app_user.display_name}, ${auth_user.name})), '')`,
     })
     .from(account_event)
-    .leftJoin(directus_users, eq(directus_users.id, account_event.actorUserId))
+    .leftJoin(auth_user, eq(auth_user.id, account_event.actorUserId))
+    .leftJoin(app_user, eq(app_user.directus_user_id, auth_user.id))
     .where(and(eq(account_event.orgId, orgId), eq(account_event.type, ORG_EVENT)))
     .orderBy(desc(account_event.createdAt))
     .limit(opts.limit ?? 50);
