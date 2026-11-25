@@ -32,6 +32,29 @@ describe("the demo fixtures parse against the contract", () => {
 		["demoFailed", fx.demoFailed, contract.DemoStatus],
 		["demoDraft", fx.demoDraft, contract.DemoStatus],
 		["demoPublished", fx.demoPublished, contract.DemoStatus],
+		["demoCheckRequest", fx.demoCheckRequest, contract.DemoCheckRequest],
+		["demoCheckNewContact", fx.demoCheckNewContact, contract.DemoCheck],
+		["demoCheckCustomer", fx.demoCheckCustomer, contract.DemoCheck],
+		[
+			"demoCheckTwoOrganisations",
+			fx.demoCheckTwoOrganisations,
+			contract.DemoCheck,
+		],
+		[
+			"demoCreateInOrganisationRequest",
+			fx.demoCreateInOrganisationRequest,
+			contract.DemoCreateRequest,
+		],
+		[
+			"demoDraftInOrganisation",
+			fx.demoDraftInOrganisation,
+			contract.DemoStatus,
+		],
+		[
+			"demoPublishedInOrganisation",
+			fx.demoPublishedInOrganisation,
+			contract.DemoStatus,
+		],
 		["accountCard", fx.accountCard, contract.AccountCard],
 		["pushOfferRequest", fx.pushOfferRequest, contract.PushOfferRequest],
 		["pushOfferResponse", fx.pushOfferResponse, contract.PushOfferResponse],
@@ -482,5 +505,62 @@ describe("the fixture backend, through the client", () => {
 			card.documents.find((x) => x.id === d.offer_document_id)?.status,
 		).toBe("draft");
 		vi.useRealTimers();
+	});
+
+	it("refuses to publish the two placed drafts with the email on, each with its code", async () => {
+		for (const [demoId, code] of [
+			[
+				"0199a2c0-0000-7000-8000-0000000000d1",
+				"demo.contact_not_in_organisation",
+			],
+			["0199a2c0-0000-7000-8000-0000000000d2", "demo.organisation_deleted"],
+		]) {
+			await expect(
+				client.call("publishDemo", {
+					body: { sign_in: true },
+					params: { demoId: demoId as string },
+				}),
+			).rejects.toMatchObject({ body: { code }, status: 409 });
+			const off = await client.call("publishDemo", {
+				body: { sign_in: false },
+				params: { demoId: demoId as string },
+			});
+			expect([off.status, off.invited_at]).toEqual(["published", null]);
+		}
+	});
+
+	it("checks a demo's contact by the three fixture addresses", async () => {
+		const check = (contact_email: string) =>
+			client.call("checkDemo", { body: { contact_email } });
+		expect((await check("new@example-harbour.example")).contact).toEqual({
+			has_account: false,
+			name: null,
+			organisations: [],
+		});
+		const robin = await check("robin@example-town.example");
+		expect(robin.contact?.organisations.map((o) => o.account_stage)).toEqual([
+			"customer",
+		]);
+		const jules = await check("jules@example-water.example");
+		expect(jules.contact?.organisations).toHaveLength(2);
+		// Organisations of the same name come with the name typed, as from the API.
+		expect(jules.organisations_named).toEqual([]);
+		const named = await client.call("checkDemo", {
+			body: {
+				contact_email: "jules@example-water.example",
+				organisation_name: "stichting vrije proef",
+			},
+		});
+		expect(named.organisations_named.map((o) => o.name)).toEqual([
+			"Stichting Vrije Proef",
+		]);
+		expect(jules.demos[0]?.same_contact).toBe(true);
+		const placed = await client.call("createDemo", {
+			body: fx.demoCreateInOrganisationRequest,
+		});
+		expect(placed.existing_organisation).toEqual({
+			id: fx.accountPage.organisation.id,
+			name: fx.accountPage.organisation.name,
+		});
 	});
 });

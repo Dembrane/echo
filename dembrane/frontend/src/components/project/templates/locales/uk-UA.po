@@ -13,27 +13,31 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:152
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:132
 msgid "{count, plural, one {# template} other {# templates}}"
 msgstr "{count, plural, one {# шаблон} few {# шаблони} many {# шаблонів} other {# шаблону}}"
 
-#: src/components/project/templates/projectTemplates.ts:154
+#: src/components/project/templates/projectTemplates.ts:162
 msgid "A live event"
 msgstr "Живий захід"
 
-#: src/components/project/templates/projectTemplates.ts:152
+#: src/components/project/templates/projectTemplates.ts:211
+msgid "A plain project. Nothing is set up for you, and you can change every setting later."
+msgstr "Простий проєкт. Нічого не налаштовано за тебе, і будь-яке налаштування можна змінити пізніше."
+
+#: src/components/project/templates/projectTemplates.ts:160
 msgid "A series of sessions"
 msgstr "Серія сесій"
 
-#: src/components/project/templates/projectTemplates.ts:219
+#: src/components/project/templates/projectTemplates.ts:231
 msgid "Align"
 msgstr "Узгодити"
 
-#: src/components/project/templates/projectTemplates.ts:235
+#: src/components/project/templates/projectTemplates.ts:247
 msgid "Aligning and moving forward"
 msgstr "Узгодитися й рухатися далі"
 
-#: src/components/project/templates/projectTemplates.ts:205
+#: src/components/project/templates/projectTemplates.ts:218
 msgid "Analyse audio files you already have."
 msgstr "Проаналізуй аудіофайли, які в тебе вже є."
 
@@ -46,14 +50,14 @@ msgstr "Проаналізуй аудіофайли, які в тебе вже �
 #~ msgstr "Спершу просить «{label}»"
 
 #: src/components/project/templates/projectTemplates.ts:158
-msgid "Blank project"
-msgstr "Порожній проєкт"
+#~ msgid "Blank project"
+#~ msgstr "Порожній проєкт"
 
-#: src/components/project/templates/projectTemplates.ts:134
+#: src/components/project/templates/projectTemplates.ts:142
 msgid "Brainstorm"
 msgstr "Мозковий штурм"
 
-#: src/components/project/templates/projectTemplates.ts:144
+#: src/components/project/templates/projectTemplates.ts:152
 msgid "Calm conversation in rounds"
 msgstr "Спокійна розмова по колу"
 
@@ -65,7 +69,7 @@ msgstr "може підхопити інші групи"
 #~ msgid "Can bring in what other groups said"
 #~ msgstr "Може підхопити сказане іншими групами"
 
-#: src/components/project/templates/projectTemplates.ts:146
+#: src/components/project/templates/projectTemplates.ts:154
 msgid "Citizens' assembly"
 msgstr "Громадянська асамблея"
 
@@ -73,19 +77,19 @@ msgstr "Громадянська асамблея"
 #~ msgid "Conference sessions"
 #~ msgstr "Сесії конференції"
 
-#: src/components/project/templates/projectTemplates.ts:221
+#: src/components/project/templates/projectTemplates.ts:233
 msgid "Decide"
 msgstr "Вирішити"
 
-#: src/components/project/templates/projectTemplates.ts:237
+#: src/components/project/templates/projectTemplates.ts:249
 msgid "Deciding together"
 msgstr "Вирішувати разом"
 
-#: src/components/project/templates/projectTemplates.ts:254
+#: src/components/project/templates/projectTemplates.ts:266
 msgid "Decisions and actions"
 msgstr "Рішення та дії"
 
-#: src/components/project/templates/projectTemplates.ts:252
+#: src/components/project/templates/projectTemplates.ts:264
 msgid "Differences"
 msgstr "Розбіжності"
 
@@ -97,9 +101,13 @@ msgstr "Кожна розмова отримує назву"
 #~ msgid "Each table checks its own summary"
 #~ msgstr "Кожен стіл перевіряє власний підсумок"
 
-#: src/components/project/templates/TemplateRow/TemplateRow.tsx:127
-msgid "Earlier formats"
-msgstr "Попередні формати"
+#: src/components/project/templates/TemplateRow/TemplateRow.tsx:132
+#~ msgid "Earlier formats"
+#~ msgstr "Попередні формати"
+
+#: src/components/project/templates/TemplateRow/TemplateRow.tsx:132
+msgid "Earlier templates"
+msgstr "Попередні шаблони"
 
 #: src/components/project/templates/projectTemplates.ts:316
 #~ msgid "Ends with decisions and actions"
@@ -109,12 +117,12 @@ msgstr "Попередні формати"
 #~ msgid "Evaluation"
 #~ msgstr "Оцінювання"
 
-#: src/components/project/templates/projectTemplates.ts:142
+#: src/components/project/templates/projectTemplates.ts:150
 msgid "Everyone's ideas, fast"
 msgstr "Ідеї кожного, швидко"
 
 #. js-lingui-explicit-id
-#: src/components/project/templates/projectTemplates.ts:217
+#: src/components/project/templates/projectTemplates.ts:229
 msgid "templates.verb.explore"
 msgstr "Дослідити"
 
@@ -122,11 +130,11 @@ msgstr "Дослідити"
 msgid "Explore"
 msgstr "Explore"
 
-#: src/components/project/templates/projectTemplates.ts:233
+#: src/components/project/templates/projectTemplates.ts:245
 msgid "Exploring futures and possibilities"
 msgstr "Досліджувати майбутнє й можливості"
 
-#: src/components/project/templates/projectTemplates.ts:122
+#: src/components/project/templates/projectTemplates.ts:130
 msgid "Focus group"
 msgstr "Фокус-група"
 
@@ -134,11 +142,11 @@ msgstr "Фокус-група"
 #~ msgid "Futures session"
 #~ msgstr "Сесія про майбутнє"
 
-#: src/components/project/templates/projectTemplates.ts:212
+#: src/components/project/templates/projectTemplates.ts:224
 msgid "Gather"
 msgstr "Зібрати"
 
-#: src/components/project/templates/projectTemplates.ts:229
+#: src/components/project/templates/projectTemplates.ts:241
 msgid "Gathering expert knowledge"
 msgstr "Збирати експертні знання"
 
@@ -146,7 +154,7 @@ msgstr "Збирати експертні знання"
 #~ msgid "Gives each recording a title"
 #~ msgstr "Дає назву кожному запису"
 
-#: src/components/project/templates/projectTemplates.ts:188
+#: src/components/project/templates/projectTemplates.ts:196
 msgid "Great for an open agenda: participants propose sessions and move between them."
 msgstr "Для відкритої програми: учасники пропонують сесії й переходять між ними."
 
@@ -154,7 +162,7 @@ msgstr "Для відкритої програми: учасники пропо�
 #~ msgid "Great for café rounds where people change tables and carry ideas along."
 #~ msgstr "Для кав'ярняних раундів, де люди пересідають і переносять ідеї."
 
-#: src/components/project/templates/projectTemplates.ts:186
+#: src/components/project/templates/projectTemplates.ts:194
 msgid "Great for café rounds: people change tables, a table host stays and carries ideas along."
 msgstr "Для кавових раундів: люди змінюють столи, ведучий лишається й передає ідеї далі."
 
@@ -166,19 +174,19 @@ msgstr "Для кавових раундів: люди змінюють стол
 #~ msgid "Great for citizens' assemblies, deliberative panels, policy juries and participatory budgeting."
 #~ msgstr "Для громадянських асамблей, дорадчих панелей, громадських журі й бюджетів участі."
 
-#: src/components/project/templates/projectTemplates.ts:196
+#: src/components/project/templates/projectTemplates.ts:204
 msgid "Great for conferences and festivals: one recording per breakout or talk, side by side."
 msgstr "Для конференцій і фестивалів: один запис на секцію чи виступ, паралельно."
 
-#: src/components/project/templates/projectTemplates.ts:194
+#: src/components/project/templates/projectTemplates.ts:202
 msgid "Great for deliberative panels, policy juries and participatory budgets: groups weigh options."
 msgstr "Для дорадчих панелей, громадських журі та бюджетів участі: групи зважують варіанти."
 
-#: src/components/project/templates/projectTemplates.ts:180
+#: src/components/project/templates/projectTemplates.ts:188
 msgid "Great for evaluating a project, pilot or event: one team looks back together."
 msgstr "Для оцінки проєкту, пілоту чи події: одна команда разом озирається назад."
 
-#: src/components/project/templates/projectTemplates.ts:172
+#: src/components/project/templates/projectTemplates.ts:180
 msgid "Great for field and expert interviews: one to one, one after another."
 msgstr "Для польових та експертних інтерв'ю: віч-на-віч, одне за одним."
 
@@ -186,7 +194,7 @@ msgstr "Для польових та експертних інтерв'ю: ві�
 #~ msgid "Great for focus groups, youth panels and small listening sessions."
 #~ msgstr "Для фокус-груп, молодіжних панелей і невеликих сесій слухання."
 
-#: src/components/project/templates/projectTemplates.ts:192
+#: src/components/project/templates/projectTemplates.ts:200
 msgid "Great for hard or charged topics: small circles where each person speaks in turn."
 msgstr "Для складних чи гострих тем: невеликі кола, де кожен говорить по черзі."
 
@@ -194,7 +202,7 @@ msgstr "Для складних чи гострих тем: невеликі к�
 #~ msgid "Great for hearing everyone in a few minutes: alone, in pairs, then in fours."
 #~ msgstr "Щоб за кілька хвилин почути всіх: наодинці, у парах, потім учотирьох."
 
-#: src/components/project/templates/projectTemplates.ts:190
+#: src/components/project/templates/projectTemplates.ts:198
 msgid "Great for hearing everyone in minutes: alone, in pairs, in fours, then all together."
 msgstr "Щоб за кілька хвилин почути всіх: самостійно, у парах, по четверо, а потім разом."
 
@@ -202,7 +210,7 @@ msgstr "Щоб за кілька хвилин почути всіх: самос�
 #~ msgid "Great for home visits and sensitive conversations, one to one."
 #~ msgstr "Для візитів додому й делікатних розмов віч-на-віч."
 
-#: src/components/project/templates/projectTemplates.ts:174
+#: src/components/project/templates/projectTemplates.ts:182
 msgid "Great for home visits and sensitive topics: one calm talk at someone's table."
 msgstr "Для візитів додому й делікатних тем: одна спокійна розмова за чиїмось столом."
 
@@ -210,7 +218,7 @@ msgstr "Для візитів додому й делікатних тем: од�
 #~ msgid "Great for idea and innovation workshops where groups build on each other."
 #~ msgstr "Для воркшопів ідей та інновацій, де групи розвивають ідеї одна одної."
 
-#: src/components/project/templates/projectTemplates.ts:182
+#: src/components/project/templates/projectTemplates.ts:190
 msgid "Great for idea and innovation workshops: groups build on each other's ideas."
 msgstr "Для майстерень ідей та інновацій: групи розвивають ідеї одна одної."
 
@@ -226,7 +234,7 @@ msgstr "Для майстерень ідей та інновацій: групи
 #~ msgid "Great for one-to-one, field and expert interviews, one after another."
 #~ msgstr "Для індивідуальних, польових та експертних інтерв'ю, одне за одним."
 
-#: src/components/project/templates/projectTemplates.ts:168
+#: src/components/project/templates/projectTemplates.ts:176
 msgid "Great for partners or experts with different interests: one table, one recording."
 msgstr "Для партнерів чи експертів із різними інтересами: один стіл, один запис."
 
@@ -234,11 +242,11 @@ msgstr "Для партнерів чи експертів із різними і
 #~ msgid "Great for resident and neighbourhood evenings, and public hearings with many tables."
 #~ msgstr "Для зустрічей мешканців, сусідських вечорів і громадських слухань із багатьма столами."
 
-#: src/components/project/templates/projectTemplates.ts:166
+#: src/components/project/templates/projectTemplates.ts:174
 msgid "Great for resident evenings and public hearings: many fixed tables at once."
 msgstr "Для зустрічей мешканців і громадських слухань: багато сталих столів водночас."
 
-#: src/components/project/templates/projectTemplates.ts:184
+#: src/components/project/templates/projectTemplates.ts:192
 msgid "Great for scenario planning and long-term visions: each group builds its own future."
 msgstr "Для планування сценаріїв і довгострокових візій: кожна група будує власне майбутнє."
 
@@ -246,7 +254,7 @@ msgstr "Для планування сценаріїв і довгостроко
 #~ msgid "Great for scenario planning, co-design and long-term visions."
 #~ msgstr "Для сценарного планування, спільного проєктування й довгострокових візій."
 
-#: src/components/project/templates/projectTemplates.ts:176
+#: src/components/project/templates/projectTemplates.ts:184
 msgid "Great for strategy days and offsites: groups find themes, then agree on actions."
 msgstr "Для стратегічних днів і виїзних сесій: групи знаходять теми, а потім домовляються про дії."
 
@@ -262,7 +270,7 @@ msgstr "Для стратегічних днів і виїзних сесій: �
 #~ msgid "Great for team meetings and working groups that need minutes, meeting after meeting."
 #~ msgstr "Для командних нарад і робочих груп, яким потрібен протокол, зустріч за зустріччю."
 
-#: src/components/project/templates/projectTemplates.ts:178
+#: src/components/project/templates/projectTemplates.ts:186
 msgid "Great for teams and working groups: the same people, meeting after meeting, with minutes."
 msgstr "Для команд і робочих груп: ті самі люди, зустріч за зустріччю, з протоколом."
 
@@ -270,11 +278,11 @@ msgstr "Для команд і робочих груп: ті самі люди, 
 #~ msgid "Great for unconferences where participants set the agenda."
 #~ msgstr "Для анконференцій, де учасники самі складають порядок денний."
 
-#: src/components/project/templates/projectTemplates.ts:170
+#: src/components/project/templates/projectTemplates.ts:178
 msgid "Great for youth panels and listening sessions: a moderator asks one small group."
 msgstr "Для молодіжних панелей і сесій слухання: модератор питає одну невелику групу."
 
-#: src/components/project/templates/projectTemplates.ts:258
+#: src/components/project/templates/projectTemplates.ts:270
 msgid "Hard points"
 msgstr "Складні моменти"
 
@@ -282,11 +290,11 @@ msgstr "Складні моменти"
 msgid "Host script"
 msgstr "Сценарій ведучого"
 
-#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:115
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:106
 msgid "How is it recorded?"
 msgstr "Як відбувається запис?"
 
-#: src/components/project/templates/projectTemplates.ts:256
+#: src/components/project/templates/projectTemplates.ts:268
 msgid "Ideas worth keeping"
 msgstr "Ідеї, які варто зберегти"
 
@@ -298,7 +306,7 @@ msgstr "Ідеї, які варто зберегти"
 msgid "in your host guide, ready to edit"
 msgstr "у твоєму посібнику ведучого, можна редагувати"
 
-#: src/components/project/templates/projectTemplates.ts:124
+#: src/components/project/templates/projectTemplates.ts:132
 msgid "Interviews"
 msgstr "Інтерв'ю"
 
@@ -306,15 +314,15 @@ msgstr "Інтерв'ю"
 #~ msgid "Keeps the differences on the record"
 #~ msgstr "Фіксує розбіжності"
 
-#: src/components/project/templates/projectTemplates.ts:126
+#: src/components/project/templates/projectTemplates.ts:134
 msgid "Kitchen-table conversation"
 msgstr "Розмова за кухонним столом"
 
-#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:67
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:60
 msgid "Loading templates"
 msgstr "Завантаження шаблонів"
 
-#: src/components/project/templates/projectTemplates.ts:244
+#: src/components/project/templates/projectTemplates.ts:256
 msgid "Many groups at once"
 msgstr "Багато груп одночасно"
 
@@ -322,13 +330,17 @@ msgstr "Багато груп одночасно"
 #~ msgid "Marks the turning points"
 #~ msgstr "Позначає переломні моменти"
 
-#: src/components/project/templates/TemplateRow/TemplateRow.tsx:138
-msgid "More formats"
-msgstr "Більше форматів"
+#: src/components/project/templates/TemplateRow/TemplateRow.tsx:143
+#~ msgid "More formats"
+#~ msgstr "Більше форматів"
+
+#: src/components/project/templates/TemplateRow/TemplateRow.tsx:143
+msgid "More templates"
+msgstr "Більше шаблонів"
 
 #: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:154
-msgid "Most used. Filter to find more."
-msgstr "Найпопулярніші. Фільтруй, щоб знайти більше."
+#~ msgid "Most used. Filter to find more."
+#~ msgstr "Найпопулярніші. Фільтруй, щоб знайти більше."
 
 #: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:109
 msgid "Name box"
@@ -339,8 +351,12 @@ msgstr "Поле імені"
 #~ msgstr "Називає складні моменти"
 
 #: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:82
-msgid "No template fits both. Clear a filter, or start blank."
-msgstr "Жоден шаблон не підходить під обидва. Зніми фільтр або почни з нуля."
+#~ msgid "No template fits both. Clear a filter, or start blank."
+#~ msgstr "Жоден шаблон не підходить під обидва. Зніми фільтр або почни з нуля."
+
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:77
+msgid "No template fits both. Clear a filter, or use Quick start."
+msgstr "Жоден шаблон не підходить під обидва. Зніми фільтр або обери «Швидкий старт»."
 
 #: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:53
 #: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:111
@@ -352,8 +368,8 @@ msgid "None: nothing to fill in"
 msgstr "Немає: нічого заповнювати"
 
 #: src/components/project/templates/projectTemplates.ts:206
-msgid "Nothing set up. Choose every setting yourself."
-msgstr "Нічого не налаштовано. Ви обираєте кожен параметр самі."
+#~ msgid "Nothing set up. Choose every setting yourself."
+#~ msgstr "Нічого не налаштовано. Ви обираєте кожен параметр самі."
 
 #: src/components/project/templates/projectTemplates.ts:363
 #~ msgid "Nothing to fill in before recording"
@@ -381,11 +397,11 @@ msgstr "Увімкнено, одне питання"
 msgid "On, your own question"
 msgstr "Увімкнено, твоє власне питання"
 
-#: src/components/project/templates/projectTemplates.ts:150
+#: src/components/project/templates/projectTemplates.ts:158
 msgid "One conversation"
 msgstr "Одна розмова"
 
-#: src/components/project/templates/projectTemplates.ts:243
+#: src/components/project/templates/projectTemplates.ts:255
 msgid "One recording at a time"
 msgstr "Один запис за раз"
 
@@ -393,17 +409,21 @@ msgstr "Один запис за раз"
 #~ msgid "Opens on the upload page"
 #~ msgstr "Відкривається на сторінці завантаження"
 
-#: src/components/project/templates/TemplateRow/TemplateRow.tsx:114
-msgid "Or start from a format"
-msgstr "Або почни з формату"
+#: src/components/project/templates/TemplateRow/TemplateRow.tsx:119
+#~ msgid "Or start from a format"
+#~ msgstr "Або почни з формату"
 
-#: src/components/project/templates/projectTemplates.ts:148
+#: src/components/project/templates/projectTemplates.ts:156
 msgid "Parallel sessions"
 msgstr "Паралельні сесії"
 
-#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:59
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:52
 msgid "Pick the closest fit and dembrane sets the project up for it, with a host script for the room. You can change every setting later."
 msgstr "Вибери найближчий варіант, і dembrane налаштує проєкт під нього, зі сценарієм для зали. Будь-яке налаштування можна змінити пізніше."
+
+#: src/components/project/templates/projectTemplates.ts:166
+msgid "Quick start"
+msgstr "Швидкий старт"
 
 #: src/components/project/templates/projectTemplates.ts:322
 #~ msgid "Reads back what was heard"
@@ -413,11 +433,11 @@ msgstr "Вибери найближчий варіант, і dembrane налаш
 msgid "reads this conversation only"
 msgstr "читає лише цю розмову"
 
-#: src/components/project/templates/projectTemplates.ts:156
+#: src/components/project/templates/projectTemplates.ts:164
 msgid "Recordings you already have"
 msgstr "Записи, які у вас уже є"
 
-#: src/components/project/templates/projectTemplates.ts:130
+#: src/components/project/templates/projectTemplates.ts:138
 msgid "Recurring meeting"
 msgstr "Регулярна зустріч"
 
@@ -429,15 +449,15 @@ msgstr "нагадування перед завершенням"
 #~ msgid "Resident evening"
 #~ msgstr "Зустріч мешканців"
 
-#: src/components/project/templates/projectTemplates.ts:132
+#: src/components/project/templates/projectTemplates.ts:140
 msgid "Retrospective"
 msgstr "Ретроспектива"
 
-#: src/components/project/templates/projectTemplates.ts:138
+#: src/components/project/templates/projectTemplates.ts:146
 msgid "Rotating tables"
 msgstr "Змінні столи"
 
-#: src/components/project/templates/projectTemplates.ts:120
+#: src/components/project/templates/projectTemplates.ts:128
 msgid "Round table"
 msgstr "Круглий стіл"
 
@@ -449,29 +469,37 @@ msgstr "Круглий стіл"
 #~ msgid "Saves the ideas worth keeping"
 #~ msgstr "Зберігає ідеї, які варто зберегти"
 
-#: src/components/project/templates/projectTemplates.ts:136
+#: src/components/project/templates/projectTemplates.ts:144
 msgid "Scenario session"
 msgstr "Сесія сценаріїв"
 
-#: src/components/project/templates/TemplateRow/TemplateRow.tsx:200
-msgid "See all formats"
-msgstr "Переглянути всі формати"
+#: src/components/project/templates/TemplateRow/TemplateRow.tsx:196
+#~ msgid "See all formats"
+#~ msgstr "Переглянути всі формати"
+
+#: src/components/project/templates/TemplateRow/TemplateRow.tsx:196
+msgid "See all templates"
+msgstr "Переглянути всі шаблони"
 
 #: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:56
 msgid "Session name"
 msgstr "Назва сесії"
 
 #: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:138
-msgid "Show all"
-msgstr "Показати всі"
+#~ msgid "Show all"
+#~ msgstr "Показати всі"
 
 #: src/components/project/templates/projectTemplates.ts:162
 #~ msgid "Stakeholder round table"
 #~ msgstr "Круглий стіл"
 
 #: src/components/project/templates/projectTemplates.ts:202
-msgid "Start blank"
-msgstr "Почати з нуля"
+#~ msgid "Start blank"
+#~ msgstr "Почати з нуля"
+
+#: src/components/project/templates/TemplateRow/TemplateRow.tsx:119
+msgid "Start from a template"
+msgstr "Почни з шаблону"
 
 #: src/components/project/templates/FlowProgress/FlowProgress.tsx:21
 #~ msgid "Step {shown} of {total}"
@@ -481,15 +509,15 @@ msgstr "Почати з нуля"
 #~ msgid "Strategy day"
 #~ msgstr "Стратегічний день"
 
-#: src/components/project/templates/projectTemplates.ts:128
+#: src/components/project/templates/projectTemplates.ts:136
 msgid "Strategy session"
 msgstr "Стратегічна сесія"
 
-#: src/components/project/templates/projectTemplates.ts:250
+#: src/components/project/templates/projectTemplates.ts:262
 msgid "Table check"
 msgstr "Перевірка столу"
 
-#: src/components/project/templates/projectTemplates.ts:118
+#: src/components/project/templates/projectTemplates.ts:126
 msgid "Table conversations"
 msgstr "Розмови за столами"
 
@@ -506,8 +534,12 @@ msgstr "Основне"
 #~ msgstr "Група разом перевіряє підсумок"
 
 #: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:72
-msgid "The templates did not load. You can still start blank and set it up yourself."
-msgstr "Шаблони не завантажилися. Ви все одно можете почати з нуля й налаштувати все самі."
+#~ msgid "The templates did not load. You can still start blank and set it up yourself."
+#~ msgstr "Шаблони не завантажилися. Ви все одно можете почати з нуля й налаштувати все самі."
+
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:67
+msgid "The templates did not load. You can still use Quick start and set the project up yourself."
+msgstr "Шаблони не завантажилися. Ти все одно можеш обрати «Швидкий старт» і налаштувати проєкт самостійно."
 
 #: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:50
 msgid "Tips and best practices"
@@ -517,7 +549,7 @@ msgstr "Поради й найкращі практики"
 msgid "Titles"
 msgstr "Назви"
 
-#: src/components/project/templates/projectTemplates.ts:262
+#: src/components/project/templates/projectTemplates.ts:274
 msgid "Turning points"
 msgstr "Переломні моменти"
 
@@ -525,19 +557,19 @@ msgstr "Переломні моменти"
 msgid "Tutorial"
 msgstr "Посібник"
 
-#: src/components/project/templates/projectTemplates.ts:140
+#: src/components/project/templates/projectTemplates.ts:148
 msgid "Unconference"
 msgstr "Анконференція"
 
-#: src/components/project/templates/projectTemplates.ts:214
+#: src/components/project/templates/projectTemplates.ts:226
 msgid "Understand"
 msgstr "Зрозуміти"
 
-#: src/components/project/templates/projectTemplates.ts:231
+#: src/components/project/templates/projectTemplates.ts:243
 msgid "Understanding what people think"
 msgstr "Розуміти, що думають люди"
 
-#: src/components/project/templates/projectTemplates.ts:202
+#: src/components/project/templates/projectTemplates.ts:216
 msgid "Upload recordings"
 msgstr "Завантажити записи"
 
@@ -545,11 +577,11 @@ msgstr "Завантажити записи"
 msgid "Verify"
 msgstr "Verify"
 
-#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:56
+#: src/components/project/templates/TemplateChooser/TemplateChooser.tsx:49
 msgid "What are you going to do?"
 msgstr "Що ви плануєте робити?"
 
-#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:93
+#: src/components/project/templates/TemplateFilters/TemplateFilters.tsx:84
 msgid "What do you need to do?"
 msgstr "Що тобі потрібно зробити?"
 
@@ -557,7 +589,7 @@ msgstr "Що тобі потрібно зробити?"
 msgid "What this sets up"
 msgstr "Що це налаштовує"
 
-#: src/components/project/templates/projectTemplates.ts:260
+#: src/components/project/templates/projectTemplates.ts:272
 msgid "What we heard"
 msgstr "Що ми почули"
 

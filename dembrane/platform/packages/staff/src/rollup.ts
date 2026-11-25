@@ -1,3 +1,4 @@
+import { madeForDemo } from "@dembrane/access";
 import { isFreeTier, type Meter } from "@dembrane/allowance";
 import {
   applyDiscount,
@@ -295,6 +296,11 @@ export async function billingRollup(s: StaffStorage, now: Date, monthOffset: num
     );
   }
 
+  // A workspace dembrane made for a demo takes no seats, as billing counts them.
+  const wsById = new Map(workspaces.map((w) => [w.id, w]));
+  const seatHolders = (ws: (typeof workspaces)[number] | undefined) =>
+    ws && !madeForDemo(ws.settings) ? (membersByWs.get(ws.id) ?? []) : [];
+
   let rows: BillingRow[] = [];
   let totalBase = 0;
   const labels = new Map<string, string | null>();
@@ -304,7 +310,7 @@ export async function billingRollup(s: StaffStorage, now: Date, monthOffset: num
     const tier = ws.tier ?? "pioneer";
     const cap = getCapacity(tier);
     const hours = hoursByWs.get(ws.id) ?? 0;
-    const [, seatCount, externalCount, observerCount] = seatState(membersByWs.get(ws.id) ?? []);
+    const [, seatCount, externalCount, observerCount] = seatState(seatHolders(ws));
     // Free hours are the allowance ledger's monthly meter, not calendar hours here.
     const includedHours = cap && !isFreeTier(tier) ? cap.includedHours : null;
     const includedSeats = cap ? cap.includedSeats : null;
@@ -390,7 +396,7 @@ export async function billingRollup(s: StaffStorage, now: Date, monthOffset: num
   const pooled = new Map<string, number>();
   for (const [acc, ids] of wsIdsByAccount) {
     const all = new Set<string>();
-    for (const id of ids) for (const u of seatUserIds(membersByWs.get(id) ?? [])) all.add(u);
+    for (const id of ids) for (const u of seatUserIds(seatHolders(wsById.get(id)))) all.add(u);
     pooled.set(acc, all.size);
   }
   const accounts = aggregateAccounts(rows, orgNames, labels, modes, pooled, budgets, now);

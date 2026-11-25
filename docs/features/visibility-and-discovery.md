@@ -67,6 +67,12 @@ A request notifies the workspace's admins and the organisation's admins. They an
 Someone an admin removed from a workspace cannot join it again this way, the organisation
 owner included. They need a new [invite](./invites-and-access.md).
 
+## A demo dembrane is preparing for you
+
+A demo dembrane prepares in your organisation stays hidden from everyone there, the owner
+included, until it is published: see
+[if dembrane made a demo for you](./offers-and-invoices.md#if-dembrane-made-a-demo-for-you).
+
 ## Private projects
 
 Inside a workspace, a project is visible to every member or it is private. A private

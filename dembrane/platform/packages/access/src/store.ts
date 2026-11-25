@@ -6,6 +6,11 @@ export interface WorkspaceRow {
   readonly deleted: boolean;
   readonly stickyRemoved: readonly string[];
   readonly inheritOrgMembers: boolean;
+  /**
+   * Held back from its organisation for a demo staff have not handed over yet (HELD_FOR_DEMO):
+   * nobody derives a role in it. Absent reads as not held.
+   */
+  readonly held?: boolean;
   readonly tier: string | null;
 }
 
@@ -27,7 +32,7 @@ export interface ProjectRow {
   readonly deleted: boolean;
   /** Owner of a legacy project that predates workspaces. */
   readonly legacyOwnerDirectusUserId: string | null;
-  /** A seeded sample (project.is_sample): free-tier allowances neither apply to it nor count it. */
+  /** A seeded sample (project.is_sample): it spends the AI budget, but takes no audio and no stats. */
   readonly isSample?: boolean;
 }
 

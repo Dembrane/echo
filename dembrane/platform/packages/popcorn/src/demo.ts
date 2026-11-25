@@ -73,10 +73,16 @@ export interface DemoInput {
   readonly feedbackUrl?: string;
   /**
    * Marks each demo project a sample (project.is_sample): its invented conversations then
-   * count toward no usage, limit or number, and it takes no recording. The sales portal
-   * project is never one: it takes real conversations.
+   * count toward no audio limit or number, and it takes no recording; its AI use still
+   * spends the AI budget. The sales portal project is never one: it takes real conversations.
    */
   readonly sample?: boolean;
+  /**
+   * Pins each demo project at this place in its workspace (project.pin_order), so the
+   * workspace's card on the organisation page leads straight to it. Absent, the pin is left
+   * as it is.
+   */
+  readonly pinOrder?: number;
 }
 
 /** The seed's identity(): the namespace the local helper shares, so sales portals converge. */
@@ -316,6 +322,7 @@ export async function seedDemo(db: Db, input: DemoInput, now: Date): Promise<Dem
           anonymize_transcripts: true,
           context: input.research,
           ...(input.sample && { is_sample: true }),
+          ...(input.pinOrder !== undefined && { pin_order: input.pinOrder }),
         });
         const summaries = dict(session.summary);
         const summary = pyStr(summaries[language] || SUMMARY[language] || SUMMARY.en);

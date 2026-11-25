@@ -16,7 +16,7 @@ it for you.
 
 ## The four steps
 
-Open your workspace and press "Create project". "Continue" and "Back" move between the steps.
+Open your workspace, press "Create" and choose "Project from a template". "Continue" and "Back" move between the steps.
 
 | Step | What you fill in |
 |---|---|

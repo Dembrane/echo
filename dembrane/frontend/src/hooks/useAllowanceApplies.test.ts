@@ -41,9 +41,9 @@ it("applies to a loaded project that is not a sample", () => {
 	expect(result.current).toEqual({ applies: true, isSample: false });
 });
 
-it("exempts a sample project", () => {
+it("applies to a sample project too, and says it is one", () => {
 	state.result = { data: { is_sample: true }, isSuccess: true };
 	const { result } = renderHook(() => useAllowanceApplies(undefined));
-	expect(result.current).toEqual({ applies: false, isSample: true });
+	expect(result.current).toEqual({ applies: true, isSample: true });
 	expect((state.args as { projectId: string }).projectId).toBe("");
 });

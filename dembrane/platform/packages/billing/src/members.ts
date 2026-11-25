@@ -1,8 +1,11 @@
+import { heldForDemo } from "@dembrane/access";
+
 /**
  * Who counts as a member of a workspace for seats, billing and notifications (Python
  * inheritance.get_effective_members). Direct rows win; org owners always derive admin,
  * org admins derive admin on open workspaces, org members only through the legacy
- * inherit flag. Staff support rows never count.
+ * inherit flag. Staff support rows never count. A workspace held back for a demo
+ * (@dembrane/access heldForDemo) derives nothing, its organisation's owners included.
  */
 export interface WorkspaceForMembers {
   readonly org_id: string | null;
@@ -49,6 +52,7 @@ export function isStickyRemoved(ws: WorkspaceForMembers, userId: string): boolea
 
 /** The org roles whose holders derive access to this workspace. */
 export function derivingOrgRoles(ws: WorkspaceForMembers): string[] {
+  if (heldForDemo(ws.settings)) return [];
   if (!followsOrgAdmins(ws)) return ["owner"];
   return followsOrgMembers(ws) ? ["owner", "admin", "member"] : ["owner", "admin"];
 }
@@ -65,7 +69,7 @@ export function effectiveMembersFromRows(
     directIds.add(r.user_id);
     out.push({ user_id: r.user_id, role: r.role ?? "", source: "direct" });
   }
-  if (!ws.org_id) return out;
+  if (!ws.org_id || heldForDemo(ws.settings)) return out;
   const inScope = new Set(derivingOrgRoles(ws));
   for (const r of org) {
     if (!r.user_id || directIds.has(r.user_id) || !r.role || !inScope.has(r.role)) continue;

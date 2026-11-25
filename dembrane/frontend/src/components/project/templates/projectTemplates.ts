@@ -31,14 +31,22 @@ export type CardKey = (typeof CARD_KEYS)[number];
 
 /** Keys from the first registry: valid for links and old projects, not offered as cards. */
 const LEGACY_KEYS = ["conversation", "series", "event"] as const;
-/** The quiet links under the cards. */
-export const LINK_KEYS = ["upload", "blank"] as const;
+/** The quiet link under the cards. */
+export const LINK_KEYS = ["upload"] as const;
 export type LinkKey = (typeof LINK_KEYS)[number];
+/**
+ * "Quick start": the plain project, the server's `blank` template. Always the first card,
+ * drawn here and not from the list, so it is offered even when the list did not load.
+ */
+export const QUICK_START = "blank";
+/** What a host can press as a card: a format, or Quick start. */
+export type ChoiceKey = CardKey | typeof QUICK_START;
 
 export const TEMPLATE_KEYS = [
 	...CARD_KEYS,
 	...LEGACY_KEYS,
 	...LINK_KEYS,
+	QUICK_START,
 ] as const;
 export type TemplateKey = (typeof TEMPLATE_KEYS)[number];
 
@@ -155,7 +163,7 @@ export const templateName = (key: TemplateKey): string => {
 		case "upload":
 			return t`Recordings you already have`;
 		case "blank":
-			return t`Blank project`;
+			return t`Quick start`;
 	}
 };
 
@@ -197,13 +205,17 @@ export const templateGreatFor = (key: CardKey): string => {
 	}
 };
 
+/** The line under a card's name: Quick start says what it is, a format its Great for. */
+export const cardLine = (key: ChoiceKey): string =>
+	key === QUICK_START
+		? t`A plain project. Nothing is set up for you, and you can change every setting later.`
+		: templateGreatFor(key);
+
 /** The link under the cards, and its one line. */
 export const linkLabel = (key: LinkKey): string =>
-	key === "upload" ? t`Upload recordings` : t`Start blank`;
+	({ upload: t`Upload recordings` })[key];
 export const linkLine = (key: LinkKey): string =>
-	key === "upload"
-		? t`Analyse audio files you already have.`
-		: t`Nothing set up. Choose every setting yourself.`;
+	({ upload: t`Analyse audio files you already have.` })[key];
 
 /** A verb as the filter chip shows it. */
 export const verbLabel = (verb: Verb): string => {
@@ -272,20 +284,14 @@ export interface TemplateFilter {
 }
 export const NO_FILTER: TemplateFilter = { setup: null, verb: null };
 
-/**
- * The cards to show: the featured ones until the host filters or asks for all, then every
- * card matching the filters, in the registry's order.
- */
+/** The cards to show: every card matching the filters, in the registry's order. */
 export const visibleCards = (
 	templates: readonly TemplateSummary[],
 	filter: TemplateFilter,
-	showAll: boolean,
 ): TemplateSummary[] => {
 	const cards = CARD_KEYS.map((key) =>
 		templates.find((tpl) => tpl.key === key && tpl.card.offer === "card"),
 	).filter((tpl): tpl is TemplateSummary => !!tpl);
-	const filtering = filter.verb !== null || filter.setup !== null;
-	if (!filtering && !showAll) return cards.filter((tpl) => tpl.card.featured);
 	return cards.filter(
 		(tpl) =>
 			(filter.verb === null || tpl.card.verbs.includes(filter.verb)) &&
@@ -296,18 +302,84 @@ export const visibleCards = (
 export const isCardKey = (v: unknown): v is CardKey =>
 	typeof v === "string" && (CARD_KEYS as readonly string[]).includes(v);
 
-/** A card's tags: the named method first if it follows one, then the verbs and the setup. */
-export const cardTags = (tpl: TemplateSummary): string[] => [
-	...(tpl.card.method ? [tpl.card.method] : []),
-	...tpl.card.verbs.map(verbLabel),
-	setupLabel(tpl.card.setup),
+/** What a list knew when a card was chosen, for analytics: never free text. */
+export interface TemplateChoiceContext {
+	featured: boolean;
+	verbs: string[];
+	/** Null for Quick start, which sets nothing up. */
+	setup: string | null;
+	/** "verb:<verb>" or "setup:<setup>"; empty with no filter on. */
+	filtersActive: string[];
+	/** Where the card was pressed: the start screen's row or all formats. */
+	list?: "row" | "all_formats";
+}
+
+/** Quick start as a card: it has no summary, so it is only its key. */
+export const QUICK_START_CARD = { key: QUICK_START } as const;
+/** One card in a row or grid: a format from the list, or Quick start. */
+export type ChoiceCard =
+	| (TemplateSummary & { key: CardKey })
+	| typeof QUICK_START_CARD;
+
+/** The cards to offer: Quick start first, then the formats given, in their order. */
+export const withQuickStart = (
+	formats: readonly TemplateSummary[],
+): ChoiceCard[] => [
+	QUICK_START_CARD,
+	...(formats.filter((tpl) => isCardKey(tpl.key)) as (TemplateSummary & {
+		key: CardKey;
+	})[]),
 ];
+
+/**
+ * The cards a list offers, and the count it shows. With no filter on, Quick start comes
+ * first and is counted. Under a filter only the formats that match show and count, since
+ * Quick start matches no filter; when none match, Quick start shows alone (counted as 0)
+ * under the "no template fits" message, so there is still a way on.
+ */
+export const offeredCards = (
+	formats: readonly TemplateSummary[],
+	filter: TemplateFilter,
+): { cards: ChoiceCard[]; count: number } => {
+	const filtering = filter.verb !== null || filter.setup !== null;
+	const cards = withQuickStart(formats);
+	if (!filtering) return { cards, count: cards.length };
+	return {
+		cards: formats.length > 0 ? cards.slice(1) : cards,
+		count: formats.length,
+	};
+};
+
+/** What a card is, for analytics: Quick start is not featured, has no verbs and no setup. */
+export const cardFacts = (
+	card: ChoiceCard,
+): { featured: boolean; verbs: string[]; setup: string | null } =>
+	"card" in card
+		? {
+				featured: card.card.featured,
+				setup: card.card.setup,
+				verbs: card.card.verbs,
+			}
+		: { featured: false, setup: null, verbs: [] };
+
+/**
+ * A card's tags: the named method first if it follows one, then the verbs and the setup.
+ * Quick start has none.
+ */
+export const cardTags = (tpl: ChoiceCard | TemplateSummary): string[] =>
+	"card" in tpl && tpl.key !== QUICK_START
+		? [
+				...(tpl.card.method ? [tpl.card.method] : []),
+				...tpl.card.verbs.map(verbLabel),
+				setupLabel(tpl.card.setup),
+			]
+		: [];
 
 /** Every card in one row: the featured ones first, then the rest, each in registry order. */
 export const rowCards = (
 	templates: readonly TemplateSummary[],
 ): TemplateSummary[] => {
-	const all = visibleCards(templates, NO_FILTER, true);
+	const all = visibleCards(templates, NO_FILTER);
 	return [
 		...all.filter((tpl) => tpl.card.featured),
 		...all.filter((tpl) => !tpl.card.featured),

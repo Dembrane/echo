@@ -201,15 +201,15 @@ run("agentic turns and the AI budget", () => {
     expect(await userMessages(a)).toBe(2);
   });
 
-  test("a sample project in a free account at zero still runs", async () => {
+  test("a sample project in a free account at zero is refused like any other", async () => {
     const { owner, billing, project } = await seed("free", { sample: true });
     await spend(billing, LIMIT);
     const a = await chat(project);
-    const r = await start(deps(), owner, project, a);
-    await append(deps(), owner, String(r.id), 1);
-    expect(await userMessages(a)).toBe(2);
-    await start(deps(), owner, project, null);
-    expect(await runs(project)).toBe(2);
+    const err = await rejection(start(deps(), owner, project, a));
+    expect(err).toMatchObject({ status: 402, details: { limit: "ai_budget" } });
+    const solo = await rejection(start(deps(), owner, project, null));
+    expect(solo).toMatchObject({ status: 402, details: { limit: "ai_budget" } });
+    expect(await runs(project)).toBe(0);
   });
 
   test("create and append with a chat read the budget once; a paid account reads no account", async () => {

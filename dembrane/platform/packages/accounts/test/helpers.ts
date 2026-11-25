@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { Writable } from "node:stream";
 import { deflateSync } from "node:zlib";
 import { Access, DrizzleAccessStore, DrizzleStaffAudit } from "@dembrane/access";
-import { newId, PlatformError } from "@dembrane/core";
+import { errorBody, newId, PlatformError } from "@dembrane/core";
 import { createDb, migrate, schema } from "@dembrane/db";
 import type { Env, Signed } from "@dembrane/http";
 import { createLogger } from "@dembrane/observability";
@@ -238,10 +238,11 @@ export async function world(name: string, routes: (d: AccountsDeps) => Hono<Env>
     await next();
   });
   app.route("/", routes(deps));
-  // The API's handler, as apps/api/src/middleware/errors.ts has it.
+  // The API's handler, as apps/api/src/middleware/errors.ts has it: the body carries the
+  // code, its params and action next to the detail.
   app.onError((err, c) =>
     err instanceof PlatformError
-      ? c.json({ detail: err.details ?? err.message }, err.status as 400)
+      ? c.json(errorBody(err), err.status as 400)
       : c.json({ detail: String(err) }, 500),
   );
   return {

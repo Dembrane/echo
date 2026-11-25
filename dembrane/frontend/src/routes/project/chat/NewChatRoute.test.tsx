@@ -231,13 +231,13 @@ it("opens the AI wall when the server refuses the new chat", async () => {
 	expect(modal.dataset.resets).toBe("2026-12-01T00:00:00Z");
 });
 
-it("lets a sample project start a chat when this month's AI is used up", async () => {
+it("walls a sample project too once this month's AI is used up", async () => {
 	project.isSample = true;
 	await renderRoute();
-	expect(screen.queryByTestId("free-allowance-banner")).toBeNull();
+	expect(screen.getByTestId("free-allowance-banner")).toBeTruthy();
 	await send();
-	expect(createChat).toHaveBeenCalledTimes(1);
-	expect(screen.queryByTestId("upgrade-modal")).toBeNull();
+	expect(createChat).not.toHaveBeenCalled();
+	expect(screen.getByTestId("upgrade-modal").dataset.wall).toBe("ai_budget");
 });
 
 it("walls nothing while is_sample is still loading", async () => {

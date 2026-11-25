@@ -10,7 +10,6 @@ import {
 	Container,
 	Group,
 	SimpleGrid,
-	Skeleton,
 	Stack,
 	Text,
 	TextInput,
@@ -28,57 +27,34 @@ import {
 	XIcon,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
-import {
-	type ComponentProps,
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useSearchParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { AccessDeniedPanel } from "@/components/common/AccessDeniedPanel";
-import { createLazyRoute } from "@/components/common/LazyRoute";
 import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { BulkMoveProjectsModal } from "@/components/project/BulkMoveProjectsModal";
-import { CreateProjectButton } from "@/components/project/CreateProjectButton";
 import { useTogglePinMutation } from "@/components/project/hooks";
 import { PinnedProjectCard } from "@/components/project/PinnedProjectCard";
 import { ProjectListItem } from "@/components/project/ProjectListItem";
 import { ProjectListSkeleton } from "@/components/project/ProjectListSkeleton";
-import { projectLanguageForLocale } from "@/components/project/projectLanguage";
 import {
-	isTemplateKey,
-	type TemplateKey,
-} from "@/components/project/templates/projectTemplates";
-import type { TemplateChoiceContext } from "@/components/project/templates/TemplatePicker/TemplatePicker";
-import type { TemplatePickerConnected } from "@/components/project/templates/TemplatePicker/TemplatePickerConnected";
+	CreateMenu,
+	type ProjectStart,
+} from "@/components/workspace/CreateMenu/CreateMenu";
+import { UpgradeModal } from "@/components/workspace/FeatureGate";
 import { API_BASE_URL } from "@/config";
 import { useBulkSelection } from "@/hooks/useBulkSelection";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
-import { useLanguage } from "@/hooks/useLanguage";
+import { useProjectCap } from "@/hooks/useProjectCap";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useWorkspaceProjects } from "@/hooks/useWorkspaceProjects";
 import { WorkspaceAccessDeniedError } from "@/lib/accessDenied";
 import { track } from "@/lib/analytics/events";
-import { isOutsiderRole, isReadOnlyRole } from "@/lib/roles";
+import { isAdminRole, isOutsiderRole, isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import { formatDurationFromHours } from "@/lib/time";
-
-// The picker and its catalog load only for a workspace with no project of its own yet;
-// a chunk that fails to load shows the error boundary's notice in its place.
-const LazyTemplatePicker = createLazyRoute<
-	ComponentProps<typeof TemplatePickerConnected>
->(
-	() =>
-		import(
-			"@/components/project/templates/TemplatePicker/TemplatePickerConnected"
-		),
-	() => <Skeleton height={132} />,
-);
 
 const MAX_PINNED = 3;
 
@@ -158,15 +134,27 @@ export const ProjectsHomeRoute = () => {
 
 	const navigate = useI18nNavigate();
 	const user = useCurrentUser();
-	const handleCreateProject = () => {
-		// Route to the creation wizard (name → access → review). Matches the
-		// workspace creation flow — a few deliberate steps instead of an
-		// instant POST that leaves the new project with a "New Project"
-		// placeholder name. See CreateProjectRoute.tsx.
+	// Create (the menu on the "All projects" row): Quick project opens the name step with
+	// Quick start chosen, so the choice is counted here; the template screen counts its own.
+	const startProject = (id: string, start: ProjectStart) => {
 		track("project_create_started");
-		if (!workspaceId) return;
-		navigate(`/w/${workspaceId}/projects/new`);
+		if (start === "template") {
+			navigate(`/w/${id}/projects/new`);
+			return;
+		}
+		track("project_template_selected", {
+			featured: false,
+			filters_active: [],
+			setup: null,
+			surface: "workspace_home",
+			template_key: "blank",
+			verbs: [],
+		});
+		navigate(`/w/${id}/projects/new?template=blank`);
 	};
+	// At the free project cap the button opens the wall where it is instead of the menu.
+	const atProjectCap = useProjectCap(workspace);
+	const [capWallOpened, capWall] = useDisclosure(false);
 
 	// First page has pinned + total_count; all pages have projects
 	const firstPage = homeData?.pages?.[0];
@@ -248,31 +236,6 @@ export const ProjectsHomeRoute = () => {
 		allProjects.length === 0 &&
 		debouncedSearchValue === "" &&
 		status === "success";
-	// No project of the host's own yet (the sample does not count): the template picker is
-	// the one primary action, above the list (ECHO-1042).
-	const noOwnProjects =
-		debouncedSearchValue === "" &&
-		status === "success" &&
-		!hasNextPage &&
-		allProjects.every((p) => p.is_sample);
-	const showStart = canCreateProject && noOwnProjects;
-	const [startTemplate, setStartTemplate] = useState<TemplateKey | null>(null);
-	const choiceRef = useRef<TemplateChoiceContext | null>(null);
-	const { language } = useLanguage();
-	const startFromTemplate = (key: TemplateKey | null = startTemplate) => {
-		if (!workspaceId || !isTemplateKey(key)) return;
-		const ctx = key === startTemplate ? choiceRef.current : null;
-		track("project_create_started");
-		track("project_template_selected", {
-			featured: ctx?.featured ?? false,
-			filters_active: ctx?.filtersActive ?? [],
-			setup: ctx?.setup ?? null,
-			surface: "workspace_home",
-			template_key: key,
-			verbs: ctx?.verbs ?? [],
-		});
-		navigate(`/w/${workspaceId}/projects/new?template=${key}`);
-	};
 
 	// Without this, a 403 falls through to the empty-state and reads as "no projects yet."
 	if (isError && error instanceof WorkspaceAccessDeniedError) {
@@ -325,89 +288,19 @@ export const ProjectsHomeRoute = () => {
 					</Stack>
 				)}
 
-				{/* Hero empty state — skip everything else when the workspace
-				    has zero projects and no search. Guests (externals) see a
-				    different copy since they can't create: the current state
-				    for them isn't "empty, go make something" — it's "nothing
-				    has been shared with you yet." */}
-				{showStart && (
-					<Stack
-						gap="md"
-						py="md"
-						data-testid="workspace-home-start"
-						data-tour="workspace-home-start"
-					>
-						<Stack gap="xs">
-							<Title order={4}>
-								<Trans>Let's hear your first conversation.</Trans>
-							</Title>
-							<Text size="sm" maw={560}>
-								<Trans>
-									Your projects will appear here. A project holds everything for
-									one topic: the link participants record on, their
-									conversations, and what dembrane makes of them.
-								</Trans>
-							</Text>
-						</Stack>
-						<LazyTemplatePicker
-							order={5}
-							language={projectLanguageForLocale(language)}
-							value={startTemplate}
-							onChange={(key, ctx) => {
-								choiceRef.current = ctx;
-								setStartTemplate(key);
-							}}
-							onFilterChange={(filter, value) =>
-								track("project_template_filter_changed", {
-									filter,
-									surface: "workspace_home",
-									value,
-								})
-							}
-							onUpload={() => startFromTemplate("upload")}
-							onStartBlank={() => startFromTemplate("blank")}
-						/>
-						<Group gap="sm">
-							<CreateProjectButton
-								size="sm"
-								w="fit-content"
-								disabled={!startTemplate}
-								onCreate={() => startFromTemplate()}
-							/>
-						</Group>
-					</Stack>
-				)}
-
-				{totallyEmpty && showStart ? null : totallyEmpty ? (
+				{/* A guest with nothing shared yet: there is nothing to search or create, so
+				    the page says why it is empty instead of showing an empty list. */}
+				{totallyEmpty && isOutsider ? (
 					<Stack gap="md" py="xl">
 						<Title order={3}>
-							{isOutsider ? (
-								<Trans>Nothing here for you yet.</Trans>
-							) : (
-								<Trans>Let's hear your first conversation.</Trans>
-							)}
+							<Trans>Nothing here for you yet.</Trans>
 						</Title>
 						<Text size="sm" maw={440}>
-							{isOutsider ? (
-								<Trans>
-									Projects will show up here once someone on the organisation
-									shares one with you.
-								</Trans>
-							) : (
-								<Trans>
-									A project holds everything for one topic. Share its link with
-									participants, gather voices, then let dembrane turn them into
-									insights.
-								</Trans>
-							)}
+							<Trans>
+								Projects will show up here once someone on the organisation
+								shares one with you.
+							</Trans>
 						</Text>
-						{canCreateProject && (
-							<CreateProjectButton
-								size="sm"
-								w="fit-content"
-								onCreate={handleCreateProject}
-							/>
-						)}
 					</Stack>
 				) : (
 					<>
@@ -433,17 +326,25 @@ export const ProjectsHomeRoute = () => {
 							</Stack>
 						)}
 
-						{/* All projects section — search lives inside this section
-						    (audit §1), Create button on the header row. */}
+						{/* All projects section: search lives inside this section
+						    (audit §1), Create on the header row: the two project items
+						    only, a plus alone on a phone. */}
 						<Stack gap="sm">
-							<Group justify="space-between" align="center">
+							<Group justify="space-between" align="center" wrap="nowrap">
 								<Title order={5}>
 									<Trans>All projects</Trans>
 								</Title>
-								{canCreateProject && !showStart && (
-									<CreateProjectButton
-										size="sm"
-										onCreate={handleCreateProject}
+								{canCreateProject && workspace && (
+									<CreateMenu
+										projectWorkspaces={[
+											{
+												id: workspace.id,
+												name: workspace.name,
+												orgName: workspace.org_name,
+											},
+										]}
+										onProject={startProject}
+										onProjectCap={atProjectCap ? capWall.open : undefined}
 									/>
 								)}
 							</Group>
@@ -475,6 +376,16 @@ export const ProjectsHomeRoute = () => {
 								className="w-full"
 								{...testId("project-search-input")}
 							/>
+
+							{totallyEmpty && (
+								<Text size="sm" c="dimmed" maw={560}>
+									<Trans>
+										Your projects will appear here. A project holds everything
+										for one topic: the link participants record on, their
+										conversations, and what dembrane makes of them.
+									</Trans>
+								</Text>
+							)}
 
 							{displayProjects.length === 0 &&
 								debouncedSearchValue !== "" &&
@@ -601,6 +512,18 @@ export const ProjectsHomeRoute = () => {
 										)}
 									</Stack>
 								</Box>
+							)}
+
+							{workspace && (
+								<UpgradeModal
+									opened={capWallOpened}
+									onClose={capWall.close}
+									currentTier="free"
+									requiredTier="changemaker"
+									canRequestUpgrade={isAdminRole(workspace.role)}
+									workspaceId={workspace.id}
+									wallKey="project_cap"
+								/>
 							)}
 
 							{workspaceId && (

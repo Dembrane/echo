@@ -1,3 +1,4 @@
+import { HELD_FOR_DEMO, heldForDemo } from "@dembrane/access";
 import { NotFoundError, newId, ValidationError, withoutTrailingSlashes } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
@@ -27,10 +28,14 @@ export interface CreateAccountResult {
   readonly continue_url: string;
 }
 
+/** A dashboard path behind the sign-in: someone signed out signs in first, then lands there. */
+export function signInUrl(dashboardUrl: string, path: string): string {
+  return `${withoutTrailingSlashes(dashboardUrl)}/login?next=${encodeURIComponent(path)}`;
+}
+
 /** Where "Continue in dembrane" leads: the sign-in, then the organisation's account page. */
 export function continueUrl(dashboardUrl: string, orgId: string): string {
-  const base = withoutTrailingSlashes(dashboardUrl);
-  return `${base}/login?next=${encodeURIComponent(`/o/${orgId}/account`)}`;
+  return signInUrl(dashboardUrl, `/o/${orgId}/account`);
 }
 
 /**
@@ -164,6 +169,55 @@ async function makeAdmin(tx: Conn, orgId: string, appUserId: string, nowIso: str
 }
 
 /**
+ * The contact as admin of the demo's workspace, the role "Join as admin" gives. Admin of
+ * the organisation already reaches it, but the workspace list and the organisation page
+ * show direct memberships only, so without this row the demo is hidden once its onboarding
+ * step is done. Only a live workspace of this organisation: a shared staff demo workspace
+ * is not theirs to join. Any row at all, a removed one included, means the person was
+ * there and someone decided about it, so it is left as it is and nothing is revived.
+ */
+async function joinDemoWorkspace(
+  tx: Conn,
+  orgId: string,
+  workspaceId: string,
+  appUserId: string,
+  nowIso: string,
+) {
+  const [ws] = await tx
+    .select({ id: schema.workspace.id })
+    .from(schema.workspace)
+    .where(
+      and(
+        eq(schema.workspace.id, workspaceId),
+        eq(schema.workspace.org_id, orgId),
+        isNull(schema.workspace.deleted_at),
+      ),
+    )
+    .limit(1);
+  if (!ws) return;
+  const [row] = await tx
+    .select({ id: schema.workspace_membership.id })
+    .from(schema.workspace_membership)
+    .where(
+      and(
+        eq(schema.workspace_membership.workspace_id, workspaceId),
+        eq(schema.workspace_membership.user_id, appUserId),
+      ),
+    )
+    .limit(1);
+  if (row) return;
+  await tx.insert(schema.workspace_membership).values({
+    id: newId(),
+    workspace_id: workspaceId,
+    user_id: appUserId,
+    role: "admin",
+    source: "direct",
+    created_at: nowIso,
+    updated_at: nowIso,
+  });
+}
+
+/**
  * The identity rows Better Auth's own signup would make (auth_user, the directus_users row
  * foreign keys still point at, the app_user memberships use), for someone we add rather
  * than someone who signs up. Existing rows are reused; a password is only ever added.
@@ -281,12 +335,46 @@ export function codeSignInGate(d: Pick<AccountsDeps, "db" | "now">) {
 }
 
 /**
+ * Hands a demo placed in an organisation its contact already works in over to them: its
+ * workspace is no longer held back and opens to the organisation like any new workspace,
+ * and the contact joins it as admin under joinDemoWorkspace's rule. Their organisation role
+ * is left as it is. Only publishing with the email on calls this, never releaseHeldContacts
+ * (these demos hold no contact). Sends nothing; a second call changes nothing.
+ */
+export async function handOverDemo(
+  c: Conn,
+  orgId: string,
+  seed: { readonly workspace_id: string; readonly contact_user_id: string },
+  now: Date,
+): Promise<void> {
+  const nowIso = now.toISOString();
+  const [ws] = await c
+    .select({ settings: schema.workspace.settings })
+    .from(schema.workspace)
+    .where(and(eq(schema.workspace.id, seed.workspace_id), eq(schema.workspace.org_id, orgId)))
+    .limit(1)
+    .for("update");
+  if (ws && heldForDemo(ws.settings)) {
+    const { [HELD_FOR_DEMO]: _held, ...settings } = (ws.settings ?? {}) as Record<string, unknown>;
+    await c
+      .update(schema.workspace)
+      .set({ settings, visibility: "open_to_organisation", updated_at: nowIso })
+      .where(eq(schema.workspace.id, seed.workspace_id));
+  }
+  const contact = await store.appUserByDirectusId(c, seed.contact_user_id);
+  if (contact) await joinDemoWorkspace(c, orgId, seed.workspace_id, contact.id, nowIso);
+}
+
+/**
  * Gives the contacts held by this organisation's demos what they wait for: the admin
- * membership and, for someone new, the sign-in. Called when staff publish a demo with
- * sign-in, send something the customer must act on, or enable the account, so each of
- * those leaves the contact able to open the organisation. Sends nothing: the invitation,
+ * membership, a place in the demo's workspace and, for someone new, the sign-in. Called
+ * when staff publish a demo with sign-in, send something the customer must act on, or
+ * enable the account, so each of those leaves the contact able to open the organisation
+ * and find the demo in it. Sends nothing: the invitation,
  * the document or the staff who enabled the account is what tells them. A contact is let
- * in once; a second call changes nothing.
+ * in once; a second call changes nothing. A demo placed in an organisation its contact
+ * already works in holds no contact, so none of these calls hands it over or touches its
+ * contact's role there: only publishing it with the email on does (handOverDemo).
  */
 export async function releaseHeldContacts(c: Conn, orgId: string, now: Date): Promise<void> {
   // Locked, so two releases at the same moment add one membership.
@@ -301,9 +389,13 @@ export async function releaseHeldContacts(c: Conn, orgId: string, now: Date): Pr
     )
     .for("update");
   for (const demo of demos) {
-    const seed = demo.seed as { contact_user_id: string };
+    const seed = demo.seed as { contact_user_id: string; workspace_id?: string };
     const contact = await store.appUserByDirectusId(c, seed.contact_user_id);
-    if (contact) await makeAdmin(c, orgId, contact.id, now.toISOString());
+    if (contact) {
+      await makeAdmin(c, orgId, contact.id, now.toISOString());
+      if (seed.workspace_id)
+        await joinDemoWorkspace(c, orgId, seed.workspace_id, contact.id, now.toISOString());
+    }
     await c
       .update(schema.account_demo)
       .set({ seed: { ...seed, contact_held: false }, updatedAt: now })
