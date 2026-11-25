@@ -1,12 +1,15 @@
 import { useLingui } from "@lingui/react";
 import { Badge, Group, Stack, Text } from "@mantine/core";
-import type { CardKey } from "../projectTemplates";
+import type { ChoiceKey } from "../projectTemplates";
 import { TemplateIllustration } from "../TemplateIllustration/TemplateIllustration";
 
 interface TemplateCardProps {
-	template: CardKey;
+	template: ChoiceKey;
 	name: string;
-	/** "Great for ...": the occasions, and what sets the format apart, in one line. */
+	/**
+	 * "Great for ...": the occasions, and what sets the format apart, in one line. For
+	 * Quick start, what it is.
+	 */
 	greatFor: string;
 	/** Small tags: a named method, the verbs, the setup. */
 	tags?: readonly string[];

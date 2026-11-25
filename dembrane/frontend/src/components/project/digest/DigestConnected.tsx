@@ -219,11 +219,11 @@ const FallbackNotice = ({ fallback }: { fallback: DigestFallback }) => (
 			)}{" "}
 			{fallback.context ? (
 				<Trans>
-					Your text is in the project context: choose a format below to
+					Your text is in the project context: choose a template above to
 					continue.
 				</Trans>
 			) : (
-				<Trans>Choose a format below to continue.</Trans>
+				<Trans>Choose a template above to continue.</Trans>
 			)}
 		</Text>
 		{fallback.cut ? (

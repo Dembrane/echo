@@ -11,7 +11,7 @@ transcripts, summaries, chats and reports. A good rule is one question or one en
 project. If you would report on it as one thing, it is one project.
 
 Projects live in a [workspace](./organisations-and-workspaces.md). The workspace home lists
-them, with a "Search projects" box and a "Create project" button.
+them, with a "Search projects" box and a "Create" button above it.
 
 ## Who can do what
 
@@ -26,19 +26,24 @@ The full table is on [roles and permissions](./roles-and-permissions.md).
 
 ## Create a project
 
-Choose "Create project" on the workspace home. There are four steps, and only the name is
-required.
+Choose "Create" above the search box on the workspace home, then "Quick project" or
+"Project from a template". On a phone the button is a plus. Home, the page that asks "What
+would you like to do?", has the same "Create" button; if you can create projects in more
+than one workspace, it first asks "Which workspace?".
 
-1. "Name". Fill in "Project name" and "Project context". The context says what the project
-   is about and what you want to learn. dembrane uses it when it writes summaries, answers
-   in chat and replies to participants. Switch on "Set up with the assistant after creating"
-   if you want to land in a chat that helps you shape the project.
-2. "Key terms". Add the people, places, organisations and jargon you expect to hear, so that
-   [transcription](./transcription.md) spells them right. You can skip this and add them
-   later.
-3. "Access". Choose "Open to the workspace" (the default) or "Private". Private needs a
-   workspace on Innovator or higher.
-4. "Review". Check the summary, then choose "Create project".
+1. Choose how to start. Under "Start from a template", the first card, "Quick start", makes
+   a plain project: nothing is set up for you, and you can change every setting later. The
+   cards after it are templates, such as "Table conversations" or "Focus group", that set the
+   project up for that kind of session. "See all templates" shows every template with filters.
+   Under the cards you can drop an agenda, invitation or run sheet instead. "Quick project"
+   skips this step and starts from "Quick start".
+2. Fill in "Project name" and, if you like, "Project context". The context says what the
+   project is about and what you want to learn. dembrane uses it when it writes summaries,
+   answers in chat and replies to participants.
+3. Choose "Create project". "More options" holds the key terms, who can see the project
+   ("Open to the workspace" or "Private", which needs Innovator or higher), "Set up with the
+   assistant after creating" where it is offered, and a summary to check. You can skip all
+   of it.
 
 You land on the project's "Overview", or in a chat with the assistant if you switched that
 on.

@@ -178,17 +178,11 @@ const tree = (client = new QueryClient(), url = "/w/w1/projects/new") => (
 
 const renderCreate = (url?: string) => render(tree(new QueryClient(), url));
 
-/** The two choices: a card in the row (or a quiet link in all formats), then a name. */
+/** The two choices: a card in the row (or the quiet link in all formats), then a name. */
 const chooseTemplate = async (key: string) => {
-	if (key === "blank" || key === "upload") {
+	if (key === "upload") {
 		fireEvent.click(await screen.findByTestId("template-row-see-all"));
-		fireEvent.click(
-			await screen.findByTestId(
-				key === "blank"
-					? "template-picker-start-blank"
-					: "template-picker-upload",
-			),
-		);
+		fireEvent.click(await screen.findByTestId("template-picker-upload"));
 		return;
 	}
 	fireEvent.click(await screen.findByTestId(`template-card-${key}`));
@@ -264,6 +258,24 @@ describe("CreateProjectRoute free project cap", () => {
 		);
 		allowance.data = projectsMeter(1, 1);
 		view.rerender(tree(client));
+		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
+	});
+
+	it("opens the wall at once on a ?template= link at the cap, as on a plain visit", async () => {
+		allowance.data = projectsMeter(1, 1);
+		renderCreate("/w/w1/projects/new?template=blank");
+		expect(screen.getByLabelText("Project name")).toBeTruthy();
+		expect(screen.getByTestId("upgrade-modal").dataset.wall).toBe(
+			"project_cap",
+		);
+	});
+
+	it("does not open the wall on a ?template= link once the host has typed a name", async () => {
+		const client = new QueryClient();
+		const view = render(tree(client, "/w/w1/projects/new?template=blank"));
+		nameIt("Town hall");
+		allowance.data = projectsMeter(1, 1);
+		view.rerender(tree(client, "/w/w1/projects/new?template=blank"));
 		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
 	});
 
@@ -405,14 +417,60 @@ describe("CreateProjectRoute: a template, then a name", () => {
 		expect(steps).toEqual(["template", "formats", "name"]);
 	});
 
-	it("starts blank from the quiet option", async () => {
+	it("offers Quick start as the first card in the row and in all formats", async () => {
+		renderCreate();
+		const first = (id: string) =>
+			screen
+				.getByTestId(id)
+				.querySelector("button[data-testid^=template-card-]")
+				?.getAttribute("data-testid");
+		await screen.findByTestId("template-row-list");
+		expect(first("template-row-list")).toBe("template-card-blank");
+		expect(screen.queryByTestId("template-picker-start-blank")).toBeNull();
+		fireEvent.click(screen.getByTestId("template-row-see-all"));
+		await screen.findByTestId("all-formats-grid");
+		expect(first("all-formats-grid")).toBe("template-card-blank");
+		expect(screen.queryByTestId("template-picker-start-blank")).toBeNull();
+	});
+
+	it("makes a plain project from Quick start, named the same on the card, the name and the review", async () => {
 		createMutate.mockResolvedValue({ id: "p2" });
 		renderCreate();
 		await chooseTemplate("blank");
+		expect(
+			screen.getByTestId("create-project-chosen-template").textContent,
+		).toBe("Starting from: Quick start");
+		expect(screen.queryByTestId("template-setup-summary-toggle")).toBeNull();
+		fireEvent.click(screen.getByTestId("create-project-more-options-toggle"));
+		expect(screen.getByTestId("create-project-review").textContent).toContain(
+			"Quick start",
+		);
+		expect(tracked).toHaveBeenCalledWith("project_template_selected", {
+			featured: false,
+			filters_active: [],
+			list: "row",
+			setup: null,
+			surface: "create",
+			template_key: "blank",
+			verbs: [],
+		});
 		nameIt("Anything");
 		create();
 		await waitFor(() => expect(createMutate).toHaveBeenCalled());
 		expect(createMutate.mock.calls[0]?.[0].templateKey).toBe("blank");
+		await waitFor(() =>
+			expect(navigate).toHaveBeenCalledWith("/w/w1/projects/p2/home"),
+		);
+	});
+
+	it("arrives on the name step from a Quick start link, without the wall under the cap", async () => {
+		allowance.data = projectsMeter(0, 1);
+		renderCreate("/w/w1/projects/new?template=blank");
+		expect(screen.getByLabelText("Project name")).toBeTruthy();
+		expect(
+			screen.getByTestId("create-project-chosen-template").textContent,
+		).toBe("Starting from: Quick start");
+		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
 	});
 
 	it("lands on the upload page for existing recordings", async () => {
@@ -666,13 +724,24 @@ describe("CreateProjectRoute: setup suggestions", () => {
 	});
 
 	describe("the context digest (ECHO-1055)", () => {
-		it("sits above the row, which steps aside with the progress line while it is active", async () => {
+		it("sits under the row, which steps aside with the progress line and Cancel while it is active", async () => {
 			renderCreate();
-			expect(screen.getByTestId("digest-stub")).toBeTruthy();
-			expect(await screen.findByTestId("template-row")).toBeTruthy();
+			const row = await screen.findByTestId("template-row");
+			const digest = screen.getByTestId("digest-stub");
+			// Templates first, the drop area under them, Cancel last.
+			expect(
+				row.compareDocumentPosition(digest) & Node.DOCUMENT_POSITION_FOLLOWING,
+			).toBeTruthy();
+			const cancel = screen.getByRole("button", { name: "Cancel" });
+			expect(
+				digest.compareDocumentPosition(cancel) &
+					Node.DOCUMENT_POSITION_FOLLOWING,
+			).toBeTruthy();
 			fireEvent.click(screen.getByText("digest active"));
 			expect(screen.queryByTestId("template-row")).toBeNull();
 			expect(screen.queryByTestId("create-project-progress")).toBeNull();
+			expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
+			expect(screen.getByTestId("digest-stub")).toBeTruthy();
 		});
 
 		it("creates from the review in one request, with the digest", async () => {

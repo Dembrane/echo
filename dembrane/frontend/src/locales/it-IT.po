@@ -67,12 +67,12 @@ msgid "(direct workspace access)"
 msgstr "(accesso diretto allo spazio di lavoro)"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:701
-#: src/routes/project/CreateProjectRoute.tsx:676
+#: src/routes/project/CreateProjectRoute.tsx:688
 msgid "(missing)"
 msgstr "(mancante)"
 
-#: src/routes/project/CreateProjectRoute.tsx:682
-#: src/routes/project/CreateProjectRoute.tsx:685
+#: src/routes/project/CreateProjectRoute.tsx:694
+#: src/routes/project/CreateProjectRoute.tsx:697
 msgid "(none)"
 msgstr "(nessuno)"
 
@@ -164,7 +164,7 @@ msgstr "{0, plural, one {# dal vivo} other {# dal vivo}}"
 
 #. placeholder {0}: workspace.member_count
 #. placeholder {0}: ws.member_count
-#: src/routes/project/ProjectsHome.tsx:307
+#: src/routes/project/ProjectsHome.tsx:270
 #: src/components/workspace/DiscoverableWorkspaces.tsx:313
 #: src/components/workspace/DiscoverableWorkspaces.tsx:369
 msgid "{0, plural, one {# member} other {# members}}"
@@ -227,7 +227,7 @@ msgstr "{0, plural, one {# posto pagato} other {# posti pagati}} per questo peri
 
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
-#: src/routes/project/ProjectsHome.tsx:514
+#: src/routes/project/ProjectsHome.tsx:425
 #: src/components/workspace/DiscoverableWorkspaces.tsx:338
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# selezionato} other {# selezionati}}"
@@ -1228,9 +1228,9 @@ msgstr "Un portale per i partecipanti per registrare conversazioni."
 msgid "A privacy policy link is required for consent-based processing. It must start with http:// or https:// and be at most 255 characters."
 msgstr "Per il trattamento basato sul consenso serve un link all'informativa sulla privacy. Deve iniziare con http:// o https:// e avere al massimo 255 caratteri."
 
-#: src/routes/project/ProjectsHome.tsx:397
-msgid "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
-msgstr "Un progetto racchiude tutto ciò che riguarda un argomento. Condividi il link con i partecipanti, raccogli le voci e lascia che dembrane le trasformi in insight."
+#: src/routes/project/ProjectsHome.tsx:396
+#~ msgid "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
+#~ msgstr "Un progetto racchiude tutto ciò che riguarda un argomento. Condividi il link con i partecipanti, raccogli le voci e lascia che dembrane le trasformi in insight."
 
 #: src/routes/project/present/PresentRoute.tsx:818
 msgid "A public page needs a higher plan. Switch Public page off under Share to show the other changes."
@@ -1299,7 +1299,7 @@ msgstr "Un titolo e un sottotitolo prima del conto alla rovescia."
 msgid "A typo"
 msgstr "Un refuso"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:337
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:405
 #: src/routes/invite/AcceptInviteRoute.tsx:48
 msgid "a workspace"
 msgstr "uno spazio di lavoro"
@@ -1342,7 +1342,7 @@ msgstr "Termini accettati"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1892
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:592
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:725
-#: src/routes/project/CreateProjectRoute.tsx:690
+#: src/routes/project/CreateProjectRoute.tsx:702
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:26
 #: src/components/project/ProjectUsageAndSharing.tsx:217
 msgid "Access"
@@ -1978,7 +1978,7 @@ msgstr "All files were uploaded successfully."
 msgid "All kinds"
 msgstr "Tutti i tipi"
 
-#: src/routes/project/ProjectsHome.tsx:441
+#: src/routes/project/ProjectsHome.tsx:335
 msgid "All projects"
 msgstr "Tutti i progetti"
 
@@ -2516,7 +2516,7 @@ msgstr "Fai una domanda sulle conversazioni di questo progetto o chiedi aiuto pe
 msgid "Ask a workspace admin for an invite, or pick a different workspace from your list."
 msgstr "Chiedi un invito a un amministratore dello spazio di lavoro oppure scegline un altro dal tuo elenco."
 
-#: src/routes/project/CreateProjectRoute.tsx:407
+#: src/routes/project/CreateProjectRoute.tsx:418
 msgid "Ask a workspace admin to create the project for you."
 msgstr "Chiedi a un amministratore dello spazio di lavoro di creare il progetto per te."
 
@@ -2791,8 +2791,8 @@ msgstr "Assente"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:370
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:760
-#: src/routes/project/CreateProjectRoute.tsx:509
-#: src/routes/project/CreateProjectRoute.tsx:728
+#: src/routes/project/CreateProjectRoute.tsx:521
+#: src/routes/project/CreateProjectRoute.tsx:740
 #: src/routes/project/report/ProjectReportRoute.tsx:500
 #: src/routes/organisation/OrganisationRoute.tsx:696
 #: src/routes/organisation/OrganisationRoute.tsx:719
@@ -2848,7 +2848,7 @@ msgstr "Torna all'accesso"
 msgid "Back to my workspaces"
 msgstr "Torna ai miei spazi di lavoro"
 
-#: src/routes/project/CreateProjectRoute.tsx:410
+#: src/routes/project/CreateProjectRoute.tsx:421
 msgid "Back to projects"
 msgstr "Torna ai progetti"
 
@@ -3100,8 +3100,8 @@ msgstr "Chiamate non associate ad alcun account"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1341
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1976
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:760
-#: src/routes/project/ProjectsHome.tsx:543
-#: src/routes/project/CreateProjectRoute.tsx:478
+#: src/routes/project/ProjectsHome.tsx:454
+#: src/routes/project/CreateProjectRoute.tsx:492
 #: src/routes/project/report/ProjectReportRoute.tsx:281
 #: src/routes/organisation/OrganisationRoute.tsx:1833
 #: src/routes/organisation/OrganisationRoute.tsx:1856
@@ -3664,8 +3664,8 @@ msgstr "Cancella tutto"
 msgid "Clear filters"
 msgstr "Cancella filtri"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:266
-#: src/routes/project/ProjectsHome.tsx:464
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:334
+#: src/routes/project/ProjectsHome.tsx:365
 #: src/routes/project/chat/NewChatRoute.tsx:175
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
 #: src/components/invite/WorkspaceSelectList.tsx:98
@@ -4060,7 +4060,7 @@ msgstr "Contatta l'assistenza"
 #~ msgid "Contact support"
 #~ msgstr "Contatta l'assistenza"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:363
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:431
 msgid "Contact the admin if this was unexpected."
 msgstr "Contatta l'amministratore se questo non era previsto."
 
@@ -4631,6 +4631,12 @@ msgstr "Impossibile salvare"
 msgid "Country"
 msgstr "Paese"
 
+#. js-lingui-explicit-id
+#: src/components/workspace/CreateMenu/CreateMenu.tsx:83
+#: src/components/workspace/CreateMenu/CreateMenu.tsx:89
+msgid "create-menu.button"
+msgstr "Crea"
+
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:286
 msgid "Create"
 msgstr "Create"
@@ -4693,16 +4699,15 @@ msgstr "Crea organizzazione"
 msgid "Create password"
 msgstr "Crea password"
 
-#: src/routes/project/CreateProjectRoute.tsx:434
-#: src/routes/project/CreateProjectRoute.tsx:738
+#: src/routes/project/CreateProjectRoute.tsx:445
+#: src/routes/project/CreateProjectRoute.tsx:750
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:82
 #: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:209
-#: src/components/project/CreateProjectButton.tsx:32
 msgid "Create project"
 msgstr "Crea progetto"
 
-#: src/routes/project/CreateProjectRoute.tsx:155
+#: src/routes/project/CreateProjectRoute.tsx:161
 msgid "Create project | dembrane"
 msgstr "Crea progetto | dembrane"
 
@@ -4763,7 +4768,7 @@ msgid "Created on"
 msgstr "Created on"
 
 #. placeholder {0}: workspace.name
-#: src/routes/project/CreateProjectRoute.tsx:437
+#: src/routes/project/CreateProjectRoute.tsx:448
 msgid "Creating in <0>{0}</0>"
 msgstr "Creazione in <0>{0}</0>"
 
@@ -5287,11 +5292,11 @@ msgid "Disabled"
 msgstr "Disabled"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:334
-#: src/routes/project/CreateProjectRoute.tsx:380
+#: src/routes/project/CreateProjectRoute.tsx:391
 msgid "Discard"
 msgstr "Scarta"
 
-#: src/routes/project/CreateProjectRoute.tsx:382
+#: src/routes/project/CreateProjectRoute.tsx:393
 msgid "Discard this project?"
 msgstr "Vuoi scartare questo progetto?"
 
@@ -5538,7 +5543,7 @@ msgstr "es. Cliente Alpha, Ricerca Q1"
 msgid "e.g. Client onboarding interviews, Q1 product research"
 msgstr "es. Interviste onboarding clienti, Ricerca prodotto Q1"
 
-#: src/routes/project/CreateProjectRoute.tsx:524
+#: src/routes/project/CreateProjectRoute.tsx:536
 msgid "e.g. Climate Listening, Q1 Research"
 msgstr "es. Ascolto sul clima, Ricerca Q1"
 
@@ -6035,7 +6040,7 @@ msgid "Everyone can find it. Admins join directly; members can ask."
 msgstr "Tutti possono trovarlo. Gli amministratori entrano direttamente; i membri possono chiedere di accedere."
 
 #. placeholder {0}: workspace.name
-#: src/routes/project/CreateProjectRoute.tsx:624
+#: src/routes/project/CreateProjectRoute.tsx:636
 msgid "Everyone in {0} can find and open this project."
 msgstr "Chiunque in {0} può trovare e aprire questo progetto."
 
@@ -7073,7 +7078,7 @@ msgstr "Vai all'editor del portale"
 msgid "Go to previous release notes"
 msgstr "Vai alle note di rilascio precedenti"
 
-#: src/routes/project/CreateProjectRoute.tsx:704
+#: src/routes/project/CreateProjectRoute.tsx:716
 msgid "Go to project home"
 msgstr "Vai alla home del progetto"
 
@@ -7085,7 +7090,7 @@ msgstr "Vai al report"
 msgid "Go to settings"
 msgstr "Vai alle impostazioni"
 
-#: src/routes/project/CreateProjectRoute.tsx:702
+#: src/routes/project/CreateProjectRoute.tsx:714
 msgid "Go to the upload page"
 msgstr "Vai alla pagina di caricamento"
 
@@ -7167,11 +7172,11 @@ msgstr "Aiuto"
 msgid "Help setting up your project."
 msgstr "Aiuto per configurare il tuo progetto."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:243
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:287
 msgid "Hi"
 msgstr "Ciao"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:243
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:287
 msgid "Hi {firstName}"
 msgstr "Ciao {firstName}"
 
@@ -7447,7 +7452,7 @@ msgstr "If you are happy with the {objectLabel} click \"Approve\" to show you fe
 msgid "If you need something different, we will draft an offer for your use case."
 msgstr "Se hai esigenze diverse, prepareremo una proposta su misura per il tuo caso d'uso."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:376
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:444
 msgid "If you were expecting access, please ask the person who invited you to send it again."
 msgstr "Se ti aspettavi l'accesso, chiedi alla persona che ti ha invitato di inviarlo di nuovo."
 
@@ -7577,7 +7582,7 @@ msgstr "ereditato dall'organizzazione"
 msgid "Initial"
 msgstr "Iniziale"
 
-#: src/routes/project/CreateProjectRoute.tsx:645
+#: src/routes/project/CreateProjectRoute.tsx:657
 msgid "Innovator or higher"
 msgstr "Innovator o superiore"
 
@@ -8036,7 +8041,7 @@ msgid "keep analysing with popcorn"
 msgstr "continuare ad analizzare con Popcorn"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:334
-#: src/routes/project/CreateProjectRoute.tsx:380
+#: src/routes/project/CreateProjectRoute.tsx:391
 msgid "Keep editing"
 msgstr "Continua a modificare"
 
@@ -8082,8 +8087,8 @@ msgstr "Continua a lavorare mentre l'audio viene caricato in background."
 msgid "Keeps the tier until the date below, then reverts to Free unless they subscribe."
 msgstr "Mantiene il livello fino alla data indicata sotto, poi torna a Free a meno che non si abbonino."
 
-#: src/routes/project/CreateProjectRoute.tsx:600
-#: src/routes/project/CreateProjectRoute.tsx:684
+#: src/routes/project/CreateProjectRoute.tsx:612
+#: src/routes/project/CreateProjectRoute.tsx:696
 #: src/components/project/KeyTermsInput.tsx:89
 #: src/components/common/settingChange.tsx:26
 msgid "Key terms"
@@ -8259,9 +8264,9 @@ msgstr "Troviamo quello che fa per te"
 #~ msgstr "Andiamo!"
 
 #: src/routes/project/ProjectsHome.tsx:342
-#: src/routes/project/ProjectsHome.tsx:387
-msgid "Let's hear your first conversation."
-msgstr "Ascoltiamo la tua prima conversazione."
+#: src/routes/project/ProjectsHome.tsx:386
+#~ msgid "Let's hear your first conversation."
+#~ msgstr "Ascoltiamo la tua prima conversazione."
 
 #. placeholder {0}: canvas.name
 #: src/routes/project/canvas/CanvasRoute.tsx:453
@@ -9120,7 +9125,7 @@ msgstr "More actions"
 msgid "More dependable anonymisation and recording"
 msgstr "Anonimizzazione e registrazione più affidabili"
 
-#: src/routes/project/CreateProjectRoute.tsx:590
+#: src/routes/project/CreateProjectRoute.tsx:602
 msgid "More options"
 msgstr "Altre opzioni"
 
@@ -9196,7 +9201,7 @@ msgstr "Cronologia spostamenti"
 msgid "Move project"
 msgstr "Sposta progetto"
 
-#: src/routes/project/ProjectsHome.tsx:533
+#: src/routes/project/ProjectsHome.tsx:444
 #: src/components/project/BulkMoveProjectsModal.tsx:89
 msgid "Move projects"
 msgstr "Sposta progetti"
@@ -9253,7 +9258,7 @@ msgstr "My templates"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1551
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:453
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:699
-#: src/routes/project/CreateProjectRoute.tsx:675
+#: src/routes/project/CreateProjectRoute.tsx:687
 #: src/components/results/curate/StakeholdersTab.tsx:45
 #: src/components/project/ProjectBasicEdit.tsx:124
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:372
@@ -9279,7 +9284,7 @@ msgstr "Name is required"
 msgid "Name it after the client, engagement, or purpose."
 msgstr "Chiamalo come il cliente, l'iniziativa o l'obiettivo."
 
-#: src/routes/project/CreateProjectRoute.tsx:523
+#: src/routes/project/CreateProjectRoute.tsx:535
 msgid "Name it after the topic, engagement, or question you're exploring."
 msgstr "Chiamalo come l'argomento, l'iniziativa o la domanda che stai approfondendo."
 
@@ -9733,7 +9738,7 @@ msgstr "I risultati della mappa non sono ancora pronti."
 msgid "No matches"
 msgstr "Nessun risultato"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:290
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:358
 msgid "No matches found"
 msgstr "Nessun risultato trovato"
 
@@ -9857,7 +9862,7 @@ msgstr "Nessuna attività del progetto in questo periodo."
 msgid "No projects found {0}"
 msgstr "No projects found {0}"
 
-#: src/routes/project/ProjectsHome.tsx:483
+#: src/routes/project/ProjectsHome.tsx:394
 msgid "No projects found for search term"
 msgstr "No projects found for search term"
 
@@ -10206,7 +10211,7 @@ msgstr "Note salvate dall'assistente su questo spazio di lavoro durante le chat.
 msgid "Nothing from dembrane right now."
 msgstr "Nessuna novità da dembrane al momento."
 
-#: src/routes/project/ProjectsHome.tsx:385
+#: src/routes/project/ProjectsHome.tsx:296
 msgid "Nothing here for you yet."
 msgstr "Non c'è ancora nulla qui per te."
 
@@ -10443,7 +10448,7 @@ msgstr "Solo le persone che aggiungi o inviti possono vederlo."
 msgid "Only when recording an invoice already paid out-of-band."
 msgstr "Solo quando si registra una fattura già saldata esternamente."
 
-#: src/routes/project/CreateProjectRoute.tsx:650
+#: src/routes/project/CreateProjectRoute.tsx:662
 msgid "Only workspace admins and the people you invite can open this project."
 msgstr "Solo gli amministratori dello spazio di lavoro e le persone che inviti possono aprire questo progetto."
 
@@ -10607,8 +10612,8 @@ msgstr "Apri questa pagina in {browserName} dal menu dell'app, oppure copia il l
 msgid "Open this page in your browser from the app's menu, or copy the link."
 msgstr "Apri questa pagina nel tuo browser dal menu dell'app, oppure copia il link."
 
-#: src/routes/project/CreateProjectRoute.tsx:621
-#: src/routes/project/CreateProjectRoute.tsx:692
+#: src/routes/project/CreateProjectRoute.tsx:633
+#: src/routes/project/CreateProjectRoute.tsx:704
 msgid "Open to the workspace"
 msgstr "Aperto allo spazio di lavoro"
 
@@ -10708,7 +10713,7 @@ msgstr "Or write your own"
 msgid "Org only"
 msgstr "Solo org"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:111
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:122
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:475
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:705
 #: src/routes/organisation/OrganisationExternalView.tsx:39
@@ -10721,6 +10726,11 @@ msgstr "Solo org"
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:348
 #: src/components/agent-access/YourOrganisations.tsx:55
 msgid "Organisation"
+msgstr "Organizzazione"
+
+#. js-lingui-explicit-id
+#: src/components/workspace/CreateMenu/CreateMenu.tsx:177
+msgid "create-menu.organisation"
 msgstr "Organizzazione"
 
 #: src/routes/organisation/OrganisationRoute.tsx:415
@@ -10774,7 +10784,7 @@ msgstr "Utilizzo dell'organizzazione"
 msgid "Organisations"
 msgstr "Organizzazioni"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:157
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:168
 msgid "Organisations | dembrane"
 msgstr "Organizzazioni | dembrane"
 
@@ -11295,7 +11305,7 @@ msgstr "Fissa fino a tre progetti in cima alla tua lista progetti."
 msgid "Pin your most-used templates directly in chat."
 msgstr "Fissa i modelli più usati direttamente nella chat."
 
-#: src/routes/project/ProjectsHome.tsx:418
+#: src/routes/project/ProjectsHome.tsx:311
 msgid "Pinned"
 msgstr "Fissati"
 
@@ -11710,8 +11720,8 @@ msgstr "URL dell'informativa sulla privacy"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1947
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:399
-#: src/routes/project/CreateProjectRoute.tsx:641
-#: src/routes/project/CreateProjectRoute.tsx:694
+#: src/routes/project/CreateProjectRoute.tsx:653
+#: src/routes/project/CreateProjectRoute.tsx:706
 #: src/components/workspace/OrganisationProjectsTable.tsx:246
 #: src/components/workspace/DiscoverableWorkspaces.tsx:309
 #: src/components/sharing/StatusLine.tsx:93
@@ -11805,15 +11815,15 @@ msgstr "Le schede progetto mostrano la lingua del progetto."
 msgid "project chats"
 msgstr "chat del progetto"
 
-#: src/routes/project/CreateProjectRoute.tsx:679
+#: src/routes/project/CreateProjectRoute.tsx:691
 #: src/components/project/ProjectContextInput.tsx:35
 #: src/components/project/ProjectBasicEdit.tsx:144
 #: src/components/common/settingChange.tsx:15
 msgid "Project context"
 msgstr "Contesto del progetto"
 
-#: src/routes/project/CreateProjectRoute.tsx:295
-#: src/routes/project/CreateProjectRoute.tsx:349
+#: src/routes/project/CreateProjectRoute.tsx:306
+#: src/routes/project/CreateProjectRoute.tsx:360
 #: src/components/report/ReportTimeline.tsx:277
 #: src/components/report/ReportTimeline.tsx:313
 msgid "Project created"
@@ -11830,6 +11840,10 @@ msgstr "Project default: enabled. Personal information will be replaced with pla
 #: src/components/project/hooks/index.ts:140
 msgid "Project deleted"
 msgstr "Progetto eliminato"
+
+#: src/components/workspace/CreateMenu/CreateMenu.tsx:151
+msgid "Project from a template"
+msgstr "Progetto da un modello"
 
 #: src/components/goal/ProjectGoalSection.tsx:85
 msgid "Project goal"
@@ -11860,7 +11874,7 @@ msgid "Project moved"
 msgstr "Progetto spostato"
 
 #: src/routes/project/ProjectHomeRoute.tsx:270
-#: src/routes/project/CreateProjectRoute.tsx:522
+#: src/routes/project/CreateProjectRoute.tsx:534
 #: src/components/project/ProjectListItem.tsx:403
 #: src/components/project/ProjectDangerZone.tsx:146
 #: src/components/common/settingChange.tsx:42
@@ -11917,7 +11931,7 @@ msgstr "progetti"
 msgid "Projects"
 msgstr "Projects"
 
-#: src/routes/project/ProjectsHome.tsx:86
+#: src/routes/project/ProjectsHome.tsx:62
 msgid "Projects | dembrane"
 msgstr "Projects | dembrane"
 
@@ -11930,7 +11944,7 @@ msgstr "Progetti nell'organizzazione · {0}"
 msgid "Projects moved"
 msgstr "Progetti spostati"
 
-#: src/routes/project/ProjectsHome.tsx:392
+#: src/routes/project/ProjectsHome.tsx:299
 msgid "Projects will show up here once someone on the organisation shares one with you."
 msgstr "I progetti compariranno qui quando qualcuno dell'organizzazione ne condividerà uno con te."
 
@@ -12023,6 +12037,10 @@ msgstr "Domande su come funziona dembrane, non solo sui tuoi dati."
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:101
 msgid "Queued"
 msgstr "In coda"
+
+#: src/components/workspace/CreateMenu/CreateMenu.tsx:144
+msgid "Quick project"
+msgstr "Progetto rapido"
 
 #: src/components/map/panels/DetailsSheet.tsx:506
 #: src/components/map/panels/ArgumentAccordion.tsx:279
@@ -13570,7 +13588,7 @@ msgstr "Cerca persone o inserisci un'email"
 msgid "Search project or workspace"
 msgstr "Cerca progetto o spazio di lavoro"
 
-#: src/routes/project/ProjectsHome.tsx:471
+#: src/routes/project/ProjectsHome.tsx:372
 msgid "Search projects"
 msgstr "Search projects"
 
@@ -13582,7 +13600,7 @@ msgstr "Search Projects"
 msgid "Search projects, conversations, transcripts…"
 msgstr "Cerca progetti, conversazioni, trascrizioni…"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:254
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:322
 msgid "Search projects, organisations, workspaces, settings…"
 msgstr "Cerca progetti, organizzazioni, spazi di lavoro, impostazioni…"
 
@@ -13591,7 +13609,7 @@ msgstr "Cerca progetti, organizzazioni, spazi di lavoro, impostazioni…"
 msgid "Search projects..."
 msgstr "Search projects..."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:280
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:348
 #: src/features/sidebar/blocks/SearchBlock.tsx:178
 msgid "Search results"
 msgstr "Risultati di ricerca"
@@ -13648,7 +13666,7 @@ msgstr "Ricerca nelle trascrizioni"
 msgid "Searching transcripts for \"{0}\""
 msgstr "Ricerca di \"{0}\" nelle trascrizioni"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:288
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:356
 #: src/features/sidebar/blocks/SearchBlock.tsx:183
 msgid "Searching…"
 msgstr "Ricerca in corso…"
@@ -13719,7 +13737,7 @@ msgstr "See you soon"
 msgid "Sees usage and invoices. No project or content access."
 msgstr "Visualizza utilizzo e fatture. Nessun accesso ai progetti o ai contenuti."
 
-#: src/routes/project/ProjectsHome.tsx:555
+#: src/routes/project/ProjectsHome.tsx:466
 #: src/components/billing/BillingManager.tsx:450
 msgid "Select"
 msgstr "Seleziona"
@@ -13760,7 +13778,7 @@ msgstr "Seleziona prima una parola"
 msgid "Select a workspace"
 msgstr "Seleziona uno spazio di lavoro"
 
-#: src/routes/project/ProjectsHome.tsx:520
+#: src/routes/project/ProjectsHome.tsx:431
 #: src/components/workspace/DiscoverableWorkspaces.tsx:279
 #: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all"
@@ -14030,7 +14048,7 @@ msgstr "Imposta su fatturazione gestita"
 msgid "Set up a new webhook from scratch"
 msgstr "Configura un nuovo webhook da zero"
 
-#: src/routes/project/CreateProjectRoute.tsx:667
+#: src/routes/project/CreateProjectRoute.tsx:679
 msgid "Set up with the assistant after creating"
 msgstr "Configura con l'assistente dopo la creazione"
 
@@ -14068,7 +14086,7 @@ msgid "Setting up"
 msgstr "Configurazione in corso"
 
 #: src/routes/settings/UserSettingsRoute.tsx:59
-#: src/routes/project/ProjectsHome.tsx:302
+#: src/routes/project/ProjectsHome.tsx:265
 #: src/portal/layout/ParticipantHeader.tsx:125
 #: src/portal/layout/ParticipantHeader.tsx:126
 #: src/features/sidebar/views/workspace/WorkspaceSettingsView.tsx:29
@@ -14103,7 +14121,7 @@ msgstr "Impostazioni da cambiare"
 msgid "Settings updated"
 msgstr "Impostazioni aggiornate"
 
-#: src/routes/project/CreateProjectRoute.tsx:698
+#: src/routes/project/CreateProjectRoute.tsx:710
 #: src/features/sidebar/views/user/UserHomeView.tsx:76
 msgid "Setup"
 msgstr "Configurazione"
@@ -14798,7 +14816,7 @@ msgstr "Start fresh"
 msgid "Start from a template, like a focus group or citizens' assembly, already set up for you."
 msgstr "Parti da un modello, come un focus group o un'assemblea dei cittadini, già configurato per te."
 
-#: src/routes/project/CreateProjectRoute.tsx:700
+#: src/routes/project/CreateProjectRoute.tsx:712
 msgid "Start in assistant chat"
 msgstr "Inizia nella chat con l'assistente"
 
@@ -14828,7 +14846,7 @@ msgstr "Usa dembrane gratis, con ore di registrazione incluse ogni mese."
 msgid "Started recording"
 msgstr "Registrazione avviata"
 
-#: src/routes/project/CreateProjectRoute.tsx:518
+#: src/routes/project/CreateProjectRoute.tsx:530
 msgid "Starting from: {templateLabel}"
 msgstr "Punto di partenza: {templateLabel}"
 
@@ -15298,7 +15316,7 @@ msgstr "Spiega agli amministratori dello spazio di lavoro perché ti serve l'acc
 msgid "Tell us what you need"
 msgstr "Facci sapere cosa ti serve"
 
-#: src/routes/project/CreateProjectRoute.tsx:674
+#: src/routes/project/CreateProjectRoute.tsx:686
 msgid "Template"
 msgstr "Modello"
 
@@ -16548,7 +16566,7 @@ msgstr "Seleziona tutte le opzioni pertinenti"
 msgid "Tick the ones you want. The rest stay as the template sets them."
 msgstr "Spunta quelli che vuoi. Gli altri restano come li imposta il modello."
 
-#: src/routes/project/CreateProjectRoute.tsx:708
+#: src/routes/project/CreateProjectRoute.tsx:720
 #: src/routes/admin/AdminSettingsRoute.tsx:1576
 #: src/routes/admin/AdminSettingsRoute.tsx:2603
 #: src/routes/admin/AdminSettingsRoute.tsx:3025
@@ -17185,7 +17203,7 @@ msgstr "Webhook senza nome"
 msgid "Unpin"
 msgstr "Unpin"
 
-#: src/routes/project/ProjectsHome.tsx:207
+#: src/routes/project/ProjectsHome.tsx:195
 msgid "Unpin a project first (max {MAX_PINNED})"
 msgstr "Unpin a project first (max {MAX_PINNED})"
 
@@ -17791,7 +17809,7 @@ msgstr "View"
 msgid "View example payload"
 msgstr "View example payload"
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:347
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:415
 msgid "View invite"
 msgstr "Visualizza invito"
 
@@ -17984,7 +18002,7 @@ msgstr "Non siamo riusciti a caricare questo spazio di lavoro. Riprova tra un at
 msgid "We couldn't load this workspace's usage."
 msgstr "Non siamo riusciti a caricare l'utilizzo di questo spazio di lavoro."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:226
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:270
 msgid "We couldn't load your organisations. Check your connection and try again."
 msgstr "Non siamo riusciti a caricare le tue organizzazioni. Controlla la tua connessione e riprova."
 
@@ -18251,6 +18269,10 @@ msgstr "Cosa vi aiuterebbe adesso?"
 msgid "What would resolve this tension"
 msgstr "Che cosa risolverebbe questa tensione"
 
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:299
+msgid "What would you like to do?"
+msgstr "Cosa vorresti fare?"
+
 #: src/components/chat/ChatModeSelector.tsx:200
 msgid "What would you like to explore?"
 msgstr "What would you like to explore?"
@@ -18347,9 +18369,9 @@ msgstr "Quando passi a un piano superiore, il calcolatore dei prezzi su dembrane
 msgid "Where views stayed different, each side in one line."
 msgstr "Dove le opinioni sono rimaste diverse, ogni posizione in una riga."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:246
-msgid "Where would you like to go?"
-msgstr "Dove vorresti andare?"
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:293
+#~ msgid "Where would you like to go?"
+#~ msgstr "Dove vorresti andare?"
 
 #: src/routes/project/chat/NewChatRoute.tsx:574
 #: src/components/chat/AgenticChatPanel.tsx:1916
@@ -18365,6 +18387,10 @@ msgstr "A quale organizzazione appartiene questo spazio di lavoro?"
 msgid "Which organisation owns this workspace's data? This sets the data and compliance context."
 msgstr "Quale organizzazione possiede i dati di questo spazio di lavoro? Questo definisce il contesto normativo e di conformità."
 
+#: src/components/workspace/CreateMenu/WhichWorkspaceModal.tsx:51
+msgid "Which workspace?"
+msgstr "Quale spazio di lavoro?"
+
 #: src/components/conversation/ImproveTranscriptAnimation.tsx:530
 msgid "While people talk, the text appears piece by piece."
 msgstr "Mentre le persone parlano, il testo appare a poco a poco."
@@ -18373,7 +18399,7 @@ msgstr "Mentre le persone parlano, il testo appare a poco a poco."
 msgid "Who can see and collaborate on this project."
 msgstr "Chi può vedere questo progetto e collaborarvi."
 
-#: src/routes/project/CreateProjectRoute.tsx:610
+#: src/routes/project/CreateProjectRoute.tsx:622
 #: src/components/project/ProjectSharingModal.tsx:283
 msgid "Who can see this project?"
 msgstr "Chi può vedere questo progetto?"
@@ -18481,7 +18507,7 @@ msgstr "Elaborazione della risposta..."
 #~ msgid "workspace"
 #~ msgstr "spazio di lavoro"
 
-#: src/routes/project/CreateProjectRoute.tsx:687
+#: src/routes/project/CreateProjectRoute.tsx:699
 #: src/routes/admin/AdminSettingsRoute.tsx:1682
 #: src/routes/admin/AdminSettingsRoute.tsx:2230
 #: src/features/sidebar/hooks/useSearchHits.ts:166
@@ -18489,6 +18515,11 @@ msgstr "Elaborazione della risposta..."
 #: src/components/workspace/OrganisationProjectsTable.tsx:215
 #: src/components/chat/TemplatesModal.tsx:582
 msgid "Workspace"
+msgstr "Spazio di lavoro"
+
+#. js-lingui-explicit-id
+#: src/components/workspace/CreateMenu/CreateMenu.tsx:162
+msgid "create-menu.workspace"
 msgstr "Spazio di lavoro"
 
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:349
@@ -18672,7 +18703,7 @@ msgstr "Sei il proprietario dei dati"
 msgid "You can change this anytime in settings."
 msgstr "Puoi modificare questa opzione in qualsiasi momento nelle impostazioni."
 
-#: src/routes/project/CreateProjectRoute.tsx:611
+#: src/routes/project/CreateProjectRoute.tsx:623
 msgid "You can change this later in project settings."
 msgstr "Puoi modificarlo più tardi nelle impostazioni del progetto."
 
@@ -18732,7 +18763,7 @@ msgstr "Ora puoi riprovare."
 msgid "You can't create a workspace yet"
 msgstr "Non puoi ancora creare uno spazio di lavoro"
 
-#: src/routes/project/CreateProjectRoute.tsx:404
+#: src/routes/project/CreateProjectRoute.tsx:415
 msgid "You can't create projects in this workspace."
 msgstr "Non puoi creare progetti in questo spazio di lavoro."
 
@@ -18787,12 +18818,12 @@ msgid "You have a pending invite"
 msgstr "Hai un invito in sospeso"
 
 #. placeholder {0}: invites[0].org_name
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:330
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:398
 msgid "You have a pending invite to {0}. Open it to join the organisation."
 msgstr "Hai un invito in sospeso per {0}. Aprilo per unirti all'organizzazione."
 
 #. placeholder {0}: invites[0].workspace_name ?? t`a workspace`
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:335
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:403
 msgid "You have a pending invite to {0}. The admin needs to free a seat before you can join."
 msgstr "Hai un invito in sospeso per {0}. L'amministratore deve liberare un posto prima che tu possa unirti."
 
@@ -18907,7 +18938,7 @@ msgstr "Riceverai l'accesso da amministratore a {singleName}. Apparirà subito n
 msgid "You'll find all your projects waiting for you."
 msgstr "Troverai tutti i tuoi progetti ad aspettarti."
 
-#: src/routes/project/CreateProjectRoute.tsx:668
+#: src/routes/project/CreateProjectRoute.tsx:680
 msgid "You'll land in a chat where dembrane helps shape the project before you collect conversations."
 msgstr "Entrerai in una chat dove dembrane ti aiuterà a definire il progetto prima di raccogliere le conversazioni."
 
@@ -18969,7 +19000,7 @@ msgstr "Stai effettuando l'accesso con l'indirizzo email errato"
 msgid "You're not in any organisation yet. Create a workspace to start an organisation, or ask a member for an invite."
 msgstr "Non fai ancora parte di nessuna organizzazione. Crea uno spazio di lavoro per avviare un'organizzazione, oppure chiedi un invito a un membro."
 
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:373
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:441
 msgid "You're not part of any organisation right now."
 msgstr "Al momento non fai parte di alcuna organizzazione."
 
@@ -19050,7 +19081,7 @@ msgstr "Il tuo accesso"
 
 #. placeholder {0}: recentRemovals[0].workspace_name
 #. placeholder {1}: new Date(recentRemovals[0].ended_at).toLocaleDateString()
-#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:357
+#: src/routes/workspaces/WorkspaceSelectorRoute.tsx:425
 msgid "Your access to {0} ended on {1}."
 msgstr "Il tuo accesso a {0} è terminato il {1}."
 
@@ -19099,7 +19130,7 @@ msgid "Your details"
 msgstr "I tuoi dati"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:330
-#: src/routes/project/CreateProjectRoute.tsx:376
+#: src/routes/project/CreateProjectRoute.tsx:387
 msgid "Your draft won't be saved."
 msgstr "La bozza non verrà salvata."
 
@@ -19267,7 +19298,7 @@ msgstr "I tuoi portali continuano a funzionare e nulla di ciò che dicono i part
 msgid "Your project context is long, so suggestions read its first 20,000 characters. The whole text is saved."
 msgstr "Il contesto del progetto è lungo, quindi i suggerimenti ne leggono i primi 20.000 caratteri. Il testo completo viene salvato."
 
-#: src/routes/project/ProjectsHome.tsx:345
+#: src/routes/project/ProjectsHome.tsx:382
 msgid "Your projects will appear here. A project holds everything for one topic: the link participants record on, their conversations, and what dembrane makes of them."
 msgstr "Qui compariranno i tuoi progetti. Un progetto raccoglie tutto su un argomento: il link su cui i partecipanti registrano, le loro conversazioni e ciò che dembrane ne ricava."
 
