@@ -46,6 +46,7 @@ const {
   methodology,
   methodology_version,
   prompt_template,
+  account_event,
 } = schema;
 
 export type Row = Record<string, unknown>;
@@ -136,6 +137,11 @@ export function projectsStorage(db: Db) {
 
     async updateProject(id: string, values: Partial<typeof project.$inferInsert>) {
       await db.update(project).set(values).where(eq(project.id, id));
+    },
+
+    /** Writes rows to an account's history; inside the transaction of the change they record. */
+    async insertAccountEvents(rows: (typeof account_event.$inferInsert)[]) {
+      if (rows.length) await db.insert(account_event).values(rows);
     },
 
     async insertProject(values: typeof project.$inferInsert) {

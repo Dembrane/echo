@@ -17,6 +17,7 @@ import type { Db } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { projectAllows, projectFor, projectSource } from "@dembrane/http";
 import { directusRow, pythonIso } from "@dembrane/legacy-shape";
+import { PROJECT_PROVIDER_EVENT } from "@dembrane/llm";
 import type { JobSink } from "@dembrane/queue";
 import { isExternalClient, legalBlock, legalWrite } from "./legal";
 import { type ProjectsStorage, projectsStorage, type Row } from "./storage";
@@ -396,6 +397,38 @@ async function moveUnderCap(
   });
 }
 
+/**
+ * A move clears the project's AI provider choices (they were made under the old account's
+ * setting), so each choice it clears is written to the new account's history as a change to
+ * null: the daily provider check rebuilds a project's choice from these events, and without
+ * one it would still see the old choice and call a legitimate call a leak.
+ */
+function clearedChoiceEvents(
+  p: { id: string; ai_transcription_provider: string | null; ai_analysis_provider: string | null },
+  orgId: string,
+  who: Signed,
+  at: Date,
+) {
+  const before = { transcription: p.ai_transcription_provider, analysis: p.ai_analysis_provider };
+  return (["transcription", "analysis"] as const).flatMap((job) =>
+    before[job] === null
+      ? []
+      : [
+          {
+            id: newId(),
+            orgId,
+            actorKind: who.isStaff ? "staff" : "customer",
+            actorUserId: who.directusUserId,
+            type: PROJECT_PROVIDER_EVENT,
+            subjectType: "project",
+            subjectId: p.id,
+            detail: { job, before: before[job], after: null, cause: "project_move" },
+            createdAt: at,
+          },
+        ],
+  );
+}
+
 export async function moveProject(
   d: ProjectDeps,
   who: Signed,
@@ -411,8 +444,9 @@ export async function moveProject(
   const fromLabel = src ? ((await d.store.workspace(src))?.name ?? null) : null;
   const now = d.now();
   const by = who.appUserId;
-  await moveUnderCap(d, who, targetId, [project], (store) =>
-    store.updateProject(projectId, {
+  await moveUnderCap(d, who, targetId, [project], async (store) => {
+    await store.insertAccountEvents(clearedChoiceEvents(project, target.org_id, who, now));
+    await store.updateProject(projectId, {
       workspace_id: targetId,
       // The choices were made under the old account's setting; the new account's defaults apply until a project admin chooses.
       ai_transcription_provider: null,
@@ -430,8 +464,8 @@ export async function moveProject(
         now,
       ),
       updated_at: now.toISOString(),
-    }),
-  );
+    });
+  });
   return { project_id: projectId, workspace_id: targetId };
 }
 
@@ -471,6 +505,7 @@ export async function bulkMoveProjects(
   await moveUnderCap(d, who, targetId, projects, async (store) => {
     for (const { project, src } of pending) {
       if (src && !names.has(src)) names.set(src, (await store.workspace(src))?.name ?? null);
+      await store.insertAccountEvents(clearedChoiceEvents(project, target.org_id, who, now));
       await store.updateProject(project.id, {
         workspace_id: targetId,
         // The choices were made under the old account's setting; the new account's defaults apply until a project admin chooses.

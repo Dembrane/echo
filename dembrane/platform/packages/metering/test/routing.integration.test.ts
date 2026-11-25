@@ -393,9 +393,11 @@ run("the routing policy against the database", () => {
       at: string,
       routed = "google",
       job: Job = "analysis",
+      /** When the row was written; a call is written when it ends, so by default the instant it started. */
+      written?: string,
     ) =>
-      sql`insert into model_call (started_at, service, model_group, model, kind, status, attempt, ms, provider, routed_provider, routing_job, routing_reason, routing_allowed, organisation_id, project_id, routing_conversation_id)
-        values (${at}::timestamptz, 'echo-worker', 'text_fast', 'gemini', 'generate', 'ok', 1, 1, 'vertex', ${routed}, ${job}, 'project', array['scaleway','google'], ${o.orgId}, ${o.projectId}, ${o.conversationId ?? null})`;
+      sql`insert into model_call (started_at, recorded_at, service, model_group, model, kind, status, attempt, ms, provider, routed_provider, routing_job, routing_reason, routing_allowed, organisation_id, project_id, routing_conversation_id)
+        values (${at}::timestamptz, ${written ?? at}::timestamptz, 'echo-worker', 'text_fast', 'gemini', 'generate', 'ok', 1, 1, 'vertex', ${routed}, ${job}, 'project', array['scaleway','google'], ${o.orgId}, ${o.projectId}, ${o.conversationId ?? null})`;
     const checkAt = (
       at: string,
       alerts: string[],
@@ -538,8 +540,8 @@ run("the routing policy against the database", () => {
       await reset();
       const a = await setup({});
       // A row from before the policy recorded anything: no destination, three days old.
-      await sql`insert into model_call (started_at, service, model_group, model, kind, status, attempt, ms, provider, organisation_id, project_id)
-        values ('2026-11-01T10:00:00Z', 'echo-worker', 'text_fast', 'gemini', 'generate', 'ok', 1, 1, 'vertex', ${a.orgId}, ${a.projectId})`;
+      await sql`insert into model_call (started_at, recorded_at, service, model_group, model, kind, status, attempt, ms, provider, organisation_id, project_id)
+        values ('2026-11-01T10:00:00Z', '2026-11-01T10:00:00Z', 'echo-worker', 'text_fast', 'gemini', 'generate', 'ok', 1, 1, 'vertex', ${a.orgId}, ${a.projectId})`;
       const alerts: string[] = [];
       expect(await checkAt("2026-11-04T04:00:00Z", alerts)).toEqual({ leaks: 0, byJob: none });
       expect(alerts).toEqual([]);
@@ -565,6 +567,68 @@ run("the routing policy against the database", () => {
       await vertexCall(a, "2026-11-03T10:00:00Z");
       expect((await checkAt("2026-11-05T04:00:00Z", [])).leaks).toBe(1);
       expect((await checkAt("2026-11-06T04:00:00Z", [])).leaks).toBe(0);
+    });
+
+    test("a call that started before a run and was written after it is read by the next run", async () => {
+      await reset();
+      const a = await setup({});
+      expect(await checkAt("2026-11-02T04:00:00Z", [])).toEqual({ leaks: 0, byJob: none });
+      // A long call: it began at 03:00, before the run read up to 04:00, and was written at 09:00.
+      await vertexCall(a, "2026-11-02T03:00:00Z", "scaleway", "analysis", "2026-11-02T09:00:00Z");
+      expect((await checkAt("2026-11-02T12:00:00Z", [])).leaks).toBe(1);
+      // Read once: the run after it has nothing new.
+      expect((await checkAt("2026-11-03T04:00:00Z", [])).leaks).toBe(0);
+    });
+
+    test("a row from before write times were kept has none and is not read", async () => {
+      await reset();
+      const a = await setup({});
+      await sql`insert into model_call (started_at, recorded_at, service, model_group, model, kind, status, attempt, ms, provider, routed_provider, routing_job, organisation_id, project_id)
+        values ('2026-11-01T10:00:00Z', null, 'echo-worker', 'text_fast', 'gemini', 'generate', 'ok', 1, 1, 'vertex', 'scaleway', 'analysis', ${a.orgId}, ${a.projectId})`;
+      expect((await checkAt("2026-11-02T04:00:00Z", [])).leaks).toBe(0);
+    });
+
+    test("the query in the alert finds exactly the rows it flagged, whichever rule flagged them", async () => {
+      await reset();
+      const a = await setup({});
+      const ev = events(a.orgId);
+      await ev.org(ONLY_SCALEWAY, BOTH, "2026-11-01T10:00:00Z");
+      await ev.project(a.projectId, "analysis", null, "google", "2026-11-01T10:30:00Z");
+      await vertexCall(a, "2026-11-01T11:00:00Z"); // allowed and chosen: not flagged
+      await vertexCall(a, "2026-11-01T09:00:00Z"); // routed to Google before Google was allowed: flagged
+      await vertexCall(a, "2026-11-01T11:30:00Z", "scaleway"); // sent elsewhere by the policy: flagged
+      const alerts: string[] = [];
+      expect((await checkAt("2026-11-02T04:00:00Z", alerts)).leaks).toBe(2);
+      const query = /Rows: (select \* from model_call where id in \([0-9, ]+\))/.exec(
+        alerts[0] ?? "",
+      )?.[1];
+      expect(query).toBeDefined();
+      const found = await sql.unsafe(`${query} order by started_at`);
+      expect(found.map((r) => new Date(r.started_at as string).toISOString())).toEqual([
+        "2026-11-01T09:00:00.000Z",
+        "2026-11-01T11:30:00.000Z",
+      ]);
+    });
+
+    test("a project's choice cleared by a move is read as cleared, so the call it allows is not a leak", async () => {
+      await reset();
+      const a = await setup({});
+      const ev = events(a.orgId);
+      // Google enabled and the account's default for analysis; the project had chosen Scaleway.
+      await ev.org(
+        ONLY_SCALEWAY,
+        setting(["scaleway", "google"], { analysis: "google" }),
+        "2026-11-01T10:00:00Z",
+      );
+      await ev.project(a.projectId, "analysis", null, "scaleway", "2026-11-01T10:30:00Z");
+      // A move at 12:00 cleared it (the event moveProject writes), so the project follows the default.
+      await ev.project(a.projectId, "analysis", "scaleway", null, "2026-11-01T12:00:00Z");
+      await vertexCall(a, "2026-11-01T12:30:00Z");
+      expect((await checkAt("2026-11-02T04:00:00Z", [])).leaks).toBe(0);
+      // Without that event the same call reads as a project that chose Scaleway.
+      await sql`delete from account_event where detail::jsonb ->> 'after' is null and type = 'project.ai_provider.changed'`;
+      await sql`delete from ai_provider_check`;
+      expect((await checkAt("2026-11-02T05:00:00Z", [])).leaks).toBe(1);
     });
 
     test("where Google is the deployment's default, only a call the policy sent elsewhere counts", async () => {
