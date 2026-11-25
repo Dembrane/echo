@@ -268,4 +268,53 @@ run("the daily provider check after a project moves between accounts", () => {
     expect(row?.a).toBeNull();
     expect((await check("2026-11-01T12:00:00Z")).leaks).toBe(0);
   });
+
+  test("a choice made while a move waits for its lock is the one the move clears and records", async () => {
+    // The project starts with no choice; an admin picks Google while the move waits for the row.
+    const project = randomUUID();
+    await sql`delete from model_call`;
+    await sql`delete from ai_provider_check`;
+    await sql`delete from account_event`;
+    await sql`insert into project (id, is_conversation_allowed, workspace_id) values (${project}, true, ${wsA})`;
+    for (const org of [orgA, orgB])
+      await event(
+        org,
+        "ai_providers.changed",
+        org,
+        { before: null, after: both },
+        "2026-11-01T09:00:00Z",
+      );
+    clock = new Date("2026-11-01T11:00:00Z");
+    let release: () => void = () => {};
+    const held = new Promise<void>((r) => {
+      release = r;
+    });
+    const choosing = sql.begin(async (tx) => {
+      await tx`select id from project where id = ${project} for update`;
+      await held;
+      await tx`update project set ai_analysis_provider = 'google' where id = ${project}`;
+      await tx`insert into account_event (id, org_id, actor_kind, type, subject_type, subject_id, detail, created_at)
+        values (${randomUUID()}, ${orgA}, 'customer', 'project.ai_provider.changed', 'project', ${project},
+          ${tx.json({ job: "analysis", before: null, after: "google" } as never)}, '2026-11-01T11:01:00Z'::timestamptz)`;
+    });
+    await Bun.sleep(300);
+    const moving = app.request(`/api/v2/projects/${project}/move`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ target_workspace_id: wsB }),
+    });
+    await Bun.sleep(500);
+    clock = new Date("2026-11-01T11:10:00Z");
+    release();
+    await choosing;
+    expect((await moving).status).toBe(200);
+    const cleared = await sql<{ org_id: string; detail: Record<string, unknown> }[]>`
+      select org_id, detail from account_event
+      where subject_id = ${project} and detail::jsonb ->> 'cause' = 'project_move'`;
+    expect(cleared.map((e) => e.org_id).sort()).toEqual([orgA, orgB].sort());
+    expect(cleared[0]?.detail).toMatchObject({ job: "analysis", before: "google", after: null });
+    // In B nobody chose Google, so a Google call there is flagged.
+    await vertexCall(orgB, project, "2026-11-01T12:30:00Z");
+    expect((await check("2026-11-01T13:00:00Z")).leaks).toBe(1);
+  });
 });

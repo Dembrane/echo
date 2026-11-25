@@ -135,6 +135,24 @@ export function projectsStorage(db: Db) {
       return { ...directusRow(row), ...(await projectAliases(db, id)) };
     },
 
+    /**
+     * The project's AI provider choices, its row locked until the transaction ends. Call inside
+     * one: a move reads what it clears here, so a choice made while the move waited is the one
+     * its history records.
+     */
+    async lockProviderChoices(id: string) {
+      const [row] = await db
+        .select({
+          id: project.id,
+          ai_transcription_provider: project.ai_transcription_provider,
+          ai_analysis_provider: project.ai_analysis_provider,
+        })
+        .from(project)
+        .where(eq(project.id, id))
+        .for("update");
+      return row ?? null;
+    },
+
     async updateProject(id: string, values: Partial<typeof project.$inferInsert>) {
       await db.update(project).set(values).where(eq(project.id, id));
     },

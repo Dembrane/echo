@@ -446,6 +446,9 @@ export async function moveProject(
   const by = who.appUserId;
   await moveUnderCap(d, who, targetId, [project], async (store) => {
     const from = src ? await store.workspace(src) : null;
+    // Read under the row lock, not from before the transaction: a choice made while the move
+    // waited is the one it clears and records.
+    const choices = (await store.lockProviderChoices(projectId)) ?? project;
     await store.updateProject(projectId, {
       workspace_id: targetId,
       // The choices were made under the old account's setting; the new account's defaults apply until a project admin chooses.
@@ -469,7 +472,7 @@ export async function moveProject(
     // daily check treats a project as cleared from this moment, so a call that started while
     // the move waited for a lock, still on the old choice, is not read as made after it.
     await store.insertAccountEvents(
-      clearedChoiceEvents(project, [from?.org_id, target.org_id], who, d.now()),
+      clearedChoiceEvents(choices, [from?.org_id, target.org_id], who, d.now()),
     );
   });
   return { project_id: projectId, workspace_id: targetId };
@@ -509,8 +512,11 @@ export async function bulkMoveProjects(
   const now = d.now();
   const moved: string[] = [];
   const projects = pending.map((x) => x.project);
+  const cleared = new Map<string, Parameters<typeof clearedChoiceEvents>[0]>();
   await moveUnderCap(d, who, targetId, projects, async (store) => {
     for (const { project, src } of pending) {
+      // As in moveProject: what the move clears is read under the row lock.
+      cleared.set(project.id, (await store.lockProviderChoices(project.id)) ?? project);
       if (src && !names.has(src)) {
         const from = await store.workspace(src);
         names.set(src, from?.name ?? null);
@@ -541,7 +547,12 @@ export async function bulkMoveProjects(
     const at = d.now();
     for (const { project, src } of pending)
       await store.insertAccountEvents(
-        clearedChoiceEvents(project, [src ? orgs.get(src) : null, target.org_id], who, at),
+        clearedChoiceEvents(
+          cleared.get(project.id) ?? project,
+          [src ? orgs.get(src) : null, target.org_id],
+          who,
+          at,
+        ),
       );
   });
   return { moved, count: moved.length };
