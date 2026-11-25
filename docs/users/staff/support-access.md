@@ -12,14 +12,21 @@ sees every step.
 
 ## Start a session
 
-1. Open "Usage and billing" in the [staff console](./admin-panel-overview.md).
-2. Expand the account and select the three-dot button on the workspace.
-3. Look under "Join for support".
+1. Open the organisation's card under "Accounts" in the [staff console](./admin-panel-overview.md)
+   (see [customer accounts](./customer-accounts.md)).
+2. Find the workspace under "Support access". Each row shows where you stand and the next step;
+   the three-dot button holds the rest. On a phone the next step is under the three-dot button too.
 
-| You see | It means | Do this |
+| Status | It means | Next step |
 |---|---|---|
-| "Join for support (24h)" | The customer has support access switched on. | Select it. Your session starts at once. |
-| "Request access" | Support access is off. | Send a request. An admin of the workspace decides. |
+| (none) | Support access is off and you have not asked. | "Request access". An admin of the workspace decides. |
+| "Support access is on" | The customer has support access switched on. | "Join for support (24h)". Your session starts at once. |
+| "Request sent" | You asked and the admins have not answered yet. | "Cancel request" takes it back. |
+| "Joined" | Your session is open, until the time under the name. | "Open workspace". "Extend 24h" and "Leave now" are under the three-dot button. |
+| "Demo not published" | The workspace holds a demo that is not published yet. | Nothing. Open the draft from the demo's page. |
+
+The same steps still sit in "Usage and billing": expand the account, select the three-dot button
+on the workspace and look under "Join for support".
 
 ### Join
 
@@ -93,6 +100,7 @@ or leave.
 ## Related
 
 - [Staff support access](../../features/staff-support-access.md): the same thing from the customer's side.
-- [Usage, billing and payments](./usage-and-billing-rollup.md): the table where the workspace actions open.
+- [Customer accounts](./customer-accounts.md): the account card, where "Support access" sits.
+- [Usage, billing and payments](./usage-and-billing-rollup.md): the other table where the workspace actions open.
 - [The staff console](./admin-panel-overview.md): what the console shows and what it does not.
 - [Roles and permissions](../../features/roles-and-permissions.md): what a workspace admin can do.

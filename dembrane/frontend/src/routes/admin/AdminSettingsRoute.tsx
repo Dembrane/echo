@@ -26,7 +26,6 @@ import {
 	Table,
 	Tabs,
 	Text,
-	Textarea,
 	TextInput,
 	Title,
 	Tooltip,
@@ -65,6 +64,8 @@ import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { notifyError } from "@/components/error/notifyError";
 import { AdminResponseFeedbackPanel } from "@/components/feedback/AdminResponseFeedbackPanel";
 import { StaffTrainingPanel } from "@/components/training";
+import { SupportRequestNoteModal } from "@/components/workspace/SupportRequestNoteModal";
+import { useSupportVisit } from "@/components/workspace/supportVisit";
 import { API_BASE_URL } from "@/config";
 import type { AiBudgetOverride } from "@/hooks/useAiCosts";
 import { useV2Me } from "@/hooks/useV2Me";
@@ -896,165 +897,22 @@ function BillingModeControl({
  * clear message). Access is granted as admin and auto-revokes after 24h.
  */
 function JoinSupportControl({ row }: { row: BillingRow }) {
-	const queryClient = useQueryClient();
-	const statusKey = ["v2", "admin", "support-access", row.workspace_id];
 	const { setWorkspace } = useWorkspace();
-
-	// Reflect the caller's current session so a reopened modal shows "active
-	// until <time>" + Extend instead of always offering a fresh join.
-	const { data: status, isLoading } = useQuery({
-		queryFn: async () => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/join-support`,
-				{ credentials: "include" },
-			);
-			if (!res.ok) throw new Error(`Failed (${res.status})`);
-			return res.json() as Promise<{
-				active: boolean;
-				expires_at: string | null;
-			}>;
-		},
-		queryKey: statusKey,
-	});
-
-	const requestKey = ["v2", "admin", "support-request", row.workspace_id];
-	const { data: reqStatus } = useQuery({
-		queryFn: async () => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/support-access/request`,
-				{ credentials: "include" },
-			);
-			if (!res.ok) throw new Error(`Failed (${res.status})`);
-			return res.json() as Promise<{
-				support_access_enabled: boolean;
-				request: {
-					id: string;
-					status: string;
-					created_at: string | null;
-				} | null;
-			}>;
-		},
-		queryKey: requestKey,
-	});
-
+	const visit = useSupportVisit(row.workspace_id);
 	const [
 		requestModalOpened,
 		{ open: openRequestModal, close: closeRequestModal },
 	] = useDisclosure(false);
-	const [requestNote, setRequestNote] = useState("");
 
-	const requestMutation = useMutation({
-		mutationFn: async (message: string) => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/support-access/request`,
-				{
-					body: JSON.stringify({ message }),
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					method: "POST",
-				},
-			);
-			if (!res.ok) {
-				const err = await res.json().catch(() => ({}));
-				throw new ApiRequestError(res.status, err);
-			}
-			return res.json();
-		},
-		onError: (e) => void notifyError(e),
-		onSuccess: () => {
-			closeRequestModal();
-			setRequestNote("");
-			toast.success(t`Request sent. The workspace admins were notified.`);
-			queryClient.invalidateQueries({ queryKey: requestKey });
-		},
-	});
-
-	const cancelRequestMutation = useMutation({
-		mutationFn: async () => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/support-access/request`,
-				{ credentials: "include", method: "DELETE" },
-			);
-			if (!res.ok) {
-				const err = await res.json().catch(() => ({}));
-				throw new ApiRequestError(res.status, err);
-			}
-			return res.json();
-		},
-		onError: (e) => void notifyError(e),
-		onSuccess: () => {
-			toast.success(t`Request withdrawn.`);
-			queryClient.invalidateQueries({ queryKey: requestKey });
-		},
-	});
-
-	const joinMutation = useMutation({
-		mutationFn: async () => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/join-support`,
-				{
-					credentials: "include",
-					headers: { "Content-Type": "application/json" },
-					method: "POST",
-				},
-			);
-			if (!res.ok) {
-				const err = await res.json().catch(() => ({}));
-				throw new ApiRequestError(res.status, err);
-			}
-			return res.json() as Promise<{
-				status: "joined" | "extended" | "already_member";
-				expires_at: string | null;
-			}>;
-		},
-		onError: (e) => void notifyError(e),
-		onSuccess: (data) => {
-			if (data.status === "already_member") {
-				toast.success(t`You already have access to this workspace.`);
-			} else if (data.status === "extended") {
-				toast.success(t`Support access extended for another 24 hours.`);
-			} else {
-				toast.success(
-					t`Support access granted. It ends automatically in 24 hours.`,
-				);
-			}
-			queryClient.invalidateQueries({ queryKey: statusKey });
-			// Refresh the workspace + project lists so the just-joined workspace
-			// shows its projects without a manual refresh.
-			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
-			queryClient.invalidateQueries({ queryKey: ["v2", "workspace-projects"] });
-			queryClient.invalidateQueries({ queryKey: ["projects"] });
-		},
-	});
-
-	const leaveMutation = useMutation({
-		mutationFn: async () => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/admin/workspaces/${row.workspace_id}/join-support`,
-				{ credentials: "include", method: "DELETE" },
-			);
-			if (!res.ok) {
-				const err = await res.json().catch(() => ({}));
-				throw new ApiRequestError(res.status, err);
-			}
-			return res.json();
-		},
-		onError: (e) => void notifyError(e),
-		onSuccess: () => {
-			toast.success(t`Support access ended.`);
-			queryClient.invalidateQueries({ queryKey: statusKey });
-		},
-	});
-
-	const active = status?.active ?? false;
-	const supportEnabled = reqStatus?.support_access_enabled ?? true;
-	const pendingRequest =
-		reqStatus?.request?.status === "pending" ? reqStatus.request : null;
-	const busy =
-		joinMutation.isPending ||
-		leaveMutation.isPending ||
-		requestMutation.isPending ||
-		cancelRequestMutation.isPending;
+	const {
+		active,
+		supportEnabled,
+		pendingRequest,
+		busy,
+		join: joinMutation,
+		leave: leaveMutation,
+		cancelRequest: cancelRequestMutation,
+	} = visit;
 	const endsAt = ((iso: string | null | undefined): string => {
 		if (!iso) return "";
 		const d = new Date(iso);
@@ -1065,7 +923,7 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 			minute: "2-digit",
 			month: "short",
 		});
-	})(status?.expires_at);
+	})(visit.expiresAt);
 
 	return (
 		<Paper withBorder p="sm">
@@ -1094,7 +952,7 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 						<Button
 							size="xs"
 							loading={joinMutation.isPending}
-							disabled={busy || isLoading}
+							disabled={busy || visit.visitLoading}
 							onClick={() => joinMutation.mutate()}
 						>
 							{active ? (
@@ -1148,41 +1006,11 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 					)}
 				</Group>
 			</Stack>
-			<Modal
+			<SupportRequestNoteModal
 				opened={requestModalOpened}
 				onClose={closeRequestModal}
-				title={t`Request support access`}
-				data-testid="support-access-request-modal"
-			>
-				<Stack gap="sm">
-					<Text size="sm">
-						<Trans>
-							Tell the workspace admins what you need access for. This note is
-							optional.
-						</Trans>
-					</Text>
-					<Textarea
-						value={requestNote}
-						onChange={(e) => setRequestNote(e.currentTarget.value)}
-						placeholder={t`e.g. investigating the report issue you emailed about`}
-						autosize
-						minRows={3}
-						data-testid="support-access-request-note"
-					/>
-					<Group justify="flex-start" gap="sm">
-						<Button
-							variant="filled"
-							loading={requestMutation.isPending}
-							onClick={() => requestMutation.mutate(requestNote)}
-						>
-							<Trans>Send request</Trans>
-						</Button>
-						<Button variant="subtle" color="gray" onClick={closeRequestModal}>
-							<Trans>Cancel</Trans>
-						</Button>
-					</Group>
-				</Stack>
-			</Modal>
+				visit={visit}
+			/>
 		</Paper>
 	);
 }

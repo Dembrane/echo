@@ -628,6 +628,23 @@ export function staffRoutes(deps: StaffRouteDeps) {
   });
 
   // ── Support access ───────────────────────────────────────────────────
+  // The account page lists an organisation's workspaces, each with its own support state.
+  app.get(`${A}/orgs/:org_id/workspaces`, async (c) => {
+    const id = c.req.param("org_id");
+    await staff(c, "staff:support_join", "org.workspaces.read", ["org", id]);
+    const org = isUuid(id) ? await s.org(id) : null;
+    if (!org || org.deleted_at) throw new NotFoundError("organisation.not_found");
+    const rows = await s.orgWorkspaces(id);
+    return c.json({
+      workspaces: rows.map((w) => ({
+        workspace_id: w.id,
+        name: w.name,
+        support_access_enabled: w.allow_support_access,
+        held_for_demo: heldForDemo(w.settings) !== null,
+      })),
+    });
+  });
+
   app.post(`${A}/workspaces/:workspace_id/join-support`, async (c) => {
     const id = c.req.param("workspace_id");
     const who = await staff(c, "staff:support_join", "workspace.support.join", ["workspace", id]);

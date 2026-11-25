@@ -62,6 +62,7 @@ import {
 } from "./AcceptedOutsideModals";
 import { EmailCustomerModal, type EmailSubject } from "./EmailCustomerModal";
 import { PushOfferModal } from "./PushOfferModal";
+import { SupportAccess } from "./SupportAccess";
 import { NewTaskModal, SendBackModal } from "./TaskModals";
 import { UploadPdfModal } from "./UploadPdfModal";
 
@@ -155,6 +156,7 @@ function Card() {
 							<Documents orgId={orgId} card={data} />
 							<Tasks orgId={orgId} card={data} />
 							<Questions orgId={orgId} tickets={data.tickets} side="staff" />
+							<SupportAccess orgId={orgId} />
 						</Stack>
 					</Box>
 					<Box
