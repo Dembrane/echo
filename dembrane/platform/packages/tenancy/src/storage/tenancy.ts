@@ -1,6 +1,6 @@
 import { shownToOrganisation } from "@dembrane/access";
 import { schema } from "@dembrane/db";
-import { and, asc, desc, eq, gte, inArray, isNull, ne, type SQL, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, ne, or, type SQL, sql } from "drizzle-orm";
 import { type Conn, isUuid } from "../db";
 
 const { org, org_membership, workspace, workspace_membership, billing_account } = schema;
@@ -125,13 +125,15 @@ export async function workspaceById(db: Conn, id: string): Promise<WorkspaceRowF
  * Live workspaces of an org as its people may see them, in primary key order or ordered as
  * the caller asks. A workspace held back for a demo staff have not handed over yet is left
  * out (shownToOrganisation in @dembrane/access): every list and rollup an organisation's
- * people get reads its workspaces here.
+ * people get reads its workspaces here. `direct`: workspaces the caller holds a live row
+ * in, which they see even while held (the staff member who made the demo).
  */
 export async function orgWorkspaces(
   db: Conn,
   orgId: string,
-  opts: { extra?: SQL; order?: SQL[] } = {},
+  opts: { extra?: SQL; order?: SQL[]; direct?: readonly string[] } = {},
 ) {
+  const direct = opts.direct?.filter(isUuid) ?? [];
   return db
     .select()
     .from(workspace)
@@ -139,7 +141,9 @@ export async function orgWorkspaces(
       and(
         eq(workspace.org_id, orgId),
         isNull(workspace.deleted_at),
-        shownToOrganisation,
+        direct.length
+          ? or(shownToOrganisation, inArray(workspace.id, direct))
+          : shownToOrganisation,
         opts.extra,
       ),
     )
@@ -448,8 +452,10 @@ export async function orgWorkspacesForCards(
   db: Conn,
   orgId: string,
   onlyIds: readonly string[] | null,
+  direct: readonly string[] = [],
 ) {
   return orgWorkspaces(db, orgId, {
+    direct,
     ...(onlyIds && { extra: inArray(workspace.id, [...onlyIds]) }),
     order: [desc(workspace.is_default), asc(workspace.name)],
   });

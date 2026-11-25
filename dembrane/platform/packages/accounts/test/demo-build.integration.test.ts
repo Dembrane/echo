@@ -388,6 +388,152 @@ run("demos made in echo", () => {
     expect((await store.billing(w.db, orgId))?.account_manager_id).toBeNull();
   });
 
+  describe("the dembrane person who made a demo is in its workspace", () => {
+    let builder: World["people"]["admin"];
+    beforeAll(async () => {
+      const u = await w.db.transaction((tx) =>
+        ensureUser(tx, {
+          email: "maker@dembrane.com",
+          name: "Demo Maker",
+          passwordHash: null,
+          nowIso: w.clock.now.toISOString(),
+        }),
+      );
+      builder = {
+        appUserId: u.appUserId,
+        directusUserId: u.userId,
+        isStaff: true,
+        email: "maker@dembrane.com",
+      };
+    });
+    /** Starts a demo for `email` as `who` (a directus user id) and builds it to a draft. */
+    const draftBy = async (
+      who: string,
+      email: string,
+      settings: Partial<DemoBuildDeps["demo"]> = {},
+    ) => {
+      const status = K.DemoStatus.parse((await start({ contact_email: email })).data);
+      await w.db
+        .update(schema.account_demo)
+        .set({ createdBy: who })
+        .where(eq(schema.account_demo.id, status.id));
+      await buildDemo({ ...deps, demo: { ...deps.demo, ...settings } }, status.id, 1);
+      return K.DemoStatus.parse(
+        (await call(w, "GET", `/api/v2/admin/accounts/demos/${status.id}`, "staff")).data,
+      );
+    };
+    const roleOn = (projectId: string) =>
+      w.deps.access.project(builder, projectId, "project:read").then(
+        (a) => a.role,
+        () => null,
+      );
+
+    test("a new prospect: after the seed the @dembrane.com builder is an admin of the demo's workspace and opens the draft project", async () => {
+      const view = await draftBy(builder.directusUserId, "maker1@voorbeeldstad.example");
+      expect(view.status).toBe("draft");
+      const { workspace_id } = await seedOf(view.id);
+      const [ws] = await w.db
+        .select({ org: schema.workspace.org_id, name: schema.workspace.name })
+        .from(schema.workspace)
+        .where(eq(schema.workspace.id, workspace_id));
+      expect(ws).toEqual({ org: view.org_id as string, name: "dembrane demo" });
+      expect(await placesIn(workspace_id, builder.email)).toEqual([ADMIN_PLACE]);
+      expect(await roleOn(view.links.projects[0]?.project_id as string)).toBe("admin");
+      expect((await w.deps.access.workspace(builder, workspace_id, "settings:manage")).role).toBe(
+        "admin",
+      );
+      // A place in the workspace only: not a member of the prospect's organisation.
+      expect(
+        (await store.members(w.db, view.org_id as string)).some(
+          (m) => m.appUserId === builder.appUserId,
+        ),
+      ).toBe(false);
+      // The project stays the contact's.
+      const [project] = await w.db
+        .select({ owner: schema.project.directus_user_id })
+        .from(schema.project)
+        .where(eq(schema.project.id, view.links.projects[0]?.project_id as string));
+      expect(project?.owner).toBe((await seedOf(view.id)).contact_user_id);
+    });
+
+    test("a builder whose address is not @dembrane.com gets no place", async () => {
+      // The world's staff member is staff@example.test.
+      const view = await draftBy(w.people.staff.directusUserId, "maker2@voorbeeldstad.example");
+      const { workspace_id } = await seedOf(view.id);
+      const rows = await w.db
+        .select({ id: schema.workspace_membership.id })
+        .from(schema.workspace_membership)
+        .where(eq(schema.workspace_membership.workspace_id, workspace_id));
+      expect(rows).toEqual([]);
+    });
+
+    test("a demo in staff's shared demo workspace adds nobody there", async () => {
+      const staffOrg = newId();
+      const billingId = newId();
+      const shared = newId();
+      await w.db.insert(schema.org).values({ id: staffOrg, name: "dembrane demos too" });
+      await w.db
+        .insert(schema.billing_account)
+        .values({ id: billingId, org_id: staffOrg, tier: "free" });
+      await w.db.insert(schema.workspace).values({
+        id: shared,
+        org_id: staffOrg,
+        name: "Demos",
+        billing_account_id: billingId,
+        visibility: "invite_only",
+      });
+      const view = await draftBy(builder.directusUserId, "maker3@voorbeeldstad.example", {
+        workspaceId: shared,
+      });
+      expect((await seedOf(view.id)).workspace_id).toBe(shared);
+      expect(await placesIn(shared, builder.email)).toEqual([]);
+    });
+
+    test("a builder who already has a row there, a removed one included, is left as they are when the seed runs again", async () => {
+      const view = await draftBy(builder.directusUserId, "maker4@voorbeeldstad.example");
+      const { workspace_id } = await seedOf(view.id);
+      // A workspace admin removed them, then the seed step runs again (a retry after a crash
+      // between its commit and its "done").
+      await w.db
+        .update(schema.workspace_membership)
+        .set({ role: "member", deleted_at: w.clock.now.toISOString() })
+        .where(
+          and(
+            eq(schema.workspace_membership.workspace_id, workspace_id),
+            eq(schema.workspace_membership.user_id, builder.appUserId as string),
+          ),
+        );
+      const row = await load(view.id);
+      const steps = row?.steps as Record<string, { status: string }>;
+      await w.db
+        .update(schema.account_demo)
+        .set({
+          status: "failed",
+          steps: {
+            ...steps,
+            seed: { ...steps.seed, status: "failed" },
+            extract: { ...steps.extract, status: "pending" },
+            review: { ...steps.review, status: "pending" },
+          } as never,
+        })
+        .where(eq(schema.account_demo.id, view.id));
+      await buildDemo(deps, view.id, 2);
+      expect((await load(view.id))?.status).toBe("draft");
+      expect(
+        (await placesIn(workspace_id, builder.email)).map((r) => [r.role, r.deleted_at !== null]),
+      ).toEqual([["member", true]]);
+      expect(await roleOn(view.links.projects[0]?.project_id as string)).toBeNull();
+    });
+
+    test("after a publish with sign-in the contact joins as before and the builder stays an admin", async () => {
+      const view = await draftBy(builder.directusUserId, "maker5@voorbeeldstad.example");
+      const { workspace_id } = await seedOf(view.id);
+      expect((await publish(view.id)).status).toBe(200);
+      expect(await placesIn(workspace_id, "maker5@voorbeeldstad.example")).toEqual([ADMIN_PLACE]);
+      expect(await placesIn(workspace_id, builder.email)).toEqual([ADMIN_PLACE]);
+    });
+  });
+
   test("publishing with sign-in: live link, the contact released and invited, Continue in dembrane", async () => {
     const status = K.DemoStatus.parse(
       (await start({ sign_in: true, contact_email: "piet@voorbeeldstad.example" })).data,

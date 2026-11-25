@@ -169,14 +169,16 @@ async function makeAdmin(tx: Conn, orgId: string, appUserId: string, nowIso: str
 }
 
 /**
- * The contact as admin of the demo's workspace, the role "Join as admin" gives. Admin of
- * the organisation already reaches it, but the workspace list and the organisation page
- * show direct memberships only, so without this row the demo is hidden once its onboarding
- * step is done. Only a live workspace of this organisation: a shared staff demo workspace
- * is not theirs to join. Any row at all, a removed one included, means the person was
- * there and someone decided about it, so it is left as it is and nothing is revived.
+ * A person as admin of the demo's workspace, the role "Join as admin" gives: the contact
+ * when the demo is released or handed over, and the @dembrane.com staff member who made it
+ * from the seed on. Admin of the organisation already reaches it, but the workspace list
+ * and the organisation page show direct memberships only, so without this row the demo is
+ * hidden once its onboarding step is done. Only a live workspace of this organisation: a
+ * shared staff demo workspace is not theirs to join. Any row at all, a removed one
+ * included, means the person was there and someone decided about it, so it is left as it
+ * is and nothing is revived. Sends nothing.
  */
-async function joinDemoWorkspace(
+export async function joinDemoWorkspace(
   tx: Conn,
   orgId: string,
   workspaceId: string,

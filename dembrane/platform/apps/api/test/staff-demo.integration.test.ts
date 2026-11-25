@@ -1318,4 +1318,398 @@ run("a staff demo where the deployment is production", () => {
       expect(K.DemoCheck.parse(await query.json()).contact).toBeNull();
     });
   });
+
+  // The follow-up: the @dembrane.com staff member who starts a demo is a direct admin of its
+  // workspace from the draft on, so they open, tune and present it in the dashboard. Read
+  // through the real routes, with the organisation's people beside them.
+  describe("the dembrane person who made a demo is in its workspace", () => {
+    let maker: Person;
+    const nowIso = new Date().toISOString();
+    const somebody = async (email: string, name: string, isStaff = false) => {
+      const u = await db.transaction((tx) =>
+        ensureUser(tx, { email, name, passwordHash: null, nowIso }),
+      );
+      const p: Person = { appUserId: u.appUserId, directusUserId: u.userId, isStaff, email };
+      byId.set(u.userId, p);
+      return p;
+    };
+    beforeAll(async () => {
+      maker = await somebody("maker@dembrane.com", "Demo Maker", true);
+    });
+    const send = async (who: Person, method: string, path: string, body?: unknown) => {
+      const res = await app.request(path, {
+        method,
+        headers: as(who),
+        ...(body !== undefined && { body: JSON.stringify(body) }),
+      });
+      return { status: res.status, data: (await res.json()) as Record<string, unknown> };
+    };
+    /** Starts and builds a demo as the maker; answers its draft and its workspace. */
+    const makeDemo = async (body: Record<string, unknown>) => {
+      const res = await send(maker, "POST", "/api/v2/admin/accounts/demos", {
+        website_url: SITE,
+        brief: "Participation for the new waterfront.",
+        language: "en",
+        sign_in: true,
+        ...body,
+      });
+      expect(res.status).toBe(201);
+      const started = K.DemoStatus.parse(res.data);
+      await buildDemo(build, started.id, 1);
+      const view = K.DemoStatus.parse(
+        (await get(maker, `/api/v2/admin/accounts/demos/${started.id}`)).data,
+      );
+      const [row] = await db
+        .select({ seed: schema.account_demo.seed })
+        .from(schema.account_demo)
+        .where(eq(schema.account_demo.id, started.id));
+      return {
+        view,
+        workspace: (row?.seed as { workspace_id?: string } | undefined)?.workspace_id ?? "",
+        project: view.links.projects[0]?.project_id as string,
+      };
+    };
+    const memberList = async (who: Person, workspaceId: string) =>
+      (
+        (await send(who, "GET", `/api/v2/workspaces/${workspaceId}/settings`)).data.members as {
+          id: string;
+          user_id: string;
+          role: string;
+          source: string;
+        }[]
+      )
+        .map((m) => ({ user_id: m.user_id, role: m.role, source: m.source }))
+        .sort((a, b) => a.user_id.localeCompare(b.user_id));
+    const inList = (who: Person, role: string) => ({
+      user_id: who.appUserId as string,
+      role,
+      source: "direct",
+    });
+    const theirList = async (who: Person) =>
+      (
+        (await get(who, "/api/v2/workspaces")).data as {
+          workspaces: { id: string; org_id: string; role: string }[];
+        }
+      ).workspaces;
+
+    describe("a new prospect organisation", () => {
+      let prospect: Awaited<ReturnType<typeof makeDemo>>;
+      let sky: Person;
+      beforeAll(async () => {
+        prospect = await makeDemo({
+          organisation_name: "Saltmarsh Council (sample)",
+          contact_name: "Sky Example",
+          contact_email: "sky@saltmarsh.example",
+        });
+        const [user] = await db
+          .select()
+          .from(schema.app_user)
+          .where(eq(schema.app_user.email, "sky@saltmarsh.example"));
+        sky = {
+          appUserId: user?.id as string,
+          directusUserId: user?.directus_user_id as string,
+          isStaff: false,
+          email: "sky@saltmarsh.example",
+        };
+        byId.set(sky.directusUserId, sky);
+      });
+
+      test("while it is a draft the maker reads the demo's workspace and project through the dashboard's routes", async () => {
+        expect(prospect.view.status).toBe("draft");
+        const settings = await send(
+          maker,
+          "GET",
+          `/api/v2/workspaces/${prospect.workspace}/settings`,
+        );
+        expect(settings.status).toBe(200);
+        expect(settings.data).toMatchObject({
+          name: "dembrane demo",
+          org_id: prospect.view.org_id,
+          my_role: "admin",
+        });
+        expect(await memberList(maker, prospect.workspace)).toEqual([inList(maker, "admin")]);
+        expect((await send(maker, "GET", `/api/v2/projects/${prospect.project}`)).status).toBe(200);
+        // Their workspace list has it. Not a member of the prospect's organisation, the list
+        // calls them external there, as it does every direct row outside one's organisations.
+        expect((await theirList(maker)).find((w) => w.id === prospect.workspace)).toMatchObject({
+          org_id: prospect.view.org_id,
+          role: "external",
+        });
+        // The organisation's own page is for its members: the maker gets the guest's answer.
+        expect((await send(maker, "GET", `/api/v2/orgs/${prospect.view.org_id}`)).status).toBe(403);
+      });
+
+      test("the maker's place takes a seat on the prospect's account: no rule leaves dembrane staff out of seats", async () => {
+        const [account] = await db
+          .select({ id: schema.billing_account.id })
+          .from(schema.billing_account)
+          .where(eq(schema.billing_account.org_id, prospect.view.org_id as string));
+        const emails = await billing.service.accountActiveSeatEmails(account?.id as string);
+        expect([...emails]).toEqual(["maker@dembrane.com"]);
+        expect(await billing.service.countAccountSeats(account?.id as string)).toBe(1);
+      });
+
+      test("released by a publish with sign-in: the contact joins as before and the member list shows both", async () => {
+        const res = await send(
+          maker,
+          "POST",
+          `/api/v2/admin/accounts/demos/${prospect.view.id}/publish`,
+          { sign_in: true },
+        );
+        expect(res.status).toBe(200);
+        const expected = [inList(maker, "admin"), inList(sky, "admin")].sort((a, b) =>
+          a.user_id.localeCompare(b.user_id),
+        );
+        expect(await memberList(sky, prospect.workspace)).toEqual(expected);
+        expect(await memberList(maker, prospect.workspace)).toEqual(expected);
+        expect((await theirList(sky)).find((w) => w.id === prospect.workspace)?.role).toBe("admin");
+      });
+    });
+
+    describe("an organisation the contact already works in, on a paid account", () => {
+      const pier = { org: newId(), billing: newId(), workspace: newId() };
+      const crew = {} as Record<"owner" | "colleague" | "contact", Person>;
+      let placed: Awaited<ReturnType<typeof makeDemo>>;
+      const seats = () => billing.service.countAccountSeats(pier.billing);
+      const provisioned = async () =>
+        (
+          await db
+            .select({ n: schema.billing_account.provisioned_seats })
+            .from(schema.billing_account)
+            .where(eq(schema.billing_account.id, pier.billing))
+        )[0]?.n;
+      /** Everything the dashboard shows a person of the organisation about its workspaces. */
+      const dashboardOf = async (who: Person) => {
+        const org = `/api/v2/orgs/${pier.org}`;
+        const read = async (path: string) => {
+          const r = await send(who, "GET", path);
+          return { status: r.status, data: r.data as unknown };
+        };
+        return {
+          workspaces: await read("/api/v2/workspaces"),
+          organisations: await read("/api/v2/orgs"),
+          overview: await read(org),
+          cards: await read(`${org}/workspaces`),
+          joinable: await read(`${org}/discoverable-workspaces`),
+          projects: await read(`${org}/projects`),
+          usage: await read(`${org}/usage`),
+          members: await read(`${org}/members`),
+        };
+      };
+      /** Notifications that name the demo, and every notification the organisation's people have. */
+      const notices = () =>
+        db
+          .select({ user: schema.notification.audience_user_id })
+          .from(schema.notification)
+          .where(
+            sql`${schema.notification.ref_workspace_id} = ${placed.workspace} or ${schema.notification.ref_project_id} = ${placed.project}`,
+          );
+      const crewNotices = () =>
+        db
+          .select({ id: schema.notification.id })
+          .from(schema.notification)
+          .where(
+            sql`${schema.notification.audience_user_id} in (${crew.owner.appUserId}, ${crew.colleague.appUserId}, ${crew.contact.appUserId})`,
+          );
+
+      beforeAll(async () => {
+        crew.owner = await somebody("owner@pier.example", "Pier Owner");
+        crew.colleague = await somebody("admin@pier.example", "Pier Admin");
+        crew.contact = await somebody("contact@pier.example", "Pier Contact");
+        await db
+          .insert(schema.org)
+          .values({ id: pier.org, name: "Pier Lane", account_stage: "customer" });
+        await db.insert(schema.billing_account).values({
+          id: pier.billing,
+          org_id: pier.org,
+          tier: "innovator",
+          status: "active",
+          payment_mode: "offline",
+          provisioned_seats: 2,
+        });
+        await db.insert(schema.workspace).values({
+          id: pier.workspace,
+          org_id: pier.org,
+          name: "Pier Lane",
+          billing_account_id: pier.billing,
+          visibility: "open_to_organisation",
+          is_default: true,
+        });
+        for (const [key, role] of [
+          ["owner", "owner"],
+          ["colleague", "admin"],
+          ["contact", "member"],
+        ] as const)
+          await db.insert(schema.org_membership).values({
+            id: newId(),
+            org_id: pier.org,
+            user_id: crew[key].appUserId as string,
+            role,
+          });
+        for (const key of ["owner", "contact"] as const)
+          await db.insert(schema.workspace_membership).values({
+            id: newId(),
+            workspace_id: pier.workspace,
+            user_id: crew[key].appUserId as string,
+            role: key === "owner" ? "admin" : "member",
+            source: "direct",
+          });
+      });
+
+      test("while it is a draft the maker opens it, and nobody in the organisation sees, joins or hears of it, and seats stay as they were", async () => {
+        const before = {
+          owner: await dashboardOf(crew.owner),
+          colleague: await dashboardOf(crew.colleague),
+          contact: await dashboardOf(crew.contact),
+        };
+        expect(await seats()).toBe(2);
+        const emailsBefore = (deps.jobs as MemoryJobs).of("account.send-email").length;
+        const sentBefore = mailer.sent.length;
+        const crewNoticesBefore = (await crewNotices()).length;
+        placed = await makeDemo({
+          organisation_name: "Pier demo (sample)",
+          contact_name: "Pier Contact",
+          contact_email: crew.contact.email,
+          org_id: pier.org,
+        });
+        const [where] = await db
+          .select({ org: schema.workspace.org_id })
+          .from(schema.workspace)
+          .where(eq(schema.workspace.id, placed.workspace));
+        expect(where?.org).toBe(pier.org);
+        // The maker is in: the workspace, its member list and the draft project open.
+        expect(
+          (await send(maker, "GET", `/api/v2/workspaces/${placed.workspace}/settings`)).status,
+        ).toBe(200);
+        expect(await memberList(maker, placed.workspace)).toEqual([inList(maker, "admin")]);
+        expect((await send(maker, "GET", `/api/v2/projects/${placed.project}`)).status).toBe(200);
+        expect((await theirList(maker)).some((w) => w.id === placed.workspace)).toBe(true);
+        // The organisation's people are where they were: not found, nothing to join.
+        for (const who of [crew.owner, crew.colleague, crew.contact]) {
+          expect(
+            (await send(who, "GET", `/api/v2/workspaces/${placed.workspace}/settings`)).status,
+          ).toBe(404);
+          expect((await send(who, "GET", `/api/v2/projects/${placed.project}`)).status).toBe(404);
+        }
+        expect(
+          (await send(crew.colleague, "POST", `/api/v2/workspaces/${placed.workspace}/join`))
+            .status,
+        ).toBe(404);
+        const after = {
+          owner: await dashboardOf(crew.owner),
+          colleague: await dashboardOf(crew.colleague),
+          contact: await dashboardOf(crew.contact),
+        };
+        for (const who of ["owner", "colleague", "contact"] as const) {
+          const seen = JSON.stringify(after[who]);
+          expect(seen).not.toContain(placed.workspace);
+          expect(seen).not.toContain(placed.project);
+          expect(seen).not.toContain("maker@dembrane.com");
+          expect(seen).not.toContain("Pier demo");
+          expect(after[who]).toEqual(before[who]);
+        }
+        // The ladders that send notices reach the maker only.
+        expect(await workspaceAdmins(billingStorage(db), placed.workspace)).toEqual([
+          maker.appUserId as string,
+        ]);
+        expect(
+          (await audiences(db).effectiveMembers(placed.workspace)).map((m) => m.userId),
+        ).toEqual([maker.appUserId as string]);
+        expect(await projectsStorage(db).effectiveMemberIds(placed.workspace)).toEqual([
+          maker.appUserId as string,
+        ]);
+        expect(await notices()).toEqual([]);
+        expect(await crewNotices()).toHaveLength(crewNoticesBefore);
+        expect(mailer.sent.slice(sentBefore)).toEqual([]);
+        expect((deps.jobs as MemoryJobs).of("account.send-email")).toHaveLength(emailsBefore);
+        // A workspace made for a demo takes no seats, the maker's included.
+        expect(await seats()).toBe(2);
+        await billing.service.reconcileAccountSeats(pier.billing);
+        expect(await provisioned()).toBe(2);
+      });
+
+      test("handed over with the email on: the contact joins as before, the maker stays, and an admin removes the maker like any member", async () => {
+        expect(placed.workspace).not.toBe("");
+        const res = await send(
+          maker,
+          "POST",
+          `/api/v2/admin/accounts/demos/${placed.view.id}/publish`,
+          { sign_in: true },
+        );
+        expect(res.status).toBe(200);
+        const expected = [inList(maker, "admin"), inList(crew.contact, "admin")].sort((a, b) =>
+          a.user_id.localeCompare(b.user_id),
+        );
+        expect(await memberList(crew.contact, placed.workspace)).toEqual(expected);
+        expect(await memberList(maker, placed.workspace)).toEqual(expected);
+        expect(await seats()).toBe(2);
+        // The contact, its admin now, removes the maker the way they remove anyone.
+        const rows = (
+          await send(crew.contact, "GET", `/api/v2/workspaces/${placed.workspace}/settings`)
+        ).data.members as { id: string; user_id: string }[];
+        const makerRow = rows.find((m) => m.user_id === maker.appUserId);
+        const removed = await send(
+          crew.contact,
+          "DELETE",
+          `/api/v2/workspaces/${placed.workspace}/members/${makerRow?.id}`,
+        );
+        expect(removed.status).toBe(200);
+        expect(await memberList(crew.contact, placed.workspace)).toEqual([
+          inList(crew.contact, "admin"),
+        ]);
+        expect((await send(maker, "GET", `/api/v2/projects/${placed.project}`)).status).not.toBe(
+          200,
+        );
+      });
+    });
+
+    test("a maker who is also an admin of the organisation finds the held demo on its page, and the other admins still do not", async () => {
+      const dock = { org: newId(), billing: newId(), workspace: newId() };
+      const owner = await somebody("owner@dock.example", "Dock Owner");
+      const contact = await somebody("contact@dock.example", "Dock Contact");
+      await db
+        .insert(schema.org)
+        .values({ id: dock.org, name: "Dock Road", account_stage: "customer" });
+      await db
+        .insert(schema.billing_account)
+        .values({ id: dock.billing, org_id: dock.org, tier: "free" });
+      await db.insert(schema.workspace).values({
+        id: dock.workspace,
+        org_id: dock.org,
+        name: "Dock Road",
+        billing_account_id: dock.billing,
+        visibility: "open_to_organisation",
+        is_default: true,
+      });
+      for (const [who, role] of [
+        [owner, "owner"],
+        [maker, "admin"],
+        [contact, "member"],
+      ] as const)
+        await db.insert(schema.org_membership).values({
+          id: newId(),
+          org_id: dock.org,
+          user_id: who.appUserId as string,
+          role,
+        });
+      const demo = await makeDemo({
+        organisation_name: "Dock demo (sample)",
+        contact_name: "Dock Contact",
+        contact_email: contact.email,
+        org_id: dock.org,
+      });
+      const cards = async (who: Person) =>
+        (
+          (await get(who, `/api/v2/orgs/${dock.org}/workspaces`)).data as unknown as {
+            id: string;
+          }[]
+        ).map((c) => c.id);
+      expect(await cards(maker)).toContain(demo.workspace);
+      expect(await cards(owner)).toEqual([dock.workspace]);
+      expect((await theirList(maker)).find((w) => w.id === demo.workspace)?.role).toBe("admin");
+      expect(
+        (await send(owner, "GET", `/api/v2/workspaces/${demo.workspace}/settings`)).status,
+      ).toBe(404);
+    });
+  });
 });
