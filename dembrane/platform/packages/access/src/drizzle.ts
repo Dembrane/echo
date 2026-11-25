@@ -1,6 +1,6 @@
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
-import { and, eq, gt, isNull, or, type SQL, sql } from "drizzle-orm";
+import { and, desc, eq, gt, isNull, or, type SQL, sql } from "drizzle-orm";
 import type { AccessStore, WorkspaceRow } from "./store";
 
 const {
@@ -12,6 +12,22 @@ const {
   billing_account,
   support_access_request,
 } = schema;
+
+type Conn = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+/** How long an approved support request lets its visit make changes. */
+const SUPPORT_APPROVAL_MS = 86_400_000;
+
+/**
+ * Ends the approvals a support visit rests on. A visit row is reused when staff come back,
+ * so every place that ends a visit calls this: a rejoin starts read only, as a new visit.
+ */
+export async function endSupportApprovals(db: Conn, membershipId: string) {
+  await db
+    .update(support_access_request)
+    .set({ membership_id: null })
+    .where(eq(support_access_request.membership_id, membershipId));
+}
 
 export class DrizzleAccessStore implements AccessStore {
   constructor(private readonly db: Db) {}
@@ -64,10 +80,11 @@ export class DrizzleAccessStore implements AccessStore {
     if (!row) return null;
     const { id, ...membership } = row;
     if (membership.source !== "staff_support") return membership;
-    // An approval resolved in the last 24 hours is what lets a support session act.
-    const since = new Date(now.getTime() - 86_400_000).toISOString();
-    const approved = await this.db
-      .select({ id: support_access_request.id })
+    // An approval resolved in the last 24 hours is what lets a support session act, until
+    // 24 hours after it was resolved.
+    const since = new Date(now.getTime() - SUPPORT_APPROVAL_MS).toISOString();
+    const [approval] = await this.db
+      .select({ resolvedAt: support_access_request.resolved_at })
       .from(support_access_request)
       .where(
         and(
@@ -76,8 +93,12 @@ export class DrizzleAccessStore implements AccessStore {
           gt(support_access_request.resolved_at, since),
         ),
       )
+      .orderBy(desc(support_access_request.resolved_at))
       .limit(1);
-    return { ...membership, supportApproved: approved.length > 0 };
+    const until = approval?.resolvedAt
+      ? new Date(new Date(approval.resolvedAt).getTime() + SUPPORT_APPROVAL_MS).toISOString()
+      : null;
+    return { ...membership, supportApproved: until !== null, supportChangeUntil: until };
   }
 
   async orgRole(orgId: string, appUserId: string) {

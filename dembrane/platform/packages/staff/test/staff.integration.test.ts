@@ -160,7 +160,11 @@ run("staff console against Postgres", () => {
       .where(eq(schema.scheduled_task.task_type, "revoke_staff_support"));
     expect(tasks.map((t) => t.status).sort()).toEqual(["cancelled", "scheduled"]);
     const status = await json(call("staff", "GET", `/api/v2/admin/workspaces/${WS2}/join-support`));
-    expect(status).toMatchObject({ active: true, membership_id: joined.membership_id });
+    expect(status).toMatchObject({
+      active: true,
+      membership_id: joined.membership_id,
+      can_change: false,
+    });
 
     // A day later the timer fires.
     now = new Date("2026-09-28T10:00:01Z");

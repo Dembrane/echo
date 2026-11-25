@@ -1,4 +1,5 @@
 import {
+  endSupportApprovals,
   POLICIES,
   type Policy,
   ROLE_POLICIES,
@@ -487,6 +488,7 @@ export function settingsService(deps: TenancyDeps) {
       const ws = await workspaceById(db, ctx.workspaceId);
       await db.transaction(async (tx) => {
         await updateMembership(tx, m.id, { deleted_at: iso(now), updated_at: iso(now) });
+        if (m.source === "staff_support") await endSupportApprovals(tx, m.id);
         await reconcileSeats(deps.jobs, tx, ws?.billing_account_id);
         if (m.user_id !== ctx.who.appUserId)
           await emit(tx, now, m.user_id, {

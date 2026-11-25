@@ -258,6 +258,20 @@ export function staffStorage(db: Db) {
       return row ?? null;
     },
 
+    /** An organisation's live workspaces by name, for the account page's support access. */
+    async orgWorkspaces(orgId: string) {
+      return db
+        .select({
+          id: workspace.id,
+          name: workspace.name,
+          allow_support_access: workspace.allow_support_access,
+          settings: workspace.settings,
+        })
+        .from(workspace)
+        .where(and(eq(workspace.org_id, orgId), isNull(workspace.deleted_at)))
+        .orderBy(asc(workspace.name), asc(workspace.id));
+    },
+
     async updateWorkspace(id: string, patch: Partial<typeof workspace.$inferInsert>, now: Date) {
       await db
         .update(workspace)

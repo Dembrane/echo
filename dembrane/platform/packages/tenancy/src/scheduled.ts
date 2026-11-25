@@ -1,3 +1,4 @@
+import { endSupportApprovals } from "@dembrane/access";
 import type { Db } from "@dembrane/db";
 import { iso } from "./db";
 import {
@@ -49,6 +50,7 @@ export async function revokeStaffSupport(d: RunnerDeps, membershipId: string, wo
     // A deleted id can be reactivated as a real member; never strip that.
     if (!m || m.deleted_at || m.source !== "staff_support") return false;
     await updateMembership(tx, membershipId, { deleted_at: iso(now), updated_at: iso(now) });
+    await endSupportApprovals(tx, membershipId);
     await recordSupportEvent(d, tx, now, {
       workspaceId,
       event: "staff_auto_revoked",

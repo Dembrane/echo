@@ -31,19 +31,35 @@ Staff who come in this way can only read.
 
 ### A request
 
-While the switch is off, a staff member can ask for access. Workspace admins get a
-notification and the email "dembrane staff requested access to {workspace_name}", with the
-staff member's note if they wrote one.
+A staff member can ask for access at any time. When the switch is on and they are already
+in to read, approving their request lets that person make changes for 24 hours. Workspace
+admins get a notification and the email "dembrane staff requested access to
+{workspace_name}", with the staff member's note if they wrote one.
 
-The request shows under "Pending access requests" as "{name} from dembrane", with "Approve"
-and "Decline". Approving asks you to confirm: "Give {name} from dembrane admin access to
-this workspace for 24 hours? Access ends automatically."
+While a request waits, workspace admins also see the dialog "Support access request" in
+dembrane: "{name} from dembrane asks for admin access to {workspace_name} for 24 hours, to
+help you with support. Access ends automatically.", with "Their note:" and the note when
+the staff member wrote one. It opens when you open dembrane, or within about a minute when
+you are already in it, one request at a time, oldest first. It does not open by itself in
+Present mode.
+
+- "Approve for 24 hours" lets that staff member in ("Access granted for 24 hours.").
+- "Decline" lets nobody in ("Request declined.").
+- Closing it leaves the request waiting. The dialog stays away until your next browser
+  session, and clicking the notification in your inbox opens it again.
+
+The request also shows under "Pending access requests" as "{name} from dembrane", with
+"Approve" and "Decline". Approving there asks you to confirm: "Give {name} from dembrane
+admin access to this workspace for 24 hours? Access ends automatically."
 
 Staff who come in this way can do what a workspace admin can, except:
 
 - invite people or manage members
 - change workspace settings
 - delete projects, reports or conversations
+
+An approval ends with that visit. If the staff member leaves, or the visit ends, and they
+come back later, they come back to read only unless you approve a new request.
 
 Approving a request does not turn the switch on. A request nobody answers expires after 7
 days. If you turn the switch on while a request is waiting, the request is cancelled,

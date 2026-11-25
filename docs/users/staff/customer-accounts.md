@@ -29,6 +29,7 @@ Select a row to open the account card.
 | "Documents" | Offers, agreements and invoices. "Push offer" and "Upload PDF" start a new one. |
 | "Tasks" | What the customer still has to do, and their answers. |
 | "Questions" | Questions from the customer, and your replies. |
+| "Support access" | Each workspace of the organisation, with what access you have there ("No access", "Request sent", "Read access on", "Read only", "Can edit" or "Demo draft") and the next step: "Request access", "Join read-only" or "Open". See [support access](./support-access.md). |
 | "Stage" | Prospect, Customer or Churned. A prospect becomes a customer when they sign an offer. |
 | "Needs form and demo" | The customer's needs form (reference, email, booked call, answers) and the link to their demo. |
 | "Billing details" | What the customer filled in for their invoices. You read it, and you can change how invoices are delivered. |

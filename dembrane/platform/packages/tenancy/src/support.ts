@@ -1,3 +1,4 @@
+import { endSupportApprovals } from "@dembrane/access";
 import { ConflictError, newId } from "@dembrane/core";
 import { localesOfAppUsers } from "@dembrane/i18n";
 import { type Conn, iso } from "./db";
@@ -374,6 +375,7 @@ export async function maybeAutoDisable(
 export async function revokeAllSupport(d: SupportDeps, tx: Conn, now: Date, workspaceId: string) {
   for (const row of await supportMemberships(tx, workspaceId)) {
     await updateMembership(tx, row.id, { deleted_at: iso(now), updated_at: iso(now) });
+    await endSupportApprovals(tx, row.id);
     await cancelPendingTasks(tx, iso(now), "revoke_staff_support", { membership_id: row.id });
     const m = await membershipById(tx, row.id);
     await recordSupportEvent(d, tx, now, {

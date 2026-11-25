@@ -1,6 +1,7 @@
 export { Access } from "./authorize";
 export {
   DrizzleAccessStore,
+  endSupportApprovals,
   HELD_FOR_DEMO,
   heldForDemo,
   MADE_FOR_DEMO,

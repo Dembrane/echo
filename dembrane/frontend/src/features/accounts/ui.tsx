@@ -1,15 +1,20 @@
 import { Box, Group, Text } from "@mantine/core";
 import type { ReactNode } from "react";
 
-/** A titled block on the account page and the staff card: title left, its action right. */
+/**
+ * A titled block on the account page and the staff card: title left, its action right.
+ * `info` is an InfoTip beside the title, for what would otherwise sit on the page.
+ */
 export const Section = ({
 	title,
+	info,
 	action,
 	children,
 	id,
 	testId,
 }: {
 	title: ReactNode;
+	info?: ReactNode;
 	action?: ReactNode;
 	children: ReactNode;
 	id?: string;
@@ -23,7 +28,14 @@ export const Section = ({
 			gap="xs"
 			wrap="nowrap"
 		>
-			<Text>{title}</Text>
+			{info ? (
+				<Group gap={4} wrap="nowrap">
+					<Text>{title}</Text>
+					{info}
+				</Group>
+			) : (
+				<Text>{title}</Text>
+			)}
 			{action}
 		</Group>
 		{children}
