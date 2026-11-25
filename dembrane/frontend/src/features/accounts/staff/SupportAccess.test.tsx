@@ -196,7 +196,7 @@ describe("the account page's support access rows", () => {
 		await show([workspace("Research", { support_access_enabled: true })]);
 		expect(await rowOf("Research")).toEqual({
 			detail: "",
-			items: ["Request access"],
+			items: ["Ask to edit"],
 			next: ["Join read-only"],
 			state: "on",
 			status: "Read access on",
@@ -221,12 +221,13 @@ describe("the account page's support access rows", () => {
 		]);
 		const row = await rowOf("Climate");
 		expect(row).toMatchObject({
-			items: ["Request access", "Extend visit by 24 hours", "End visit now"],
+			items: ["Ask to edit", "Extend visit by 24 hours", "End visit now"],
 			next: ["Open"],
 			state: "read",
 			status: "Read only",
 		});
-		expect(row.detail).toMatch(/^Until /);
+		// Day, month and time: a visit ends within a day or two, so no year.
+		expect(row.detail).toMatch(/^Until Nov \d+, \d+:\d{2} [AP]M$/);
 		expect(row.detail).not.toContain("Request");
 	});
 
@@ -245,7 +246,9 @@ describe("the account page's support access rows", () => {
 			state: "read",
 			status: "Read only",
 		});
-		expect(row.detail).toMatch(/^Until .+\. Request to edit sent$/);
+		expect(row.detail).toMatch(
+			/^Until Nov \d+, \d+:\d{2} [AP]M\. Request to edit sent$/,
+		);
 	});
 
 	it("can edit with the switch on: no asking, and extending is offered", async () => {
@@ -280,6 +283,7 @@ describe("the account page's support access rows", () => {
 			});
 		expect(detail).toContain(at(CHANGE_UNTIL));
 		expect(detail).not.toContain(at(UNTIL));
+		expect(detail).not.toContain("2026");
 	});
 
 	it("a demo that is not published: its badge and nothing to do", async () => {
@@ -298,5 +302,17 @@ describe("the account page's support access rows", () => {
 		fireEvent.click(screen.getByTestId("staff-support-request"));
 		const dialog = await screen.findByRole("dialog");
 		expect(dialog.textContent).toContain("Tell the admins of Panels");
+	});
+
+	it("asking to edit from a read-only visit opens the same note dialog", async () => {
+		await show([
+			workspace("Climate", { support_access_enabled: true, visit: read }),
+		]);
+		fireEvent.click(screen.getByTestId("staff-support-menu"));
+		fireEvent.click(
+			await screen.findByRole("menuitem", { name: "Ask to edit" }),
+		);
+		const dialog = await screen.findByRole("dialog");
+		expect(dialog.textContent).toContain("Tell the admins of Climate");
 	});
 });

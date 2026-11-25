@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { InfoTip } from "@/components/common/InfoTip";
 import { I18nLink } from "@/components/common/i18nLink";
+import { formatTimestamp } from "@/components/map/panels/shared";
 import { SupportRequestNoteModal } from "@/components/workspace/SupportRequestNoteModal";
 import {
 	orgWorkspacesKey,
@@ -22,7 +23,7 @@ import {
 } from "@/components/workspace/supportVisit";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { formatDate, formatDateTime } from "../format";
+import { formatDate } from "../format";
 import { Section } from "../ui";
 
 /** One workspace of the organisation, with the caller's own visit and waiting request. */
@@ -270,6 +271,11 @@ export function VisitRow({ ws }: { ws: OrgWorkspace }) {
 		onClick: () => setNoteOpen(true),
 		testId: "staff-support-request",
 	};
+	// With read access already on, what a request adds is the right to edit, so it says so.
+	const askToEdit: Step = {
+		...request,
+		label: <Trans>Ask to edit</Trans>,
+	};
 	const cancel: Step = {
 		label: <Trans>Cancel request</Trans>,
 		loading: actions.cancelRequest.isPending,
@@ -294,7 +300,8 @@ export function VisitRow({ ws }: { ws: OrgWorkspace }) {
 			// Extending needs the switch on, as joining does.
 			const extendLeave = on ? [extend, leave] : [leave];
 			if (visit.can_change) {
-				const until = formatDateTime(
+				// A visit ends within a day or two, so the time goes without the year.
+				const until = formatTimestamp(
 					visit.change_until ?? visit.expires_at,
 					i18n.locale,
 				);
@@ -307,12 +314,12 @@ export function VisitRow({ ws }: { ws: OrgWorkspace }) {
 				};
 			}
 			// A read-only visit can still ask the admins to let it edit.
-			const until = formatDateTime(visit.expires_at, i18n.locale);
+			const until = formatTimestamp(visit.expires_at, i18n.locale);
 			return {
 				detail: waiting
 					? t`Until ${until}. Request to edit sent`
 					: t`Until ${until}`,
-				more: [waiting ? cancel : request, ...extendLeave],
+				more: [waiting ? cancel : askToEdit, ...extendLeave],
 				next: open,
 				state: "read",
 				status: { color: "green", label: <Trans>Read only</Trans> },
@@ -330,7 +337,7 @@ export function VisitRow({ ws }: { ws: OrgWorkspace }) {
 		}
 		if (on)
 			return {
-				more: [request],
+				more: [askToEdit],
 				next: join,
 				state: "on",
 				status: { color: "gray", label: <Trans>Read access on</Trans> },

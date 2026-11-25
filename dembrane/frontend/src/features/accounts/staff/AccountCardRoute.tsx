@@ -193,7 +193,7 @@ function Documents({ orgId, card }: { orgId: string; card: AccountCardT }) {
 		<Menu position="bottom-end" withinPortal>
 			<Menu.Target>
 				<UnstyledButton aria-label={t`Actions`} p={4}>
-					<DotsThreeIcon size={18} />
+					<DotsThreeIcon size={20} />
 				</UnstyledButton>
 			</Menu.Target>
 			<Menu.Dropdown>

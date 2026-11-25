@@ -22,8 +22,8 @@ sees every step.
 |---|---|---|---|
 | "No access" | Support access is off and you have not asked. | "Request access". An admin of the workspace decides. | |
 | "Request sent" | You asked and the admins have not answered yet. The line under the name says when the request expires. | "Cancel request" takes it back. | "Join read-only", while the switch is on |
-| "Read access on" | The customer has support access switched on. | "Join read-only". Your visit starts at once. | "Request access" |
-| "Read only" | You are in to read, until the time under the name. If you asked to edit, the line says "Request to edit sent". | "Open" | "Request access" (or "Cancel request"), "Extend visit by 24 hours", "End visit now" |
+| "Read access on" | The customer has support access switched on. | "Join read-only". Your visit starts at once. | "Ask to edit" |
+| "Read only" | You are in to read, until the time under the name. If you asked to edit, the line says "Request to edit sent". | "Open" | "Ask to edit" (or "Cancel request"), "Extend visit by 24 hours", "End visit now" |
 | "Can edit" | An admin approved your request. You can edit until the time under the name. | "Open" | "Extend visit by 24 hours" (while the switch is on), "End visit now" |
 | "Demo draft" | The workspace holds a demo that is not published yet. | Nothing. Open the draft from the demo's page. | |
 
@@ -43,7 +43,8 @@ for support".
 
 ### Request access
 
-1. Select "Request access".
+1. Select "Request access". Where you can already read, the step is "Ask to edit" under the
+   three-dot button; it sends the same request.
 2. Write what you need access for. The note is optional, and the admins of that workspace read
    it. For example: "investigating the report issue you emailed about".
 3. Select "Send request".
