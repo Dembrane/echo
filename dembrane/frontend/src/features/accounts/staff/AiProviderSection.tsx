@@ -20,6 +20,7 @@ import { useState } from "react";
 import {
 	AI_JOBS,
 	type AiHistoryLine,
+	type AiModels,
 	type AiJob,
 	type AiProvider,
 	aiRequest,
@@ -51,7 +52,7 @@ export interface StaffAiProviders {
 	serves: Record<AiProvider, AiJob[]>;
 	enabled: Record<AiJob, AiProvider[]>;
 	defaults: Record<AiJob, AiProvider>;
-	models?: Partial<Record<AiProvider, string[]>>;
+	models?: AiModels;
 	cost: CostLines;
 	month: { from: string; spent: Record<AiProvider, number> };
 	history: AiHistoryLine[];
@@ -232,7 +233,7 @@ export function AiProviderSection({ orgId }: { orgId: string }) {
 						</Group>
 					))}
 					<Text size="sm" c="dimmed" data-testid="ai-provider-google-month">
-						<Trans>Google this month: EUR {google}</Trans>
+						<Trans>Google this month: {google}</Trans>
 					</Text>
 				</Stack>
 				{data.history.length > 0 && (
@@ -348,7 +349,7 @@ function EditForm({
 									<Box key={p} data-testid={`edit-provider-${job}-${p}`}>
 										<ProviderCard
 											provider={p}
-											models={data.models?.[p]}
+											models={data.models?.[p]?.[job]}
 											muted={!on}
 											cost={costText(data.cost[job][p], i18n.locale)}
 											badge={

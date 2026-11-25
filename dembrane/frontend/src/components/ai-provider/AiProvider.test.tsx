@@ -27,6 +27,7 @@ import type {
 	OrgAiProviders,
 	ProjectAiProviders,
 } from "./hooks";
+import { euros } from "./hooks";
 import { OrgAiProviderPanel, requestTicket } from "./OrgAiProviderPanel";
 import { modelNames, ProviderCard } from "./ProviderCard";
 
@@ -93,29 +94,47 @@ const tree = (ui: React.ReactNode) => (
 );
 const wrap = (ui: React.ReactNode) => render(tree(ui));
 
-const MODELS = { scaleway: ["whisper-large-v3", "glm-5.3"] };
+const MODELS = {
+	scaleway: {
+		analysis: ["glm-5.3"],
+		transcription: ["whisper-large-v3"],
+	},
+};
 
-it("a Scaleway card names its models from the config and a Google card lists its own lines", () => {
+it("a Scaleway card names the models of its job from the config and a Google card lists its own lines", () => {
 	wrap(
 		<>
-			<ProviderCard provider="scaleway" models={MODELS.scaleway} />
+			<ProviderCard
+				provider="scaleway"
+				models={MODELS.scaleway.transcription}
+			/>
+			<ProviderCard provider="scaleway" models={MODELS.scaleway.analysis} />
 			<ProviderCard provider="google" />
 		</>,
 	);
 	for (const line of [
-		"Paris",
-		"Open models: Whisper and GLM 5.3",
-		"Good for English and Dutch",
+		"Open models: Whisper",
+		"Open models: GLM 5.3",
 		"EU",
 		"Slightly better quality",
 		"Closed models: Gemini",
 	])
 		expect(screen.getByText(line)).toBeTruthy();
-	expect(screen.getAllByText("Runs in the EU")).toHaveLength(2);
-	expect(screen.getByText("Scaleway")).toBeTruthy();
+	expect(screen.getAllByText("Paris")).toHaveLength(2);
+	expect(screen.getAllByText("Good for English and Dutch")).toHaveLength(2);
+	expect(screen.getAllByText("Runs in the EU")).toHaveLength(3);
+	expect(screen.getAllByText("Scaleway")).toHaveLength(2);
 	expect(screen.getByText("Google Vertex AI")).toBeTruthy();
-	expect(screen.getByTestId("provider-logo-scaleway")).toBeTruthy();
+	expect(screen.getAllByTestId("provider-logo-scaleway")).toHaveLength(2);
 	expect(screen.getByTestId("provider-logo-google")).toBeTruthy();
+});
+
+it("amounts are written in the reader's locale with the euro sign", () => {
+	expect(euros(12, "en-US", "estimate")).toBe("€12");
+	expect(euros(12.4, "en-GB")).toBe("€12.40");
+	expect(euros(12, "nl-NL", "estimate")).toBe("€\u00a012");
+	// Below one euro an estimate keeps its cents.
+	expect(euros(0.5, "en-US", "estimate")).toBe("€0.50");
 });
 
 it("a model the map does not know shows as its id, and one name is shown once", () => {
@@ -199,13 +218,22 @@ it("an account with only Scaleway shows two jobs, Scaleway as default and Google
 				.querySelector("[data-muted]"),
 		).toBeNull();
 	}
+	// Each job's card names the models of that job only.
+	for (const [job, models] of [
+		["transcription", "Open models: Whisper"],
+		["analysis", "Open models: GLM 5.3"],
+	] as const) {
+		const card = within(screen.getByTestId(`org-provider-${job}-scaleway`));
+		expect(card.getByText(models)).toBeTruthy();
+		expect(card.getAllByText(/^Open models:/)).toHaveLength(1);
+	}
 	// One cost line per card: included, or what an hour or a hundred questions would cost.
 	expect(screen.getAllByText("Included in your plan")).toHaveLength(2);
-	expect(screen.getByText("EUR 1.80 per hour of audio")).toBeTruthy();
-	expect(screen.getByText("EUR 2.50 per 100 questions")).toBeTruthy();
+	expect(screen.getByText("€1.80 per hour of audio")).toBeTruthy();
+	expect(screen.getByText("€2.50 per 100 questions")).toBeTruthy();
 	expect(screen.getAllByText("Request")).toHaveLength(2);
 	expect(
-		screen.getByText("This month: Scaleway included, Google EUR 0.00"),
+		screen.getByText("This month: Scaleway included, Google €0.00"),
 	).toBeTruthy();
 });
 
@@ -297,7 +325,7 @@ it("Google enabled for analysis only: Default and Enabled badges, the price at l
 	expect(within(analysis).queryByText("Not enabled")).toBeNull();
 	expect(
 		within(analysis).getByText(
-			"About EUR 9 a month at your last 30 days of use, billed on top",
+			"About €9 a month at your last 30 days of use, billed on top",
 		),
 	).toBeTruthy();
 	expect(
@@ -309,7 +337,7 @@ it("Google enabled for analysis only: Default and Enabled badges, the price at l
 		screen.getByText("3 Dec 2026 · Google Vertex AI enabled for Analysis"),
 	).toBeTruthy();
 	expect(
-		screen.getByText("This month: Scaleway included, Google EUR 12.40"),
+		screen.getByText("This month: Scaleway included, Google €12.40"),
 	).toBeTruthy();
 });
 
@@ -369,12 +397,12 @@ it("the project shows a choice per job with the account default marked and a cos
 	expect(screen.getAllByText("Account default")).toHaveLength(2);
 	expect(
 		within(screen.getByTestId("project-job-analysis")).getByText(
-			"About EUR 9 a month at your last 30 days of use, billed on top",
+			"About €9 a month at your last 30 days of use, billed on top",
 		),
 	).toBeTruthy();
 	expect(
 		within(screen.getByTestId("project-job-transcription")).getByText(
-			"EUR 1.80 per hour of audio",
+			"€1.80 per hour of audio",
 		),
 	).toBeTruthy();
 });
@@ -388,7 +416,7 @@ it("choosing Google for a job asks once, with the price, and saves only that job
 	).toBeTruthy();
 	expect(
 		screen.getByText(
-			"Analysis in this project goes to Google in the EU, billed on top of your plan, about EUR 9 a month at your last 30 days of use.",
+			"Analysis in this project goes to Google in the EU, billed on top of your plan, about €9 a month at your last 30 days of use.",
 		),
 	).toBeTruthy();
 	expect(mutate).not.toHaveBeenCalled();

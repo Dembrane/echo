@@ -108,7 +108,7 @@ export const OrgAiProviderPanel = ({
 									<Box key={p} data-testid={`org-provider-${job}-${p}`}>
 										<ProviderCard
 											provider={p}
-											models={data.models?.[p]}
+											models={data.models?.[p]?.[job]}
 											muted={!has}
 											cost={costText(data.cost[job][p], i18n.locale)}
 											badge={
@@ -145,7 +145,7 @@ export const OrgAiProviderPanel = ({
 				</Paper>
 			)}
 			<Text size="sm" c="dimmed" data-testid="ai-provider-month">
-				<Trans>This month: Scaleway included, Google EUR {google}</Trans>
+				<Trans>This month: Scaleway included, Google {google}</Trans>
 			</Text>
 		</Stack>
 	);

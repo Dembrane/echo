@@ -59,7 +59,10 @@ export const orgScaleway = {
 	history: [],
 	jobs: ["transcription", "analysis"],
 	models: {
-		scaleway: ["whisper-large-v3", "glm-5.3"],
+		scaleway: {
+			analysis: ["glm-5.3"],
+			transcription: ["whisper-large-v3"],
+		},
 	},
 	month: {
 		from: "2026-11-01T00:00:00.000Z",
@@ -134,7 +137,10 @@ export const orgGoogleForAnalysis = {
 	],
 	jobs: ["transcription", "analysis"],
 	models: {
-		scaleway: ["whisper-large-v3", "glm-5.3"],
+		scaleway: {
+			analysis: ["glm-5.3"],
+			transcription: ["whisper-large-v3"],
+		},
 	},
 	month: {
 		from: "2026-11-01T00:00:00.000Z",
@@ -204,7 +210,10 @@ export const projectChoices = {
 		},
 	},
 	models: {
-		scaleway: ["whisper-large-v3", "glm-5.3"],
+		scaleway: {
+			analysis: ["glm-5.3"],
+			transcription: ["whisper-large-v3"],
+		},
 	},
 } as unknown as ProjectAiProviders;
 
@@ -301,7 +310,10 @@ export const staffAccount = {
 	],
 	jobs: ["transcription", "analysis"],
 	models: {
-		scaleway: ["whisper-large-v3", "glm-5.3"],
+		scaleway: {
+			analysis: ["glm-5.3"],
+			transcription: ["whisper-large-v3"],
+		},
 	},
 	month: {
 		from: "2026-11-01T00:00:00.000Z",

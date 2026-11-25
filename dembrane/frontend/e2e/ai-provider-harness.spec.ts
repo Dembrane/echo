@@ -76,7 +76,7 @@ for (const size of sizes) {
 					"Google Vertex AI enabled for Analysis",
 				);
 				await expect(page.getByTestId("ai-provider-month")).toContainText(
-					"This month: Scaleway included, Google EUR",
+					"This month: Scaleway included, Google €",
 				);
 				await shot(page, "1c-org-ai-provider-with-google");
 			});
@@ -98,7 +98,7 @@ for (const size of sizes) {
 					"Use Google Vertex AI for Analysis?",
 				);
 				await expect(dialog).toContainText(
-					"about EUR 4 a month at your last 30 days of use",
+					"about €4 a month at your last 30 days of use",
 				);
 				// Let the dialog finish its entrance before it is drawn.
 				await page.waitForTimeout(500);
@@ -113,7 +113,7 @@ for (const size of sizes) {
 				await expect(page.getByTestId("summary-transcription")).toBeVisible();
 				await expect(
 					page.getByTestId("ai-provider-google-month"),
-				).toContainText("Google this month: EUR");
+				).toContainText("Google this month: €");
 				await page.getByTestId("ai-provider-show-all").click();
 				await shot(page, "3-staff-ai-provider");
 				await page.getByTestId("ai-provider-edit").click();

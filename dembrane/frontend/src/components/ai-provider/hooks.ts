@@ -14,6 +14,9 @@ export type AiJob = "transcription" | "analysis";
 export const AI_JOBS: readonly AiJob[] = ["transcription", "analysis"];
 
 /** What one provider costs for one job, as the server worked it out from the call log. */
+/** The model ids each provider uses for each job, from the deployment's config. */
+export type AiModels = Partial<Record<AiProvider, Partial<Record<AiJob, string[]>>>>;
+
 export interface CostLine {
 	job: AiJob;
 	provider: AiProvider;
@@ -47,8 +50,8 @@ export interface OrgAiProviders {
 	/** What the account has enabled for each job. */
 	enabled: Record<AiJob, AiProvider[]>;
 	defaults: Record<AiJob, AiProvider>;
-	/** The model ids each provider uses on this deployment, from its config. */
-	models?: Partial<Record<AiProvider, string[]>>;
+	/** The model ids each provider uses for each job on this deployment, from its config. */
+	models?: AiModels;
 	cost: CostLines;
 	/** What the account has spent since the month began, in euros. */
 	month: { from: string; spent: Record<AiProvider, number> };
@@ -65,8 +68,8 @@ export interface JobChoice {
 export interface ProjectAiProviders {
 	jobs: Record<AiJob, JobChoice>;
 	can_change: boolean;
-	/** The model ids each provider uses on this deployment, from its config. */
-	models?: Partial<Record<AiProvider, string[]>>;
+	/** The model ids each provider uses for each job on this deployment, from its config. */
+	models?: AiModels;
 	/** What each provider would cost this project from its own last 30 days. */
 	cost: CostLines;
 }
@@ -146,8 +149,8 @@ export const jobName = (job: AiJob): string =>
 	job === "transcription" ? t`Transcription` : t`Analysis`;
 
 /**
- * Euros in the reader's format. An estimate is a whole number from one euro up ("About EUR 9"),
- * a price or an amount spent is exact to the cent ("EUR 1.80").
+ * Euros as the reader's locale writes them ("€12" in English, "€ 12" in Dutch). An estimate is
+ * a whole amount from one euro up, a price or an amount spent is exact to the cent.
  */
 export const euros = (
 	n: number,
@@ -155,9 +158,11 @@ export const euros = (
 	style: "estimate" | "exact" = "exact",
 ): string => {
 	const whole = style === "estimate" && n >= 1;
-	return new Intl.NumberFormat(locale.startsWith("en") ? "en-GB" : locale, {
+	return new Intl.NumberFormat(locale, {
+		currency: "EUR",
 		maximumFractionDigits: whole ? 0 : 2,
 		minimumFractionDigits: whole ? 0 : 2,
+		style: "currency",
 	}).format(n);
 };
 
@@ -174,15 +179,15 @@ export const costText = (
 	if (line.billing === "included") return t`Included in your plan`;
 	if (line.monthly_eur !== null) {
 		const n = euros(line.monthly_eur, locale, "estimate");
-		return t`About EUR ${n} a month at your last 30 days of use, billed on top`;
+		return t`About ${n} a month at your last 30 days of use, billed on top`;
 	}
 	if (line.per_hour_eur !== null) {
 		const n = euros(line.per_hour_eur, locale);
-		return t`EUR ${n} per hour of audio`;
+		return t`${n} per hour of audio`;
 	}
 	if (line.per_100_calls_eur !== null) {
 		const n = euros(line.per_100_calls_eur, locale);
-		return t`EUR ${n} per 100 questions`;
+		return t`${n} per 100 questions`;
 	}
 	return null;
 };

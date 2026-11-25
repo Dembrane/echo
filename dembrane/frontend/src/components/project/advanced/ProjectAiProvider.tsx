@@ -98,7 +98,7 @@ export const ProjectAiProvider = ({
 											render: (checked) => (
 												<ProviderCard
 													provider={p}
-													models={data.models?.[p]}
+													models={data.models?.[p]?.[job]}
 													selected={checked}
 													flush
 													cost={costText(data.cost[job][p], i18n.locale)}
@@ -126,7 +126,7 @@ export const ProjectAiProvider = ({
 						amount !== null ? (
 							<Trans>
 								{asking} in this project goes to Google in the EU, billed on top
-								of your plan, about EUR {amount} a month at your last 30 days of
+								of your plan, about {amount} a month at your last 30 days of
 								use.
 							</Trans>
 						) : (
