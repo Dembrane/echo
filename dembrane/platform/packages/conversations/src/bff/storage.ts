@@ -16,7 +16,7 @@ import {
   type SQL,
   sql,
 } from "drizzle-orm";
-import { isUuid, type Row } from "../storage";
+import { FINAL_GAVE_UP, isUuid, type Row } from "../storage";
 
 const {
   conversation,
@@ -447,16 +447,34 @@ export function bffStore(db: Db) {
       return row ?? null;
     },
 
-    /** Whether a final transcript pass is queued or running for the conversation, so the dashboard says it is on its way. */
-    async finalQueued(conversationId: string): Promise<boolean> {
-      if (!isUuid(conversationId)) return false;
-      const rows = await db.execute<{ one: number }>(sql`
-        select 1 as one from dbos.workflow_status
-        where name = 'conversations.final-transcript'
-          and workflow_uuid like ${`conversations.final-transcript:${conversationId}:%`}
-          and status in ('ENQUEUED', 'PENDING', 'DELAYED')
-        limit 1`);
-      return rows.length > 0;
+    /** Whether the conversation has any recorded audio: only those get a final transcript. */
+    async hasAudio(conversationId: string): Promise<boolean> {
+      const [row] = await db
+        .select({ id: conversation_chunk.id })
+        .from(conversation_chunk)
+        .where(
+          and(
+            eq(conversation_chunk.conversation_id, conversationId),
+            isNotNull(conversation_chunk.path),
+          ),
+        )
+        .limit(1);
+      return Boolean(row);
+    },
+
+    /** Whether the final transcript job ended without one, so the dashboard stops saying it is on its way. */
+    async finalGaveUp(conversationId: string): Promise<boolean> {
+      const [row] = await db
+        .select({ id: processing_status.id })
+        .from(processing_status)
+        .where(
+          and(
+            eq(processing_status.conversation_id, conversationId),
+            eq(processing_status.event, FINAL_GAVE_UP),
+          ),
+        )
+        .limit(1);
+      return Boolean(row);
     },
 
     async chunkPage(

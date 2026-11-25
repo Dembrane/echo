@@ -7,7 +7,8 @@ import { directusRow, pythonIso } from "@dembrane/legacy-shape";
 import { projectsStorage, sameMoveContext } from "@dembrane/projects";
 import { conversationForBff } from "../access";
 import type { ConversationsDeps } from "../deps";
-import type { Row } from "../storage";
+import { improvesOf } from "../speech";
+import { type Row, UPLOAD_SOURCE } from "../storage";
 import { NO_TRANSCRIPT_SUMMARY } from "../v1/summary";
 import { conversationLock, enrich, overCapActive, scrubChunk } from "./lock";
 import {
@@ -387,6 +388,18 @@ export async function replaceTags(
   return (await store.tagRows([conversationId])).map((t) => tagRow(t, true));
 }
 
+/**
+ * What a final pass would improve for this conversation. A deployment with one provider
+ * answers with its profile, as it always has; with several, the conversation's own provider
+ * is asked, since the pass that runs is the one the conversation's start record and its
+ * project's setting resolve to, and a provider that improves nothing never queues one.
+ */
+async function improvesFor(d: AudioDeps, conversationId: string) {
+  if (d.speech && Object.keys(d.speech.kits).length > 1)
+    return (await improvesOf(d.speech, conversationId)) ?? d.settings.improves;
+  return d.settings.improves;
+}
+
 // A signed link outlives an hour of listening to the transcript.
 const PLAYER_URL_S = 3 * 3600;
 
@@ -406,9 +419,18 @@ export async function finalTranscript(d: AudioDeps, who: Signed, conversationId:
   );
   const record = await store.recordTranscript(conversationId);
   if (!record) {
-    // On its way only while a final pass is queued or running for this conversation: one
-    // that finished without a pass (it ended on a provider that improves nothing) never gets one.
-    const expected = await store.finalQueued(conversationId);
+    // Is a final transcript on its way? The conversation's provider improves this kind of
+    // conversation, it has audio, and it is not so old that the job has long since given up (a
+    // conversation it failed on must not say "draft" forever).
+    const fresh =
+      !a.conversation.is_finished ||
+      d.now().getTime() - new Date(a.conversation.created_at ?? 0).getTime() < 24 * 3600_000;
+    const improves = await improvesFor(d, conversationId);
+    const expected =
+      Boolean(a.conversation.source === UPLOAD_SOURCE ? improves?.uploads : improves?.recordings) &&
+      fresh &&
+      (await store.hasAudio(conversationId)) &&
+      !(await store.finalGaveUp(conversationId));
     return { available: false as const, expected };
   }
   if (locked) return { available: true as const, locked: true as const };

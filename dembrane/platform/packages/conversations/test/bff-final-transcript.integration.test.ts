@@ -13,13 +13,16 @@ import { admin, freshDatabase, quiet } from "./pipeline-harness";
 
 const run = admin ? describe : describe.skip;
 
-// "Improving transcript" is shown only while a final pass is queued or running for the
-// conversation; one that ended on a provider that improves nothing is never promised one.
+// "Improving transcript" is shown for a conversation its provider improves, that has audio and
+// is not so old that the job has given up. A deployment with one provider answers as it always
+// has, a recording still in progress included; with several, the conversation's own provider
+// says whether a pass will come. The API reads no job-queue table for it.
 run("the dashboard's final transcript state", () => {
   setDefaultTimeout(60_000);
   let sql: postgres.Sql;
   let close: () => Promise<void>;
   let app: Hono<Env>;
+  let deps: ConversationsDeps;
   const owner: Signed = { appUserId: newId(), directusUserId: newId(), isStaff: false };
   const [workspace, project] = [newId(), newId()];
 
@@ -36,7 +39,7 @@ run("the dashboard's final transcript state", () => {
     await sql`insert into workspace (id, name, org_id, billing_account_id) values (${workspace}, 'W', ${org}, ${billing})`;
     await sql`insert into workspace_membership (id, workspace_id, user_id, role) values (${newId()}, ${workspace}, ${owner.appUserId}, 'owner')`;
     await sql`insert into project (id, name, workspace_id, is_conversation_allowed) values (${project}, 'P', ${workspace}, true)`;
-    const d = {
+    deps = {
       db: database.db,
       access: new Access(new DrizzleAccessStore(database.db)),
       hub: null,
@@ -48,6 +51,7 @@ run("the dashboard's final transcript state", () => {
       settings: { improves: { recordings: true, uploads: true } },
       now: () => new Date(),
     } as unknown as ConversationsDeps;
+    const d = deps;
     app = new Hono<Env>();
     app.use(async (c, next) => {
       c.set("principal", owner);
@@ -66,12 +70,16 @@ run("the dashboard's final transcript state", () => {
     await close();
   });
 
-  const recorded = async () => {
+  const recorded = async (
+    o: { finished?: boolean; ageHours?: number; audio?: boolean; provider?: string } = {},
+  ) => {
     const id = newId();
-    await sql`insert into conversation (id, project_id, participant_name, source, is_finished, created_at, updated_at)
-      values (${id}, ${project}, 'P', 'PORTAL_AUDIO', true, now(), now())`;
-    await sql`insert into conversation_chunk (id, conversation_id, path, timestamp, created_at)
-      values (${newId()}, ${id}, 'audio/a.mp3', now(), now())`;
+    await sql`insert into conversation (id, project_id, participant_name, source, is_finished, ai_transcription_provider, created_at, updated_at)
+      values (${id}, ${project}, 'P', 'PORTAL_AUDIO', ${o.finished ?? true}, ${o.provider ?? null},
+        now() - ${`${o.ageHours ?? 0} hours`}::interval, now())`;
+    if (o.audio !== false)
+      await sql`insert into conversation_chunk (id, conversation_id, path, timestamp, created_at)
+        values (${newId()}, ${id}, 'audio/a.mp3', now(), now())`;
     return id;
   };
   const state = async (id: string) =>
@@ -79,24 +87,50 @@ run("the dashboard's final transcript state", () => {
       available: boolean;
       expected: boolean;
     };
-  const workflow = (id: string, status: string) =>
-    sql`insert into dbos.workflow_status (workflow_uuid, status, name, created_at, updated_at)
-      values (${`conversations.final-transcript:${id}:whisper:h`}, ${status}, 'conversations.final-transcript', 0, 0)`;
+  const gaveUp = (id: string) =>
+    sql`insert into processing_status (conversation_id, event, message, timestamp)
+      values (${id}, 'task_final_transcript.gave_up', 'gave up', now())`;
 
-  test("a conversation that finished without a final pass is not said to be improving", async () => {
-    const id = await recorded();
-    expect(await state(id)).toEqual({ available: false, expected: false });
+  test("a recording still in progress is improving, as it is on a deployment with one provider", async () => {
+    expect(await state(await recorded({ finished: false }))).toEqual({
+      available: false,
+      expected: true,
+    });
   });
 
-  test("one with a final pass queued or running is, and not once it has ended", async () => {
-    const queued = await recorded();
-    await workflow(queued, "ENQUEUED");
-    expect(await state(queued)).toEqual({ available: false, expected: true });
-    const running = await recorded();
-    await workflow(running, "PENDING");
-    expect(await state(running)).toEqual({ available: false, expected: true });
-    const ended = await recorded();
-    await workflow(ended, "ERROR");
-    expect(await state(ended)).toEqual({ available: false, expected: false });
+  test("a finished one with audio is improving, until the job gave up, and not once it is old or has no audio", async () => {
+    expect(await state(await recorded())).toEqual({ available: false, expected: true });
+    const failed = await recorded();
+    await gaveUp(failed);
+    expect(await state(failed)).toEqual({ available: false, expected: false });
+    expect((await state(await recorded({ ageHours: 30 }))).expected).toBe(false);
+    expect((await state(await recorded({ audio: false }))).expected).toBe(false);
+  });
+
+  test("with several providers, the conversation's own says whether a pass will come", async () => {
+    const kit = (improves: boolean) => ({ improves: { recordings: improves, uploads: improves } });
+    (deps as { speech?: unknown }).speech = {
+      kits: { scaleway: kit(true), google: kit(false) },
+      default: "scaleway",
+      // As the database policy does for a conversation: the provider it began on.
+      decide: async (who: { id: string }) => {
+        const [c] =
+          await sql`select ai_transcription_provider as p from conversation where id = ${who.id}`;
+        return {
+          provider: c?.p ?? "scaleway",
+          job: "transcription",
+          organisationId: null,
+          reason: "conversation",
+          allowed: null,
+        };
+      },
+    } as unknown as ConversationsDeps["speech"];
+    try {
+      expect((await state(await recorded({ provider: "google" }))).expected).toBe(false);
+      expect((await state(await recorded({ provider: "scaleway" }))).expected).toBe(true);
+      expect((await state(await recorded())).expected).toBe(true);
+    } finally {
+      delete (deps as { speech?: unknown }).speech;
+    }
   });
 });

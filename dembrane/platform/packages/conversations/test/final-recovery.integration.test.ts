@@ -14,7 +14,6 @@ import { newId } from "@dembrane/core";
 import { createDb } from "@dembrane/db";
 import { Queue } from "@dembrane/queue";
 import postgres from "postgres";
-import { bffStore } from "../src/bff/storage";
 import { finalTranscript } from "../src/pipeline/defs";
 import { currentChunkHash } from "../src/pipeline/final";
 import { bursts } from "./final-helpers";
@@ -116,7 +115,14 @@ run("a final pass recovered after its project left Google", () => {
     (
       await sql`select 1 from processing_status where conversation_id = ${id} and event = 'task_final_transcript.gave_up'`
     ).length;
-  const improving = (id: string) => bffStore(db).finalQueued(id);
+  /** A final pass is queued or running: read from the job queue's own table, as the dashboard no longer does. */
+  const improving = async (id: string) =>
+    (
+      await sql`select 1 from dbos.workflow_status
+        where name = 'conversations.final-transcript'
+          and workflow_uuid like ${`conversations.final-transcript:${id}:%`}
+          and status in ('ENQUEUED', 'PENDING', 'DELAYED') limit 1`
+    ).length > 0;
   const liveText = async (id: string) =>
     (await sql`select transcript from conversation_chunk where conversation_id = ${id}`).map(
       (r) => r.transcript,

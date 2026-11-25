@@ -2,7 +2,6 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { join } from "node:path";
 import { newId } from "@dembrane/core";
 import type { SpeechRouter } from "../src";
-import { bffStore } from "../src/bff/storage";
 import { finalTranscript } from "../src/pipeline/defs";
 import { currentChunkHash } from "../src/pipeline/final";
 import { bursts } from "./final-helpers";
@@ -77,8 +76,14 @@ run("a final pass whose project leaves Google", () => {
     (
       await h.sql`select 1 from processing_status where conversation_id = ${id} and event = 'task_final_transcript.gave_up'`
     ).length;
-  /** The dashboard says a final transcript is on its way while a pass is queued or running. */
-  const improving = (id: string) => bffStore(h.deps.db).finalQueued(id);
+  /** A final pass is queued or running: read from the job queue's own table, as the dashboard no longer does. */
+  const improving = async (id: string) =>
+    (
+      await h.sql`select 1 from dbos.workflow_status
+        where name = 'conversations.final-transcript'
+          and workflow_uuid like ${`conversations.final-transcript:${id}:%`}
+          and status in ('ENQUEUED', 'PENDING', 'DELAYED') limit 1`
+    ).length > 0;
   const liveText = async (id: string) =>
     (await h.sql`select transcript from conversation_chunk where conversation_id = ${id}`).map(
       (r) => r.transcript,
