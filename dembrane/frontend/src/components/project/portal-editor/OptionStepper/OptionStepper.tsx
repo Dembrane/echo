@@ -18,7 +18,10 @@ import {
 	useRef,
 } from "react";
 import { FlowProgress } from "@/components/common/FlowProgress/FlowProgress";
-import { Explainer, type ExplainerName } from "@/components/explainers/Explainer";
+import {
+	Explainer,
+	type ExplainerName,
+} from "@/components/explainers/Explainer";
 import { ShownTitleContext } from "@/components/form/FormLabel";
 import { testId } from "@/lib/testUtils";
 
@@ -123,60 +126,62 @@ export const OptionStepper = ({
 					const bodyId = `${baseId}-${option.key}-body`;
 					const Caret = isOpen ? CaretDownIcon : CaretRightIcon;
 					const row = (
-								<UnstyledButton
-									ref={(el) => {
-										headers.current[i] = el;
-									}}
-									id={headerId}
-									aria-expanded={isOpen}
-									aria-controls={bodyId}
-									onClick={() => {
-										if (!isOpen) onOpen(option.key, "row");
-									}}
-									onKeyDown={(e) => onRowKey(e, i)}
-									// Closed, the row is the box; open, the item around it is.
-									className={isOpen ? "block min-w-0 flex-1" : "app-do block min-w-0 flex-1"}
-									px="sm"
-									py="sm"
-									style={isOpen ? { cursor: "default" } : undefined}
-									{...testId(`${testIdPrefix}-${option.key}-row`)}
+						<UnstyledButton
+							ref={(el) => {
+								headers.current[i] = el;
+							}}
+							id={headerId}
+							aria-expanded={isOpen}
+							aria-controls={bodyId}
+							onClick={() => {
+								if (!isOpen) onOpen(option.key, "row");
+							}}
+							onKeyDown={(e) => onRowKey(e, i)}
+							// Closed, the row is the box; open, the item around it is.
+							className={
+								isOpen ? "block min-w-0 flex-1" : "app-do block min-w-0 flex-1"
+							}
+							px="sm"
+							py="sm"
+							style={isOpen ? { cursor: "default" } : undefined}
+							{...testId(`${testIdPrefix}-${option.key}-row`)}
+						>
+							<span className="grid grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)] items-baseline gap-x-3">
+								<Caret size={16} aria-hidden />
+								{/* The badge follows the name's last word, on its line. */}
+								<Text
+									component="span"
+									className={isOpen ? "col-span-2" : undefined}
+									style={{ minWidth: 0, overflowWrap: "break-word" }}
 								>
-									<span className="grid grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)] items-baseline gap-x-3">
-										<Caret size={16} aria-hidden />
-										{/* The badge follows the name's last word, on its line. */}
-										<Text
+									{option.title}
+									{option.beta && (
+										<Badge
 											component="span"
-											className={isOpen ? "col-span-2" : undefined}
-											style={{ minWidth: 0, overflowWrap: "break-word" }}
+											color="mauve"
+											c="graphite"
+											size="sm"
+											ml="xs"
+											style={{ verticalAlign: "middle" }}
+											{...testId(`${testIdPrefix}-${option.key}-beta`)}
 										>
-											{option.title}
-											{option.beta && (
-												<Badge
-													component="span"
-													color="mauve"
-													c="graphite"
-													size="sm"
-													ml="xs"
-													style={{ verticalAlign: "middle" }}
-													{...testId(`${testIdPrefix}-${option.key}-beta`)}
-												>
-													<Trans>Beta</Trans>
-												</Badge>
-											)}
-										</Text>
-										{!isOpen && (
-											<Text
-												component="span"
-												size="sm"
-												className="app-muted"
-												truncate="end"
-												{...testId(`${testIdPrefix}-${option.key}-summary`)}
-											>
-												{option.summary}
-											</Text>
-										)}
-									</span>
-								</UnstyledButton>
+											<Trans>Beta</Trans>
+										</Badge>
+									)}
+								</Text>
+								{!isOpen && (
+									<Text
+										component="span"
+										size="sm"
+										className="app-muted"
+										truncate="end"
+										{...testId(`${testIdPrefix}-${option.key}-summary`)}
+									>
+										{option.summary}
+									</Text>
+								)}
+							</span>
+						</UnstyledButton>
 					);
 					return (
 						<li

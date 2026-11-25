@@ -253,7 +253,7 @@ export function Frame({ loop, t }: { loop: Loop; t: number }) {
 			</svg>
 			<Text
 				size="sm"
-				mt={6}
+				mt="xs"
 				h="3em"
 				style={{ opacity: caption.opacity * out }}
 				data-testid="explainer-line"

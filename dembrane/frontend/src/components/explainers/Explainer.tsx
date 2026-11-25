@@ -93,7 +93,7 @@ export function Explainer({
 						onClick={() => setOpened((o) => !o)}
 						{...testId(`explainer-${name}`)}
 					>
-						<Info size={18} />
+						<Info size={20} />
 					</ActionIcon>
 				</Popover.Target>
 			</Group>
