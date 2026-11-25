@@ -440,7 +440,10 @@ export function staffRoutes(deps: StaffRouteDeps) {
     const id = c.req.param("org_id");
     await staff(c, "staff:workspaces", "org.ai_providers.read", ["org", id]);
     return c.json(
-      await readOrgForStaff({ db: deps.db, policy: aiPolicy, models: deps.aiModels }, id),
+      await readOrgForStaff(
+        { db: deps.db, policy: aiPolicy, ...(deps.aiModels && { models: deps.aiModels }) },
+        id,
+      ),
     );
   });
 
@@ -459,7 +462,12 @@ export function staffRoutes(deps: StaffRouteDeps) {
     const who = await staff(c, "staff:workspaces", "org.ai_providers.set", ["org", id], body);
     return c.json(
       await setOrg(
-        { db: deps.db, policy: aiPolicy, models: deps.aiModels, now: clock },
+        {
+          db: deps.db,
+          policy: aiPolicy,
+          ...(deps.aiModels && { models: deps.aiModels }),
+          now: clock,
+        },
         who.directusUserId,
         id,
         {
