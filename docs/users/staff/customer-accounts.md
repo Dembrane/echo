@@ -67,7 +67,8 @@ select "Open the draft (EN)" to look through the demo, then select "Publish".
   @dembrane.com account is added, and only you: an account manager who did not start the demo
   is not. If you are the demo's contact yourself, you are not added at the build: you get your
   place when it is published, like any contact. You stay in the workspace after publishing, in
-  its member list like anyone, and its admins can remove you. You take no seat there.
+  its member list like anyone, and its admins can remove you. You take no seat there. Demos
+  built before this change got their builder added the same way, under the same rules.
 - Outside the customer's organisation the dashboard shows you as "External" there. You can open
   the demo project, change it in the portal editor and edit its brief. You cannot open the
   workspace's settings, make a new project or a copy, pin a project or delete a conversation.

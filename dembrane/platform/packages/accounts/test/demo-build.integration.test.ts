@@ -1,8 +1,11 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
+import { heldForDemo } from "@dembrane/access";
 import { newId } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import { FakeCompleter, fakeCalls, takeUnscopedFakeCalls } from "@dembrane/llm";
 import { and, asc, eq, isNotNull, isNull, sql } from "drizzle-orm";
+// The seat read the invite dialog and its preview use, with staffGuestTakesNoSeat applied.
+import { accountForWorkspace, countAccountSeats } from "../../account/src/seats";
 import * as K from "../src/contract";
 import { buildDemo, type DemoBuildDeps, demoSlug } from "../src/demo/build";
 import type { HttpGet } from "../src/demo/fetch";
@@ -13,6 +16,7 @@ import { onboardingSignals } from "../src/onboarding";
 import { ensureUser, joinDemoWorkspace } from "../src/prospect";
 import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
+import { existingOrganisation, personWithAccount } from "./demo-helpers";
 import { admin, call, dropDatabase, type World, world } from "./helpers";
 
 // A demo made in echo, end to end on a fake model, a fake website and a fake popcorn read:
@@ -1071,6 +1075,252 @@ run("demos made in echo", () => {
         (r) => r.deleted_at !== null,
       ),
     ).toEqual([true]);
+  });
+
+  test("the backfill gives the @dembrane.com maker of a demo made before the seed did the same place in its own workspace, once", async () => {
+    const backfill = async () => {
+      const file = new URL(
+        "../../db/migrations/0059_expand_demo_staff_workspace_membership.sql",
+        import.meta.url,
+      );
+      for (const statement of (await Bun.file(file).text()).split("--> statement-breakpoint"))
+        if (statement.trim()) await w.db.execute(sql.raw(statement));
+    };
+    const maker = async (email: string) => {
+      const u = await w.db.transaction((tx) =>
+        ensureUser(tx, {
+          email,
+          name: email.split("@")[0] ?? email,
+          passwordHash: null,
+          nowIso: w.clock.now.toISOString(),
+        }),
+      );
+      return { appUserId: u.appUserId, directusUserId: u.userId, isStaff: true, email };
+    };
+    /** Every row a person has in a workspace, by app user, a removed one included. */
+    const rowsOf = (workspaceId: string, appUserId: string) =>
+      w.db
+        .select({
+          role: schema.workspace_membership.role,
+          source: schema.workspace_membership.source,
+          deleted_at: schema.workspace_membership.deleted_at,
+        })
+        .from(schema.workspace_membership)
+        .where(
+          and(
+            eq(schema.workspace_membership.workspace_id, workspaceId),
+            eq(schema.workspace_membership.user_id, appUserId),
+          ),
+        );
+    /** A demo as one built before the seed added its maker: built by `by`, with no row of theirs. */
+    const madeBefore = async (
+      by: { appUserId: string | null; directusUserId: string },
+      email: string,
+      over: Record<string, unknown> = {},
+      settings: Partial<DemoBuildDeps["demo"]> = {},
+    ) => {
+      const status = K.DemoStatus.parse((await start({ contact_email: email, ...over })).data);
+      await w.db
+        .update(schema.account_demo)
+        .set({ createdBy: by.directusUserId })
+        .where(eq(schema.account_demo.id, status.id));
+      await buildDemo({ ...deps, demo: { ...deps.demo, ...settings } }, status.id, 1);
+      const row = await load(status.id);
+      const workspaceId = (await seedOf(status.id)).workspace_id;
+      await w.db
+        .delete(schema.workspace_membership)
+        .where(
+          and(
+            eq(schema.workspace_membership.workspace_id, workspaceId),
+            eq(schema.workspace_membership.user_id, by.appUserId as string),
+          ),
+        );
+      const view = K.DemoStatus.parse(
+        (await call(w, "GET", `/api/v2/admin/accounts/demos/${status.id}`, "staff")).data,
+      );
+      return {
+        id: status.id,
+        orgId: row?.orgId as string,
+        workspaceId,
+        projectId: view.links.projects[0]?.project_id as string,
+      };
+    };
+    const everyRow = async () =>
+      w.db
+        .select({
+          id: schema.workspace_membership.id,
+          ws: schema.workspace_membership.workspace_id,
+          user: schema.workspace_membership.user_id,
+        })
+        .from(schema.workspace_membership);
+    const eventCount = async () => (await w.db.select().from(schema.account_event)).length;
+
+    // The maker's address in another case: isStaffEmail reads it in lower case.
+    const oud = await maker("oud@dembrane.com");
+    await w.db
+      .update(schema.app_user)
+      .set({ email: "Oud@Dembrane.COM" })
+      .where(eq(schema.app_user.id, oud.appUserId));
+    const roleOn = (projectId: string) =>
+      w.deps.access.project(oud, projectId, "project:read").then(
+        (a) => a.role,
+        () => null,
+      );
+
+    // Owed a row: a draft in a new prospect's "dembrane demo"; a published one whose
+    // contact joined at release; one that failed after its seed (the seed had run, so it
+    // would have added them); one in a held workspace of an organisation people work in.
+    const draft = await madeBefore(oud, "oud1@voorbeeldstad.example");
+    expect(await roleOn(draft.projectId)).toBeNull();
+    const published = await madeBefore(oud, "oud2@voorbeeldstad.example");
+    expect((await publish(published.id)).status).toBe(200);
+    const failed = await madeBefore(oud, "oud3@voorbeeldstad.example");
+    await w.db
+      .update(schema.account_demo)
+      .set({ status: "failed" })
+      .where(eq(schema.account_demo.id, failed.id));
+    const brentContact = await personWithAccount(w, "oud-brent");
+    const brent = await existingOrganisation(w, {
+      name: "Brent oud",
+      stage: "customer",
+      members: [{ person: brentContact, role: "admin" }],
+    });
+    const held = await madeBefore(oud, brentContact.email, { org_id: brent.id, offer: null });
+    expect(held.orgId).toBe(brent.id);
+    const heldBefore = (
+      await w.db
+        .select({ settings: schema.workspace.settings, visibility: schema.workspace.visibility })
+        .from(schema.workspace)
+        .where(eq(schema.workspace.id, held.workspaceId))
+    )[0];
+    expect(heldForDemo(heldBefore?.settings)).toBe(held.id);
+    expect(await roleOn(held.projectId)).toBeNull();
+    // A second demo row of the same maker in the same workspace: still one row.
+    const twin = await load(draft.id);
+    if (!twin) throw new Error("the draft demo is gone");
+    await w.db.insert(schema.account_demo).values({ ...twin, id: newId() });
+
+    // Owed nothing. The shared staff demo workspace: the demo's organisation is the
+    // prospect's, the workspace is in staff's own, so the join on the organisation skips it.
+    const staffOrg = newId();
+    const staffBilling = newId();
+    const shared = newId();
+    await w.db.insert(schema.org).values({ id: staffOrg, name: "dembrane demos oud" });
+    await w.db
+      .insert(schema.billing_account)
+      .values({ id: staffBilling, org_id: staffOrg, tier: "free" });
+    await w.db.insert(schema.workspace).values({
+      id: shared,
+      org_id: staffOrg,
+      name: "Demos",
+      billing_account_id: staffBilling,
+      visibility: "invite_only",
+    });
+    const sharedSettings = { workspaceId: shared };
+    const inShared = await madeBefore(oud, "oud5@voorbeeldstad.example", {}, sharedSettings);
+    expect(inShared.workspaceId).toBe(shared);
+    expect(inShared.orgId).not.toBe(staffOrg);
+    // Already there: removed since (the removal stands), or a member with another role.
+    const removed = await madeBefore(oud, "oud6@voorbeeldstad.example");
+    await w.db.insert(schema.workspace_membership).values({
+      id: newId(),
+      workspace_id: removed.workspaceId,
+      user_id: oud.appUserId,
+      role: "admin",
+      source: "direct",
+      deleted_at: w.clock.now.toISOString(),
+    });
+    const member = await madeBefore(oud, "oud7@voorbeeldstad.example");
+    await w.db.insert(schema.workspace_membership).values({
+      id: newId(),
+      workspace_id: member.workspaceId,
+      user_id: oud.appUserId,
+      role: "member",
+      source: "direct",
+    });
+    // The maker is the demo's contact, still held.
+    const zelf = await maker("oud-zelf@dembrane.com");
+    const self = await madeBefore(zelf, "oud-zelf@dembrane.com");
+    // A maker outside @dembrane.com (the world's staff member is staff@example.test).
+    const outside = await madeBefore(w.people.staff, "oud9@voorbeeldstad.example");
+    // The workspace was deleted; the organisation was deleted.
+    const goneWorkspace = await madeBefore(oud, "oud10@voorbeeldstad.example");
+    await w.db
+      .update(schema.workspace)
+      .set({ deleted_at: w.clock.now.toISOString() })
+      .where(eq(schema.workspace.id, goneWorkspace.workspaceId));
+    const goneOrg = await madeBefore(oud, "oud11@voorbeeldstad.example");
+    await w.db
+      .update(schema.org)
+      .set({ deleted_at: w.clock.now.toISOString() })
+      .where(eq(schema.org.id, goneOrg.orgId));
+    // Failed before its seed: no workspace yet, so nothing to join.
+    const unseeded = K.DemoStatus.parse(
+      (await start({ contact_email: "oud12@voorbeeldstad.example" })).data,
+    );
+    await w.db
+      .update(schema.account_demo)
+      .set({ createdBy: oud.directusUserId, status: "failed" })
+      .where(eq(schema.account_demo.id, unseeded.id));
+    expect((await load(unseeded.id))?.seed).toBeNull();
+
+    const before = await everyRow();
+    const events = await eventCount();
+    await backfill();
+    const once = await everyRow();
+    await backfill();
+    // Exactly the four owed rows, once each, and nothing on the second run; every other
+    // demo here and in the tests above is left as it was.
+    expect((await everyRow()).map((r) => r.id).sort()).toEqual(once.map((r) => r.id).sort());
+    const known = new Set(before.map((r) => r.id));
+    expect(
+      once
+        .filter((r) => !known.has(r.id))
+        .map((r) => `${r.ws}:${r.user}`)
+        .sort(),
+    ).toEqual(
+      [draft, published, failed, held].map((d) => `${d.workspaceId}:${oud.appUserId}`).sort(),
+    );
+    for (const owed of [draft, published, failed, held])
+      expect(await rowsOf(owed.workspaceId, oud.appUserId)).toEqual([ADMIN_PLACE]);
+    // They open the draft project, the held one included, as its workspace's admin.
+    expect(await roleOn(draft.projectId)).toBe("admin");
+    expect(await roleOn(held.projectId)).toBe("admin");
+    // The published demo's contact is there as before.
+    expect(await placesIn(published.workspaceId, "oud2@voorbeeldstad.example")).toEqual([
+      ADMIN_PLACE,
+    ]);
+    // The held workspace stays held, as private as it was.
+    const heldAfter = (
+      await w.db
+        .select({ settings: schema.workspace.settings, visibility: schema.workspace.visibility })
+        .from(schema.workspace)
+        .where(eq(schema.workspace.id, held.workspaceId))
+    )[0];
+    expect(heldAfter).toEqual(heldBefore as never);
+    expect(heldForDemo(heldAfter?.settings)).toBe(held.id);
+    // Not a member of any of the organisations, and no seat on their accounts: in the
+    // prospect's "dembrane demo" only the released contact counts (staffGuestTakesNoSeat).
+    for (const owed of [draft, published])
+      expect(
+        (await store.members(w.db, owed.orgId)).some((m) => m.appUserId === oud.appUserId),
+      ).toBe(false);
+    const seatsOf = async (workspaceId: string) =>
+      countAccountSeats(w.db, (await accountForWorkspace(w.db, workspaceId))?.id as string);
+    expect(await seatsOf(draft.workspaceId)).toBe(0);
+    expect(await seatsOf(published.workspaceId)).toBe(1);
+    // No trace on the account's timeline: the seed's has no migration twin.
+    expect(await eventCount()).toBe(events);
+    // Left as they were.
+    expect(await rowsOf(inShared.workspaceId, oud.appUserId)).toEqual([]);
+    const roleAndRemoved = async (workspaceId: string) =>
+      (await rowsOf(workspaceId, oud.appUserId)).map((r) => [r.role, r.deleted_at !== null]);
+    expect(await roleAndRemoved(removed.workspaceId)).toEqual([["admin", true]]);
+    expect(await roleAndRemoved(member.workspaceId)).toEqual([["member", false]]);
+    expect(await rowsOf(self.workspaceId, zelf.appUserId)).toEqual([]);
+    expect(await rowsOf(outside.workspaceId, w.people.staff.appUserId as string)).toEqual([]);
+    expect(await rowsOf(goneWorkspace.workspaceId, oud.appUserId)).toEqual([]);
+    expect(await rowsOf(goneOrg.workspaceId, oud.appUserId)).toEqual([]);
   });
 
   test("a failed step: the demo says which and why; a retry resumes there without repeating the others", async () => {
