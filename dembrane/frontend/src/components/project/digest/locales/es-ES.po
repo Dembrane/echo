@@ -21,11 +21,11 @@ msgstr "Aceptar y seguir"
 msgid "Accept the rest"
 msgstr "Aceptar el resto"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:175
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:176
 msgid "Add a link"
 msgstr "Añadir un enlace"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:126
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:127
 msgid "Add from a file"
 msgstr "Añadir desde un archivo"
 
@@ -41,7 +41,7 @@ msgstr "Todas las plantillas"
 msgid "Also fits:"
 msgstr "También encaja:"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:197
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:198
 msgid "An invitation or project page. dembrane reads it once."
 msgstr "Una invitación o una página del proyecto. dembrane la lee una vez."
 
@@ -74,8 +74,12 @@ msgstr "Cambiar: {part}"
 #~ msgstr "Revisa cada parte, cambia lo que no encaje y desactiva lo que no quieras. No se guarda nada hasta que crees el proyecto."
 
 #: src/components/project/digest/DigestConnected.tsx:226
-msgid "Choose a format below to continue."
-msgstr "Elige un formato abajo para continuar."
+#~ msgid "Choose a format below to continue."
+#~ msgstr "Elige un formato abajo para continuar."
+
+#: src/components/project/digest/DigestConnected.tsx:226
+msgid "Choose a template above to continue."
+msgstr "Elige una plantilla arriba para continuar."
 
 #: src/components/project/digest/DigestConnected.tsx:204
 #~ msgid "Choose a template below to continue."
@@ -101,11 +105,11 @@ msgstr "dembrane no ha podido sacar nada que añadir de esto."
 msgid "dembrane couldn't set the project up from this."
 msgstr "dembrane no ha podido configurar el proyecto con esto."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:128
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:129
 msgid "Drop files here, or choose them"
 msgstr "Suelta archivos aquí o elígelos"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:112
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:113
 msgid "Drop files or choose them"
 msgstr "Suelta archivos o elígelos"
 
@@ -122,7 +126,7 @@ msgstr "Editar"
 msgid "Explore question"
 msgstr "Pregunta de Explorar"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:228
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:229
 msgid "Files stay on your device. Only their text is sent to dembrane's model provider to prepare the setup. Don't drop material you may not share."
 msgstr "Los archivos se quedan en tu dispositivo. Solo su texto se envía al proveedor de modelos de dembrane para preparar la configuración. No sueltes material que no puedas compartir."
 
@@ -150,7 +154,7 @@ msgstr "Objetivo"
 #~ msgid "Have an agenda or invitation? Drop it here and dembrane sets the project up."
 #~ msgstr "¿Tienes una agenda o una invitación? Suéltala aquí y dembrane configura el proyecto."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:97
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:98
 msgid "Have an agenda, invitation or run sheet? Drop it here and dembrane sets the project up."
 msgstr "¿Tienes una agenda, una invitación o un guion del evento? Suéltalo aquí y dembrane prepara el proyecto."
 
@@ -171,7 +175,7 @@ msgstr "Términos clave"
 msgid "Larger than 10 MB. Try a shorter version, or paste the part that matters."
 msgstr "Más de 10 MB. Prueba una versión más corta o pega la parte que importa."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:196
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:197
 msgid "Link to a page about it"
 msgstr "Enlace a una página sobre ello"
 
@@ -217,20 +221,20 @@ msgstr "O elige otra"
 msgid "Participants tap the round they are in before they record."
 msgstr "Los participantes tocan su ronda antes de grabar."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:157
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:158
 msgid "Paste text"
 msgstr "Pegar texto"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:183
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:184
 msgid "Paste the agenda, the invitation or the brief."
 msgstr "Pega la agenda, la invitación o el briefing."
 
 #: src/components/project/digest/useDigestRun.ts:117
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:182
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:183
 msgid "Pasted text"
 msgstr "Texto pegado"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:132
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:133
 msgid "PDF, Word, PowerPoint or text. Up to {MAX_FILES} files of 10 MB."
 msgstr "PDF, Word, PowerPoint o texto. Hasta {MAX_FILES} archivos de 10 MB."
 
@@ -281,7 +285,7 @@ msgstr "Listo para crear"
 msgid "Rounds as tags"
 msgstr "Rondas como etiquetas"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:216
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:217
 msgid "Set up from this"
 msgstr "Configurar con esto"
 
@@ -429,8 +433,12 @@ msgid "Your material was long, so dembrane read its start and a condensed versio
 msgstr "Tu material era largo, así que dembrane leyó el principio y una versión resumida. Comprueba que no falte nada importante."
 
 #: src/components/project/digest/DigestConnected.tsx:221
-msgid "Your text is in the project context: choose a format below to continue."
-msgstr "Tu texto está en el contexto del proyecto: elige un formato abajo para continuar."
+#~ msgid "Your text is in the project context: choose a format below to continue."
+#~ msgstr "Tu texto está en el contexto del proyecto: elige un formato abajo para continuar."
+
+#: src/components/project/digest/DigestConnected.tsx:221
+msgid "Your text is in the project context: choose a template above to continue."
+msgstr "Tu texto está en el contexto del proyecto: elige una plantilla arriba para continuar."
 
 #: src/components/project/digest/DigestConnected.tsx:199
 #~ msgid "Your text is in the project context: choose a template below to continue."

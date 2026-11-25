@@ -1,12 +1,13 @@
 import type { ReactNode } from "react";
-import type { CardKey } from "../projectTemplates";
+import type { ChoiceKey } from "../projectTemplates";
 
 /**
- * The sixteen room drawings (ECHO-1058): each format seen from above, so the picture tells
- * the formats apart. One grammar for all: a square is a table, a ring is a person, a filled
- * ring is the person who leads (moderator, interviewer, table host, convener), and the one
- * accent, a small blue block, is the phone that records. Drawn on a 160 by 80 grid with
- * thin round strokes, as Phosphor light draws its icons.
+ * The room drawings (ECHO-1058): each format seen from above, so the picture tells the
+ * formats apart, and Quick start, a table no one has set up yet. One grammar for all: a
+ * square is a table, a ring is a person, a filled ring is the person who leads (moderator,
+ * interviewer, table host, convener), and the one accent, a small blue block, is the phone
+ * that records. Drawn on a 160 by 80 grid with thin round strokes, as Phosphor light draws
+ * its icons.
  */
 
 /** A person seen from above. */
@@ -97,7 +98,14 @@ const ring = (cx: number, cy: number, r: number, n: number, start = -90) =>
 		);
 	});
 
-export const DRAWINGS: Record<CardKey, () => ReactNode> = {
+export const DRAWINGS: Record<ChoiceKey, () => ReactNode> = {
+	// Quick start: a table and its phone, nothing set up around it yet.
+	blank: () => (
+		<>
+			<T x={80} y={40} w={72} h={36} />
+			<R x={80} y={40} />
+		</>
+	),
 	// Table conversations: many fixed tables at once, each with its own phone.
 	resident_evening: () => (
 		<>

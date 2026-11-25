@@ -21,11 +21,11 @@ msgstr "Accetta e continua"
 msgid "Accept the rest"
 msgstr "Accetta il resto"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:175
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:176
 msgid "Add a link"
 msgstr "Aggiungi un link"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:126
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:127
 msgid "Add from a file"
 msgstr "Aggiungi da un file"
 
@@ -41,7 +41,7 @@ msgstr "Tutti i modelli"
 msgid "Also fits:"
 msgstr "Va bene anche:"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:197
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:198
 msgid "An invitation or project page. dembrane reads it once."
 msgstr "Un invito o una pagina del progetto. dembrane la legge una volta."
 
@@ -74,8 +74,12 @@ msgstr "Cambia: {part}"
 #~ msgstr "Controlla ogni parte, cambia ciò che non va e disattiva ciò che non vuoi. Non viene salvato nulla finché non crei il progetto."
 
 #: src/components/project/digest/DigestConnected.tsx:226
-msgid "Choose a format below to continue."
-msgstr "Scegli un formato qui sotto per continuare."
+#~ msgid "Choose a format below to continue."
+#~ msgstr "Scegli un formato qui sotto per continuare."
+
+#: src/components/project/digest/DigestConnected.tsx:226
+msgid "Choose a template above to continue."
+msgstr "Scegli un modello qui sopra per continuare."
 
 #: src/components/project/digest/DigestConnected.tsx:204
 #~ msgid "Choose a template below to continue."
@@ -101,11 +105,11 @@ msgstr "dembrane non è riuscito a ricavarne nulla da aggiungere."
 msgid "dembrane couldn't set the project up from this."
 msgstr "dembrane non è riuscito a impostare il progetto da questo materiale."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:128
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:129
 msgid "Drop files here, or choose them"
 msgstr "Trascina qui i file o sceglili"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:112
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:113
 msgid "Drop files or choose them"
 msgstr "Trascina i file o sceglili"
 
@@ -122,7 +126,7 @@ msgstr "Modifica"
 msgid "Explore question"
 msgstr "Domanda di Explore"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:228
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:229
 msgid "Files stay on your device. Only their text is sent to dembrane's model provider to prepare the setup. Don't drop material you may not share."
 msgstr "I file restano sul tuo dispositivo. Solo il loro testo viene inviato al fornitore di modelli di dembrane per preparare l'impostazione. Non caricare materiale che non puoi condividere."
 
@@ -150,7 +154,7 @@ msgstr "Obiettivo"
 #~ msgid "Have an agenda or invitation? Drop it here and dembrane sets the project up."
 #~ msgstr "Hai un ordine del giorno o un invito? Trascinalo qui e dembrane imposta il progetto."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:97
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:98
 msgid "Have an agenda, invitation or run sheet? Drop it here and dembrane sets the project up."
 msgstr "Hai un ordine del giorno, un invito o una scaletta? Trascinalo qui e dembrane prepara il progetto."
 
@@ -171,7 +175,7 @@ msgstr "Termini chiave"
 msgid "Larger than 10 MB. Try a shorter version, or paste the part that matters."
 msgstr "Più di 10 MB. Prova una versione più breve o incolla la parte che conta."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:196
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:197
 msgid "Link to a page about it"
 msgstr "Link a una pagina che ne parla"
 
@@ -217,20 +221,20 @@ msgstr "Oppure scegline un altro"
 msgid "Participants tap the round they are in before they record."
 msgstr "I partecipanti toccano il proprio turno prima di registrare."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:157
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:158
 msgid "Paste text"
 msgstr "Incolla testo"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:183
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:184
 msgid "Paste the agenda, the invitation or the brief."
 msgstr "Incolla l'ordine del giorno, l'invito o il brief."
 
 #: src/components/project/digest/useDigestRun.ts:117
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:182
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:183
 msgid "Pasted text"
 msgstr "Testo incollato"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:132
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:133
 msgid "PDF, Word, PowerPoint or text. Up to {MAX_FILES} files of 10 MB."
 msgstr "PDF, Word, PowerPoint o testo. Fino a {MAX_FILES} file da 10 MB."
 
@@ -281,7 +285,7 @@ msgstr "Pronto da creare"
 msgid "Rounds as tags"
 msgstr "Turni come tag"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:216
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:217
 msgid "Set up from this"
 msgstr "Imposta da qui"
 
@@ -429,8 +433,12 @@ msgid "Your material was long, so dembrane read its start and a condensed versio
 msgstr "Il tuo materiale era lungo, quindi dembrane ne ha letto l'inizio e una versione condensata. Controlla che non manchi nulla di importante."
 
 #: src/components/project/digest/DigestConnected.tsx:221
-msgid "Your text is in the project context: choose a format below to continue."
-msgstr "Il tuo testo è nel contesto del progetto: scegli un formato qui sotto per continuare."
+#~ msgid "Your text is in the project context: choose a format below to continue."
+#~ msgstr "Il tuo testo è nel contesto del progetto: scegli un formato qui sotto per continuare."
+
+#: src/components/project/digest/DigestConnected.tsx:221
+msgid "Your text is in the project context: choose a template above to continue."
+msgstr "Il tuo testo è nel contesto del progetto: scegli un modello qui sopra per continuare."
 
 #: src/components/project/digest/DigestConnected.tsx:199
 #~ msgid "Your text is in the project context: choose a template below to continue."

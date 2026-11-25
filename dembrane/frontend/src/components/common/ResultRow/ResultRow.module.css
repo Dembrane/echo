@@ -1,5 +1,7 @@
-/* The row is an `.app-do` (the full box you press); this only lays it out.
- * The keyboard highlight is `data-selected`, the same blue box as a pick. */
+/* A row you press to go somewhere: an icon, a title and a quiet line under it. Home's
+ * search results and the Create menu's "Which workspace" rows share it. The row is an
+ * `.app-do` (the full box you press); this only lays it out. The keyboard highlight is
+ * `data-selected`, the same blue box as a pick. */
 .resultRow {
 	display: flex;
 	width: 100%;

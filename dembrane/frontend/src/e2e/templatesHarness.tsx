@@ -14,9 +14,10 @@ import { PortalSectionEditor } from "@/components/project/portal-editor/PortalSe
 import { useTemplatesCatalog } from "@/components/project/templates/i18n";
 import {
 	CARD_KEYS,
-	type CardKey,
+	type ChoiceKey,
+	cardLine,
 	cardTags,
-	templateGreatFor,
+	QUICK_START,
 	templateName,
 } from "@/components/project/templates/projectTemplates";
 import {
@@ -33,11 +34,13 @@ import { ParticipantInitiateForm } from "@/portal/components/start/ParticipantIn
 import { CreateProjectRoute } from "@/routes/project/CreateProjectRoute";
 import { HostGuidePage } from "@/routes/project/HostGuidePage";
 import { ProjectsHomeRoute } from "@/routes/project/ProjectsHome";
+import { WorkspaceSelectorRoute } from "@/routes/workspaces/WorkspaceSelectorRoute";
 import { cssVariablesResolver, theme } from "@/theme";
 
-// The create flow and workspace home's first-project state (ECHO-1042, ECHO-1053), the
-// portal editor's name box label and a host guide a template filled in, outside the
-// signed-in shell, for screenshots. ?path= picks the page; the spec answers the API.
+// The create flow and workspace home with its Create menu (ECHO-1042, ECHO-1053), the
+// portal editor's name box label, a host guide a template filled in, and Home (/o) with
+// its Create menu, outside the signed-in shell, for screenshots. ?path= picks the page;
+// the spec answers the API.
 const queryClient = new QueryClient({
 	defaultOptions: { queries: { retry: false } },
 });
@@ -46,7 +49,11 @@ queryClient.setQueryData(
 	["v2", "project-templates", "nl"],
 	TEMPLATE_SUMMARIES_NL,
 );
-queryClient.setQueryData(["v2", "me"], { is_staff: false });
+queryClient.setQueryData(["v2", "me"], {
+	display_name: "Sam Jansen",
+	is_staff: false,
+	orgs: [{ id: "o1", name: "Sam's organisation", role: "owner" }],
+});
 // The portal editor's legal basis section and Verify topics, for the editor page.
 const clientManaged = {
 	legal_basis: "client-managed",
@@ -155,7 +162,9 @@ const PortalNameBox = () => {
 	);
 };
 
-// All sixteen cards on one sheet (ECHO-1058), to judge the drawings side by side.
+// Quick start and all sixteen cards on one sheet (ECHO-1058), to judge the drawings side
+// by side.
+const SHEET: ChoiceKey[] = [QUICK_START, ...CARD_KEYS];
 const ContactSheet = () => {
 	const ready = useTemplatesCatalog();
 	const nl = window.location.search.includes("nl-NL");
@@ -171,14 +180,14 @@ const ContactSheet = () => {
 				padding: 24,
 			}}
 		>
-			{CARD_KEYS.map((key: CardKey) => {
+			{SHEET.map((key) => {
 				const tpl = summaries.find((x) => x.key === key);
 				return (
 					<div key={key} className="app-do" style={{ padding: 16 }}>
 						<TemplateCard
 							template={key}
 							name={templateName(key)}
-							greatFor={templateGreatFor(key)}
+							greatFor={cardLine(key)}
 							tags={tpl ? cardTags(tpl) : []}
 						/>
 					</div>
@@ -193,6 +202,7 @@ const path =
 	"/en-US/w/w1/projects/new";
 const router = createMemoryRouter(
 	[
+		{ element: <WorkspaceSelectorRoute />, path: "/:language/o" },
 		{
 			element: <CreateProjectRoute />,
 			path: "/:language/w/:workspaceId/projects/new",
