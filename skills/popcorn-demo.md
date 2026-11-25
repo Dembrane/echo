@@ -42,6 +42,8 @@ curl -sf "${H[@]}" -X POST "$API/api/v2/admin/accounts/demos/check" \
 
 To put the demo in one of their organisations, add `"org_id": "<organisation id>"` to the start. The contact must have an account and be a live member of it, the organisation must not be deleted, and `offer` cannot come with it; otherwise the answer is a 422 naming `org_id` (or `offer`) and nothing is made. The demo then gets a workspace of its own in that organisation, named after `organisation_name`, with the project pinned in it and owned by the contact. No organisation, account manager, stage or onboarding is added, and the contact's role there does not change. `existing_organisation` in the status names the organisation from the first answer on. An `org_id` wins over a shared staff demo workspace.
 
+The staff member who starts the demo (the person, or the holder of the staff key) becomes an admin of the demo's own workspace at the `seed` step, so they can open the draft in the dashboard: a direct row, never an organisation membership, and only for a @dembrane.com account. A row they already have there, removed or not, is left as it is. In a held workspace that row opens it to them alone and takes no seat; in a new prospect's "dembrane demo" it counts as a seat like anyone's. A demo in the shared staff demo workspace adds nobody. They stay a member after publishing; the workspace's admins can remove them.
+
 ## 2. Follow
 
 ```sh
@@ -53,7 +55,7 @@ Steps run `fetch`, `research`, `author`, `seed`, `extract`, `review`. Poll until
 
 ## 3. Review before publishing
 
-Open `links.projects` (the demo in the dashboard) and read `research` in the status. Check that the first screen says the stories are invented, that no real person is quoted or named as saying anything, and that nothing is presented as a real finding. A person decides whether it is good enough to show.
+Open `links.projects` (the demo in the dashboard; the staff member who started it is an admin of its workspace and can open it, a held one included) and read `research` in the status. Check that the first screen says the stories are invented, that no real person is quoted or named as saying anything, and that nothing is presented as a real finding. A person decides whether it is good enough to show.
 
 ## 4. Publish
 
