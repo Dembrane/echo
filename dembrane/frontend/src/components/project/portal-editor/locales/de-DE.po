@@ -60,7 +60,7 @@ msgstr "Erweitert (Tipps und Best Practices)"
 msgid "After"
 msgstr "Danach"
 
-#: src/components/project/portal-editor/sections/privacy.tsx:97
+#: src/components/project/portal-editor/sections/privacy.tsx:98
 msgid "Anonymize transcripts"
 msgstr "Transkripte anonymisieren"
 
@@ -100,7 +100,7 @@ msgstr "Automatisch einen kurzen themenbasierten Titel für jedes Gespräch nach
 msgid "Automation, early features, and moving or deleting this project."
 msgstr "Automatisierung, frühe Funktionen und dieses Projekt verschieben oder löschen."
 
-#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:208
+#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:229
 msgid "Back"
 msgstr "Zurück"
 
@@ -112,7 +112,7 @@ msgstr "Grundlegend (wesentliche Tutorial-Folien)"
 msgid "Before"
 msgstr "Vorher"
 
-#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:170
+#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:168
 msgid "Beta"
 msgstr "Beta"
 
@@ -128,7 +128,7 @@ msgstr "Ideen brainstormen"
 #~ msgid "Change the key terms in Brief"
 #~ msgstr "Ändere die Schlüsselbegriffe im Briefing"
 
-#: src/components/project/portal-editor/sections/verify.tsx:399
+#: src/components/project/portal-editor/sections/verify.tsx:400
 msgid "Change the key terms in the project brief"
 msgstr "Ändere die Schlüsselbegriffe im Projektbriefing"
 
@@ -140,8 +140,8 @@ msgstr "Ändere die Datenschutzeinstellungen im Portal-Editor"
 msgid "Choose a topic first."
 msgstr "Wähle zuerst ein Thema."
 
-#: src/components/project/portal-editor/sections/explore.tsx:136
-#: src/components/project/portal-editor/sections/explore.tsx:156
+#: src/components/project/portal-editor/sections/explore.tsx:137
+#: src/components/project/portal-editor/sections/explore.tsx:157
 msgid "Cross-pollination"
 msgstr "Gegenseitige Anregung"
 
@@ -244,11 +244,11 @@ msgid "Example: a made-up conversation, to show the shape. Real replies are buil
 msgstr "Beispiel: ein ausgedachtes Gespräch, um die Form zu zeigen. Echte Antworten entstehen aus dem, was die Teilnehmenden sagen."
 
 #: src/components/project/portal-editor/sectionLabels.ts:13
-#: src/components/project/portal-editor/sections/explore.tsx:66
+#: src/components/project/portal-editor/sections/explore.tsx:67
 msgid "Explore"
 msgstr "Explore"
 
-#: src/components/project/portal-editor/sections/explore.tsx:147
+#: src/components/project/portal-editor/sections/explore.tsx:148
 msgid "Explore may bring in what other groups in this project said. Off: it only looks at this conversation."
 msgstr "Erkunden darf einbeziehen, was andere Gruppen in diesem Projekt gesagt haben. Aus: Es schaut nur auf dieses Gespräch."
 
@@ -276,13 +276,25 @@ msgstr "Leitfaden, wie Titel generiert werden. Titel beschreiben das Thema des G
 msgid "Hidden"
 msgstr "Verborgen"
 
-#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:397
+#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:398
 msgid "Hide preview"
 msgstr "Vorschau ausblenden"
 
 #: src/components/project/portal-editor/sections/AnonymiseExample.tsx:38
 msgid "Hosts read the after. The recording itself cannot be played or downloaded."
 msgstr "Hosts lesen die Fassung danach. Die Aufnahme selbst kann nicht abgespielt oder heruntergeladen werden."
+
+#: src/components/project/portal-editor/sections/privacy.tsx:96
+msgid "How anonymization works"
+msgstr ""
+
+#: src/components/project/portal-editor/sections/explore.tsx:65
+msgid "How Explore works"
+msgstr ""
+
+#: src/components/project/portal-editor/sections/verify.tsx:374
+msgid "How Verify works"
+msgstr ""
 
 #: src/components/project/portal-editor/sections/AnonymiseExample.tsx:32
 msgid "I'm [name] from [address]. Call me on [phone] about the square."
@@ -300,7 +312,7 @@ msgstr "Italienisch (nur ECHO-Funktionen, Transkription und Zusammenfassungen)"
 msgid "Keep it to {NAME_LABEL_MAX} characters."
 msgstr "Höchstens {NAME_LABEL_MAX} Zeichen."
 
-#: src/components/project/portal-editor/sections/verify.tsx:405
+#: src/components/project/portal-editor/sections/verify.tsx:406
 #: src/components/project/brief/ProjectKeyTermsSection.tsx:81
 msgid "Key terms"
 msgstr "Schlüsselbegriffe"
@@ -310,7 +322,7 @@ msgstr "Schlüsselbegriffe"
 msgid "Language"
 msgstr "Sprache"
 
-#: src/components/project/portal-editor/sections/privacy.tsx:102
+#: src/components/project/portal-editor/sections/privacy.tsx:103
 msgid "Legal basis"
 msgstr "Rechtsgrundlage"
 
@@ -322,8 +334,8 @@ msgstr "Verify Themen werden geladen…"
 msgid "Made by dembrane from a sample conversation, with your settings."
 msgstr "Von dembrane aus einem Beispielgespräch gemacht, mit deinen Einstellungen."
 
-#: src/components/project/portal-editor/sections/explore.tsx:76
-#: src/components/project/portal-editor/sections/explore.tsx:125
+#: src/components/project/portal-editor/sections/explore.tsx:77
+#: src/components/project/portal-editor/sections/explore.tsx:126
 msgid "Mode"
 msgstr "Modus"
 
@@ -331,17 +343,17 @@ msgstr "Modus"
 msgid "Name and tags"
 msgstr "Name und Tags"
 
-#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:223
+#: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:244
 msgid "Next"
 msgstr "Weiter"
 
 #. placeholder {0}: sectionTitle(after)
-#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:357
+#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:358
 msgid "Next: {0}"
 msgstr "Weiter: {0}"
 
-#: src/components/project/portal-editor/sections/verify.tsx:390
-#: src/components/project/portal-editor/sections/verify.tsx:404
+#: src/components/project/portal-editor/sections/verify.tsx:391
+#: src/components/project/portal-editor/sections/verify.tsx:405
 msgid "No key terms yet."
 msgstr "Noch keine Schlüsselbegriffe."
 
@@ -354,7 +366,7 @@ msgid "No verify topics available."
 msgstr "Keine Verify Themen verfügbar."
 
 #: src/components/project/portal-editor/sections/verify.tsx:338
-#: src/components/project/portal-editor/sections/verify.tsx:440
+#: src/components/project/portal-editor/sections/verify.tsx:441
 msgid "None"
 msgstr "Keine"
 
@@ -364,7 +376,7 @@ msgid "Not asked"
 msgstr "Wird nicht gefragt"
 
 #: src/components/project/portal-editor/sections/welcome.tsx:56
-#: src/components/project/portal-editor/sections/explore.tsx:189
+#: src/components/project/portal-editor/sections/explore.tsx:190
 #: src/components/project/portal-editor/sections/about.tsx:41
 msgid "Nothing yet"
 msgstr "Noch nichts"
@@ -373,22 +385,22 @@ msgstr "Noch nichts"
 msgid "Notify participants when a report is published."
 msgstr "Teilnehmer benachrichtigen, wenn ein Bericht veröffentlicht wird."
 
-#: src/components/project/portal-editor/sections/verify.tsx:374
-#: src/components/project/portal-editor/sections/verify.tsx:431
-#: src/components/project/portal-editor/sections/privacy.tsx:96
+#: src/components/project/portal-editor/sections/verify.tsx:375
+#: src/components/project/portal-editor/sections/verify.tsx:432
+#: src/components/project/portal-editor/sections/privacy.tsx:97
 #: src/components/project/portal-editor/sections/finish.tsx:156
-#: src/components/project/portal-editor/sections/explore.tsx:65
-#: src/components/project/portal-editor/sections/explore.tsx:155
+#: src/components/project/portal-editor/sections/explore.tsx:66
+#: src/components/project/portal-editor/sections/explore.tsx:156
 #: src/components/project/portal-editor/sections/about.tsx:148
 msgid "Off"
 msgstr "Aus"
 
-#: src/components/project/portal-editor/sections/verify.tsx:374
-#: src/components/project/portal-editor/sections/verify.tsx:431
-#: src/components/project/portal-editor/sections/privacy.tsx:96
+#: src/components/project/portal-editor/sections/verify.tsx:375
+#: src/components/project/portal-editor/sections/verify.tsx:432
+#: src/components/project/portal-editor/sections/privacy.tsx:97
 #: src/components/project/portal-editor/sections/finish.tsx:156
-#: src/components/project/portal-editor/sections/explore.tsx:65
-#: src/components/project/portal-editor/sections/explore.tsx:155
+#: src/components/project/portal-editor/sections/explore.tsx:66
+#: src/components/project/portal-editor/sections/explore.tsx:156
 #: src/components/project/portal-editor/sections/about.tsx:148
 msgid "On"
 msgstr "Ein"
@@ -434,7 +446,7 @@ msgid "Portal preview: {0}"
 msgstr "Vorschau des Portals: {0}"
 
 #: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:130
-#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:399
+#: src/components/project/portal-editor/PortalSectionEditor/PortalSectionEditor.tsx:400
 msgid "Preview"
 msgstr "Vorschau"
 
@@ -454,16 +466,16 @@ msgstr "Projektbriefing"
 msgid "Recording screen"
 msgstr "Aufnahmebildschirm"
 
-#: src/components/project/portal-editor/sections/verify.tsx:432
+#: src/components/project/portal-editor/sections/verify.tsx:433
 msgid "Remind at finish"
 msgstr "Beim Abschluss erinnern"
 
-#: src/components/project/portal-editor/sections/verify.tsx:416
+#: src/components/project/portal-editor/sections/verify.tsx:417
 msgid "Remind users to verify before finishing"
 msgstr "Benutzer daran erinnern, vor dem Abschließen zu überprüfen"
 
-#: src/components/project/portal-editor/sections/explore.tsx:167
-#: src/components/project/portal-editor/sections/explore.tsx:190
+#: src/components/project/portal-editor/sections/explore.tsx:168
+#: src/components/project/portal-editor/sections/explore.tsx:191
 msgid "Reply prompt"
 msgstr "Antwort-Prompt"
 
@@ -500,7 +512,7 @@ msgstr "Mindestens ein anderes Thema auswählen, bevor dieses gelöscht wird"
 msgid "Select the instructions that will be shown to participants when they start a conversation"
 msgstr "Wähle die Anweisungen aus, die den Teilnehmern beim Starten eines Gesprächs angezeigt werden"
 
-#: src/components/project/portal-editor/sections/explore.tsx:81
+#: src/components/project/portal-editor/sections/explore.tsx:82
 msgid "Select the type of feedback or engagement you want to encourage."
 msgstr "Wähle den Typ der Rückmeldung oder der Beteiligung, die du fördern möchtest."
 
@@ -555,7 +567,7 @@ msgstr "Dankeseite"
 msgid "Thank you page content"
 msgstr "Inhalt der Dankesseite"
 
-#: src/components/project/portal-editor/sections/verify.tsx:381
+#: src/components/project/portal-editor/sections/verify.tsx:382
 msgid "The drafts participants check spell names and terms the way your key terms do."
 msgstr "Die Entwürfe, die die Teilnehmenden prüfen, schreiben Namen und Begriffe so wie deine Schlüsselbegriffe."
 
@@ -587,7 +599,7 @@ msgstr "Diese Seite wird angezeigt, nachdem der Teilnehmer das Gespräch beendet
 msgid "This page is shown to participants when they start a conversation after they successfully complete the tutorial."
 msgstr "Diese Seite wird den Teilnehmern angezeigt, wenn sie nach erfolgreichem Abschluss des Tutorials ein Gespräch beginnen."
 
-#: src/components/project/portal-editor/sections/explore.tsx:174
+#: src/components/project/portal-editor/sections/explore.tsx:175
 msgid "This prompt guides how the AI responds to participants. Customize it to shape the type of feedback or engagement you want to encourage."
 msgstr "Dieser Prompt leitet ein, wie die KI auf die Teilnehmer reagiert. Passe ihn an, um den Typ der Rückmeldung oder Engagement zu bestimmen, den du fördern möchtest."
 
@@ -628,12 +640,12 @@ msgstr "Ukrainisch (nur ECHO-Funktionen, Transkription und Zusammenfassungen)"
 
 #. js-lingui-explicit-id
 #: src/components/project/portal-editor/sectionLabels.ts:15
-#: src/components/project/portal-editor/sections/verify.tsx:375
+#: src/components/project/portal-editor/sections/verify.tsx:376
 msgid "dashboard.dembrane.verify.title"
 msgstr "Verifizieren"
 
 #: src/components/project/portal-editor/sections/verify.tsx:189
-#: src/components/project/portal-editor/sections/verify.tsx:441
+#: src/components/project/portal-editor/sections/verify.tsx:442
 #: src/components/project/portal-editor/preview/PortalPreviewFrame.tsx:31
 msgid "Verify topics"
 msgstr "Verify-Themen"
@@ -671,7 +683,7 @@ msgstr "Worum es in diesem Projekt geht. dembrane liest es für Transkripte, Zus
 msgid "When enabled, all new transcripts will have personal information (names, emails, phone numbers, addresses) replaced with placeholders. Anonymized conversations also disable audio playback, audio download, and retranscription to protect participant privacy. This cannot be undone for already-processed conversations."
 msgstr "Wenn aktiviert, werden alle neuen Transkripte persönliche Informationen (Namen, E-Mails, Telefonnummern, Adressen) durch Platzhalter ersetzt. Anonymisierte Unterhaltungen deaktivieren auch die Audio-Wiedergabe, den Audio-Download und die Hertranskription, um die Privatsphäre der Teilnehmer zu schützen. Dies kann für bereits verarbeitete Gespräche nicht rückgängig gemacht werden."
 
-#: src/components/project/portal-editor/sections/verify.tsx:423
+#: src/components/project/portal-editor/sections/verify.tsx:424
 msgid "When finishing the conversation, participants who haven't verified yet will be prompted to verify or skip"
 msgstr "Wenn das Gespräch abgeschlossen wird, werden Teilnehmer, die noch nicht verifiziert haben, aufgefordert, zu verifizieren oder zu überspringen"
 

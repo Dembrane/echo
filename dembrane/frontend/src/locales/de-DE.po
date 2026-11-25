@@ -124,7 +124,7 @@ msgid "{0, plural, one {# conversation could not be added to this chat.} other {
 msgstr "{0, plural, one {# Gespräch konnte diesem Chat nicht hinzugefügt werden.} other {# Gespräche konnten diesem Chat nicht hinzugefügt werden.}}"
 
 #. placeholder {0}: hiddenConversations.size
-#: src/components/map/MapPage.tsx:849
+#: src/components/map/MapPage.tsx:853
 msgid "{0, plural, one {# conversation is hidden from the map.} other {# conversations are hidden from the map.}}"
 msgstr "{0, plural, one {# Gespräch ist auf der Karte ausgeblendet.} other {# Gespräche sind auf der Karte ausgeblendet.}}"
 
@@ -141,7 +141,7 @@ msgstr "{0, plural, one {# Gespräch wird ebenfalls ausgeblendet.} other {# Gesp
 #. placeholder {0}: counts.conversations
 #. placeholder {0}: p.conversation_count
 #. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
-#: src/routes/project/popcorn/PopcornRoute.tsx:50
+#: src/routes/project/popcorn/PopcornRoute.tsx:51
 #: src/components/workspace/OrganisationUsageRollup.tsx:851
 #: src/components/project/ProjectListItem.tsx:219
 #: src/components/popcorn/PopcornStatus.tsx:41
@@ -193,7 +193,7 @@ msgstr "{0, plural, one {# Zahlung} other {# Zahlungen}}"
 #. placeholder {0}: presentation.counts.phrases
 #. placeholder {0}: counts.phrases
 #: src/routes/project/present/PresentRoute.tsx:904
-#: src/routes/project/popcorn/PopcornRoute.tsx:54
+#: src/routes/project/popcorn/PopcornRoute.tsx:55
 msgid "{0, plural, one {# phrase} other {# phrases}}"
 msgstr "{0, plural, one {# Phrase} other {# Phrasen}}"
 
@@ -241,7 +241,7 @@ msgid "{0, plural, one {# transcribing} other {# transcribing}}"
 msgstr "{0, plural, one {# wird transkribiert} other {# werden transkribiert}}"
 
 #. placeholder {0}: views?.total ?? 0
-#: src/routes/project/report/ProjectReportRoute.tsx:1074
+#: src/routes/project/report/ProjectReportRoute.tsx:1077
 msgid "{0, plural, one {# view} other {# views}}"
 msgstr "{0, plural, one {# Aufruf} other {# Aufrufe}}"
 
@@ -437,7 +437,7 @@ msgid "{0} h ago"
 msgstr "vor {0} Std."
 
 #. placeholder {0}: counts.held_back
-#: src/routes/project/popcorn/PopcornRoute.tsx:57
+#: src/routes/project/popcorn/PopcornRoute.tsx:58
 msgid "{0} held back"
 msgstr "{0} zurückgehalten"
 
@@ -554,7 +554,7 @@ msgid "{0} total rises to {1} when {pendingInvites} pending {2} accepted"
 msgstr "{0} Gesamtbetrag steigt auf {1}, wenn {pendingInvites} ausstehende {2} angenommen werden"
 
 #. placeholder {0}: counts.validated ?? 0
-#: src/routes/project/popcorn/PopcornRoute.tsx:55
+#: src/routes/project/popcorn/PopcornRoute.tsx:56
 msgid "{0} validated"
 msgstr "{0} validiert"
 
@@ -641,11 +641,11 @@ msgstr "{amount} Standard"
 msgid "{amount} until {until}"
 msgstr "{amount} bis {until}"
 
-#: src/components/map/MapPage.tsx:511
+#: src/components/map/MapPage.tsx:513
 msgid "{argumentCount, plural, one {# argument} other {# arguments}}"
 msgstr "{argumentCount, plural, one {# Argument} other {# Argumente}}"
 
-#: src/components/map/MapPage.tsx:510
+#: src/components/map/MapPage.tsx:512
 msgid "{argumentCount, plural, one {# argument} other {# arguments}} from {conversationCount, plural, one {# conversation} other {# conversations}}"
 msgstr "{argumentCount, plural, one {# Argument} other {# Argumente}} aus {conversationCount, plural, one {# Gespräch} other {# Gesprächen}}"
 
@@ -886,11 +886,11 @@ msgstr "{person} verliert den Zugriff auf alle Arbeitsbereiche in dieser Organis
 msgid "{phrases, plural, one {# phrase} other {# phrases}}"
 msgstr "{phrases, plural, one {# Phrase} other {# Phrasen}}"
 
-#: src/routes/project/chat/NewChatRoute.tsx:600
+#: src/routes/project/chat/NewChatRoute.tsx:603
 msgid "{pickedCount, plural, one {Focusing on # conversation} other {Focusing on # conversations}}"
 msgstr "{pickedCount, plural, one {Fokus auf # Gespräch} other {Fokus auf # Gespräche}}"
 
-#: src/routes/project/chat/NewChatRoute.tsx:606
+#: src/routes/project/chat/NewChatRoute.tsx:609
 msgid "{pickedCount, plural, one {Using # conversation} other {Using # conversations}}"
 msgstr "{pickedCount, plural, one {# Gespräch wird verwendet} other {# Gespräche werden verwendet}}"
 
@@ -997,7 +997,7 @@ msgstr "{totalWorkspaces, plural, one {# Arbeitsbereich} other {# Arbeitsbereich
 msgid "{translated} of {total} translated, {failed} could not be translated"
 msgstr "{translated} von {total} übersetzt, {failed} konnten nicht übersetzt werden"
 
-#: src/components/map/MapPage.tsx:788
+#: src/components/map/MapPage.tsx:792
 msgid "{unplacedCount, plural, one {# argument could not be placed on the map.} other {# arguments could not be placed on the map.}}"
 msgstr "{unplacedCount, plural, one {# Argument konnte nicht auf der Karte platziert werden.} other {# Argumente konnten nicht auf der Karte platziert werden.}}"
 
@@ -1205,7 +1205,7 @@ msgstr "Ein neuer Assistent und ein Live-Monitor"
 msgid "A new free plan"
 msgstr "Ein neuer kostenloser Tarif"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:467
+#: src/routes/project/report/ProjectReportRoute.tsx:470
 msgid "A new report will be automatically generated and published at the scheduled time."
 msgstr "Ein neuer Bericht wird automatisch zum geplanten Zeitpunkt erstellt und veröffentlicht."
 
@@ -2004,6 +2004,10 @@ msgstr "Alle Plätze sind belegt. Gib einen Platz frei oder wechsle den Tarif, u
 msgid "All seats taken"
 msgstr "Alle Plätze belegt"
 
+#: src/components/explainers/popcorn.tsx:288
+msgid "All tables talk at once."
+msgstr "Alle Tische sprechen gleichzeitig."
+
 #: src/components/chat/TemplatesModal.tsx:807
 msgid "All templates"
 msgstr "Alle Vorlagen"
@@ -2128,11 +2132,11 @@ msgstr "Eine frühere Formulierung wiederhergestellt"
 #~ msgid "An email notification will be sent to {0} participant{1}. Do you want to proceed?"
 #~ msgstr "Eine E-Mail-Benachrichtigung wird an {0} Teilnehmer{1} gesendet. Möchten Sie fortfahren?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1238
+#: src/routes/project/report/ProjectReportRoute.tsx:1241
 msgid "An email notification will be sent to {participantCount, plural, one {# participant} other {# participants}}. Do you want to proceed?"
 msgstr "Eine E-Mail-Benachrichtigung wird an {participantCount, plural, one {# Teilnehmer} other {# Teilnehmer}} gesendet. Möchtest du fortfahren?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1248
+#: src/routes/project/report/ProjectReportRoute.tsx:1251
 msgid "An email notification will be sent to participants. Do you want to proceed?"
 msgstr "Eine E-Mail-Benachrichtigung wird an die Teilnehmer gesendet. Möchtest du fortfahren?"
 
@@ -2193,8 +2197,8 @@ msgstr "Analyse | dembrane"
 #~ msgid "Analysis runs"
 #~ msgstr "Analysedurchläufe"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:205
-#: src/routes/project/report/ProjectReportRoute.tsx:1089
+#: src/routes/project/report/ProjectReportRoute.tsx:208
+#: src/routes/project/report/ProjectReportRoute.tsx:1092
 msgid "Analytics"
 msgstr "Analytik"
 
@@ -2307,7 +2311,7 @@ msgstr "Beliebiger Tag"
 msgid "Anyone in your organisation can find this workspace. Admins can join; members can request access."
 msgstr "Jeder in deiner Organisation kann diesen Arbeitsbereich finden. Administratoren können beitreten; Mitglieder können Zugriff anfordern."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:967
+#: src/routes/project/report/ProjectReportRoute.tsx:970
 msgid "Anyone with the link can read it. No login, and no transcripts."
 msgstr "Alle mit dem Link können ihn lesen. Ohne Anmeldung und ohne Transkripte."
 
@@ -2393,6 +2397,10 @@ msgstr "Genehmigen"
 msgid "Approve for 24 hours"
 msgstr "Für 24 Stunden genehmigen"
 
+#: src/components/explainers/verify.tsx:741
+msgid "Approve it when you feel heard."
+msgstr "Geben Sie es frei, sobald Sie sich gehört fühlen."
+
 #: src/components/workspace/SupportAccessSection.tsx:284
 msgid "Approve support access"
 msgstr "Support-Zugriff genehmigen"
@@ -2423,7 +2431,7 @@ msgstr "Bist du sicher, dass du dieses Gespräch löschen möchtest? Diese Aktio
 msgid "Are you sure you want to delete this project? This action cannot be undone."
 msgstr "Bist du sicher, dass du dieses Projekt löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1263
+#: src/routes/project/report/ProjectReportRoute.tsx:1266
 msgid "Are you sure you want to delete this report? This action cannot be undone."
 msgstr "Bist du sicher, dass du diesen Bericht löschen möchtest? Diese Aktion kann nicht rückgängig gemacht werden."
 
@@ -2502,7 +2510,7 @@ msgstr "Mit dembrane vereinbart"
 msgid "Ask"
 msgstr "Fragen"
 
-#: src/routes/project/chat/NewChatRoute.tsx:262
+#: src/routes/project/chat/NewChatRoute.tsx:263
 msgid "Ask | dembrane"
 msgstr "Fragen | dembrane"
 
@@ -2530,7 +2538,11 @@ msgstr "Fragen zur App stellen."
 msgid "Ask about these"
 msgstr "Dazu fragen"
 
-#: src/routes/project/chat/NewChatRoute.tsx:682
+#: src/components/explainers/chat.tsx:767
+msgid "Ask about your conversations."
+msgstr "Stellen Sie Fragen zu Ihren Gesprächen."
+
+#: src/routes/project/chat/NewChatRoute.tsx:685
 #: src/components/chat/AgenticChatPanel.tsx:2350
 msgid "Ask about your conversations..."
 msgstr "Frage zu deinen Gesprächen..."
@@ -2674,6 +2686,10 @@ msgstr "Audio pro Gespräch"
 msgid "Audio per month"
 msgstr "Audio pro Monat"
 
+#: src/components/explainers/anonymise.tsx:353
+msgid "Audio playback and download are off."
+msgstr "Audiowiedergabe und Download sind deaktiviert."
+
 #: src/components/conversation/ConversationTranscriptSection.tsx:283
 msgid "Audio playback not available for anonymized conversations"
 msgstr "Audio-Wiedergabe nicht verfügbar für anonymisierte Unterhaltungen"
@@ -2791,7 +2807,7 @@ msgstr "Abwesend"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:760
 #: src/routes/project/CreateProjectRoute.tsx:521
 #: src/routes/project/CreateProjectRoute.tsx:740
-#: src/routes/project/report/ProjectReportRoute.tsx:500
+#: src/routes/project/report/ProjectReportRoute.tsx:503
 #: src/routes/organisation/OrganisationRoute.tsx:696
 #: src/routes/organisation/OrganisationRoute.tsx:719
 #: src/routes/onboarding/OnboardingRoute.tsx:502
@@ -2903,9 +2919,9 @@ msgid "participant.modal.verify_reminder.title"
 msgstr "Bevor du abschließt"
 
 #: src/routes/project/ProjectMonitorRoute.tsx:86
-#: src/routes/project/popcorn/PopcornRoute.tsx:111
+#: src/routes/project/popcorn/PopcornRoute.tsx:114
 #: src/routes/project/library/LibraryRoute.tsx:98
-#: src/routes/project/chat/NewChatRoute.tsx:710
+#: src/routes/project/chat/NewChatRoute.tsx:713
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:115
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:124
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:146
@@ -2913,7 +2929,7 @@ msgstr "Bevor du abschließt"
 #: src/components/report/UpdateReportModalButton.tsx:200
 #: src/components/report/CreateReportForm.tsx:241
 #: src/components/project/ProjectExperimentalSection.tsx:56
-#: src/components/map/MapPage.tsx:680
+#: src/components/map/MapPage.tsx:684
 #: src/components/conversation/RetranscribeConversation.tsx:180
 #: src/components/chat/ChatModeSelector.tsx:105
 #: src/components/chat/AgenticIntroModal.tsx:25
@@ -3100,7 +3116,7 @@ msgstr "Aufrufe, die keinem Account zugeordnet werden konnten"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:760
 #: src/routes/project/ProjectsHome.tsx:454
 #: src/routes/project/CreateProjectRoute.tsx:492
-#: src/routes/project/report/ProjectReportRoute.tsx:281
+#: src/routes/project/report/ProjectReportRoute.tsx:284
 #: src/routes/organisation/OrganisationRoute.tsx:1840
 #: src/routes/organisation/OrganisationRoute.tsx:1863
 #: src/routes/organisation/OrganisationRoute.tsx:1886
@@ -3198,7 +3214,7 @@ msgstr "Tarif kündigen"
 msgid "Cancel request"
 msgstr "Anfrage abbrechen"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:535
+#: src/routes/project/report/ProjectReportRoute.tsx:538
 msgid "Cancel schedule"
 msgstr "Planung abbrechen"
 
@@ -3230,7 +3246,7 @@ msgstr "Durch die Kündigung verlängert sich dein Tarif nicht mehr. Du behälts
 msgid "Cannot add empty conversation"
 msgstr "Leeres Gespräch kann nicht hinzugefügt werden"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:514
+#: src/routes/project/report/ProjectReportRoute.tsx:517
 msgid "Cannot reschedule within 10 minutes of the scheduled time"
 msgstr "Kann nicht innerhalb von 10 Minuten vor dem geplanten Zeitpunkt umgeplant werden"
 
@@ -3435,7 +3451,7 @@ msgid "Chat is more reliable."
 msgstr "Der Chat ist zuverlässiger."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:630
-#: src/routes/project/chat/NewChatRoute.tsx:542
+#: src/routes/project/chat/NewChatRoute.tsx:543
 msgid "Chat isn't available on your access level. Reach out to your workspace admin to request an upgrade."
 msgstr "Der Chat ist mit deiner Berechtigungsstufe nicht verfügbar. Wende dich an deinen Arbeitsbereich-Administrator, um ein Upgrade anzufragen."
 
@@ -3466,7 +3482,7 @@ msgstr "Der Chat warnt, bevor eine Nachricht über dem Zeichenlimit gesendet wir
 msgid "Chat with individual conversations."
 msgstr "Chat mit einzelnen Gesprächen."
 
-#: src/routes/project/chat/NewChatRoute.tsx:159
+#: src/routes/project/chat/NewChatRoute.tsx:160
 msgid "Chats"
 msgstr "Chats"
 
@@ -3664,7 +3680,7 @@ msgstr "Filter zurücksetzen"
 
 #: src/routes/workspaces/WorkspaceSelectorRoute.tsx:334
 #: src/routes/project/ProjectsHome.tsx:365
-#: src/routes/project/chat/NewChatRoute.tsx:175
+#: src/routes/project/chat/NewChatRoute.tsx:176
 #: src/features/sidebar/blocks/SearchBlock.tsx:168
 #: src/components/invite/WorkspaceSelectList.tsx:98
 #: src/components/conversation/ProjectConversationsPanel.tsx:709
@@ -3979,7 +3995,7 @@ msgstr "Passwort bestätigen"
 #~ msgid "Confirm Publishing"
 #~ msgstr "Veröffentlichung bestätigen"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:492
+#: src/routes/project/report/ProjectReportRoute.tsx:495
 msgid "Confirm reschedule"
 msgstr "Umplanung bestätigen"
 
@@ -4267,7 +4283,7 @@ msgstr "Gespräche: {0}"
 msgid "participant.refine.cooling.down"
 msgstr "Abkühlung läuft. Verfügbar in {0}"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1041
+#: src/routes/project/report/ProjectReportRoute.tsx:1044
 #: src/portal/components/ParticipantShareModal.tsx:111
 #: src/portal/components/start/InAppBrowserNotice.tsx:66
 #: src/portal/components/conversation/text/ParticipantConversationText.tsx:237
@@ -4328,7 +4344,7 @@ msgstr "Link kopieren"
 #~ msgid "Copy link to clipboard"
 #~ msgstr "Link in die Zwischenablage kopieren"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1043
+#: src/routes/project/report/ProjectReportRoute.tsx:1046
 msgid "Copy report content"
 msgstr "Berichtsinhalt kopieren"
 
@@ -4380,7 +4396,7 @@ msgstr "Nicht alle Änderungen an den Schlagwörtern konnten übernommen werden.
 msgid "Could not apply the changes. Nothing was saved."
 msgstr "Änderungen konnten nicht übernommen werden. Es wurde nichts gespeichert."
 
-#: src/routes/project/chat/NewChatRoute.tsx:457
+#: src/routes/project/chat/NewChatRoute.tsx:458
 msgid "Could not carry over your selection. Pick again below."
 msgstr "Deine Auswahl konnte nicht übernommen werden. Wähle unten erneut."
 
@@ -4459,7 +4475,7 @@ msgstr "Übersicht konnte nicht geladen werden. Authentifizierung und Backend-Pr
 msgid "Could not load this project's goal."
 msgstr "Ziel dieses Projekts konnte nicht geladen werden."
 
-#: src/routes/project/chat/NewChatRoute.tsx:461
+#: src/routes/project/chat/NewChatRoute.tsx:462
 msgid "Could not open the conversation list. Try again."
 msgstr "Die Gesprächsliste konnte nicht geöffnet werden. Versuche es erneut."
 
@@ -4996,7 +5012,7 @@ msgstr "Standard: {defaultValue}"
 msgid "Delegate multi-step analysis with live tool execution"
 msgstr "Multistufige Analyse mit live Werkzeugausführung delegieren"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1264
+#: src/routes/project/report/ProjectReportRoute.tsx:1267
 #: src/portal/components/conversation/UserChunkMessage.tsx:100
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
 #: src/components/project/ProjectTagsInput.tsx:121
@@ -5046,8 +5062,8 @@ msgstr "Projekt löschen"
 #~ msgid "Delete Project"
 #~ msgstr "Projekt löschen"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1053
-#: src/routes/project/report/ProjectReportRoute.tsx:1262
+#: src/routes/project/report/ProjectReportRoute.tsx:1056
+#: src/routes/project/report/ProjectReportRoute.tsx:1265
 msgid "Delete report"
 msgstr "Bericht löschen"
 
@@ -5132,6 +5148,10 @@ msgstr "dembrane B.V. {0}, alle Rechte vorbehalten."
 msgid "dembrane can make mistakes. Please double-check responses."
 msgstr "dembrane kann Fehler machen. Bitte überprüfe Antworten."
 
+#: src/components/explainers/popcorn.tsx:289
+msgid "dembrane catches each table's key ideas."
+msgstr "dembrane erfasst die wichtigsten Ideen jedes Tisches."
+
 #: src/components/popcorn/PopcornVoiceSection.tsx:60
 msgid "dembrane default"
 msgstr "dembrane-Standard"
@@ -5143,6 +5163,10 @@ msgstr "dembrane Event-Einladung"
 #: src/components/settings/LegalBasisCard.tsx:23
 msgid "dembrane events"
 msgstr "dembrane events"
+
+#: src/components/explainers/map.tsx:479
+msgid "dembrane finds the ideas people raised."
+msgstr "dembrane findet die eingebrachten Ideen."
 
 #: src/features/sidebar/shell/SidebarHeader.tsx:23
 #: src/features/sidebar/shell/SidebarHeader.tsx:30
@@ -5427,7 +5451,7 @@ msgstr "Alle Transkripte herunterladen"
 msgid "Download as"
 msgstr "Herunterladen als"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1015
+#: src/routes/project/report/ProjectReportRoute.tsx:1018
 msgid "Download as PDF"
 msgstr "Als PDF herunterladen"
 
@@ -5576,6 +5600,10 @@ msgstr "Jedes neue Mitglied wird pro Platz in deinem Tarif abgerechnet."
 msgid "Each popcorn pops once per language: the original first, then these in random order."
 msgstr "Jedes Popcorn ploppt einmal pro Sprache auf: das Original zuerst, danach die weiteren in zufälliger Reihenfolge."
 
+#: src/components/explainers/report.tsx:432
+msgid "Each question gets its own answer."
+msgstr "Jede Frage erhält eine eigene Antwort."
+
 #: src/components/map/panels/HistoryPanel.tsx:129
 msgid "Earlier in the spotlight"
 msgstr "Zuvor im Spotlight"
@@ -5645,7 +5673,7 @@ msgstr "Ziel bearbeiten"
 msgid "Edit methodology"
 msgstr "Methodik bearbeiten"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1126
+#: src/routes/project/report/ProjectReportRoute.tsx:1129
 msgid "Edit mode"
 msgstr "Bearbeitungsmodus"
 
@@ -5788,11 +5816,11 @@ msgstr "email@work.com"
 #~ msgid "Embed in a webpage"
 #~ msgstr "In Webseite einbetten"
 
-#: src/components/map/MapPage.tsx:105
+#: src/components/map/MapPage.tsx:107
 msgid "Embedding arguments"
 msgstr "Argumente werden eingebettet"
 
-#: src/components/map/MapPage.tsx:104
+#: src/components/map/MapPage.tsx:106
 msgid "Embedding arguments {done} of {total}"
 msgstr "Argumente werden eingebettet: {done} von {total}"
 
@@ -6021,6 +6049,10 @@ msgstr "Jeder Aufruf eines Agenten in dieser Organisation, neueste zuerst."
 msgid "Every connected agent in {0} stops working immediately. Members keep their connections and they resume if you turn this back on."
 msgstr "Jeder verbundene Agent in {0} stoppt sofort. Mitglieder behalten ihre Verbindungen und diese werden fortgesetzt, wenn du dies wieder aktivierst."
 
+#: src/components/explainers/report.tsx:430
+msgid "Every conversation becomes a transcript."
+msgstr "Aus jedem Gespräch entsteht ein Transkript."
+
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:206
 msgid "Every member's connection that names this organisation."
 msgstr "Jede Verbindung eines Mitglieds, die diese Organisation nennt."
@@ -6028,6 +6060,14 @@ msgstr "Jede Verbindung eines Mitglieds, die diese Organisation nennt."
 #: src/routes/admin/AiCostsPanel.tsx:655
 msgid "Every priced AI call, all tiers"
 msgstr "Alle abgerechneten KI-Aufrufe, alle Tarife"
+
+#: src/components/explainers/verify.tsx:742
+msgid "Every table approves its own outcomes."
+msgstr "Jeder Tisch gibt seine eigenen Ergebnisse frei."
+
+#: src/components/explainers/explore.tsx:700
+msgid "Every table explores more ideas."
+msgstr "Jeder Tisch vertieft weitere Ideen."
 
 #: src/components/pricing/questions.ts:158
 msgid "Every week for a year"
@@ -6051,6 +6091,14 @@ msgstr "Alle in deiner Organisation"
 #: src/components/training/TrainingRowActions.tsx:286
 msgid "Everyone on the roster is trained."
 msgstr "Alle auf der Liste sind geschult."
+
+#: src/components/explainers/popcorn.tsx:291
+msgid "Everyone sees what each table thinks."
+msgstr "Alle sehen, was an den einzelnen Tischen gedacht wird."
+
+#: src/components/explainers/anonymise.tsx:351
+msgid "Everyone talks as they normally would."
+msgstr "Alle unterhalten sich ganz normal."
 
 #. js-lingui-explicit-id
 #: src/portal/components/settings/MicrophoneCheck.tsx:389
@@ -6086,7 +6134,7 @@ msgstr "Beispiel-Webhook-Payload"
 msgid "Exceeds seat cap. Overage billing applies."
 msgstr "Überschreitet das Sitzplatzlimit. Es fallen Zusatzgebühren an."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1133
+#: src/routes/project/report/ProjectReportRoute.tsx:1136
 #: src/routes/project/canvas/CanvasRoute.tsx:613
 #: src/routes/project/canvas/CanvasRoute.tsx:618
 msgid "Exit fullscreen"
@@ -6144,6 +6192,10 @@ msgstr "Erkunde Geschichten und Perspektiven mit der Chatvorlage Narratives, auf
 #: src/components/release/PilotHistory.tsx:41
 msgid "Explore the dembrane/pilot archive"
 msgstr "Das dembrane/pilot-Archiv erkunden"
+
+#: src/components/explainers/verify.tsx:743
+msgid "Explore them later in the dashboard."
+msgstr "Erkunden Sie sie später im Dashboard."
 
 #: src/components/conversation/StatePill.tsx:25
 msgid "Exploring"
@@ -6373,7 +6425,7 @@ msgstr "Avatar konnte nicht entfernt werden"
 msgid "Failed to remove logo"
 msgstr "Logo konnte nicht entfernt werden"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:483
+#: src/routes/project/report/ProjectReportRoute.tsx:486
 msgid "Failed to reschedule. Please choose a time further in the future and try again."
 msgstr "Neuplanung fehlgeschlagen. Bitte wahle einen spateren Zeitpunkt und versuche es erneut."
 
@@ -6825,7 +6877,7 @@ msgstr "Vollbild"
 msgid "Full transcript (when available)"
 msgstr "Vollständiges Transkript (wenn verfügbar)"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1133
+#: src/routes/project/report/ProjectReportRoute.tsx:1136
 msgid "Fullscreen"
 msgstr "Vollbild"
 
@@ -6893,11 +6945,11 @@ msgstr "Gesprächstitel automatisch generieren, mit der Option, dies zu deaktivi
 #~ msgstr "Bibliothek generieren"
 
 #: src/components/map/attributes.ts:126
-#: src/components/map/MapPage.tsx:155
+#: src/components/map/MapPage.tsx:157
 msgid "Generate map"
 msgstr "Karte generieren"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:510
+#: src/routes/project/report/ProjectReportRoute.tsx:513
 #: src/components/report/UpdateReportModalButton.tsx:349
 #: src/components/report/CreateReportForm.tsx:350
 msgid "Generate now"
@@ -6947,7 +6999,7 @@ msgstr "Aus dem Transkript generiert. Du kannst es bearbeiten."
 msgid "Generating"
 msgstr "Wird erstellt"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:306
+#: src/routes/project/report/ProjectReportRoute.tsx:309
 msgid "Generating report..."
 msgstr "Bericht wird generiert..."
 
@@ -6955,7 +7007,7 @@ msgstr "Bericht wird generiert..."
 msgid "Generating the summary. Please wait..."
 msgstr "Zusammenfassung wird erstellt. Kurz warten ..."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:259
+#: src/routes/project/report/ProjectReportRoute.tsx:262
 msgid "Generating your report..."
 msgstr "Dein Bericht wird erstellt..."
 
@@ -6971,6 +7023,14 @@ msgstr "Holt euch eine Frage, um tiefer zu gehen."
 #: src/components/release/releaseHistory.ts:792
 msgid "Get a reply during a conversation"
 msgstr "Während eines Gesprächs eine Antwort erhalten"
+
+#: src/components/explainers/explore.tsx:698
+msgid "Get a reply that goes deeper."
+msgstr "Erhalten Sie eine fundiertere Antwort."
+
+#: src/components/explainers/verify.tsx:739
+msgid "Get a summary of your conversation."
+msgstr "Erhalten Sie eine Zusammenfassung Ihres Gesprächs."
 
 #~ msgid "Get an immediate reply from dembrane to help you deepen the conversation."
 #~ msgstr "Erhalte eine sofortige Antwort von dembrane, um das Gespräch zu vertiefen."
@@ -7135,8 +7195,8 @@ msgstr "Steuere die Berichterstellung mit eigenen Anweisungen."
 msgid "Guide the report"
 msgstr "Bericht anleiten"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:331
-#: src/routes/project/report/ProjectReportRoute.tsx:1116
+#: src/routes/project/report/ProjectReportRoute.tsx:334
+#: src/routes/project/report/ProjectReportRoute.tsx:1119
 msgid "Guided"
 msgstr "Angeleitet"
 
@@ -7220,7 +7280,7 @@ msgstr "Details ausblenden"
 msgid "Hide from this presentation"
 msgstr "In dieser Präsentation ausblenden"
 
-#: src/components/map/MapPage.tsx:799
+#: src/components/map/MapPage.tsx:803
 msgid "Hide missing arguments"
 msgstr "Fehlende Argumente ausblenden"
 
@@ -7330,6 +7390,10 @@ msgstr "Stunden ab jetzt"
 #~ msgid "Hover over nodes to explore clusters. Hold position for 1.5s to distill the core idea."
 #~ msgstr "Fahren Sie über Knoten, um Cluster zu erkunden. Verweilen Sie 1,5 Sek., um die Kernidee zu erfassen."
 
+#: src/routes/project/chat/NewChatRoute.tsx:574
+msgid "How Ask works"
+msgstr "So funktioniert Fragen"
+
 #: src/components/chat/ChatHistoryMessage.tsx:250
 msgid "How Ask works and what it can do."
 msgstr "Wie Fragen funktioniert und was es kann."
@@ -7346,9 +7410,21 @@ msgstr "Wie es funktioniert:"
 msgid "How many recordings do you expect in your first year?"
 msgstr "Wie viele Aufnahmen erwartest du in deinem ersten Jahr?"
 
+#: src/routes/project/popcorn/PopcornRoute.tsx:108
+msgid "How Popcorn works"
+msgstr "So funktioniert Popcorn"
+
+#: src/routes/project/report/ProjectReportRoute.tsx:174
+msgid "How reports work"
+msgstr "So funktionieren Berichte"
+
 #: src/components/popcorn/PopcornVoiceSection.tsx:51
 msgid "How should the phrases sound?"
 msgstr "Wie sollen die Sätze klingen?"
+
+#: src/components/map/MapPage.tsx:678
+msgid "How the map works"
+msgstr "So funktioniert die Karte"
 
 #~ msgid ""
 #~ "How would you describe to a colleague what are you trying to accomplish with this project?\n"
@@ -7545,7 +7621,7 @@ msgstr "Posteingang"
 msgid "incl. {deleted} from removed accounts"
 msgstr "inkl. {deleted} von entfernten Konten"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:970
+#: src/routes/project/report/ProjectReportRoute.tsx:973
 msgid "Include portal link"
 msgstr "Portal-Link einschließen"
 
@@ -7612,7 +7688,7 @@ msgstr "Erkenntnis {0}"
 #~ msgid "Inspect evidence or hide a finding from this presentation. Shared results stay available in Analysis."
 #~ msgstr ""
 
-#: src/components/map/MapPage.tsx:801
+#: src/components/map/MapPage.tsx:805
 msgid "Inspect missing arguments"
 msgstr "Fehlende Argumente ansehen"
 
@@ -8185,7 +8261,7 @@ msgstr "Zuletzt aktualisiert {0}"
 msgid "Last used"
 msgstr "Zuletzt verwendet"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:329
+#: src/routes/project/report/ProjectReportRoute.tsx:332
 msgid "Latest"
 msgstr "Neueste"
 
@@ -8216,6 +8292,10 @@ msgstr "Feedback geben"
 #: src/routes/admin/AdminSettingsRoute.tsx:1115
 msgid "Leave now"
 msgstr "Jetzt verlassen"
+
+#: src/components/explainers/explore.tsx:701
+msgid "Leave with new insights to explore."
+msgstr "Gewinnen Sie neue Erkenntnisse zum Weiterdenken."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1128
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1147
@@ -8486,7 +8566,7 @@ msgid "Live until {0}"
 msgstr "Live bis {0}"
 
 #. placeholder {0}: format(expiry, "EEE d MMM, HH:mm")
-#: src/routes/project/popcorn/PopcornRoute.tsx:63
+#: src/routes/project/popcorn/PopcornRoute.tsx:64
 msgid "live until {0}, reads every {every} min"
 msgstr "live bis {0}, Durchlauf alle {every} Min."
 
@@ -8495,7 +8575,7 @@ msgstr "live bis {0}, Durchlauf alle {every} Min."
 msgid "Live, {0} phrases so far"
 msgstr "Live, bisher {0} Phrasen"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:64
+#: src/routes/project/popcorn/PopcornRoute.tsx:65
 msgid "live, reads every {every} min"
 msgstr "live, Durchlauf alle {every} Min."
 
@@ -8573,11 +8653,11 @@ msgstr "Präsentation wird geladen"
 #~ msgid "Loading templates"
 #~ msgstr "Vorlagen werden geladen"
 
-#: src/components/map/MapPage.tsx:562
+#: src/components/map/MapPage.tsx:564
 msgid "Loading the map."
 msgstr "Die Karte wird geladen."
 
-#: src/components/map/MapPage.tsx:868
+#: src/components/map/MapPage.tsx:872
 msgid "Loading the new scope. The current map stays until then."
 msgstr "Neuer Bereich wird geladen. Die aktuelle Karte bleibt bis dahin sichtbar."
 
@@ -8830,7 +8910,7 @@ msgstr "Gerade wurden viele Karten gestartet. Versuche es gleich noch einmal."
 
 #: src/routes/project/present/blockLabel.ts:6
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:155
-#: src/components/map/MapPage.tsx:677
+#: src/components/map/MapPage.tsx:680
 #: src/components/map/panels/MapSettingsMenu.tsx:405
 msgid "Map"
 msgstr "Karte"
@@ -8859,7 +8939,7 @@ msgstr "Kartenanzeige"
 msgid "Map failed"
 msgstr "Map fehlgeschlagen"
 
-#: src/components/map/MapPage.tsx:604
+#: src/components/map/MapPage.tsx:606
 msgid "Map reads this project's transcripts, finds the arguments people make, and places related arguments close together. Generate a map to explore them."
 msgstr "Die Karte liest die Transkripte dieses Projekts, erfasst die Argumente der Beteiligten und platziert zusammenhängende Argumente nah beieinander. Erstelle eine Karte, um sie zu erkunden."
 
@@ -9115,7 +9195,7 @@ msgstr "weitere"
 msgid "More"
 msgstr "Mehr"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1024
+#: src/routes/project/report/ProjectReportRoute.tsx:1027
 msgid "More actions"
 msgstr "Weitere Aktionen"
 
@@ -9327,6 +9407,10 @@ msgstr "Benannte Arbeitsweisen, die dein Team wiederverwenden kann."
 #: src/components/conversation/ImproveTranscriptAnimation.tsx:532
 msgid "Names and key terms are spelled right, and the text is cleaned up."
 msgstr "Namen und Schlüsselbegriffe werden richtig geschrieben, und der Text wird bereinigt."
+
+#: src/components/explainers/anonymise.tsx:352
+msgid "Names and personal details are replaced."
+msgstr "Namen und persönliche Details werden ersetzt."
 
 #: src/components/popcorn/PopcornScreenSettings.tsx:31
 msgid "Names on the legend"
@@ -9552,7 +9636,7 @@ msgstr "Diesen Monat wurden keine KI-Kosten erfasst."
 msgid "No arguments saved yet."
 msgstr "Noch keine Argumente gespeichert."
 
-#: src/components/map/MapPage.tsx:623
+#: src/components/map/MapPage.tsx:625
 #: src/components/map/panels/BudgetStates.tsx:9
 msgid "No arguments were found in this project's conversations."
 msgstr "In den Gesprächen dieses Projekts wurden keine Argumente gefunden."
@@ -9594,11 +9678,11 @@ msgstr "Keine Änderung"
 msgid "project.sidebar.chat.empty.description"
 msgstr "Keine Chats gefunden. Starte einen Chat mit dem \"Fragen\"-Button."
 
-#: src/routes/project/chat/NewChatRoute.tsx:188
+#: src/routes/project/chat/NewChatRoute.tsx:189
 msgid "No chats match your search."
 msgstr "Keine Chats entsprechen deiner Suche."
 
-#: src/routes/project/chat/NewChatRoute.tsx:193
+#: src/routes/project/chat/NewChatRoute.tsx:194
 msgid "No chats yet."
 msgstr "Noch keine Chats."
 
@@ -9723,7 +9807,7 @@ msgstr "Keine verknüpften Argumente."
 msgid "No logo set. dembrane default will be used."
 msgstr "Kein Logo festgelegt. Es wird der dembrane-Standard verwendet."
 
-#: src/components/map/MapPage.tsx:600
+#: src/components/map/MapPage.tsx:602
 msgid "No map has been generated for this project yet."
 msgstr "Für dieses Projekt wurde noch keine Map erstellt."
 
@@ -9907,7 +9991,7 @@ msgstr "Keine Berichtsdaten verfügbar"
 msgid "No report found"
 msgstr "Kein Bericht gefunden"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:926
+#: src/routes/project/report/ProjectReportRoute.tsx:929
 msgid "No reports yet"
 msgstr "Noch keine Berichte"
 
@@ -10388,6 +10472,10 @@ msgstr "Eine Zahl"
 msgid "one quote only"
 msgstr "nur ein Zitat"
 
+#: src/components/explainers/report.tsx:431
+msgid "One report covers all of them."
+msgstr "Ein Bericht fasst alle zusammen."
+
 #: src/components/results/ResultRow.tsx:289
 msgid "One sentence, for the people you work with and anyone who checks later."
 msgstr "Ein Satz, für die Menschen, mit denen du arbeitest, und für alle, die das später prüfen."
@@ -10488,6 +10576,10 @@ msgstr "Kontoaktionen öffnen"
 
 #~ msgid "Open all"
 #~ msgstr "Alle öffnen"
+
+#: src/components/explainers/map.tsx:481
+msgid "Open an idea to read quotes."
+msgstr "Öffnen Sie eine Idee, um Zitate zu lesen."
 
 #: src/features/processes/copy.ts:24
 msgid "Open chat"
@@ -11473,7 +11565,7 @@ msgstr "Popcorn auch auf"
 #~ msgid "Popcorn cadence floor"
 #~ msgstr "Popcorn Mindestkadenz"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:191
+#: src/routes/project/popcorn/PopcornRoute.tsx:194
 msgid "Popcorn could not be loaded"
 msgstr "Popcorn konnte nicht geladen werden"
 
@@ -11887,7 +11979,7 @@ msgstr "Projektname und -ID"
 msgid "Project name must be at least 4 characters long"
 msgstr "Der Projektname muss mindestens 4 Zeichen lang sein"
 
-#: src/routes/project/chat/NewChatRoute.tsx:530
+#: src/routes/project/chat/NewChatRoute.tsx:531
 msgid "Project not found"
 msgstr "Projekt nicht gefunden"
 
@@ -11984,14 +12076,14 @@ msgstr "Anbieter: {provider}"
 msgid "Public page"
 msgstr "Öffentliche Seite"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1254
+#: src/routes/project/report/ProjectReportRoute.tsx:1257
 msgid "Publish"
 msgstr "Veröffentlichen"
 
 #~ msgid "Publish changes"
 #~ msgstr "Änderungen veröffentlichen"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1235
+#: src/routes/project/report/ProjectReportRoute.tsx:1238
 msgid "Publish report"
 msgstr "Bericht veröffentlichen"
 
@@ -12056,6 +12148,10 @@ msgstr "Zitate ({quoteCount})"
 
 #~ msgid "Quotes ({quotes})"
 #~ msgstr "Zitate ({quotes})"
+
+#: src/components/explainers/report.tsx:433
+msgid "Quotes show people's own words."
+msgstr "Zitate zeigen den Originalwortlaut."
 
 #. placeholder {0}: items.length
 #: src/components/chat/AgenticChatPanel.tsx:620
@@ -12171,11 +12267,11 @@ msgstr "Skill lesen"
 msgid "Reading a transcript"
 msgstr "Transkript lesen"
 
-#: src/components/map/MapPage.tsx:112
+#: src/components/map/MapPage.tsx:114
 msgid "Reading conversations"
 msgstr "Gespräche werden gelesen"
 
-#: src/components/map/MapPage.tsx:111
+#: src/components/map/MapPage.tsx:113
 msgid "Reading conversations {done} of {total}"
 msgstr "Gespräche werden gelesen ({done} von {total})"
 
@@ -12446,7 +12542,7 @@ msgstr "Wird aktualisiert…"
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:635
 #: src/components/popcorn/PopcornActions.tsx:70
 #: src/components/popcorn/PopcornActions.tsx:96
-#: src/components/map/MapPage.tsx:153
+#: src/components/map/MapPage.tsx:155
 #: src/components/conversation/ConversationEdit.tsx:455
 #: src/components/conversation/ConversationEdit.tsx:524
 msgid "Regenerate"
@@ -12484,6 +12580,10 @@ msgstr "Zusammenfassung wird neu erstellt. Kurz warten ..."
 #: src/routes/auth/Register.tsx:37
 msgid "Register | dembrane"
 msgstr "Registrieren | dembrane"
+
+#: src/components/explainers/map.tsx:480
+msgid "Related ideas sit together."
+msgstr "Verwandte Ideen stehen beieinander."
 
 #: src/components/map/panels/NodeDetailCard.tsx:325
 #: src/components/map/panels/NodeDetailCard.tsx:531
@@ -12703,7 +12803,7 @@ msgid "report"
 msgstr "Bericht"
 
 #: src/routes/project/ProjectHomeRoute.tsx:115
-#: src/routes/project/report/ProjectReportRoute.tsx:174
+#: src/routes/project/report/ProjectReportRoute.tsx:176
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:162
 #: src/components/report/ReportRenderer.tsx:65
 msgid "Report"
@@ -12748,12 +12848,12 @@ msgstr "Berichtserstellung abgebrochen"
 msgid "Report generation continues in the background with a visible status."
 msgstr "Die Berichtserstellung läuft im Hintergrund mit sichtbarem Status weiter."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:237
+#: src/routes/project/report/ProjectReportRoute.tsx:240
 msgid "Report generation in progress..."
 msgstr "Bericht wird erstellt..."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:758
-#: src/routes/project/report/ProjectReportRoute.tsx:1200
+#: src/routes/project/report/ProjectReportRoute.tsx:761
+#: src/routes/project/report/ProjectReportRoute.tsx:1203
 msgid "Report generation was cancelled. You can start a new report below."
 msgstr "Die Berichtserstellung wurde abgebrochen. Du kannst unten einen neuen Bericht starten."
 
@@ -12781,7 +12881,7 @@ msgstr "Bericht nicht erstellt"
 msgid "Report ready"
 msgstr "Bericht fertig"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:464
+#: src/routes/project/report/ProjectReportRoute.tsx:467
 msgid "Report scheduled"
 msgstr "Bericht geplant"
 
@@ -12809,7 +12909,7 @@ msgstr "Bericht aktualisiert"
 msgid "Report updated · {0}"
 msgstr "Bericht aktualisiert · {0}"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:886
+#: src/routes/project/report/ProjectReportRoute.tsx:889
 msgid "Reports"
 msgstr "Berichte"
 
@@ -12922,12 +13022,12 @@ msgstr "Erforderlich"
 #~ msgid "Rerun popcorn?"
 #~ msgstr "Popcorn erneut ausführen?"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:525
+#: src/routes/project/report/ProjectReportRoute.tsx:528
 #: src/components/training/TrainingRowActions.tsx:150
 msgid "Reschedule"
 msgstr "Umplanen"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:477
+#: src/routes/project/report/ProjectReportRoute.tsx:480
 msgid "Reschedule to"
 msgstr "Umplanen auf"
 
@@ -13553,8 +13653,8 @@ msgstr "Argumente suchen"
 msgid "Search by organisation"
 msgstr "Nach Organisation suchen"
 
-#: src/routes/project/chat/NewChatRoute.tsx:168
 #: src/routes/project/chat/NewChatRoute.tsx:169
+#: src/routes/project/chat/NewChatRoute.tsx:170
 msgid "Search chats"
 msgstr "Chats durchsuchen"
 
@@ -13822,9 +13922,9 @@ msgstr "Gespräch auswählen"
 #: src/routes/project/chat/ProjectChatRoute.tsx:976
 #: src/routes/project/chat/ProjectChatRoute.tsx:977
 #: src/routes/project/chat/ProjectChatRoute.tsx:1062
-#: src/routes/project/chat/NewChatRoute.tsx:633
-#: src/routes/project/chat/NewChatRoute.tsx:635
-#: src/routes/project/chat/NewChatRoute.tsx:746
+#: src/routes/project/chat/NewChatRoute.tsx:636
+#: src/routes/project/chat/NewChatRoute.tsx:638
+#: src/routes/project/chat/NewChatRoute.tsx:749
 #: src/components/conversation/ProjectConversationsPanel.tsx:829
 msgid "Select conversations"
 msgstr "Gespräche auswählen"
@@ -13856,6 +13956,10 @@ msgstr "Projekt auswählen"
 #: src/components/conversation/ConversationDrilldownModal.tsx:201
 msgid "Select tags"
 msgstr "Tags auswählen"
+
+#: src/components/explainers/chat.tsx:768
+msgid "Select the conversations that matter."
+msgstr "Wählen Sie die relevanten Gespräche aus."
 
 #: src/components/results/curate/CurateTable.tsx:200
 msgid "Select this finding"
@@ -13908,7 +14012,7 @@ msgid "Self-serve"
 msgstr "Self-Service"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:1001
-#: src/routes/project/chat/NewChatRoute.tsx:656
+#: src/routes/project/chat/NewChatRoute.tsx:659
 #: src/components/feedback/ResponseFeedbackControls.tsx:219
 #: src/components/chat/AgenticChatPanel.tsx:2324
 msgid "Send"
@@ -14277,7 +14381,7 @@ msgstr "Alle {0} anzeigen"
 msgid "Show all {total}"
 msgstr "Alle {total} anzeigen"
 
-#: src/components/map/MapPage.tsx:860
+#: src/components/map/MapPage.tsx:864
 msgid "Show all conversations"
 msgstr "Alle Gespräche anzeigen"
 
@@ -14289,7 +14393,7 @@ msgstr "Audio-Player anzeigen"
 msgid "Show breakdown"
 msgstr "Aufschlüsselung anzeigen"
 
-#: src/components/map/MapPage.tsx:821
+#: src/components/map/MapPage.tsx:825
 msgid "Show current arguments"
 msgstr "Aktuelle Argumente anzeigen"
 
@@ -14301,7 +14405,7 @@ msgstr "Daten anzeigen"
 msgid "Show detail"
 msgstr "Details anzeigen"
 
-#: src/components/map/MapPage.tsx:842
+#: src/components/map/MapPage.tsx:846
 msgid "Show every tag"
 msgstr "Alle Tags anzeigen"
 
@@ -14433,20 +14537,20 @@ msgid "Showing {rangeStart}-{rangeEnd} of {total}"
 msgstr "{rangeStart}-{rangeEnd} von {total}"
 
 #. placeholder {0}: tagIndex.tags .filter((tag) => chosenTags.has(tag.id)) .map((tag) => tag.name) .join(", ")
-#: src/components/map/MapPage.tsx:828
+#: src/components/map/MapPage.tsx:832
 msgid "Showing conversations tagged {0}."
 msgstr "Gespräche mit dem Tag {0}."
 
-#: src/components/map/MapPage.tsx:814
+#: src/components/map/MapPage.tsx:818
 msgid "Showing the arguments of one result."
 msgstr "Die Argumente eines Ergebnisses werden angezeigt."
 
 #. placeholder {0}: listedChats.length
-#: src/routes/project/chat/NewChatRoute.tsx:198
+#: src/routes/project/chat/NewChatRoute.tsx:199
 msgid "Showing the first {0} of {shownCount} matches. Narrow the search to see the rest."
 msgstr "Die ersten {0} von {shownCount} Treffern werden angezeigt. Grenze die Suche ein, um den Rest zu sehen."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:862
+#: src/routes/project/report/ProjectReportRoute.tsx:865
 msgid "Showing your most recent completed report."
 msgstr "Dein zuletzt fertiggestellter Bericht wird angezeigt."
 
@@ -14514,7 +14618,7 @@ msgstr "Slack-Community"
 msgid "Smoother recording and quicker questions"
 msgstr "Flüssigere Aufnahmen und schnellere Fragen"
 
-#: src/components/map/MapPage.tsx:808
+#: src/components/map/MapPage.tsx:812
 msgid "Some arguments are based on an earlier analysis."
 msgstr "Einige Argumente basieren auf einer früheren Analyse."
 
@@ -14589,12 +14693,12 @@ msgstr "Etwas ist schief gelaufen"
 msgid "participant.conversation.error"
 msgstr "Etwas ist schief gelaufen"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:857
+#: src/routes/project/report/ProjectReportRoute.tsx:860
 msgid "Something went wrong generating your latest report."
 msgstr "Beim Erstellen deines letzten Berichts ist etwas schiefgelaufen."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:765
-#: src/routes/project/report/ProjectReportRoute.tsx:1209
+#: src/routes/project/report/ProjectReportRoute.tsx:768
+#: src/routes/project/report/ProjectReportRoute.tsx:1212
 msgid "Something went wrong generating your report."
 msgstr "Beim Erstellen deines Berichts ist etwas schiefgelaufen."
 
@@ -14724,6 +14828,10 @@ msgstr "Der Chat für spezifische Details berücksichtigt nun die manuelle Auswa
 #: src/routes/admin/AiCostsPanel.tsx:650
 msgid "Spend"
 msgstr "Ausgaben"
+
+#: src/components/explainers/verify.tsx:740
+msgid "Spot a mistake? Discuss and revise."
+msgstr "Fehler entdeckt? Besprechen und anpassen."
 
 #: src/components/map/panels/SpotlightPanel.tsx:218
 #: src/components/map/panels/SpotlightPanel.tsx:220
@@ -15293,6 +15401,23 @@ msgstr "Mitmachen"
 #~ msgid "Take some time to create an outcome that makes your contribution concrete."
 #~ msgstr "Nimm dir Zeit, ein konkretes Ergebnis zu erstellen, das deinen Beitrag festhält."
 
+#: src/components/explainers/explore.tsx:699
+msgid "Take the conversation somewhere new."
+msgstr "Bringen Sie das Gespräch auf neue Wege."
+
+#: src/components/explainers/verify.tsx:737
+#: src/components/explainers/explore.tsx:696
+msgid "Talk it through at your table."
+msgstr "Besprechen Sie es an Ihrem Tisch."
+
+#: src/components/explainers/explore.tsx:697
+msgid "Tap ECHO, then tap Explore."
+msgstr "Tippen Sie auf ECHO und dann auf Explore."
+
+#: src/components/explainers/verify.tsx:738
+msgid "Tap ECHO, then tap Verify."
+msgstr "Tippen Sie auf ECHO und dann auf Verify."
+
 #: src/components/release/releaseHistory.ts:44
 msgid "Tapping Record twice no longer creates duplicate conversations."
 msgstr "Zweimaliges Tippen auf „Aufnehmen“ erstellt keine doppelten Gespräche mehr."
@@ -15319,7 +15444,7 @@ msgid "Template"
 msgstr "Vorlage"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:596
-#: src/routes/project/chat/NewChatRoute.tsx:314
+#: src/routes/project/chat/NewChatRoute.tsx:315
 #: src/components/chat/AgenticChatPanel.tsx:1738
 msgid "Template applied"
 msgstr "Template übernommen"
@@ -15487,6 +15612,10 @@ msgstr "Der Agent und das betreibende Unternehmen erhalten die von dir freigegeb
 #: src/routes/project/chat/ProjectChatRoute.tsx:843
 msgid "The AI couldn't answer this question. Try rewording it."
 msgstr "Die KI konnte diese Frage nicht beantworten. Versuche, sie umzuformulieren."
+
+#: src/components/explainers/chat.tsx:770
+msgid "The answer cites those conversations."
+msgstr "Die Antwort bezieht sich auf diese Gespräche."
 
 #: src/components/release/releases.ts:201
 msgid "The app feels much faster overall."
@@ -15668,6 +15797,10 @@ msgstr "Der Bildschirm mit dem Host-Leitfaden zeigt den Code zum Mitmachen. Scha
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "Der Host hat noch keine Präsentation vorbereitet."
 
+#: src/components/explainers/anonymise.tsx:354
+msgid "The ideas stay. The names don't."
+msgstr "Die Ideen bleiben. Die Namen nicht."
+
 #~ msgid "The invite is in your inbox. We will read your answers before then and bring a draft offer. Do you have any questions in the meantime? Reach out to"
 #~ msgstr "Die Einladung liegt in Ihrem Postfach. Wir schauen uns Ihre Antworten vorher an und bereiten ein Angebot vor. Haben Sie in der Zwischenzeit Fragen? Wenden Sie sich an"
 
@@ -15676,7 +15809,7 @@ msgid "The invite was sent to {invitedEmail}, but you're signed in as {myEmail}.
 msgstr "Die Einladung wurde an {invitedEmail} gesendet, du bist jedoch als {myEmail} angemeldet. Melde dich ab und mit der richtigen Adresse an, oder bitte den Administrator um eine erneute Einladung an {myEmail}."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:774
+#: src/components/map/MapPage.tsx:778
 msgid "The last generation failed, so this is still the previous map. {0}"
 msgstr "Die letzte Generierung ist fehlgeschlagen, daher siehst du noch die vorherige Karte. {0}"
 
@@ -15709,11 +15842,11 @@ msgid "The live popcorn deck and the canvases built for this project live here."
 msgstr "Das Live-Popcorn-Deck und die für dieses Projekt erstellten Canvases befinden sich hier."
 
 #. placeholder {0}: failedAttempt.error ?? ""
-#: src/components/map/MapPage.tsx:779
+#: src/components/map/MapPage.tsx:783
 msgid "The map could not be generated. {0}"
 msgstr "Die Karte konnte nicht erstellt werden. {0}"
 
-#: src/components/map/MapPage.tsx:574
+#: src/components/map/MapPage.tsx:576
 msgid "The map could not be loaded"
 msgstr "Die Karte konnte nicht geladen werden"
 
@@ -15728,7 +15861,7 @@ msgstr "Die Karte konnte nicht geladen werden."
 msgid "The map could not be started."
 msgstr "Die Karte konnte nicht gestartet werden."
 
-#: src/components/map/MapPage.tsx:587
+#: src/components/map/MapPage.tsx:589
 msgid "The map is being generated. It appears here when it is ready."
 msgstr "Die Karte wird erstellt. Sie erscheint hier, sobald sie fertig ist."
 
@@ -15838,7 +15971,7 @@ msgstr "Die Spannungsfelder zwischen den Wünschen der Menschen, abgeglichen mit
 msgid "The random walk will surface nodes here once available."
 msgstr "Der Random Walk zeigt hier Nodes an, sobald welche verfügbar sind."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:971
+#: src/routes/project/report/ProjectReportRoute.tsx:974
 msgid "The report ends with an invitation to add your voice."
 msgstr "Der Bericht endet mit einer Einladung, deine Stimme einzubringen."
 
@@ -16007,6 +16140,10 @@ msgstr "Diese Arbeitsbereiche werden separat abgerechnet. Jede Person, die du hi
 #: src/components/billing/BillingManager.tsx:1526
 msgid "These workspaces have their own plan, managed from each workspace. They aren't part of this organisation's plan."
 msgstr "Diese Arbeitsbereiche haben ihren eigenen Tarif, der im jeweiligen Arbeitsbereich verwaltet wird. Sie sind nicht Teil des Tarifs dieser Organisation."
+
+#: src/components/explainers/popcorn.tsx:290
+msgid "They appear on the big screen."
+msgstr "Sie erscheinen auf dem großen Bildschirm."
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:659
 msgid "They'll be added as members. You can add more later."
@@ -16347,8 +16484,8 @@ msgstr "Diese Präsentation ist nicht verfügbar."
 msgid "This project could not be reached."
 msgstr "Dieses Projekt konnte nicht erreicht werden."
 
-#: src/components/map/MapPage.tsx:593
-#: src/components/map/MapPage.tsx:618
+#: src/components/map/MapPage.tsx:595
+#: src/components/map/MapPage.tsx:620
 msgid "This project has no conversations with transcripts yet. Generate a map once conversations have been transcribed."
 msgstr "Dieses Projekt hat noch keine Gespräche mit Transkripten. Erstelle eine Map, sobald Gespräche transkribiert wurden."
 
@@ -16413,7 +16550,7 @@ msgstr "Dieser Bericht ist noch nicht verfügbar."
 #~ msgstr "Dieser Bericht ist derzeit nicht verfügbar. "
 
 #. placeholder {0}: views?.total ?? 0
-#: src/routes/project/report/ProjectReportRoute.tsx:213
+#: src/routes/project/report/ProjectReportRoute.tsx:216
 msgid "This report was opened by {0} people"
 msgstr "Dieser Bericht wurde von {0} Personen geöffnet"
 
@@ -16989,7 +17126,7 @@ msgstr "Probleme bei der Anmeldung? Wende dich an support@dembrane.com."
 #: src/components/results/resultEditing.tsx:555
 #: src/components/pricing/PricingTextInput.tsx:346
 #: src/components/present/TranslationStatus.tsx:143
-#: src/components/map/MapPage.tsx:151
+#: src/components/map/MapPage.tsx:153
 #: src/components/map/panels/SpotlightPanel.tsx:414
 #: src/components/map/panels/HistoryPanel.tsx:165
 #: src/components/dropzone/UploadConversationDropzone.tsx:994
@@ -17006,7 +17143,7 @@ msgstr "Erneut versuchen"
 #~ msgid "Try again in a moment."
 #~ msgstr ""
 
-#: src/routes/project/chat/NewChatRoute.tsx:707
+#: src/routes/project/chat/NewChatRoute.tsx:710
 msgid "Try Agentic instead"
 msgstr "Stattdessen Agentic ausprobieren"
 
@@ -17103,6 +17240,10 @@ msgstr "Gib <0>{0}</0> ein, um zu bestätigen."
 msgid "Type a message or press / for templates..."
 msgstr "Nachricht eingeben oder / für Vorlagen drücken..."
 
+#: src/components/explainers/chat.tsx:769
+msgid "Type your question and send it."
+msgstr "Geben Sie Ihre Frage ein und senden Sie sie ab."
+
 #: src/portal/components/conversation/text/ParticipantConversationText.tsx:249
 msgid "Type your response here"
 msgstr "Gib hier deine Antwort ein"
@@ -17143,7 +17284,7 @@ msgid "Under your organisation"
 msgstr "Unter deiner Organisation"
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:598
-#: src/routes/project/chat/NewChatRoute.tsx:316
+#: src/routes/project/chat/NewChatRoute.tsx:317
 #: src/components/results/resultEditing.tsx:574
 #: src/components/results/ResultRow.tsx:367
 #: src/components/chat/AgenticChatPanel.tsx:1740
@@ -17276,7 +17417,7 @@ msgstr "Unbenanntes Gespräch"
 msgid "Untitled methodology"
 msgstr "Unbenannte Methodik"
 
-#: src/routes/project/report/ProjectReportRoute.tsx:307
+#: src/routes/project/report/ProjectReportRoute.tsx:310
 msgid "Untitled report"
 msgstr "Unbenannter Bericht"
 
@@ -17915,7 +18056,7 @@ msgstr "Warten auf Gespräche..."
 msgid "Waiting for inputs"
 msgstr "Warten auf Eingaben"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:48
+#: src/routes/project/popcorn/PopcornRoute.tsx:49
 msgid "Waiting for the first conversation"
 msgstr "Warten auf das erste Gespräch"
 
@@ -17927,7 +18068,7 @@ msgstr "Warten auf das erste Gespräch mit einem Transkript."
 msgid "Waiting for the next node"
 msgstr "Warten auf den nächsten Knoten"
 
-#: src/components/map/MapPage.tsx:114
+#: src/components/map/MapPage.tsx:116
 msgid "Waiting to start"
 msgstr "Warten auf Start"
 
@@ -18369,7 +18510,7 @@ msgstr "Wo die Sichtweisen verschieden blieben, jede Seite in einer Zeile."
 #~ msgid "Where would you like to go?"
 #~ msgstr "Wohin möchtest du gehen?"
 
-#: src/routes/project/chat/NewChatRoute.tsx:574
+#: src/routes/project/chat/NewChatRoute.tsx:576
 #: src/components/chat/AgenticChatPanel.tsx:1916
 msgid "Where would you like to start?"
 msgstr "Wo möchtest du beginnen?"
@@ -18715,7 +18856,7 @@ msgstr "Du kannst das später in den Arbeitsbereich-Einstellungen ändern."
 msgid "You can close this page. We'll notify you when it's done."
 msgstr "Du kannst diese Seite schließen. Wir benachrichtigen dich, sobald alles fertig ist."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:262
+#: src/routes/project/report/ProjectReportRoute.tsx:265
 msgid "You can navigate away and come back later. Your report will continue generating in the background."
 msgstr "Du kannst die Seite verlassen und später zurückkommen. Dein Bericht wird im Hintergrund weiter erstellt."
 
@@ -18743,7 +18884,7 @@ msgstr "Du kannst dies später unter <0>Hilfe, Eigenen Agenten verbinden</0> wid
 #~ msgid "You can skip this and add them later."
 #~ msgstr "Sie können diesen Schritt überspringen und sie später hinzufügen."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:1214
+#: src/routes/project/report/ProjectReportRoute.tsx:1217
 msgid "You can try again below."
 msgstr "Du kannst es unten erneut versuchen."
 
@@ -19112,6 +19253,10 @@ msgstr "Dein Browser blockiert das Mikrofon. Erlaube den Zugriff und versuche es
 #~ msgid "Your call is booked."
 #~ msgstr "Ihr Termin ist gebucht."
 
+#: src/components/explainers/map.tsx:478
+msgid "Your conversations hold many ideas."
+msgstr "Ihre Gespräche stecken voller Ideen."
+
 #. js-lingui-explicit-id
 #: src/lib/errors/present.ts:69
 msgid "error.fallback.upgrade"
@@ -19188,7 +19333,7 @@ msgstr "Deine Einladung wurde bereits angenommen, aber du bist kein Mitglied von
 msgid "Your last payment didn't go through. Your plan stays active. Update your payment method or retry the charge to settle up."
 msgstr "Deine letzte Zahlung ist fehlgeschlagen. Dein Tarif bleibt aktiv. Aktualisiere deine Zahlungsmethode oder wiederhole die Abbuchung, um den Betrag zu begleichen."
 
-#: src/routes/project/report/ProjectReportRoute.tsx:848
+#: src/routes/project/report/ProjectReportRoute.tsx:851
 msgid "Your latest report generation was cancelled. Showing your most recent completed report."
 msgstr "Die Erstellung deines neuesten Berichts wurde abgebrochen. Dein letzter abgeschlossener Bericht wird angezeigt."
 
