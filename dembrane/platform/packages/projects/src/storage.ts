@@ -1,3 +1,4 @@
+import { heldForDemo } from "@dembrane/access";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import { directusRow } from "@dembrane/legacy-shape";
@@ -799,7 +800,8 @@ export function projectsStorage(db: Db) {
     /**
      * Everyone with access to a workspace (spec 2.3): direct rows other than support staff,
      * then org owners everywhere, org admins on open workspaces, org members only with the
-     * legacy inherit flag; sticky removals skip derivation.
+     * legacy inherit flag; sticky removals skip derivation. A workspace held back for a
+     * demo derives nothing.
      */
     async effectiveMemberIds(workspaceId: string) {
       const ws = await self.liveWorkspace(workspaceId);
@@ -816,6 +818,8 @@ export function projectsStorage(db: Db) {
         )
         .orderBy(asc(workspace_membership.id));
       const out = direct.map((r) => r.user_id);
+      // A workspace held back for a demo derives nothing from its organisation yet.
+      if (heldForDemo(ws.settings)) return out;
       const settings = (ws.settings ?? {}) as {
         inherit_organisation_members?: unknown;
         sticky_removed?: unknown;

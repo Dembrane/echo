@@ -1,4 +1,4 @@
-import { isWorkspaceRole, roleHas } from "@dembrane/access";
+import { heldForDemo, isWorkspaceRole, roleHas } from "@dembrane/access";
 import type { Db } from "@dembrane/db";
 import { notificationStorage } from "./storage";
 
@@ -6,7 +6,8 @@ import { notificationStorage } from "./storage";
  * Who hears about an event. Workspace audiences use effective membership: direct rows
  * (never staff support) plus access derived from the org, with the same rules as the
  * access resolver (owners everywhere, admins on open workspaces, members only through the
- * legacy inherit flag, sticky removals respected).
+ * legacy inherit flag, sticky removals respected, nothing derived in a workspace held
+ * back for a demo).
  */
 export function audiences(db: Db) {
   const store = notificationStorage(db);
@@ -16,7 +17,9 @@ export function audiences(db: Db) {
     if (!ws || ws.deletedAt) return [];
     const out = new Map<string, string>();
     for (const r of await store.directMembers(workspaceId)) out.set(r.userId, r.role);
-    if (!ws.orgId) return [...out].map(([userId, role]) => ({ userId, role }));
+    // A workspace held back for a demo derives nothing from its organisation yet.
+    if (!ws.orgId || heldForDemo(ws.settings))
+      return [...out].map(([userId, role]) => ({ userId, role }));
     const settings = (ws.settings ?? {}) as {
       sticky_removed?: unknown;
       inherit_organisation_members?: unknown;

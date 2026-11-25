@@ -30,6 +30,7 @@ import {
   updateBilling,
 } from "./customer";
 import {
+  checkDemo,
   createDemo,
   demoStatus,
   listDemos,
@@ -315,6 +316,19 @@ export function accountsRoutes(d: AccountsDeps) {
     const b = await body(c, K.DemoCreateRequest);
     requireDemoSettings();
     return c.json(await createDemo(d, who, b), 201);
+  });
+  // Before the /:demoId routes, though no POST matches /demos/:demoId alone.
+  // The answer says whether an address has an account: staff only, and the email is read
+  // from the body, never from the URL.
+  app.post(R.checkDemo.path, async (c) => {
+    const who = requireUser(c);
+    const b = await body(c, K.DemoCheckRequest);
+    // The audit row says which address and name were asked about.
+    await staffCan(d, who, "accounts.demo.check", undefined, c.get("requestId"), {
+      contact_email: b.contact_email?.trim() || null,
+      organisation_name: b.organisation_name?.trim() || null,
+    });
+    return c.json(await checkDemo(d, b));
   });
   app.get(R.demoStatus.path, async (c) => {
     await staffCan(d, requireUser(c), "accounts.demo.read", demo(c), c.get("requestId"));

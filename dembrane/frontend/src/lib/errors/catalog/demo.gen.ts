@@ -68,6 +68,14 @@ export const demo = {
     action: "none",
     detail: "That organisation was deleted",
     audience: "staff",
-    description: "The prospect's organisation exists but is deleted.",
+    description:
+      "The prospect's organisation exists but is deleted, or the organisation a demo was placed in was deleted or no longer exists when staff publish with the email on.",
+  },
+  "demo.contact_not_in_organisation": {
+    action: "none",
+    detail: "The contact is no longer in that organisation",
+    audience: "staff",
+    description:
+      "Staff publish a demo placed in an existing organisation with the email on, and its contact no longer has an account or is no longer a live member of that organisation.",
   },
 } as const satisfies Codes<"demo">;

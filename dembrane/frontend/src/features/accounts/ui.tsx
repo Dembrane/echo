@@ -29,3 +29,14 @@ export const Section = ({
 		{children}
 	</Box>
 );
+
+/**
+ * Keeps an email address or a short label in one piece inside a sentence: the line breaks
+ * around it while it fits on a line, and inside it only when it is longer than the line
+ * (an address would otherwise split at its hyphen on a phone, or run off it when long).
+ */
+export const Whole = ({ children }: { children: string }) => (
+	<span className="inline-block max-w-full [overflow-wrap:anywhere]">
+		{children}
+	</span>
+);
