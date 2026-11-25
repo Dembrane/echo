@@ -62,6 +62,7 @@ export const useExploreOptions = ({ page }: SectionProps): SectionContent => {
 						/>
 					</Stack>
 				),
+				explainer: { label: t`How Explore works`, name: "explore" },
 				summary: onOff(v.is_get_reply_enabled, t`On`, t`Off`),
 				title: t`Explore`,
 			},

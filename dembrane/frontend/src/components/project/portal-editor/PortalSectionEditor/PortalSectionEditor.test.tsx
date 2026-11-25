@@ -376,7 +376,7 @@ describe("portal editor pages: Verify and Explore", () => {
 		);
 		expect(
 			screen
-				.getByTestId("portal-option-anonymise-row")
+				.getByTestId("portal-option-anonymise-header")
 				.contains(screen.getByTestId("portal-option-anonymise-beta")),
 		).toBe(true);
 		expect(body.textContent).not.toContain("Beta");

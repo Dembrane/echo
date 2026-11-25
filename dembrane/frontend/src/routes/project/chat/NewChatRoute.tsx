@@ -57,6 +57,7 @@ import { BaseSkeleton } from "@/components/common/BaseSkeleton";
 import { NavigationButton } from "@/components/common/NavigationButton";
 import { toast } from "@/components/common/Toaster";
 import { ProjectConversationsPanel } from "@/components/conversation/ProjectConversationsPanel";
+import { Explainer } from "@/components/explainers/Explainer";
 import { PageContainer } from "@/components/layout/PageContainer";
 import {
 	useAttachChatConversationsMutation,
@@ -570,9 +571,11 @@ export const NewChatRoute = () => {
 			<Stack gap="xl">
 				{ENABLE_AGENTIC_CHAT ? (
 					<Stack gap="lg" className="pb-4 pt-10">
-						<Title order={2}>
-							<Trans>Where would you like to start?</Trans>
-						</Title>
+						<Explainer name="chat" label={t`How Ask works`}>
+							<Title order={2}>
+								<Trans>Where would you like to start?</Trans>
+							</Title>
+						</Explainer>
 						{allowanceApplies && (
 							<FreeAllowanceBanner
 								workspaceId={workspaceId}

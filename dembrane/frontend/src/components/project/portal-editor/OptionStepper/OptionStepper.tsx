@@ -18,6 +18,10 @@ import {
 	useRef,
 } from "react";
 import { FlowProgress } from "@/components/common/FlowProgress/FlowProgress";
+import {
+	Explainer,
+	type ExplainerName,
+} from "@/components/explainers/Explainer";
 import { ShownTitleContext } from "@/components/form/FormLabel";
 import { testId } from "@/lib/testUtils";
 
@@ -34,6 +38,8 @@ export interface StepperOption {
 	body: ReactNode;
 	/** An early feature: "Beta" beside its name. */
 	beta?: boolean;
+	/** A short loop of what the feature does, behind an "i" right after its name. */
+	explainer?: { name: ExplainerName; label: string };
 }
 
 export type StepVia = "row" | "next" | "back";
@@ -61,6 +67,8 @@ interface OptionStepperProps {
  * A closed row is a box you press: its name in the first half, its value in the second
  * (cut to one line, never over the name). The open option is one unfolded box (ECHO-1062):
  * its name across the whole row, then its field and its buttons, with no line between.
+ * The row's button lies under its words, so an "i" can sit right after the name without
+ * being inside the button.
  */
 export const OptionStepper = ({
 	options,
@@ -119,6 +127,32 @@ export const OptionStepper = ({
 					const headerId = `${baseId}-${option.key}-header`;
 					const bodyId = `${baseId}-${option.key}-body`;
 					const Caret = isOpen ? CaretDownIcon : CaretRightIcon;
+					const titleId = `${baseId}-${option.key}-title`;
+					const summaryId = `${baseId}-${option.key}-summary`;
+					const title = (
+						<Title order={5} m={0} style={{ display: "inline", minWidth: 0 }}>
+							<Text
+								component="span"
+								id={titleId}
+								style={{ overflowWrap: "break-word" }}
+							>
+								{option.title}
+								{option.beta && (
+									<Badge
+										component="span"
+										color="mauve"
+										c="graphite"
+										size="sm"
+										ml="xs"
+										style={{ verticalAlign: "middle" }}
+										{...testId(`${testIdPrefix}-${option.key}-beta`)}
+									>
+										<Trans>Beta</Trans>
+									</Badge>
+								)}
+							</Text>
+						</Title>
+					);
 					return (
 						<li
 							key={option.key}
@@ -129,7 +163,14 @@ export const OptionStepper = ({
 							data-open={isOpen || undefined}
 							{...testId(`${testIdPrefix}-${option.key}`)}
 						>
-							<Title order={5} m={0}>
+							{/* The row is one press target (the button under everything) with its words
+							    laid over it. The words let clicks through, so the whole row opens it;
+							    only the "i" takes them, and sits right after the title as the button's
+							    sibling, never inside it. */}
+							<div
+								className="relative"
+								{...testId(`${testIdPrefix}-${option.key}-header`)}
+							>
 								<UnstyledButton
 									ref={(el) => {
 										headers.current[i] = el;
@@ -137,54 +178,50 @@ export const OptionStepper = ({
 									id={headerId}
 									aria-expanded={isOpen}
 									aria-controls={bodyId}
+									aria-labelledby={titleId}
+									aria-describedby={isOpen ? undefined : summaryId}
 									onClick={() => {
 										if (!isOpen) onOpen(option.key, "row");
 									}}
 									onKeyDown={(e) => onRowKey(e, i)}
 									// Closed, the row is the box; open, the item around it is.
-									className={isOpen ? "block w-full" : "app-do block w-full"}
-									px="sm"
-									py="sm"
+									className={
+										isOpen
+											? "absolute inset-0 block h-full w-full"
+											: "app-do absolute inset-0 block h-full w-full"
+									}
 									style={isOpen ? { cursor: "default" } : undefined}
 									{...testId(`${testIdPrefix}-${option.key}-row`)}
-								>
-									<span className="grid grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)] items-baseline gap-x-3">
-										<Caret size={16} aria-hidden />
-										{/* The badge follows the name's last word, on its line. */}
+								/>
+								<div className="pointer-events-none relative grid grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)] items-baseline gap-x-3 px-3 py-3">
+									<Caret size={16} aria-hidden />
+									<div className={isOpen ? "col-span-2 min-w-0" : "min-w-0"}>
+										{option.explainer ? (
+											<Explainer
+												inline
+												name={option.explainer.name}
+												label={option.explainer.label}
+											>
+												{title}
+											</Explainer>
+										) : (
+											title
+										)}
+									</div>
+									{!isOpen && (
 										<Text
 											component="span"
-											className={isOpen ? "col-span-2" : undefined}
-											style={{ minWidth: 0, overflowWrap: "break-word" }}
+											id={summaryId}
+											size="sm"
+											className="app-muted"
+											truncate="end"
+											{...testId(`${testIdPrefix}-${option.key}-summary`)}
 										>
-											{option.title}
-											{option.beta && (
-												<Badge
-													component="span"
-													color="mauve"
-													c="graphite"
-													size="sm"
-													ml="xs"
-													style={{ verticalAlign: "middle" }}
-													{...testId(`${testIdPrefix}-${option.key}-beta`)}
-												>
-													<Trans>Beta</Trans>
-												</Badge>
-											)}
+											{option.summary}
 										</Text>
-										{!isOpen && (
-											<Text
-												component="span"
-												size="sm"
-												className="app-muted"
-												truncate="end"
-												{...testId(`${testIdPrefix}-${option.key}-summary`)}
-											>
-												{option.summary}
-											</Text>
-										)}
-									</span>
-								</UnstyledButton>
-							</Title>
+									)}
+								</div>
+							</div>
 							{isOpen && (
 								<section
 									id={bodyId}

@@ -93,6 +93,7 @@ export const usePrivacyOptions = ({
 						<AnonymiseExample />
 					</Stack>
 				),
+				explainer: { label: t`How anonymization works`, name: "anonymise" },
 				summary: onOff(page.values.anonymize_transcripts, t`On`, t`Off`),
 				title: t`Anonymize transcripts`,
 			},
