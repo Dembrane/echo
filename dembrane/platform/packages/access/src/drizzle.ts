@@ -13,6 +13,19 @@ const {
   support_access_request,
 } = schema;
 
+type Conn = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+/**
+ * Ends the approvals a support visit rests on. A visit row is reused when staff come back,
+ * so every place that ends a visit calls this: a rejoin starts read only, as a new visit.
+ */
+export async function endSupportApprovals(db: Conn, membershipId: string) {
+  await db
+    .update(support_access_request)
+    .set({ membership_id: null })
+    .where(eq(support_access_request.membership_id, membershipId));
+}
+
 export class DrizzleAccessStore implements AccessStore {
   constructor(private readonly db: Db) {}
 

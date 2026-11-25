@@ -1,6 +1,7 @@
 import {
   type AccessStore,
   DrizzleAccessStore,
+  endSupportApprovals,
   heldForDemo,
   requireStaff,
   type StaffAudit,
@@ -707,6 +708,7 @@ export function staffRoutes(deps: StaffRouteDeps) {
     const now = clock();
     for (const r of rows) {
       await s.updateMembership(r.id, { deleted_at: pyIso(now) }, now);
+      await endSupportApprovals(deps.db, r.id);
       await cancelPendingTasks(
         deps.db,
         SUPPORT_TASKS.revokeStaffSupport,

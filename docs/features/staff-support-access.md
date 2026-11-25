@@ -58,6 +58,9 @@ Staff who come in this way can do what a workspace admin can, except:
 - change workspace settings
 - delete projects, reports or conversations
 
+An approval ends with that visit. If the staff member leaves, or the visit ends, and they
+come back later, they come back to read only unless you approve a new request.
+
 Approving a request does not turn the switch on. A request nobody answers expires after 7
 days. If you turn the switch on while a request is waiting, the request is cancelled,
 because staff can then come in directly.
