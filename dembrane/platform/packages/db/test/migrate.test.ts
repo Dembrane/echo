@@ -1,9 +1,11 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import postgres from "postgres";
 import {
+  applyOutsideTransaction,
   ContractArchiveMissing,
   LOCK_ATTEMPTS,
   lockedSession,
+  type Migration,
   MigrationLockLost,
   migrate,
   recordContractArchive,
@@ -50,6 +52,8 @@ run("migrate", () => {
       "mig_keep",
       "mig_rebuild",
       "mig_build_timeout",
+      "mig_optional",
+      "mig_untrusted",
       "mig_lost",
     ]) {
       await sql.unsafe(`drop database if exists ${db}`);
@@ -218,23 +222,36 @@ run("migrate", () => {
     }
   }, 30_000);
 
-  test("a build waits for a long-open transaction only as long as the lock timeout, then fails and heals on the next run", async () => {
+  /** A one-statement migration as the runner reads one, to run on its own. */
+  const probe = (marker: string): Migration => ({
+    tag: "probe",
+    folderMillis: 1,
+    hash: "probe",
+    sql: [
+      `${marker}\nCREATE INDEX CONCURRENTLY IF NOT EXISTS "probe_idx" ON "model_call" USING btree ("model")`,
+    ],
+  });
+  const journalRows = async (db: postgres.Sql) =>
+    Number((await db`select count(*)::int as n from drizzle.__drizzle_migrations`)[0]?.n);
+
+  test("a migration without the optional marker waits for a long-open transaction only as long as the lock timeout, then fails and records nothing", async () => {
     const url = `${base}/mig_build_timeout`;
     await migrate(url, { appEnv: "test" });
     const db = postgres(url, { max: 2, onnotice: () => {} });
+    const session = await lockedSession(url);
     try {
-      await forgetLast(db);
-      await db`drop index concurrently "model_call_recorded_at_idx"`;
-      await db`drop index concurrently "model_call_org_started_idx"`;
       // A transaction that writes model_call and never finishes: the build waits for it.
       const holder = await db.reserve();
       await holder`begin`;
       await holder`lock table model_call in row exclusive mode`;
+      const before = await journalRows(db);
       const started = Date.now();
-      const outcome = await migrate(url, {
-        appEnv: "test",
-        noTransactionLockTimeout: "1s",
-      }).then(
+      const outcome = await applyOutsideTransaction(
+        session,
+        probe("-- migrate: no-transaction"),
+        "1s",
+        () => {},
+      ).then(
         () => "applied",
         (e: unknown) => e,
       );
@@ -246,16 +263,109 @@ run("migrate", () => {
       // Each attempt gave up after the timeout, and there are LOCK_ATTEMPTS of them.
       expect(elapsed).toBeGreaterThanOrEqual(LOCK_ATTEMPTS * 1_000);
       expect(elapsed).toBeLessThan(20_000);
-      // The failed build left no history row, so the next run starts again, and its lock was released.
+      expect(await journalRows(db)).toBe(before);
+      // Its invalid leftover is dropped by the next try, which builds it once the wait is over.
+      expect(
+        await applyOutsideTransaction(session, probe("-- migrate: no-transaction"), "1s"),
+      ).toBe(true);
+    } finally {
+      session.close();
+      await session.sql.end({ timeout: 5 }).catch(() => {});
+      await db.end({ timeout: 5 });
+    }
+  }, 60_000);
+
+  test("an optional build held up by a long-open transaction on another table does not fail the run: it warns, records nothing, and the next run builds it", async () => {
+    const url = `${base}/mig_optional`;
+    await migrate(url, { appEnv: "test" });
+    const db = postgres(url, { max: 2, onnotice: () => {} });
+    try {
+      await forgetLast(db);
+      await db`drop index concurrently "model_call_recorded_at_idx"`;
+      await db`drop index concurrently "model_call_org_started_idx"`;
+      const recorded = await journalRows(db);
+      // A report on another table: its snapshot is older than the build, which waits for it to end.
+      const holder = await db.reserve();
+      await holder`begin isolation level repeatable read`;
+      await holder`select count(*) from conversation`;
+      const warnings: string[] = [];
+      const started = Date.now();
+      let result: Awaited<ReturnType<typeof migrate>>;
+      try {
+        result = await migrate(url, {
+          appEnv: "test",
+          noTransactionLockTimeout: "1s",
+          warn: (m) => warnings.push(m),
+        });
+      } finally {
+        await holder`rollback`;
+        holder.release();
+      }
+      // One timeout, not LOCK_ATTEMPTS of them: the next deploy is the retry.
+      expect(Date.now() - started).toBeLessThan(LOCK_ATTEMPTS * 1_000 + 3_000);
+      expect(result).toEqual({
+        adoptedBaseline: false,
+        applied: 0,
+        deferred: ["0061_expand_model_call_indexes_concurrently"],
+      });
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain("model_call_recorded_at_idx");
+      expect(warnings[0]).toContain("0061_expand_model_call_indexes_concurrently");
+      expect(await journalRows(db)).toBe(recorded);
+      // The build that gave up left nothing invalid behind.
+      expect(await indexState(db)).toEqual({});
       expect(await migrate(url, { appEnv: "test" })).toEqual({
         adoptedBaseline: false,
         applied: 1,
       });
       expect(Object.values(await indexState(db)).map((i) => i.valid)).toEqual([true, true]);
+      expect(await journalRows(db)).toBe(recorded + 1);
     } finally {
       await db.end({ timeout: 5 });
     }
   }, 60_000);
+
+  test("a connection replaced while a statement runs marks that statement untrusted and the migration is not recorded", async () => {
+    const url = `${base}/mig_untrusted`;
+    await migrate(url, { appEnv: "test" });
+    const session = await lockedSession(url);
+    const killer = postgres(url, { max: 1, onnotice: () => {} });
+    try {
+      const before = await journalRows(killer);
+      // The connection dies after the check that precedes the statement: the driver runs the
+      // statement on a new connection, which holds no lock.
+      let first = true;
+      const sql = new Proxy(session.sql, {
+        get(target, prop, receiver) {
+          if (prop !== "unsafe") return Reflect.get(target, prop, receiver);
+          return async (q: string) => {
+            if (q.includes("probe_idx") && first) {
+              first = false;
+              await killer`select pg_terminate_backend(${session.pid})`;
+              await Bun.sleep(300);
+            }
+            return target.unsafe(q);
+          };
+        },
+      });
+      const err = await applyOutsideTransaction(
+        { ...session, sql },
+        probe("-- migrate: no-transaction"),
+        "5s",
+        () => {},
+      ).then(
+        () => null,
+        (e: unknown) => e,
+      );
+      expect(err).toBeInstanceOf(MigrationLockLost);
+      expect((err as MigrationLockLost).untrusted).toContain("probe_idx");
+      expect(await journalRows(killer)).toBe(before);
+    } finally {
+      session.close();
+      await session.sql.end({ timeout: 5 }).catch(() => {});
+      await killer.end({ timeout: 5 });
+    }
+  }, 30_000);
 
   test("a dropped connection is an error, not a new connection without the advisory lock", async () => {
     const url = `${base}/mig_lost`;
