@@ -62,6 +62,16 @@ select "Open the draft (EN)" to look through the demo, then select "Publish".
   timeline.
 - The build creates the prospect's organisation, with your contact as its admin. Nothing reaches
   them until you publish.
+- The build makes you, the staff member who started it, an admin of the demo's workspace (not of
+  the organisation), so the draft is in your own workspace list before you publish. Only a
+  @dembrane.com account is added, and only you: an account manager who did not start the demo
+  is not. If you are the demo's contact yourself, you are not added at the build: you get your
+  place when it is published, like any contact. You stay in the workspace after publishing, in
+  its member list like anyone, and its admins can remove you. You take no seat there. Demos
+  built before this change got their builder added the same way, under the same rules.
+- Outside the customer's organisation the dashboard shows you as "External" there. You can open
+  the demo project, change it in the portal editor and edit its brief. You cannot open the
+  workspace's settings, make a new project or a copy, pin a project or delete a conversation.
 - "Publish" makes the public demo link live. With "Send the sign-in invitation" on, the contact
   gets the email "Your dembrane account for {org_name}" and signs in with a code. With it off, the
   page says "No email went out; share the demo link yourself."
@@ -91,8 +101,9 @@ picks the first of their own organisations.
   contact is not in, the form says so with a link to it ("Open it", "Open the account"). It never
   stops you from building.
 - While the demo builds and while it is a draft, nobody in that organisation sees the workspace or
-  the project, its owner included, and nobody gets an email or a notification about it. You
-  cannot ask for support access to it either: open the draft from the demo's page.
+  the project, its owner included, and nobody gets an email or a notification about it. You do:
+  the build made you its admin, so it is in your own workspace list and the demo project opens
+  for you, as above. Support access to it cannot be asked for.
 - "Email them the demo" on: publishing adds the contact to the workspace as an admin, opens the
   workspace to the organisation like any new workspace, and sends them "Your demo is ready:
   {demo_name}" in their own language, with a button that opens the demo project (they sign in
@@ -100,16 +111,20 @@ picks the first of their own organisations.
   link to the demo."
 - With it off, publishing only makes the public link live. The workspace stays hidden and the
   contact gets nothing; share the link yourself.
-- The demo's workspace takes no seats, before or after publishing: the contact adds none to the
-  organisation's bill, and someone who already has a seat there keeps that one seat.
+- The demo's workspace takes no seats, before or after publishing: the contact and you add none
+  to the organisation's bill, and someone who already has a seat there keeps that one seat.
+- A @dembrane.com account in a customer's workspace takes no seat on its account unless it is a
+  member of the customer's organisation: that covers you in a demo's workspace and anyone at
+  dembrane a customer adds to a workspace for help.
 - If the contact has left the organisation, or the organisation was deleted, before the build
   reached "Seeding", that step fails and says why. Fix it and select "Retry", or start a new demo.
   Publishing with the email on checks the same again: if either changed since, nothing is
   published and the page says why. Publishing with the email off still works.
 - A draft never published, or published with the email off, leaves its workspace hidden from
-  the organisation. There is no button to discard it yet. When an organisation is deleted its
-  hidden demo workspace goes with it: it is not one of the workspaces the customer has to empty
-  and delete first, and they could not see it to do so.
+  the organisation. There is no button to discard it yet. You stay its only admin and cannot
+  leave it; nobody in the organisation can see it to remove you. When an organisation is
+  deleted its hidden demo workspace goes with it: it is not one of the workspaces the customer
+  has to empty and delete first, and they could not see it to do so.
 
 ## Send an offer
 

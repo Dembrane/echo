@@ -154,6 +154,9 @@ step: "Check out the demo we made for you", "Watch the tutorial", "Create a proj
 withdrawn. An organisation that signed up by itself does not get these tasks, unless
 dembrane adds them.
 
+The person at dembrane who made the demo is a member of the demo's workspace, so they can
+help you with it. A workspace admin can remove them, like any member.
+
 ### A demo in an organisation you already work in
 
 If you already use dembrane, the demo can go into your organisation instead. It gets a

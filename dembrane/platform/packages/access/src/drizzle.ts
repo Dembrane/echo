@@ -165,7 +165,9 @@ export function workspaceReach(row: {
  * While it is set the workspace is not there for the organisation's people: nobody derives
  * a role in it from the organisation, its owner included (deriveWorkspaceRole), and no list
  * or count shown to them includes it (`shownToOrganisation`), the free tier's workspace
- * limit included: until it is handed over it is not the organisation's.
+ * limit included: until it is handed over it is not the organisation's. A direct row still
+ * opens it to that one person: the @dembrane.com staff member who made the demo has one
+ * from the seed on, which shows it in their own workspace list and nobody else's.
  */
 export const HELD_FOR_DEMO = "held_for_demo";
 

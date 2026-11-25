@@ -169,20 +169,27 @@ async function makeAdmin(tx: Conn, orgId: string, appUserId: string, nowIso: str
 }
 
 /**
- * The contact as admin of the demo's workspace, the role "Join as admin" gives. Admin of
- * the organisation already reaches it, but the workspace list and the organisation page
- * show direct memberships only, so without this row the demo is hidden once its onboarding
- * step is done. Only a live workspace of this organisation: a shared staff demo workspace
- * is not theirs to join. Any row at all, a removed one included, means the person was
- * there and someone decided about it, so it is left as it is and nothing is revived.
+ * A person as admin of the demo's workspace, the role "Join as admin" gives: the contact
+ * when the demo is released or handed over, and the @dembrane.com staff member who made it
+ * from the seed on (unless they are its contact too). Admin of the organisation already
+ * reaches it, but the workspace list and the organisation page show direct memberships
+ * only, so without this row the demo is hidden once its onboarding step is done. Only a
+ * live workspace of this organisation: a shared staff demo workspace is not theirs to
+ * join. Any row at all, a removed one included, means the person was there and someone
+ * decided about it, so it is left as it is and nothing is revived. Sends nothing. True
+ * when it added the row.
  */
-async function joinDemoWorkspace(
+export async function joinDemoWorkspace(
   tx: Conn,
   orgId: string,
   workspaceId: string,
   appUserId: string,
   nowIso: string,
-) {
+): Promise<boolean> {
+  // The workspace row is locked for the rest of the caller's transaction: workspace
+  // membership has no unique (workspace, user) index, so two callers at once (a seed run
+  // resumed by recovery while the first still runs, or a seed beside a release) would both
+  // find no row and both insert. The second now waits and finds the first one's row.
   const [ws] = await tx
     .select({ id: schema.workspace.id })
     .from(schema.workspace)
@@ -193,8 +200,9 @@ async function joinDemoWorkspace(
         isNull(schema.workspace.deleted_at),
       ),
     )
-    .limit(1);
-  if (!ws) return;
+    .limit(1)
+    .for("update");
+  if (!ws) return false;
   const [row] = await tx
     .select({ id: schema.workspace_membership.id })
     .from(schema.workspace_membership)
@@ -205,7 +213,7 @@ async function joinDemoWorkspace(
       ),
     )
     .limit(1);
-  if (row) return;
+  if (row) return false;
   await tx.insert(schema.workspace_membership).values({
     id: newId(),
     workspace_id: workspaceId,
@@ -215,6 +223,7 @@ async function joinDemoWorkspace(
     created_at: nowIso,
     updated_at: nowIso,
   });
+  return true;
 }
 
 /**
