@@ -1,6 +1,6 @@
 import { planPieces } from "@dembrane/audio";
 import { PROVIDERS, type ProviderId, type RouteDecision, rerouted, routed } from "@dembrane/llm";
-import type { Payer } from "@dembrane/observability";
+import type { Logger, Payer } from "@dembrane/observability";
 import {
   pieceSeconds,
   type RequestLimits,
@@ -12,6 +12,7 @@ import {
   type TranscribeResult,
   type Transcriber,
 } from "@dembrane/transcription";
+import type { FilePart, TextPart } from "ai";
 import type { FinalSettings } from "./pipeline/final";
 
 /**
@@ -39,6 +40,12 @@ export interface SpeechRouter {
   readonly kits: Readonly<Partial<Record<ProviderId, SpeechKit>>>;
   readonly default: ProviderId;
   decide(who: Payer): Promise<RouteDecision>;
+  /**
+   * The analysis decision for a payer. With it, a request that carries audio is first read to
+   * text when the two jobs resolve to different providers (`audioForAnalysis`); without it
+   * nothing is split, which is right for a deployment with one provider.
+   */
+  decideAnalysis?(who: Payer): Promise<RouteDecision>;
 }
 
 /** The kit for a payer and the decision that chose it. */
@@ -267,3 +274,76 @@ export async function improvesOf(
     (await speechKit(router, { ref: "conversation", id: conversationId }))?.kit.improves ?? null
   );
 }
+
+/** One recording an analysis request carries: what introduces it to the model, and its bytes. */
+export interface AnalysisClip {
+  readonly label: string;
+  readonly audio: Uint8Array;
+}
+
+/** What reading a clip needs to know about its project, as the live transcript knows it. */
+export interface ClipReading {
+  readonly language: string;
+  readonly hotwords: readonly string[] | null;
+  readonly anonymize: boolean;
+  readonly customGuidancePrompt: string | null;
+}
+
+/**
+ * The audio of an analysis request (Explore, Verify). Transcription and analysis may sit on
+ * different providers for one conversation, and a request is only ever the job of the provider
+ * that receives it: when they differ, each clip is read to text with the speech kit of the
+ * conversation's transcription provider (the path its live transcript takes, so the
+ * conversation's start record applies and the call is logged as transcription), and the
+ * request then goes out as text alone, as analysis. When both resolve to the same provider the
+ * audio goes in the request itself, which is how Gemini hears it when both are Google.
+ */
+export async function audioForAnalysis(
+  d: { speech?: SpeechRouter | undefined; logger: Logger },
+  who: Payer,
+  clips: readonly AnalysisClip[],
+  reading: ClipReading,
+  attach: (clip: AnalysisClip) => TextPart | FilePart,
+): Promise<(TextPart | FilePart)[]> {
+  const router = d.speech;
+  const split =
+    clips.length > 0 &&
+    router?.decideAnalysis !== undefined &&
+    (await router.decide(who)).provider !== (await router.decideAnalysis(who)).provider;
+  const out: (TextPart | FilePart)[] = [];
+  for (const clip of clips) {
+    out.push({ type: "text", text: clip.label });
+    if (!split) {
+      out.push(attach(clip));
+      continue;
+    }
+    try {
+      const read = await withTranscriber(router, who, noSpeech, (transcriber) =>
+        transcriber.transcribe({
+          audio: clip.audio,
+          language: reading.language,
+          hotwords: reading.hotwords,
+          usePiiRedaction: false,
+          anonymizeTranscripts: reading.anonymize,
+          customGuidancePrompt: reading.customGuidancePrompt,
+          priority: "live",
+        }),
+      );
+      if (read.transcript.trim())
+        out.push({ type: "text", text: `Transcript of this audio:\n${read.transcript.trim()}` });
+    } catch (err) {
+      d.logger.warn({ err, label: clip.label }, "failed to read audio chunk to text");
+    }
+  }
+  return out;
+}
+
+/** Stands where a transcriber would be when the router has no kit: nothing is sent anywhere. */
+const noSpeech: Transcriber = {
+  transcribe: async () => {
+    throw new Error("no speech kit for this conversation");
+  },
+  redactText: async () => {
+    throw new Error("no speech kit for this conversation");
+  },
+};
