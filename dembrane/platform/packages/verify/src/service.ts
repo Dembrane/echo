@@ -1,5 +1,7 @@
 import type { Policy } from "@dembrane/access";
 import {
+  type AnalysisClip,
+  audioForAnalysis,
   type ConversationsDeps,
   PARTICIPANT_TOKEN_HEADER,
   requirePortalAi,
@@ -24,7 +26,16 @@ import { type ArtifactRow, type VerifyStorage, verifyStorage } from "./storage";
 
 export type VerifyDeps = Pick<
   ConversationsDeps,
-  "db" | "access" | "audio" | "audioUrls" | "models" | "tokens" | "limiter" | "logger" | "now"
+  | "db"
+  | "access"
+  | "audio"
+  | "audioUrls"
+  | "models"
+  | "tokens"
+  | "limiter"
+  | "logger"
+  | "now"
+  | "speech"
 >;
 
 export interface TopicView {
@@ -330,25 +341,45 @@ function audioChunks(chunks: Chunk[], after: number | null): Chunk[] {
   });
 }
 
-async function audioParts(ctx: Ctx, chunks: Chunk[]) {
-  const out: (TextPart | FilePart)[] = [];
+/**
+ * The audio of a draft or revision as parts of its request. One provider with both jobs gets
+ * the recordings themselves; two providers get their transcripts, read by the conversation's
+ * transcription provider, so the draft's prompt only reaches the analysis provider.
+ */
+async function audioParts(
+  ctx: Ctx,
+  conversationId: string,
+  project: VerifyProject,
+  chunks: Chunk[],
+) {
+  const clips: AnalysisClip[] = [];
   for (const c of chunks) {
-    out.push({ type: "text", text: `Audio chunk ${c.id} captured at ${pyIsoformat(c.timestamp)}` });
     if (!c.path) continue;
     try {
       const blob = await ctx.d.audio.get(ctx.d.audioUrls.keyOf(c.path));
       if (!blob) throw new Error("audio object missing");
-      // Labelled audio/mp3 whatever the container, as the Python API sent it.
-      out.push({
-        type: "file",
-        data: new Uint8Array(await blob.arrayBuffer()),
-        mediaType: "audio/mp3",
+      clips.push({
+        label: `Audio chunk ${c.id} captured at ${pyIsoformat(c.timestamp)}`,
+        audio: new Uint8Array(await blob.arrayBuffer()),
       });
     } catch (err) {
       ctx.d.logger.warn({ err, chunk: c.id }, "failed to attach audio chunk");
     }
   }
-  return out;
+  const terms = project.default_conversation_transcript_prompt;
+  return audioForAnalysis(
+    ctx.d,
+    { ref: "conversation", id: conversationId },
+    clips,
+    {
+      language: project.language || "en",
+      hotwords: terms ? terms.split(",").map((w) => w.trim()) : null,
+      anonymize: Boolean(project.anonymize_transcripts),
+      customGuidancePrompt: terms,
+    },
+    // Labelled audio/mp3 whatever the container, as the Python API sent it.
+    (clip) => ({ type: "file", data: clip.audio, mediaType: "audio/mp3" }),
+  );
 }
 
 async function complete(
@@ -566,7 +597,7 @@ export async function generateArtifact(
         transcript: transcriptText(chunks),
         audio: audio.map((c) => ({ id: c.id, timestamp: c.timestamp })),
       },
-      await audioParts(ctx, audio),
+      await audioParts(ctx, conv.id, project, audio),
     ),
   );
   const created = await ctx.store.createArtifact({
@@ -639,7 +670,9 @@ export async function updateArtifact(
           type: "text",
           text: "Please revise the outcome using the feedback provided. Audio clips accompany segments without transcripts.",
         },
-        ...(await audioParts(ctx, audio)),
+        ...(await withPayer({ ref: "conversation", id: artifact.conversation_id }, () =>
+          audioParts(ctx, artifact.conversation_id as string, project, audio),
+        )),
       ],
       "Failed to revise verification artifact",
       project.language || "en",

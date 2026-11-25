@@ -1,5 +1,5 @@
 import type { Json, ObjectRevision, SourceRef } from "../contracts";
-import { EmbeddingService, identityKey, inputHash, refJson } from "../embeddings";
+import { identityKey, inputHash, refJson } from "../embeddings";
 import { type RecipeContext, RecipeFailed, stepResult } from "../executor";
 import { contentHash, type PyFloat, sha256Hex } from "../hashing";
 import verifyPrompt from "../prompts/dedup-verify-v2.md" with { type: "text" };
@@ -45,7 +45,12 @@ import {
   verificationUserText,
 } from "./deduplication-core";
 import { AnswerDidNotParse, jsonFromText } from "./model";
-import { modelDeployment, type ProducerServices, producerServices } from "./services";
+import {
+  embeddingBatch,
+  modelDeployment,
+  type ProducerServices,
+  producerServices,
+} from "./services";
 
 /**
  * Deduplicated arguments as a recipe: discovery (deterministic, recomputed and saved),
@@ -219,13 +224,14 @@ async function embeddingModel(
 ): Promise<string> {
   const named = new Set(refs.filter((r) => r.model).map((r) => String(r.model)));
   if (named.size === 1) return [...named][0] as string;
-  const identity = await producerServices(ctx.services).probe();
-  return identityKey(identity) === configKey ? identity.model : "unknown";
+  return embeddingBatch(ctx.store, producerServices(ctx.services), async (_, identity) =>
+    identityKey(identity) === configKey ? identity.model : "unknown",
+  );
 }
 
 async function execute(ctx: RecipeContext): Promise<void> {
   const services = producerServices(ctx.services);
-  const deployment = liveModelDeployment(ctx);
+  const deployment = await liveModelDeployment(ctx);
   const validated = validateAgainst(PARAMETERS, { ...ctx.parameters }, false);
   if (!validated.ok) throw new RecipeFailed("The deduplication parameters are invalid.");
   const parameters = validated.value;
@@ -463,16 +469,16 @@ async function execute(ctx: RecipeContext): Promise<void> {
       const missing = hashes.filter((h) => !stored.has(h));
       let computed = 0;
       if (missing.length) {
-        const identity = await services.probe();
-        if (identityKey(identity) !== configKey)
-          throw new RecipeFailed(
-            "The embedding deployment changed since the arguments were embedded. Refresh the arguments first.",
+        const batch = await embeddingBatch(ctx.store, services, async (service, identity) => {
+          if (identityKey(identity) !== configKey)
+            throw new RecipeFailed(
+              "The embedding deployment changed since the arguments were embedded. Refresh the arguments first.",
+            );
+          return service.ensure(
+            ctx.projectId,
+            missing.map((h) => texts.get(h) as string),
           );
-        const service = new EmbeddingService(ctx.store, identity, services.embed);
-        const batch = await service.ensure(
-          ctx.projectId,
-          missing.map((h) => texts.get(h) as string),
-        );
+        });
         for (const [hashed, id] of batch.ids) ids[hashed] = id;
         computed = batch.computed;
       }

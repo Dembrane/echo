@@ -1,4 +1,9 @@
-import { type Embedder, retryAfterMs } from "@dembrane/llm";
+import {
+  type Embedder,
+  EmbeddingRouteChanged,
+  type PinnedEmbedder,
+  retryAfterMs,
+} from "@dembrane/llm";
 import { AnalysisStoreError, type Json, type ObjectRevision } from "./contracts";
 import { sha256Hex } from "./hashing";
 import { sortedStrings } from "./registry";
@@ -41,6 +46,8 @@ export function validateVector(values: unknown, dims: number): number[] {
 
 /** Everything that decides which vector space an embedding lives in; `dims` is what the provider returned. */
 export interface EmbeddingIdentity {
+  /** The embedder this identity was probed on, when it depends on the project; its vectors are made by it alone. */
+  readonly pin?: PinnedEmbedder | undefined;
   readonly model: string;
   readonly endpoint: string | null;
   readonly dims: number;
@@ -73,14 +80,32 @@ export function identityConfig(i: EmbeddingIdentity): Json {
   };
 }
 
-/** One small request to learn the deployment's real dimensions. */
-export async function probeIdentity(embedder: Embedder): Promise<EmbeddingIdentity> {
-  const vector = await embedWithRetry(embedder, PROBE_TEXT);
-  if (!vector.length) throw new Error("Embedding probe returned no vector.");
+/**
+ * One small request to learn the deployment's real dimensions. Which embedder answers
+ * depends on the project's AI provider: the identity keys the project's stored vectors, so
+ * it is taken from the one decision every embed of the batch then follows (`pin`), and a
+ * project that switches embeds again on its next analysis. `known` remembers dimensions per
+ * provider, so a provider already probed costs no request.
+ */
+export async function probeIdentity(
+  embedder: Embedder,
+  known?: Map<string, number>,
+): Promise<EmbeddingIdentity> {
+  const pin = await embedder.pinned?.();
+  const key = pin?.provider ?? "default";
+  let dims = known?.get(key);
+  if (!dims) {
+    const vector = await embedWithRetry(pin ?? embedder, PROBE_TEXT);
+    if (!vector.length) throw new Error("Embedding probe returned no vector.");
+    dims = vector.length;
+    known?.set(key, dims);
+  }
+  const { model, endpoint } = pin?.identity ?? embedder;
   return {
-    model: embedder.model,
-    endpoint: embedder.endpoint,
-    dims: vector.length,
+    pin,
+    model,
+    endpoint,
+    dims,
     inputNormalization: INPUT_NORMALIZATION,
     taskType: null,
   };
@@ -100,7 +125,7 @@ export interface RetryOptions {
 }
 
 /** When each embedder may be called again after a 429: one answer slows every worker on it. */
-const pausedUntil = new WeakMap<Embedder, number>();
+const pausedUntil = new WeakMap<object, number>();
 
 /** Seconds or HTTP date from a Retry-After header on the error the model client raised. */
 function retryAfterOf(err: unknown, now: number): number | null {
@@ -117,7 +142,7 @@ const isRateLimit = (err: unknown) => (err as { statusCode?: number } | null)?.s
  * instead of failing after seconds against a per-minute quota.
  */
 export async function embedWithRetry(
-  embedder: Embedder,
+  embedder: Pick<Embedder, "embed"> & { readonly hold?: object },
   text: string,
   tries = 5,
   opts: RetryOptions = {},
@@ -126,14 +151,17 @@ export async function embedWithRetry(
   const now = opts.now ?? Date.now;
   const random = opts.random ?? Math.random;
   const limitTries = Math.max(tries, RATE_LIMIT_TRIES);
+  const held = embedder.hold ?? embedder;
   const deadline = now() + RETRY_DEADLINE_MS;
   let last: unknown;
   for (let attempt = 0; attempt < limitTries; attempt++) {
-    const hold = (pausedUntil.get(embedder) ?? 0) - now();
+    const hold = (pausedUntil.get(held) ?? 0) - now();
     if (hold > 0) await sleep(hold);
     try {
       return await embedder.embed(text);
     } catch (err) {
+      // A batch dropped because the project's provider changed is run again, not retried here.
+      if (err instanceof EmbeddingRouteChanged) throw err;
       last = err;
       const limited = isRateLimit(err);
       if (attempt + 1 >= (limited ? limitTries : tries)) break;
@@ -147,7 +175,7 @@ export async function embedWithRetry(
         Math.max(retryAfterOf(err, now()) ?? 0, grown / 2 + (grown / 2) * random()),
       );
       if (now() + wait > deadline) break;
-      pausedUntil.set(embedder, Math.max(pausedUntil.get(embedder) ?? 0, now() + wait));
+      pausedUntil.set(held, Math.max(pausedUntil.get(held) ?? 0, now() + wait));
     }
   }
   throw last;
@@ -205,12 +233,14 @@ export class EmbeddingService {
     }
     batch.reused = stored.size;
     const missing = sortedStrings(wanted.keys()).filter((h) => !stored.has(h));
+    const pin = this.identity.pin;
+    const embedOne = pin ? (text: string) => embedWithRetry(pin, text) : this.embed;
     let next = 0;
     const worker = async () => {
       while (next < missing.length) {
         const hashed = missing[next++] as string;
         const vector = validateVector(
-          await this.embed(wanted.get(hashed) as string),
+          await embedOne(wanted.get(hashed) as string),
           this.identity.dims,
         );
         const [id, kept] = await this.store.saveEmbedding({

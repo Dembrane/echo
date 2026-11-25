@@ -1354,6 +1354,30 @@ run("accounts routes against Postgres", () => {
   });
 
   // ── questions ───────────────────────────────────────────────────────
+  test("a request for an AI provider is a question in the account's ticket list, which staff then cite as the request", async () => {
+    // The Request button on the AI provider page opens a question through the same route as any other.
+    const opened = await call(w, "POST", `${C()}/tickets`, "admin", {
+      subject: "Google Vertex AI for Analysis",
+      body: "We would like to use Google Vertex AI for Analysis in our account. Please enable it.",
+    });
+    expect(opened.status).toBe(201);
+    const ticket = K.Ticket.parse(opened.data);
+    expect(ticket).toMatchObject({
+      subject: "Google Vertex AI for Analysis",
+      status: "waiting_on_dembrane",
+    });
+    expect(ticket.messages[0]?.body).toContain("Analysis");
+    const [row] = await w.db
+      .select({ orgId: schema.account_ticket.orgId, subject: schema.account_ticket.subject })
+      .from(schema.account_ticket)
+      .where(eq(schema.account_ticket.id, ticket.id));
+    expect(row).toEqual({ orgId: w.orgId, subject: "Google Vertex AI for Analysis" });
+    // A member may not ask on the account's behalf, as for any question.
+    expect(
+      (await call(w, "POST", `${C()}/tickets`, "member", { subject: "x", body: "y" })).status,
+    ).toBe(403);
+  });
+
   test("questions: customers open and reply, staff answer and close; a new question reaches sam and Slack", async () => {
     expect(
       (await call(w, "POST", `${C()}/tickets`, "member", { subject: "a", body: "b" })).status,
@@ -1698,6 +1722,31 @@ run("accounts routes against Postgres", () => {
     expect(nameOf(rows.staff)).toBe("staff");
     expect(nameOf(rows.gone)).toBeNull();
     expect(nameOf(rows.customer)).toBeNull();
+  });
+
+  test("the staff card gives a project's change the project's name", async () => {
+    const projectId = newId();
+    await w.db
+      .insert(schema.project)
+      .values({ id: projectId, name: "Example town", is_conversation_allowed: true });
+    const eventId = newId();
+    await store.insertEvent(w.db, {
+      id: eventId,
+      orgId: w.orgId,
+      type: "project.ai_provider.changed",
+      actorKind: "customer",
+      subjectType: "project",
+      subjectId: projectId,
+      detail: { job: "analysis", before: null, after: "google" },
+      createdAt: w.clock.now,
+    });
+    const card = K.AccountCard.parse((await call(w, "GET", S(), "staff")).data);
+    expect(card.timeline.find((e) => e.id === eventId)?.detail).toEqual({
+      job: "analysis",
+      before: null,
+      after: "google",
+      project_name: "Example town",
+    });
   });
 
   test("reminding the named signer sends the same link again and keeps the wait", async () => {

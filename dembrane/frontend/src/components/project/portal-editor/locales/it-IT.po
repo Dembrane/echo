@@ -24,6 +24,18 @@ msgstr ""
 #~ msgid "dashboard.dembrane.concrete.beta"
 #~ msgstr "Beta"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:127
+msgid "{asking} in this project goes to Google in the EU, billed on top of your plan, about {amount} a month at your last 30 days of use."
+msgstr "Le richieste ({asking}) in questo progetto vengono inviate a Google nell'UE, fatturate oltre al tuo piano, circa {amount} al mese in base all'uso degli ultimi 30 giorni."
+
+#: src/components/project/advanced/ProjectAiProvider.tsx:127
+#~ msgid "{asking} in this project goes to Google in the EU, billed on top of your plan, about EUR {amount} a month at your last 30 days of use."
+#~ msgstr "{asking} in questo progetto passa da Google nell'UE, con costi aggiuntivi rispetto al tuo piano, circa {amount} EUR al mese in base all'uso degli ultimi 30 giorni."
+
+#: src/components/project/advanced/ProjectAiProvider.tsx:133
+msgid "{asking} in this project goes to Google in the EU, billed on top of your plan."
+msgstr "{asking} in questo progetto passa da Google nell'UE, con costi aggiuntivi rispetto al tuo piano."
+
 #: src/components/project/portal-editor/sectionLabels.ts:31
 msgid "A question from dembrane, when a group asks for one, to go deeper."
 msgstr "Una domanda di dembrane per andare più a fondo, quando un gruppo la chiede."
@@ -44,11 +56,15 @@ msgstr "Informazioni sull'anteprima"
 msgid "About Try it"
 msgstr "Informazioni su Prova"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:107
+msgid "Account default"
+msgstr "Predefinito dell'account"
+
 #: src/components/project/portal-editor/sections/verify.tsx:330
 msgid "Add topic"
 msgstr "Aggiungi argomento"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:63
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:64
 msgid "Advanced"
 msgstr "Avanzate"
 
@@ -59,6 +75,10 @@ msgstr "Avanzato (suggerimenti e buone pratiche)"
 #: src/components/project/portal-editor/sections/AnonymiseExample.tsx:29
 msgid "After"
 msgstr "Dopo"
+
+#: src/components/project/advanced/ProjectAiProvider.tsx:74
+msgid "AI provider"
+msgstr "Provider di IA"
 
 #: src/components/project/portal-editor/sections/privacy.tsx:97
 msgid "Anonymize transcripts"
@@ -96,7 +116,7 @@ msgstr "Auto-generate titles"
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:66
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:67
 msgid "Automation, early features, and moving or deleting this project."
 msgstr "Automazione, funzioni in anteprima, e spostare o eliminare questo progetto."
 
@@ -231,7 +251,7 @@ msgstr "English"
 
 #: src/components/project/portal-editor/PortalEditorRoute.tsx:59
 #: src/components/project/brief/ProjectBriefRoute.tsx:83
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:74
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:75
 msgid "Error loading project"
 msgstr "Error loading project"
 
@@ -331,6 +351,10 @@ msgstr "Mode"
 msgid "Name and tags"
 msgstr "Nome e tag"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:75
+#~ msgid "New conversations and all analysis in this project go to Google in the EU, billed per use."
+#~ msgstr "Le nuove conversazioni e tutte le analisi di questo progetto vanno a Google nell'UE, con fatturazione a consumo."
+
 #: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:223
 msgid "Next"
 msgstr "Next"
@@ -402,7 +426,7 @@ msgstr "Una domanda"
 msgid "One sample cannot show what Explore takes from other conversations."
 msgstr "Un solo esempio non può mostrare cosa Explore prende da altre conversazioni."
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:86
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:87
 msgid "Only workspace admins can manage project automation."
 msgstr "Solo gli amministratori dello spazio di lavoro possono gestire l'automazione del progetto."
 
@@ -626,6 +650,18 @@ msgstr "Schede del tutorial"
 msgid "Ukrainian (only ECHO features, transcription and summaries)"
 msgstr "Ucraino (solo funzionalità ECHO, trascrizione e riepiloghi)"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:139
+msgid "Use Google"
+msgstr "Usa Google"
+
+#: src/components/project/advanced/ProjectAiProvider.tsx:124
+msgid "Use Google Vertex AI for {asking}?"
+msgstr "Vuoi usare Google Vertex AI per {asking}?"
+
+#: src/components/project/advanced/ProjectAiProvider.tsx:73
+#~ msgid "Use Google Vertex AI for this project?"
+#~ msgstr "Vuoi usare Google Vertex AI per questo progetto?"
+
 #. js-lingui-explicit-id
 #: src/components/project/portal-editor/sectionLabels.ts:15
 #: src/components/project/portal-editor/sections/verify.tsx:375
@@ -638,11 +674,11 @@ msgstr "Verify"
 msgid "Verify topics"
 msgstr "Verifica argomenti"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:98
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:99
 msgid "Webhooks"
 msgstr "Webhooks"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:81
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:82
 msgid "Webhooks are not enabled for this environment."
 msgstr "I webhook non sono abilitati per questo ambiente."
 

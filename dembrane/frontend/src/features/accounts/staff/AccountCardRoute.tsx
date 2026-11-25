@@ -60,6 +60,7 @@ import {
 	outsideViaLabel,
 	VoidAcceptanceModal,
 } from "./AcceptedOutsideModals";
+import { AiProviderSection, aiEventLines } from "./AiProviderSection";
 import { EmailCustomerModal, type EmailSubject } from "./EmailCustomerModal";
 import { PushOfferModal } from "./PushOfferModal";
 import { NewTaskModal, SendBackModal } from "./TaskModals";
@@ -167,6 +168,7 @@ function Card() {
 							)}
 							<NeedsForm card={data} />
 							<Billing card={data} />
+							<AiProviderSection orgId={orgId} />
 							<Timeline card={data} />
 						</Stack>
 					</Box>
@@ -914,6 +916,7 @@ const eventLabel = (type: string): string =>
 		"account.enabled": t`Account enabled`,
 		"account.stage_set": t`Stage set`,
 		"account.updated": t`Account updated`,
+		"ai_providers.changed": t`AI provider changed`,
 		"billing_details.updated": t`Billing details updated`,
 		"booking.recorded": t`Call booked`,
 		"demo.opened": t`Demo opened by staff`,
@@ -939,6 +942,7 @@ const eventLabel = (type: string): string =>
 		"message.sent": t`Customer emailed`,
 		"onboarding.added": t`Onboarding tasks added`,
 		"onboarding.withdrawn": t`Onboarding tasks withdrawn`,
+		"project.ai_provider.changed": t`Project AI provider changed`,
 		"task.approve": t`Task approved`,
 		"task.approved": t`Task approved`,
 		"task.check_in_asked": t`Account manager asked to check in`,
@@ -953,6 +957,12 @@ const eventLabel = (type: string): string =>
 		"ticket.opened": t`Question opened`,
 		"ticket.replied": t`Question answered`,
 	})[type] ?? type;
+
+/** An AI provider change says what changed, one line per change; the rest have a fixed label. */
+const eventText = (e: { type: string; detail: unknown }): string =>
+	(e.type === "ai_providers.changed" || e.type === "project.ai_provider.changed"
+		? aiEventLines(e).join(", ")
+		: "") || eventLabel(e.type);
 
 /** An invoice part's subject is its offer's id and the part's number: the offer's id. */
 const subjectDocument = (id: string | null) => id?.split(":")[0] ?? null;
@@ -985,7 +995,7 @@ function Timeline({ card }: { card: AccountCardT }) {
 											(e.detail as { waits_for?: string[] } | null)
 												?.waits_for ?? [],
 										)
-									: eventLabel(e.type)}
+									: eventText(e)}
 								{title(subjectDocument(e.subject_id)) ? (
 									<Text span c="dimmed" size="sm">
 										{" "}

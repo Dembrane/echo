@@ -201,6 +201,66 @@ run("free projects", () => {
       expect((await liveCount(f.ws)) + (await liveCount(other))).toBe(1);
     });
 
+    describe("AI provider choices", () => {
+      const choose = (id: string, transcription: string | null, analysis: string | null) =>
+        sql`update project set ai_transcription_provider = ${transcription}, ai_analysis_provider = ${analysis} where id = ${id}`;
+      const cleared = (id: string) =>
+        sql<{ org_id: string; actor_kind: string; actor_user_id: string | null; detail: object }[]>`
+          select org_id, actor_kind, actor_user_id, detail from account_event
+          where type = 'project.ai_provider.changed' and subject_id = ${id}
+          order by detail::jsonb ->> 'job'`;
+
+      test("a move that clears a project's choices writes each to the new account's history, with who, before and after", async () => {
+        const f = await space("changemaker");
+        const other = await workspace(f.org, f.account, [[f.owner, "owner"]]);
+        const p = await project(f.ws);
+        await choose(p, "google", "scaleway");
+        await moveProject(d, f.owner, p, other);
+        const [now] =
+          await sql`select ai_transcription_provider as t, ai_analysis_provider as a from project where id = ${p}`;
+        expect(now).toMatchObject({ t: null, a: null });
+        const events = await cleared(p);
+        expect(events.map((e) => e.detail)).toEqual([
+          { job: "analysis", before: "scaleway", after: null, cause: "project_move" },
+          { job: "transcription", before: "google", after: null, cause: "project_move" },
+        ]);
+        expect(events[0]?.org_id).toBe(f.org);
+        expect(events.every((e) => e.actor_kind === "customer")).toBe(true);
+        expect(events.every((e) => e.actor_user_id === f.owner.directusUserId)).toBe(true);
+      });
+
+      test("staff's move is written as staff's, and a move that clears nothing writes nothing", async () => {
+        const staff = await person(true);
+        const f = await space("changemaker", [[staff, "owner"]]);
+        const other = await workspace(f.org, f.account, [[staff, "owner"]]);
+        const chosen = await project(f.ws);
+        const plain = await project(f.ws);
+        await choose(chosen, null, "google");
+        await moveProject(d, staff, chosen, other);
+        await moveProject(d, staff, plain, other);
+        const events = await cleared(chosen);
+        expect(events).toHaveLength(1);
+        expect(events[0]).toMatchObject({ org_id: f.org, actor_kind: "staff" });
+        expect([...(await cleared(plain))]).toEqual([]);
+      });
+
+      test("a bulk move writes them for every project it clears", async () => {
+        const f = await space("changemaker");
+        const other = await workspace(f.org, f.account, [[f.owner, "owner"]]);
+        const a = await project(f.ws);
+        const b = await project(f.ws);
+        await choose(a, "google", null);
+        await choose(b, null, "google");
+        await bulkMoveProjects(d, f.owner, [a, b], other);
+        expect((await cleared(a)).map((e) => e.detail)).toEqual([
+          { job: "transcription", before: "google", after: null, cause: "project_move" },
+        ]);
+        expect((await cleared(b)).map((e) => e.detail)).toEqual([
+          { job: "analysis", before: "google", after: null, cause: "project_move" },
+        ]);
+      });
+    });
+
     test("bulk-moving two legacy projects into an empty free account is refused and moves none", async () => {
       const f = await space();
       const a = await project(null, { owner: f.owner });

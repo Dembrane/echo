@@ -2,7 +2,12 @@ import type { Db } from "@dembrane/db";
 import {
   embeddingModelOf,
   groupsOf,
+  isJob,
+  JOBS,
+  type Job,
   type LlmSettings,
+  type ProviderId,
+  serves,
   type TranscriptionProfile,
 } from "@dembrane/llm";
 import type { Logger } from "@dembrane/observability";
@@ -30,8 +35,18 @@ export const spendRollup = defineJob("metering.spend-rollup", z.object({}), {
 });
 const SPEND_ROLLUP_CRON = "30 0 * * *";
 
+/** Daily at 04:00 UTC, once across workers: proves every Google call since the last check was meant for Google. */
+export const providerCheck = defineJob("metering.provider-check", z.object({}), {
+  policy: "singleton",
+  retryLimit: 2,
+  expireInSeconds: 10 * 60,
+});
+const PROVIDER_CHECK_CRON = "0 4 * * *";
+
 export interface MeteringJobDeps {
   readonly db: Db;
+  /** The deployment's default provider; where it is Google, a call to Google needs no opt-in to be right. */
+  readonly defaultProvider?: ProviderId;
   readonly logger: Logger;
   /** sam's inbox for the alerts; null logs them only. */
   readonly alerts: CostAlertSink | null;
@@ -47,7 +62,7 @@ export function meteringRegistration(d: MeteringJobDeps): {
   register(queue: Queue): Promise<void>;
 } {
   return {
-    jobs: [priceSync, spendRollup],
+    jobs: [priceSync, spendRollup, providerCheck],
     async register(queue) {
       // The table only feeds dashboards: a failed sync never stops the jobs.
       try {
@@ -77,11 +92,155 @@ export function meteringRegistration(d: MeteringJobDeps): {
         });
       });
       await queue.schedule(spendRollup, SPEND_ROLLUP_CRON, {}, "UTC");
+      await queue.work(providerCheck, { concurrency: 1 }, async () => {
+        await runProviderCheck({
+          db: d.db,
+          logger: d.logger,
+          alerts: d.alerts,
+          now: () => new Date(),
+          defaultProvider: d.defaultProvider ?? "scaleway",
+        });
+      });
+      await queue.schedule(providerCheck, PROVIDER_CHECK_CRON, {}, "UTC");
     },
   };
 }
 
 const DAY_MS = 86_400_000;
+
+/** The check's place in ai_provider_check: everything before this instant has been read. */
+const CHECK_NAME = "provider-check";
+/**
+ * The check reads rows by when they were written (model_call.recorded_at), which is after the
+ * call ended, so a long call is read by the run after it finishes, never skipped. It still
+ * stops this far short of now: a row's write may commit a moment after its clock reading.
+ */
+const CHECK_LAG_MS = 15 * 60_000;
+
+/**
+ * Counts the Google (Vertex) calls since the last check that were not meant for Google. It
+ * must be zero: anything else raises the AI cost alert to sam's inbox. A call counts when the
+ * policy recorded a destination other than Google, and, where Google needs an opt-in, when the
+ * account's own history says Google was not allowed for the call's job at that moment: the
+ * providers the account had enabled for that job and its default for it, the project's choice for that
+ * job (and whether a later removal of Google cleared it) from account_event, and, for audio, the
+ * provider the conversation began on. That is read again here, independently of what the call
+ * recorded about itself. Where Google is the deployment's default, a call there needs no opt-in,
+ * so only calls the policy sent elsewhere count.
+ *
+ * It reads from where the last run stopped, so a day the job did not run is covered by the
+ * next one; the first run, which has no place saved, reads the last 24 hours. The place is
+ * saved only after the alert went out.
+ */
+export async function runProviderCheck(d: {
+  db: Db;
+  logger: Logger;
+  alerts: CostAlertSink | null;
+  now: () => Date;
+  defaultProvider: ProviderId;
+  /** How far behind now the check stops; the default leaves time for rows still being written. */
+  lagMs?: number;
+}): Promise<{ leaks: number; byJob: Record<Job, number> }> {
+  const now = d.now();
+  const until = new Date(now.getTime() - (d.lagMs ?? CHECK_LAG_MS)).toISOString();
+  const [mark] = await d.db.execute<{ checked_through: Date }>(
+    sql`select checked_through from ai_provider_check where name = ${CHECK_NAME}`,
+  );
+  // With no place saved the check reads the last day only: rows written before the policy
+  // recorded its destination have none, and counting the whole log would call them leaks.
+  const since = new Date(
+    mark ? new Date(mark.checked_through).getTime() : now.getTime() - DAY_MS,
+  ).toISOString();
+  const optInNeeded = d.defaultProvider !== "google";
+  const defaultIsGoogle = d.defaultProvider === "google";
+  const googleJobs = JOBS.filter((j) => serves("google", j));
+  const rows = await d.db.execute<{
+    job: string;
+    leaks: number;
+    organisations: string[] | null;
+    ids: (number | string)[] | null;
+  }>(sql`
+    with calls as (
+      select id, started_at, organisation_id, project_id, routing_conversation_id, routed_provider,
+        coalesce(routing_job, '') as job
+      from model_call
+      where recorded_at >= ${since}::timestamptz and recorded_at < ${until}::timestamptz
+        and provider = 'vertex'
+    ),
+    -- A project's choices as every account recorded them: a project that moved away and came
+    -- back has events in each, and the latest one is its choice, whichever account wrote it.
+    project_choices as (
+      select e.subject_id, e.detail::jsonb ->> 'job' as job, e.created_at as at,
+        e.detail::jsonb ->> 'after' as choice
+      from account_event e
+      where e.type = 'project.ai_provider.changed'
+        and e.subject_id in (select project_id::text from calls where project_id is not null)
+    ),
+    judged as (
+      select c.*,
+        -- The account's setting when the call was made; none recorded means the deployment's own.
+        coalesce(
+          (oe.setting -> 'enabled' -> c.job) @> '["google"]'::jsonb,
+          ${defaultIsGoogle}
+        ) as google_allowed,
+        coalesce(oe.setting -> 'defaults' ->> c.job, ${d.defaultProvider}) as account_default,
+        -- The project's own choice for this job then; a later removal of Google from the account cleared it.
+        case when pe.at is null or (rm.at is not null and rm.at > pe.at) then null else pe.choice end as project_choice,
+        cv.ai_transcription_provider as conversation_provider
+      from calls c
+      left join lateral (
+        select e.detail::jsonb -> 'after' as setting from account_event e
+        where e.org_id = c.organisation_id and e.type = 'ai_providers.changed' and e.created_at <= c.started_at
+        order by e.created_at desc limit 1) oe on true
+      left join lateral (
+        select max(e.created_at) as at from account_event e
+        where e.org_id = c.organisation_id and e.type = 'ai_providers.changed' and e.created_at <= c.started_at
+          and (e.detail::jsonb -> 'before' -> 'enabled' -> c.job) @> '["google"]'::jsonb
+          and not ((e.detail::jsonb -> 'after' -> 'enabled' -> c.job) @> '["google"]'::jsonb)) rm on true
+      left join lateral (
+        select e.at, e.choice from project_choices e
+        where e.subject_id = c.project_id::text and e.job = c.job and e.at <= c.started_at
+        order by e.at desc limit 1) pe on true
+      left join lateral (
+        select v.ai_transcription_provider from conversation v where v.id = c.routing_conversation_id) cv on true
+    )
+    select job, count(*)::int as leaks,
+      array_agg(distinct organisation_id::text) filter (where organisation_id is not null) as organisations,
+      (array_agg(id order by id))[1:20] as ids
+    from judged
+    where routed_provider is distinct from 'google'
+      or (${optInNeeded} and not (
+        organisation_id is not null
+        and job = any(${sql.param(googleJobs)}::text[])
+        and google_allowed
+        and coalesce(project_choice = 'google' or (project_choice is null and account_default = 'google'), false)
+        and (job <> 'transcription' or routing_conversation_id is null or coalesce(conversation_provider = 'google', false))))
+    group by job`);
+  const byJob = { transcription: 0, analysis: 0 } as Record<Job, number>;
+  for (const r of rows) if (isJob(r.job)) byJob[r.job] += Number(r.leaks);
+  const leaks = rows.reduce((n, r) => n + Number(r.leaks), 0);
+  d.logger.info(
+    { leaks, byJob, since, until, signal: "metering.provider_check" },
+    "AI provider check",
+  );
+  if (leaks > 0) {
+    const who = [...new Set(rows.flatMap((r) => r.organisations ?? []))].slice(0, 5).join(", ");
+    const jobs = rows.map((r) => `${r.job || "unknown job"}: ${r.leaks}`).join(", ");
+    // The query names the rows it flagged, so it finds exactly those, whichever rule flagged them.
+    const ids = rows.flatMap((r) => (r.ids ?? []).map(Number)).sort((a, b) => a - b);
+    const more = leaks > ids.length ? ` (the first ${ids.length} of ${leaks})` : "";
+    await postCostAlert(
+      d.alerts,
+      `AI provider check: ${leaks} model call${leaks === 1 ? "" : "s"} since ${since} went to Google (Vertex) for a project the routing did not send there, or that its account's history did not allow Google for that job at that moment (${jobs}). Organisations: ${who || "none recorded"}. Rows${more}: select * from model_call where id in (${ids.join(", ")}).`,
+      d.logger,
+      now,
+    );
+  }
+  await d.db.execute(sql`
+    insert into ai_provider_check (name, checked_through) values (${CHECK_NAME}, ${until}::timestamptz)
+    on conflict (name) do update set checked_through = excluded.checked_through`);
+  return { leaks, byJob };
+}
 const UNATTRIBUTED_ALERT_SHARE = 0.01;
 /** Complete UTC days each run rolls up, so a missed run is filled by the next. */
 const ROLLUP_DAYS = 3;

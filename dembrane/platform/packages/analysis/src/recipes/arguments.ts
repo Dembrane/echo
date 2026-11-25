@@ -5,7 +5,7 @@ import {
   type ObjectRevision,
   type SourceRef,
 } from "../contracts";
-import { EmbeddingService, inputHash, refJson } from "../embeddings";
+import { inputHash, refJson } from "../embeddings";
 import { type RecipeContext, RecipeFailed, RunStopped, stepResult, taskGroup } from "../executor";
 import { CanonicalizationError, contentHash, sha256Hex } from "../hashing";
 import {
@@ -25,7 +25,12 @@ import type { InputRequest, Recipe, StepDef } from "../registry";
 import { normKey } from "../text";
 import { getObjectType } from "../types";
 import { EXTRACTION_PROMPT, extractArguments } from "./model";
-import { modelDeployment, type ProducerServices, producerServices } from "./services";
+import {
+  embeddingBatch,
+  modelDeployment,
+  type ProducerServices,
+  producerServices,
+} from "./services";
 
 /**
  * Arguments: Map's grounded transcript extraction as a recipe. Scope `project`; inputs are
@@ -126,8 +131,8 @@ export function revisionQuotes(r: ObjectRevision): SourceRef[] {
   );
 }
 
-export const liveModelDeployment = (ctx: RecipeContext): Json => ({
-  ...producerServices(ctx.services).modelDeployment(),
+export const liveModelDeployment = async (ctx: RecipeContext): Promise<Json> => ({
+  ...(await producerServices(ctx.services).modelDeployment()),
 });
 
 /** Whether the step just awaited computed, rather than reusing an artifact. */
@@ -147,7 +152,7 @@ export async function resolveInputs(request: InputRequest): Promise<Json> {
   return {
     sources: transcripts.map(source),
     sourceFingerprint: sourceFingerprint(transcripts),
-    embedding: { ...services.embeddingSettings() },
+    embedding: { ...(await services.embeddingSettings()) },
   };
 }
 
@@ -205,7 +210,7 @@ export async function execute(ctx: RecipeContext): Promise<void> {
   const services = producerServices(ctx.services);
   const sources = [...((ctx.inputManifest.sources as Json[] | undefined) ?? [])];
   const embeddingConfig = { ...((ctx.inputManifest.embedding as Json | undefined) ?? {}) };
-  const deployment = liveModelDeployment(ctx);
+  const deployment = await liveModelDeployment(ctx);
 
   await ctx.progress("loading", { force: true });
   const transcripts = await loadPinnedTranscripts(services, ctx.projectId, sources);
@@ -373,10 +378,15 @@ export async function execute(ctx: RecipeContext): Promise<void> {
         return stepResult({
           output: { ids: {}, configKey: null, model: null, reused: 0, computed: 0 },
         });
-      const identity = await services.probe();
-      const service = new EmbeddingService(ctx.store, identity, services.embed);
-      const batch = await service.ensure(ctx.projectId, texts.values());
-      await service.verifyDurable(ctx.projectId, batch.ids.values());
+      const { batch, identity, service } = await embeddingBatch(
+        ctx.store,
+        services,
+        async (service, identity) => {
+          const batch = await service.ensure(ctx.projectId, texts.values());
+          await service.verifyDurable(ctx.projectId, batch.ids.values());
+          return { batch, identity, service };
+        },
+      );
       return stepResult({
         output: {
           ids: Object.fromEntries(batch.ids),

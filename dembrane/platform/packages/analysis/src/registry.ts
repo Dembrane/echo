@@ -187,7 +187,7 @@ export interface Recipe {
   readonly parameters?: Model | null;
   readonly scopeKeyPattern?: RegExp;
   /** The model deployment identity, part of every model step's cache key. */
-  readonly modelConfig?: (services: RecipeServices) => Json;
+  readonly modelConfig?: (services: RecipeServices) => Json | Promise<Json>;
   /** Runs of this recipe running at once across workers; null is unbounded. */
   readonly maxRunning?: number | null;
   readonly modelConcurrency?: number;

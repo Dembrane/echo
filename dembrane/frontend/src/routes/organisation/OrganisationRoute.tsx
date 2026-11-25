@@ -34,6 +34,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router";
 import { OrgAgentAccessPanel } from "@/components/agent-access/OrgAgentAccessPanel";
+import { OrgAiProviderPanel } from "@/components/ai-provider/OrgAiProviderPanel";
 import { OrgBillingTab } from "@/components/billing/BillingManager";
 import { AvatarBubbles, pressable } from "@/components/common/AvatarBubbles";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
@@ -350,6 +351,7 @@ export const OrganisationRoute = () => {
 		...(ENABLE_TRAINING ? (["training"] as const) : []),
 		"billing",
 		"agents",
+		"ai-provider",
 	] as const;
 	type TabValue = (typeof allowedTabs)[number];
 	const segments = (splat ?? "").split("/").filter(Boolean);
@@ -365,6 +367,7 @@ export const OrganisationRoute = () => {
 				if (section === "training" && ENABLE_TRAINING) return "training";
 				if (section === "billing") return "billing";
 				if (section === "agents") return "agents";
+				if (section === "ai-provider") return "ai-provider";
 				// general / anything else → overview (general settings).
 				return "overview";
 			})()
@@ -471,7 +474,7 @@ export const OrganisationRoute = () => {
 	// never an empty panel for them.
 	const view: TabValue =
 		(!canSeeFinancials && (viewRaw === "usage" || viewRaw === "billing")) ||
-		(!isAdmin && viewRaw === "agents")
+		(!isAdmin && (viewRaw === "agents" || viewRaw === "ai-provider"))
 			? "members"
 			: viewRaw;
 
@@ -897,6 +900,12 @@ export const OrganisationRoute = () => {
 									orgName={organisation.name}
 								/>
 							)}
+						</Tabs.Panel>
+					)}
+
+					{isAdmin && (
+						<Tabs.Panel value="ai-provider" pt="md">
+							{organisationId && <OrgAiProviderPanel orgId={organisationId} />}
 						</Tabs.Panel>
 					)}
 

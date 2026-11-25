@@ -88,7 +88,11 @@ run("obs.ai_feature", () => {
     };
     await reg.register(queue as never);
     expect(errors).toHaveLength(1);
-    expect(worked).toEqual(["metering.price-sync", "metering.spend-rollup"]);
+    expect(worked).toEqual([
+      "metering.price-sync",
+      "metering.spend-rollup",
+      "metering.provider-check",
+    ]);
   });
 
   test("the dashboard role can call the function and cannot read the table", async () => {

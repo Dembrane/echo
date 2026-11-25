@@ -5,7 +5,12 @@ export { revisionDoc, runDoc } from "./bff";
 export * from "./budgets";
 export * from "./contracts";
 export { clientOf, isUuid, micros, pyIso } from "./db";
-export { EmbeddingService, inputHash as embeddingInputHash } from "./embeddings";
+export {
+  EmbeddingService,
+  identityKey,
+  inputHash as embeddingInputHash,
+  probeIdentity,
+} from "./embeddings";
 export * from "./executor";
 export { type AnalysisWorker, analysisSweep, analysisWorker } from "./jobs";
 export {
@@ -44,6 +49,7 @@ export {
   RECIPE_ID as POPCORN_TENSIONS_RECIPE_ID,
   SCOPE_KEY as POPCORN_TENSIONS_SCOPE_KEY,
 } from "./recipes/popcorn-tensions";
+export { embeddingBatch } from "./recipes/services";
 export * from "./registry";
 export { type AnalysisRoutesDeps, analysisRoutes } from "./routes";
 export * from "./runtime";

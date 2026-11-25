@@ -1,6 +1,6 @@
 import type { Json } from "../contracts";
 import { q } from "../db";
-import { EmbeddingService, inputHash, refJson } from "../embeddings";
+import { inputHash, refJson } from "../embeddings";
 import { type RecipeContext, RecipeFailed, stepResult } from "../executor";
 import { pyFind } from "../maprecipe";
 import type { InputRequest, Recipe, RecipeServices, StepDef } from "../registry";
@@ -9,7 +9,7 @@ import { normalizeText, normKey, sha256Hex } from "../text";
 import { getObjectType } from "../types";
 import { artifactHash, fresh, LOCATION_BASIS, liveModelDeployment } from "./arguments";
 import { isVerbatim, norm, POPCORN_PROMPT, VALIDATE_PROMPT } from "./popcorn-shared";
-import { loadTranscripts, modelDeployment, producerServices } from "./services";
+import { embeddingBatch, loadTranscripts, modelDeployment, producerServices } from "./services";
 
 /**
  * Popcorn: a session's short phrases as shared analysis objects. Scope
@@ -220,7 +220,7 @@ export async function resolveInputs(request: InputRequest): Promise<Json> {
     phrases: [...source.phrases],
     voice: source.voice ? sha256Hex(source.voice).slice(0, 20) : "",
     prompts: { ...(source.prompts ?? {}) },
-    embedding: { ...services.embeddingSettings() },
+    embedding: { ...(await services.embeddingSettings()) },
   };
 }
 
@@ -317,10 +317,15 @@ export async function execute(ctx: RecipeContext): Promise<void> {
         return stepResult({
           output: { ids: {}, configKey: null, model: null, reused: 0, computed: 0 },
         });
-      const identity = await services.probe();
-      const service = new EmbeddingService(ctx.store, identity, services.embed);
-      const batch = await service.ensure(ctx.projectId, texts.values());
-      await service.verifyDurable(ctx.projectId, batch.ids.values());
+      const { batch, identity, service } = await embeddingBatch(
+        ctx.store,
+        services,
+        async (service, identity) => {
+          const batch = await service.ensure(ctx.projectId, texts.values());
+          await service.verifyDurable(ctx.projectId, batch.ids.values());
+          return { batch, identity, service };
+        },
+      );
       return stepResult({
         output: {
           ids: Object.fromEntries(batch.ids),
@@ -346,7 +351,7 @@ export async function execute(ctx: RecipeContext): Promise<void> {
   }
 
   await ctx.progress("emitting", { force: true });
-  const deployment = liveModelDeployment(ctx);
+  const deployment = await liveModelDeployment(ctx);
   const prompts = { ...((ctx.inputManifest.prompts as Json | undefined) ?? {}) };
   const ids = embedded.ids as Record<string, string>;
   for (const phrase of checked) {

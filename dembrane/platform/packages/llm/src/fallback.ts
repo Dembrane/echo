@@ -1,9 +1,11 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import type {
   LanguageModelV4,
   LanguageModelV4CallOptions,
   LanguageModelV4GenerateResult,
   LanguageModelV4StreamResult,
 } from "@ai-sdk/provider";
+import { routing } from "@dembrane/observability";
 import {
   type CallMeta,
   failedCall,
@@ -36,6 +38,29 @@ export interface FallbackOptions {
   /** Hears the first fault of the observer or its mapping, once per process. */
   readonly onObserverFault?: (err: unknown) => void;
 }
+
+/**
+ * Asked before every attempt that follows another, on any model of the scope it was set for.
+ * It throws when the call no longer belongs where it began; the scope's owner catches that
+ * and runs the call again on the new route (see `rerouted`).
+ */
+export type Recheck = () => Promise<void>;
+
+interface Watch {
+  readonly recheck: Recheck;
+  /** Whether an attempt has been made in this scope: the first is never rechecked. */
+  started: boolean;
+}
+
+const watching = new AsyncLocalStorage<Watch | null>();
+
+/**
+ * Runs `fn` so that every FallbackModel call inside it asks `recheck` before each attempt
+ * after the first of the scope: a retry, the next deployment, the next model group and a
+ * second pass over the same audio all count. A null `recheck` clears an outer scope.
+ */
+export const watched = <T>(recheck: Recheck | null, fn: () => T): T =>
+  watching.run(recheck ? { recheck, started: false } : null, fn);
 
 /** Per-call providerOptions: a refused answer moves on to the next deployment. */
 export const FALL_BACK_ON_REFUSAL = { fallback: { onRefusal: true } };
@@ -160,16 +185,25 @@ export class FallbackModel implements LanguageModelV4 {
     }, options.abortSignal);
   }
 
+  /**
+   * The scope's recheck is asked before each attempt after the scope's first, never during
+   * one, so a stream that has begun is not moved.
+   */
   private async run<T>(
     call: (d: Deployment, meta: CallMeta, last: boolean) => PromiseLike<T>,
     signal?: AbortSignal,
   ): Promise<T> {
+    const watch = watching.getStore();
     const order = this.healthyFirst();
     let last: unknown;
     let attempts = 0;
     for (const [i, d] of order.entries()) {
       for (let attempt = 0; attempt < this.opts.attemptsPerDeployment; attempt++) {
         if (signal?.aborted) throw signal.reason ?? new Error("aborted");
+        if (watch) {
+          if (watch.started) await watch.recheck();
+          watch.started = true;
+        }
         attempts++;
         try {
           return await call(
@@ -180,6 +214,7 @@ export class FallbackModel implements LanguageModelV4 {
               model: d.model.modelId,
               attempt: attempts,
               fallback: i > 0,
+              routing: routing() ?? null,
             },
             i === order.length - 1 && attempt === this.opts.attemptsPerDeployment - 1,
           );

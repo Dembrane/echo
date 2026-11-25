@@ -7,7 +7,7 @@ import {
   profileGaps,
   profileOf,
 } from "../src/profiles";
-import { modelsConfigOf } from "../src/settings";
+import { modelsConfigOf, providerModelsOf } from "../src/settings";
 
 const eu = PROFILES["dembrane-26-10-whisper-eu"];
 const gcp = PROFILES["dembrane-26-10-gemini"];
@@ -91,4 +91,39 @@ test("Whisper's model and language come from the profile", () => {
   const c = modelsConfigOf(base).openaiCompatible;
   expect(c?.transcriptionModel).toBe("whisper-large-v3");
   expect(c?.transcriptionLanguage).toBe("auto");
+});
+
+const settings = {
+  provider: "openai-compatible",
+  searchGrounding: false,
+  textFast: ["gemini-3.8-flash"],
+  multiModalFast: ["gemini-3.8-flash"],
+  multiModalPro: ["gemini-3.8-flash"],
+  compatTextFast: ["glm-5.3"],
+  compatMultiModalFast: ["glm-5.3"],
+  compatMultiModalPro: ["glm-5.3"],
+  vertexProject: "p",
+  vertexLocation: "eu",
+  embeddingModel: "text-embedding-004",
+  compatEmbeddingModel: "qwen3-embedding-8b",
+  embeddingLocation: "europe-west4",
+  embeddingDimensions: 768,
+} as const;
+
+test("the models a card names are the ones Scaleway runs here for each job, once each", () => {
+  expect(providerModelsOf(settings, "scaleway")).toEqual({
+    transcription: ["whisper-large-v3"],
+    analysis: ["glm-5.3"],
+  });
+  expect(
+    providerModelsOf({ ...settings, compatTextFast: ["glm-5.3", "other-model"] }, "scaleway"),
+  ).toEqual({ transcription: ["whisper-large-v3"], analysis: ["glm-5.3", "other-model"] });
+  expect(providerModelsOf(settings, "google")).toEqual({ transcription: [], analysis: [] });
+});
+
+test("the models follow the deployment's config when it runs Vertex by default", () => {
+  expect(providerModelsOf({ ...settings, provider: "vertex" }, "scaleway")).toEqual({
+    transcription: ["whisper-large-v3"],
+    analysis: ["glm-5.3"],
+  });
 });

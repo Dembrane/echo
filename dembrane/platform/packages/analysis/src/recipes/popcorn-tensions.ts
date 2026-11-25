@@ -1,6 +1,6 @@
 import type { Json, SourceRef } from "../contracts";
 import { q } from "../db";
-import { EmbeddingService, inputHash, refJson } from "../embeddings";
+import { inputHash, refJson } from "../embeddings";
 import { type RecipeContext, RecipeFailed, stepResult } from "../executor";
 import { pyFind } from "../maprecipe";
 import type { InputRequest, Recipe, RecipeServices, StepDef } from "../registry";
@@ -8,7 +8,7 @@ import type { AnalysisStore } from "../store";
 import { normalizeText, normKey, sha256Hex } from "../text";
 import { getObjectType } from "../types";
 import { artifactHash, fresh, LOCATION_BASIS, liveModelDeployment } from "./arguments";
-import { loadTranscripts, modelDeployment, producerServices } from "./services";
+import { embeddingBatch, loadTranscripts, modelDeployment, producerServices } from "./services";
 
 /**
  * A live session's tensions as shared analysis objects. The tick finds them (positions,
@@ -177,7 +177,7 @@ export async function resolveInputs(request: InputRequest): Promise<Json> {
     // The tensions themselves are the input: the run publishes exactly what the room was shown.
     tensions: source.tensions.map((t) => ({ ...t, quotes: t.quotes.map((x) => ({ ...x })) })),
     textHashes: citedHashes(source),
-    embedding: { ...services.embeddingSettings() },
+    embedding: { ...(await services.embeddingSettings()) },
   };
 }
 
@@ -313,10 +313,15 @@ export async function execute(ctx: RecipeContext): Promise<void> {
         return stepResult({
           output: { ids: {}, configKey: null, model: null, reused: 0, computed: 0 },
         });
-      const identity = await services.probe();
-      const service = new EmbeddingService(ctx.store, identity, services.embed);
-      const batch = await service.ensure(ctx.projectId, byHash.values());
-      await service.verifyDurable(ctx.projectId, batch.ids.values());
+      const { batch, identity, service } = await embeddingBatch(
+        ctx.store,
+        services,
+        async (service, identity) => {
+          const batch = await service.ensure(ctx.projectId, byHash.values());
+          await service.verifyDurable(ctx.projectId, batch.ids.values());
+          return { batch, identity, service };
+        },
+      );
       return stepResult({
         output: {
           ids: Object.fromEntries(batch.ids),
@@ -341,7 +346,7 @@ export async function execute(ctx: RecipeContext): Promise<void> {
   }
 
   await ctx.progress("emitting", { force: true });
-  const deployment = liveModelDeployment(ctx);
+  const deployment = await liveModelDeployment(ctx);
   const ids = embedded.ids as Record<string, string>;
   for (const t of grounded) {
     const payload = rec(t.payload);

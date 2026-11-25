@@ -1151,8 +1151,18 @@ export const conversation = pgTable(
     recording_started_at: timestamp({ withTimezone: true, mode: "string" }),
     // When a live recording first got the AI budget stop; its grace runs from here.
     ai_stopped_at: timestamp({ withTimezone: true, mode: "string" }),
+    /**
+     * The transcription provider the project resolved to when the conversation began. Its audio
+     * reaches a provider that needs an opt-in only while both this and the project's current
+     * setting say so. Analysis decides at every call and records nothing here.
+     */
+    ai_transcription_provider: varchar({ length: 32 }),
   },
   (table): PgTableExtraConfigValue[] => [
+    check(
+      "conversation_ai_transcription_provider_check",
+      sql`${table.ai_transcription_provider} is null or ${table.ai_transcription_provider} in ('scaleway', 'google')`,
+    ),
     foreignKey({
       columns: [table.project_id],
       foreignColumns: [project.id],
@@ -2069,6 +2079,16 @@ export const org = pgTable(
     // Customer accounts: null for organisations dembrane does not manage as an account.
     account_stage: varchar({ length: 32 }),
     origin_pricing_configuration_id: uuid(),
+    /**
+     * The AI providers the account has enabled for each job, set by dembrane staff after a
+     * written request (packages/llm/src/providers.ts). Null: only the environment's default
+     * provider. The environment still decides which providers exist; this only chooses among them.
+     */
+    ai_transcription_providers: text().array(),
+    ai_analysis_providers: text().array(),
+    /** The provider projects use for each job unless they choose another; enabled, and serving the job. */
+    ai_transcription_default: varchar({ length: 32 }),
+    ai_analysis_default: varchar({ length: 32 }),
   },
   (table): PgTableExtraConfigValue[] => [
     foreignKey({
@@ -2076,6 +2096,22 @@ export const org = pgTable(
       foreignColumns: [app_user.id],
       name: "org_created_by_foreign",
     }).onDelete("set null"),
+    check(
+      "org_ai_transcription_providers_check",
+      sql`${table.ai_transcription_providers} is null or ${table.ai_transcription_providers} <@ array['scaleway', 'google']::text[]`,
+    ),
+    check(
+      "org_ai_analysis_providers_check",
+      sql`${table.ai_analysis_providers} is null or ${table.ai_analysis_providers} <@ array['scaleway', 'google']::text[]`,
+    ),
+    check(
+      "org_ai_transcription_default_check",
+      sql`${table.ai_transcription_default} is null or ${table.ai_transcription_default} in ('scaleway', 'google')`,
+    ),
+    check(
+      "org_ai_analysis_default_check",
+      sql`${table.ai_analysis_default} is null or ${table.ai_analysis_default} in ('scaleway', 'google')`,
+    ),
     foreignKey({
       columns: [table.origin_pricing_configuration_id],
       foreignColumns: [pricing_configuration.id],
@@ -2780,8 +2816,19 @@ export const project = pgTable(
      */
     template_key: varchar({ length: 64 }),
     template_version: integer(),
+    /** The provider the project chose for each job among those its account has enabled; null follows the account's default. */
+    ai_transcription_provider: varchar({ length: 32 }),
+    ai_analysis_provider: varchar({ length: 32 }),
   },
   (table): PgTableExtraConfigValue[] => [
+    check(
+      "project_ai_transcription_provider_check",
+      sql`${table.ai_transcription_provider} is null or ${table.ai_transcription_provider} in ('scaleway', 'google')`,
+    ),
+    check(
+      "project_ai_analysis_provider_check",
+      sql`${table.ai_analysis_provider} is null or ${table.ai_analysis_provider} in ('scaleway', 'google')`,
+    ),
     foreignKey({
       columns: [table.directus_user_id],
       foreignColumns: [directus_users.id],

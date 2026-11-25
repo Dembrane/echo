@@ -5,6 +5,7 @@ import {
   type StaffPolicy,
   TIERS,
 } from "@dembrane/access";
+import { type ProviderModels, readOrgForStaff, setOrg } from "@dembrane/ai-providers";
 import {
   accountWorkspaceIds,
   allowanceForWorkspace,
@@ -36,7 +37,9 @@ import {
 import { type Db, schema } from "@dembrane/db";
 import { type Ctx, type Env, requireUser, v } from "@dembrane/http";
 import { directusTime } from "@dembrane/legacy-shape";
+import { type RoutingPolicy, routingPolicyOf } from "@dembrane/llm";
 import type { Mailer } from "@dembrane/mail";
+import type { UnitCosts } from "@dembrane/metering";
 import type { Logger } from "@dembrane/observability";
 import { inArray } from "drizzle-orm";
 import { Hono } from "hono";
@@ -54,6 +57,12 @@ export interface StaffRouteDeps {
   readonly logger: Logger;
   readonly config: { readonly http: { readonly dashboardUrl: string } };
   readonly clock?: () => Date;
+  /** The AI providers this deployment has and its default; staff can only grant what exists. */
+  readonly aiPolicy?: RoutingPolicy;
+  /** The model ids each AI provider uses on this deployment, for the cards staff see. */
+  readonly aiModels?: ProviderModels;
+  /** What the price list says each provider costs per unit, for providers with no call history yet. */
+  readonly aiPriceList?: () => UnitCosts | null;
 }
 
 const MOLLIE_DASHBOARD_LIVE = "https://www.mollie.com/dashboard/payments";
@@ -431,6 +440,60 @@ export function staffRoutes(deps: StaffRouteDeps) {
     if (!org || org.deleted_at) throw new NotFoundError("organisation.not_found");
     await s.updateOrg(id, { is_partner: body.is_partner }, clock());
     return c.json({ status: "ok", org_id: id, is_partner: body.is_partner });
+  });
+
+  // ── AI providers ─────────────────────────────────────────────────────
+  const aiPolicy = deps.aiPolicy ?? routingPolicyOf({ provider: "openai-compatible" });
+
+  app.get(`${A}/orgs/:org_id/ai-providers`, async (c) => {
+    const id = c.req.param("org_id");
+    await staff(c, "staff:workspaces", "org.ai_providers.read", ["org", id]);
+    return c.json(
+      await readOrgForStaff(
+        {
+          db: deps.db,
+          policy: aiPolicy,
+          now: clock,
+          ...(deps.aiModels && { models: deps.aiModels }),
+          ...(deps.aiPriceList && { priceList: deps.aiPriceList }),
+        },
+        id,
+      ),
+    );
+  });
+
+  // What is enabled for each job and the default of each, set after a written request: the ticket it was made in.
+  app.put(`${A}/orgs/:org_id/ai-providers`, async (c) => {
+    const raw = await v.rawRequest(c.req);
+    requireUser(c);
+    const { body } = v.validateRaw(raw, {
+      body: {
+        transcription_enabled: v.list(v.str(), { min: 1 }),
+        analysis_enabled: v.list(v.str(), { min: 1 }),
+        transcription_default: v.str(),
+        analysis_default: v.str(),
+        request_ticket_id: v.str(),
+      },
+    });
+    const id = c.req.param("org_id");
+    const who = await staff(c, "staff:workspaces", "org.ai_providers.set", ["org", id], body);
+    return c.json(
+      await setOrg(
+        {
+          db: deps.db,
+          policy: aiPolicy,
+          ...(deps.aiModels && { models: deps.aiModels }),
+          now: clock,
+        },
+        who.directusUserId,
+        id,
+        {
+          enabled: { transcription: body.transcription_enabled, analysis: body.analysis_enabled },
+          defaults: { transcription: body.transcription_default, analysis: body.analysis_default },
+          requestTicketId: body.request_ticket_id,
+        },
+      ),
+    );
   });
 
   app.post(`${A}/billing-accounts/:account_id/grant-trial`, async (c) => {

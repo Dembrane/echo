@@ -24,6 +24,18 @@ msgstr ""
 #~ msgid "dashboard.dembrane.concrete.beta"
 #~ msgstr "Beta"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:127
+msgid "{asking} in this project goes to Google in the EU, billed on top of your plan, about {amount} a month at your last 30 days of use."
+msgstr "{asking} у цьому проєкті надсилається до Google в ЄС і тарифікується додатково до вашого тарифу: приблизно {amount} на місяць за рівнем використання за останні 30 днів."
+
+#: src/components/project/advanced/ProjectAiProvider.tsx:127
+#~ msgid "{asking} in this project goes to Google in the EU, billed on top of your plan, about EUR {amount} a month at your last 30 days of use."
+#~ msgstr "{asking} у цьому проєкті надсилається до Google в ЄС і тарифікується понад ваш тариф: приблизно {amount} EUR на місяць за рівнем використання за останні 30 днів."
+
+#: src/components/project/advanced/ProjectAiProvider.tsx:133
+msgid "{asking} in this project goes to Google in the EU, billed on top of your plan."
+msgstr "{asking} у цьому проєкті надсилається до Google в ЄС і тарифікується понад ваш тариф."
+
 #: src/components/project/portal-editor/sectionLabels.ts:31
 msgid "A question from dembrane, when a group asks for one, to go deeper."
 msgstr "Запитання від dembrane, щоб піти глибше, коли група про нього просить."
@@ -44,11 +56,15 @@ msgstr "Про попередній перегляд"
 msgid "About Try it"
 msgstr "Про Спробувати"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:107
+msgid "Account default"
+msgstr "За замовчуванням для облікового запису"
+
 #: src/components/project/portal-editor/sections/verify.tsx:330
 msgid "Add topic"
 msgstr "Додати тему"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:63
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:64
 msgid "Advanced"
 msgstr "Додатково"
 
@@ -59,6 +75,10 @@ msgstr "Розширений (поради та найкращі практик�
 #: src/components/project/portal-editor/sections/AnonymiseExample.tsx:29
 msgid "After"
 msgstr "Після"
+
+#: src/components/project/advanced/ProjectAiProvider.tsx:74
+msgid "AI provider"
+msgstr "Постачальник ШІ"
 
 #: src/components/project/portal-editor/sections/privacy.tsx:97
 msgid "Anonymize transcripts"
@@ -96,7 +116,7 @@ msgstr "Auto-generate titles"
 msgid "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 msgstr "Automatically generate a short topic-based title for each conversation after summarization. The title describes what was discussed, not who participated. The participant's original name is preserved separately, if they provided one."
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:66
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:67
 msgid "Automation, early features, and moving or deleting this project."
 msgstr "Автоматизація, ранні функції, перенесення або видалення цього проєкту."
 
@@ -231,7 +251,7 @@ msgstr "English"
 
 #: src/components/project/portal-editor/PortalEditorRoute.tsx:59
 #: src/components/project/brief/ProjectBriefRoute.tsx:83
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:74
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:75
 msgid "Error loading project"
 msgstr "Error loading project"
 
@@ -331,6 +351,10 @@ msgstr "Mode"
 msgid "Name and tags"
 msgstr "Ім'я та теги"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:75
+#~ msgid "New conversations and all analysis in this project go to Google in the EU, billed per use."
+#~ msgstr "Нові розмови та весь аналіз у цьому проєкті передаються Google в ЄС, рахунок виставляється за використання."
+
 #: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:223
 msgid "Next"
 msgstr "Next"
@@ -402,7 +426,7 @@ msgstr "Одне запитання"
 msgid "One sample cannot show what Explore takes from other conversations."
 msgstr "Один приклад не може показати, що Explore бере з інших розмов."
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:86
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:87
 msgid "Only workspace admins can manage project automation."
 msgstr "Лише адміністратори робочого простору можуть керувати автоматизацією проєктів."
 
@@ -626,6 +650,18 @@ msgstr "Картки інструкції"
 msgid "Ukrainian (only ECHO features, transcription and summaries)"
 msgstr "Українська (лише функції ECHO, транскрипція та підсумки)"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:139
+msgid "Use Google"
+msgstr "Використовувати Google"
+
+#: src/components/project/advanced/ProjectAiProvider.tsx:124
+msgid "Use Google Vertex AI for {asking}?"
+msgstr "Використовувати Google Vertex AI для {asking}?"
+
+#: src/components/project/advanced/ProjectAiProvider.tsx:73
+#~ msgid "Use Google Vertex AI for this project?"
+#~ msgstr "Використовувати Google Vertex AI для цього проєкту?"
+
 #. js-lingui-explicit-id
 #: src/components/project/portal-editor/sectionLabels.ts:15
 #: src/components/project/portal-editor/sections/verify.tsx:375
@@ -638,11 +674,11 @@ msgstr "Verify"
 msgid "Verify topics"
 msgstr "Перевірити теми"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:98
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:99
 msgid "Webhooks"
 msgstr "Webhooks"
 
-#: src/components/project/advanced/ProjectAdvancedRoute.tsx:81
+#: src/components/project/advanced/ProjectAdvancedRoute.tsx:82
 msgid "Webhooks are not enabled for this environment."
 msgstr "Вебхуки не ввімкнено для цього середовища."
 

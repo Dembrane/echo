@@ -27,7 +27,14 @@ export {
   type FeatureRule,
   UNLABELLED,
 } from "./features";
-export { configuredModels, type MeteringJobDeps, meteringRegistration, priceSync } from "./jobs";
+export {
+  configuredModels,
+  type MeteringJobDeps,
+  meteringRegistration,
+  priceSync,
+  providerCheck,
+  runProviderCheck,
+} from "./jobs";
 export {
   loadOverrides,
   type OverrideFile,
@@ -47,7 +54,32 @@ export {
   type SyncResult,
   syncPrices,
 } from "./prices/sync";
-export { type Resolution, type ResolvedPayer, resolvePayers } from "./resolve";
+export {
+  accountVolume,
+  type CostLine,
+  costLine,
+  googleSpendByAccount,
+  listedUnitCosts,
+  loggedUnitCosts,
+  mergeUnitCosts,
+  monthSpend,
+  monthStart,
+  NO_VOLUME,
+  type UnitCost,
+  type UnitCosts,
+  type Volume,
+  WINDOW_DAYS,
+} from "./provider-cost";
+export { projectOfPayer, type Resolution, type ResolvedPayer, resolvePayers } from "./resolve";
+export {
+  dbRoutingStore,
+  providerResolver,
+  type ResolverOptions,
+  type RoutingFacts,
+  type RoutingStore,
+  resolve as resolveRouting,
+} from "./routing";
+export { type AiRouting, aiRouting } from "./wiring";
 
 /** A model_call row as stored: the call plus who made it and under which operation. */
 export type ModelCallRow = typeof schema.model_call.$inferInsert;
@@ -344,6 +376,12 @@ export function toRow(
     audio_seconds: call.audioSeconds,
     search_queries: call.searchQueries,
     usage_estimated: call.usageEstimated,
+    organisation_id: call.routing?.organisationId ?? null,
+    routed_provider: call.routing?.provider ?? null,
+    routing_job: call.routing?.job ?? null,
+    routing_reason: call.routing?.reason ?? null,
+    routing_allowed: call.routing?.allowed ? [...call.routing.allowed] : null,
+    routing_conversation_id: call.routing?.conversationId ?? null,
   };
 }
 
@@ -379,6 +417,24 @@ export function modelCallTable(db: Db): ModelCallSink {
     return (p: Payer | null): Resolution => (p ? (cache.get(payerKey(p))?.value ?? null) : null);
   };
 
+  const owner = new Map<string, { value: string | null; until: number }>();
+  const organisations = async (tx: Db, projectIds: readonly string[]) => {
+    const now = Date.now();
+    for (const [k, v] of owner) if (v.until <= now) owner.delete(k);
+    const missing = [...new Set(projectIds)].filter((id) => !owner.has(id));
+    if (missing.length) {
+      const found = await tx.execute<{ id: string; org_id: string }>(
+        sql`select p.id::text as id, w.org_id::text as org_id
+          from project p join workspace w on w.id = p.workspace_id
+          where p.id = any(${sql.param(missing)}::uuid[])`,
+      );
+      const byProject = new Map(found.map((r) => [r.id, r.org_id]));
+      for (const id of missing)
+        owner.set(id, { value: byProject.get(id) ?? null, until: now + RESOLVE_TTL_MS });
+    }
+    return new Map([...owner].map(([k, v]) => [k, v.value]));
+  };
+
   return {
     async write(batch, spend) {
       if (!batch.length && !spend.size) return;
@@ -391,7 +447,18 @@ export function modelCallTable(db: Db): ModelCallSink {
         ];
         const who = await resolve(tx, payers);
 
-        const rows = batch.map((p) => ({ ...p.row, ...attribution(who(p.payer)) }));
+        const attributed = batch.map((p) => ({ ...p.row, ...attribution(who(p.payer)) }));
+        // A call that ran under no routing policy (a deployment with one provider) still
+        // records the organisation that owns the project's workspace.
+        const owners = await organisations(
+          tx,
+          attributed.flatMap((r) => (!r.organisation_id && r.project_id ? [r.project_id] : [])),
+        );
+        const rows = attributed.map((r) =>
+          !r.organisation_id && r.project_id
+            ? { ...r, organisation_id: owners.get(r.project_id) ?? null }
+            : r,
+        );
         for (let i = 0; i < rows.length; i += INSERT_CHUNK)
           await tx.insert(schema.model_call).values(rows.slice(i, i + INSERT_CHUNK));
 

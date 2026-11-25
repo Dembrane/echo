@@ -29,6 +29,7 @@ import {
   embeddingLocationOf,
   embeddingModelOf,
   type Models,
+  providerOfKind,
 } from "@dembrane/llm";
 import type { Mailer } from "@dembrane/mail";
 import { mapWorker } from "@dembrane/map";
@@ -290,6 +291,7 @@ export function registrations(deps: {
       modelsDevUrl: config.metering.modelsDevUrl,
       ecbUrl: config.metering.ecbRatesUrl,
       book: deps.prices,
+      defaultProvider: providerOfKind(config.llm.provider),
     }),
     supportForwardRegistration({
       outbox: supportOutbox(db),

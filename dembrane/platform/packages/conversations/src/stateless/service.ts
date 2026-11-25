@@ -8,6 +8,7 @@ import { type Payer, withPayer } from "@dembrane/observability";
 import { TranscriptionError } from "@dembrane/transcription";
 import { and, asc, desc, eq, gt, isNull, ne, or } from "drizzle-orm";
 import type { ConversationsDeps } from "../deps";
+import { withTranscriber } from "../speech";
 import { isUuid } from "../storage";
 
 // Uploaded audio is parked under this prefix only for the duration of the request.
@@ -178,15 +179,17 @@ export async function transcribeStateless(
   try {
     try {
       const r = await withPayer(payer, () =>
-        d.transcriber.transcribe({
-          audio,
-          language: input.language,
-          hotwords: parseHotwords(input.hotwords),
-          usePiiRedaction: input.usePiiRedaction,
-          anonymizeTranscripts: input.anonymizeTranscripts,
-          customGuidancePrompt: input.customGuidancePrompt,
-          promptOverride: input.promptOverride,
-        }),
+        withTranscriber(d.speech, payer, d.transcriber, (transcriber) =>
+          transcriber.transcribe({
+            audio,
+            language: input.language,
+            hotwords: parseHotwords(input.hotwords),
+            usePiiRedaction: input.usePiiRedaction,
+            anonymizeTranscripts: input.anonymizeTranscripts,
+            customGuidancePrompt: input.customGuidancePrompt,
+            promptOverride: input.promptOverride,
+          }),
+        ),
       );
       transcript = r.transcript;
       note = r.note;

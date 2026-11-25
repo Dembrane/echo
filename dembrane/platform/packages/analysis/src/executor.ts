@@ -190,15 +190,15 @@ function runWork(run: Run): string {
   });
 }
 
-function nodeContext(
+async function nodeContext(
   recipe: Recipe,
   request: RunRequest,
   services: RecipeServices,
   selected: readonly string[] = [],
-): Json {
+): Promise<Json> {
   const context: Json = {
     ...(request.context ?? {}),
-    model: { ...(recipe.modelConfig?.(services) ?? {}) },
+    model: { ...((await recipe.modelConfig?.(services)) ?? {}) },
   };
   if (selected.length) context.selectedRevisionIds = [...selected];
   return context;
@@ -382,7 +382,7 @@ export async function requestRun(request: RunRequest, deps: ExecutorDeps): Promi
           current,
           nodeRecipe,
           node.parameters,
-          nodeContext(nodeRecipe, request, deps.services),
+          await nodeContext(nodeRecipe, request, deps.services),
         )
       ) {
         pins.set(node.key, await pin(store, node.key, node.recipeId, node.scopeKey, current));
@@ -431,7 +431,7 @@ async function requestNode(
   },
 ): Promise<RequestOutcome> {
   const { store } = deps;
-  const context = nodeContext(recipe, o.request, deps.services, o.selected);
+  const context = await nodeContext(recipe, o.request, deps.services, o.selected);
   const parameters = { ...node.parameters };
   const current = await currentReady(store, o.scopeId);
   const epoch = o.mode === "regenerate" ? null : current ? current.epoch : 0;

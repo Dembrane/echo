@@ -41,14 +41,64 @@ export interface Completer {
   complete(request: CompletionRequest): Promise<Completion>;
   /** What a group resolves to, as the Python settings named it ("vertex_ai/<model>"). */
   modelIdentity(group: ModelGroup): string;
+  /** The same for the payer in scope, where the provider depends on it; absent where it does not. */
+  identityOf?(group: ModelGroup): Promise<string>;
+  /** Whether a request for Google Search grounding can be answered for the payer in scope. */
+  grounds?(): Promise<boolean>;
+  /** The same completer without the fallback to the other provider's models; see `Models.standalone`. */
+  readonly standalone?: Completer;
 }
+
+/** Whether the payer in scope can have an answer grounded with Google Search. */
+export const canGround = (completer: Completer): Promise<boolean> =>
+  completer.grounds?.() ?? Promise.resolve(true);
+
+/** What a group resolves to for the payer in scope. */
+export const completerIdentity = (completer: Completer, group: ModelGroup): Promise<string> =>
+  completer.identityOf?.(group) ?? Promise.resolve(completer.modelIdentity(group));
 
 export interface Embedder {
   embed(text: string): Promise<number[]>;
   /** The deployment identity that keys stored vectors (model, endpoint, dimensions). */
   readonly model: string;
   readonly endpoint: string;
+  /** The provider's base URL: the compatible API's own, or a Vertex region's host. */
+  readonly baseUrl?: string | undefined;
   readonly dimensions: number;
+  /** The identity of the embedder the payer in scope uses, where it depends on the payer. */
+  identity?(): Promise<{ readonly model: string; readonly endpoint: string }>;
+  /**
+   * One decision for a whole batch, where the embedder depends on the payer: the identity and
+   * every embed of the pin come from the same provider, so the vectors stored under the
+   * identity's key were made by it. An embed after the payer's provider changed fails with
+   * EmbeddingRouteChanged and the batch is dropped to be run again.
+   */
+  pinned?(): Promise<PinnedEmbedder>;
+}
+
+export interface PinnedEmbedder {
+  /** The provider the batch is pinned to. */
+  readonly provider: string;
+  readonly identity: {
+    readonly model: string;
+    readonly endpoint: string;
+    /** The provider's base URL, as the run's pinned settings record it. */
+    readonly baseUrl?: string | undefined;
+  };
+  /** What rate-limit pauses are shared by: the provider's own embedder. */
+  readonly hold: object;
+  embed(text: string): Promise<number[]>;
+}
+
+/** The payer's provider changed while a batch was being embedded; nothing of the batch is kept. */
+export class EmbeddingRouteChanged extends Error {
+  override name = "EmbeddingRouteChanged";
+  constructor(
+    readonly from: string,
+    readonly to: string,
+  ) {
+    super(`the embedding provider changed from ${from} to ${to} during a batch`);
+  }
 }
 
 const MAX_SOURCES = 5;
@@ -161,6 +211,8 @@ export function vertexCompleter(models: Models, cfg: VertexCompleterConfig): Com
       return completeWith(models.model(request.group), request);
     },
     modelIdentity: (group) => name(cfg.groups[group][0] ?? group),
+    grounds: async () => cfg.searchGrounding !== false,
+    ...(models.standalone && { standalone: vertexCompleter(models.standalone, cfg) }),
   };
 }
 
@@ -184,6 +236,10 @@ export function vertexEmbedder(models: Models, cfg: VertexEmbedderConfig): Embed
       cfg.provider === "openai-compatible"
         ? `openai-compatible:${cfg.baseUrl ?? ""}`
         : `vertex:${cfg.project}:${cfg.location}`,
+    baseUrl:
+      cfg.provider === "openai-compatible"
+        ? (cfg.baseUrl ?? "")
+        : `https://${cfg.location}-aiplatform.googleapis.com`,
     get dimensions() {
       return models.embedding().dimensions;
     },

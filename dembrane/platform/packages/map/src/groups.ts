@@ -1,5 +1,5 @@
 import type { AnalysisRuntime } from "@dembrane/analysis";
-import type { Completer } from "@dembrane/llm";
+import { type Completer, completerIdentity } from "@dembrane/llm";
 import { withPayer } from "@dembrane/observability";
 import { defineJob, step } from "@dembrane/queue";
 import { z } from "zod";
@@ -95,10 +95,12 @@ export async function runGroup(
 
   const written = await run(
     "complete",
-    () =>
+    async () =>
       d.store.completeGroup(job.groupId, job.attempt, {
         title: titled.title,
-        model: d.completer.modelIdentity("multi_modal_fast"),
+        model: await withPayer({ ref: "project", id: projectId }, () =>
+          completerIdentity(d.completer, "multi_modal_fast"),
+        ),
         promptVersion: TITLE_PROMPT,
       }),
     60_000,

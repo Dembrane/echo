@@ -3,8 +3,8 @@ import { AudioError, durationOf, fileFormatOf, planPieces } from "@dembrane/audi
 import { PaymentRequiredError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
-import type { Models } from "@dembrane/llm";
-import type { Logger } from "@dembrane/observability";
+import { type Models, routed } from "@dembrane/llm";
+import type { Logger, Payer } from "@dembrane/observability";
 import { isFinalAttempt } from "@dembrane/queue";
 import type { ObjectStorage } from "@dembrane/storage";
 import {
@@ -27,6 +27,13 @@ import { FREE_LIMIT_SKIPPED, LIVE_CHUNK_BYTES, LIVE_SOURCE, meterLiveChunk } fro
 import { afterResponse, hostEventStore, transcriptReady } from "../host-events";
 import { LIVENESS_TTL_SECONDS } from "../live/presence";
 import { mergeConversationAudio, NoContent, NoMergeableChunks } from "../merge";
+import {
+  followingFinal,
+  followingTranscriber,
+  kitLimits,
+  type SpeechRouter,
+  speechKit,
+} from "../speech";
 import { type ChunkRow, conversationStore, type Tx, transaction } from "../storage";
 import { NO_TRANSCRIPT_SUMMARY, summarizeAndStore } from "../v1/summary";
 import { computeTokenCount } from "../v1/token-count";
@@ -63,14 +70,46 @@ export interface PipelineDeps {
     conversationId: string,
   ) => Promise<void>;
   /** The final pass over the whole recording; absent or empty means the live text is the record. */
-  readonly final?: FinalSettings;
+  readonly final?: FinalSettings | undefined;
   /** Product analytics for host events (server_transcript_ready); none in tests. */
   readonly capture?: Capture;
   /** Files above this are split before transcription; tests lower it to split small files. */
   /** Which speech model the live text goes to; its limits cut uploads. Defaults to whisper. */
-  readonly liveProvider?: SpeechProvider;
+  readonly liveProvider?: SpeechProvider | undefined;
   /** Replaces the provider's limits; tests lower them to cut small files. */
-  readonly requestLimits?: RequestLimits;
+  readonly requestLimits?: RequestLimits | undefined;
+  /**
+   * One speech kit per AI provider. With it, the four fields above are the default provider's
+   * and each conversation's calls use the kit of the provider it resolves to at that moment.
+   */
+  readonly speech?: SpeechRouter;
+}
+
+/**
+ * The deps as one conversation's provider sees them, and the routing scope its calls run in.
+ * Resolved at every call, never kept for the run: a conversation whose project goes back to
+ * Scaleway is on Whisper from its next piece of audio.
+ */
+export async function withSpeech<T>(
+  d: PipelineDeps,
+  conversationId: string,
+  fn: (d: PipelineDeps) => Promise<T>,
+): Promise<T> {
+  const who: Payer = { ref: "conversation", id: conversationId };
+  const router = d.speech;
+  const picked = router ? await speechKit(router, who) : null;
+  if (!router || !picked) return fn(d);
+  const { kit, decision } = picked;
+  return routed(decision, () =>
+    fn({
+      ...d,
+      transcriber: followingTranscriber(router, who, decision),
+      liveProvider: kit.liveProvider,
+      requestLimits: kit.requestLimits,
+      // The whole final pass decides again before every call to a provider that needs an opt-in.
+      final: kit.final && followingFinal(router, who, decision, kit.final),
+    }),
+  );
 }
 
 // Namespace for the ids of split pieces: a retried split names its pieces the same way.
@@ -290,7 +329,7 @@ export async function prepareChunk(d: PipelineDeps, chunkId: string): Promise<st
       { conversationId: chunk.conversation_id },
       "task_process_conversation_chunk.split_audio_chunk",
       `for chunk ${chunkId}`,
-      () => convertAndSplit(d, chunk),
+      () => withSpeech(d, chunk.conversation_id, (kd) => convertAndSplit(kd, chunk)),
     );
   } catch (err) {
     // Bytes that will not change on a retry (an unsupported type, a file with no audio stream, a
@@ -384,15 +423,24 @@ async function convertAndSplit(d: PipelineDeps, chunk: ChunkRow): Promise<string
     if (r === "refused") return [];
     metered = r === "counted" || r === "already";
   }
-  const limits = d.requestLimits ?? requestLimits(d.liveProvider ?? "whisper");
+  // The pieces are cut for the provider that will read them: the conversation's provider now,
+  // not the one the step began with, since a conversion can take minutes.
+  const now = d.speech
+    ? (await speechKit(d.speech, { ref: "conversation", id: chunk.conversation_id }))?.kit
+    : undefined;
+  const liveProvider = now ? now.liveProvider : d.liveProvider;
+  const limits = now
+    ? kitLimits(now)
+    : (d.requestLimits ?? requestLimits(d.liveProvider ?? "whisper"));
+  const finalNow = now ? now.final : d.final;
   // An upload whose improved transcript is its own first reading is cut, at pauses, into pieces
   // short enough for Whisper's sentence times; anything else keeps the provider's limits.
   const conv = await conversationStore(d.db).conversation(chunk.conversation_id);
   const timedCap =
-    (d.liveProvider ?? "whisper") === "whisper" &&
+    (liveProvider ?? "whisper") === "whisper" &&
     conv?.source === UPLOAD_SOURCE &&
-    finalTreatment(d.final, conv.source) === "first-pass"
-      ? (d.final?.timedPieceSeconds ?? Number.POSITIVE_INFINITY)
+    finalTreatment(finalNow, conv.source) === "first-pass"
+      ? (finalNow?.timedPieceSeconds ?? Number.POSITIVE_INFINITY)
       : Number.POSITIVE_INFINITY;
   const maxSeconds = Math.min(limits.maxSeconds, timedCap);
   // The recorder cuts a live chunk at 30 seconds, and a small file cannot hold more than
@@ -547,53 +595,55 @@ export async function transcribePiece(
   const store = conversationStore(d.db);
   const chunk = await store.chunk(chunkId);
   if (!chunk) return { ok: false, reason: "gone" };
-  return withStatus(
-    d,
-    { conversationId: chunk.conversation_id },
-    "task_transcribe_chunk",
-    `for chunk ${chunkId}`,
-    async () => {
-      try {
-        if (!chunk.path) throw new Error(`chunk ${chunkId} has no path`);
-        const [conv] = await d.db
-          .select({
-            language: project.language,
-            prompt: project.default_conversation_transcript_prompt,
-          })
-          .from(conversation)
-          .innerJoin(project, eq(project.id, conversation.project_id))
-          .where(eq(conversation.id, chunk.conversation_id))
-          .limit(1);
-        if (!conv) throw new Error("Conversation not found");
-        const key = d.audioUrls.keyOf(chunk.path);
-        const blob = await d.audio.get(key);
-        if (!blob) throw new Error(`audio ${key} not found in storage`);
-        const result = await d.transcriber.transcribe({
-          audio: new Uint8Array(await blob.arrayBuffer()),
-          language: conv.language || "en",
-          hotwords: conv.prompt ? conv.prompt.split(",").map((w) => w.trim()) : null,
-          usePiiRedaction: opts.usePiiRedaction,
-          anonymizeTranscripts: opts.anonymize,
-          customGuidancePrompt: conv.prompt,
-          cutSpan: spanCutter(d, key, `chunk-${chunkId}`),
-          pauses: pausesOf(d, key),
-          priority: chunk.source === "PORTAL_AUDIO" ? "live" : "upload",
-        });
-        await recordRetries(d, chunk.conversation_id, "live", result.retry);
-        await updateChunk(d, chunkId, chunk.conversation_id, {
-          transcript: result.transcript,
-          // A new reading replaces the old times too; none (Gemini, redacted) clears them.
-          segments: result.segments ?? null,
-          diarization: {
-            schema: "Dembrane-26-07-gemini",
-            data: { note: result.note, raw: {}, error: null, models: result.models },
-          },
-        });
-        return { ok: true };
-      } catch (err) {
-        return failChunk(d, chunkId, chunk.conversation_id, err);
-      }
-    },
+  return withSpeech(d, chunk.conversation_id, (d) =>
+    withStatus(
+      d,
+      { conversationId: chunk.conversation_id },
+      "task_transcribe_chunk",
+      `for chunk ${chunkId}`,
+      async () => {
+        try {
+          if (!chunk.path) throw new Error(`chunk ${chunkId} has no path`);
+          const [conv] = await d.db
+            .select({
+              language: project.language,
+              prompt: project.default_conversation_transcript_prompt,
+            })
+            .from(conversation)
+            .innerJoin(project, eq(project.id, conversation.project_id))
+            .where(eq(conversation.id, chunk.conversation_id))
+            .limit(1);
+          if (!conv) throw new Error("Conversation not found");
+          const key = d.audioUrls.keyOf(chunk.path);
+          const blob = await d.audio.get(key);
+          if (!blob) throw new Error(`audio ${key} not found in storage`);
+          const result = await d.transcriber.transcribe({
+            audio: new Uint8Array(await blob.arrayBuffer()),
+            language: conv.language || "en",
+            hotwords: conv.prompt ? conv.prompt.split(",").map((w) => w.trim()) : null,
+            usePiiRedaction: opts.usePiiRedaction,
+            anonymizeTranscripts: opts.anonymize,
+            customGuidancePrompt: conv.prompt,
+            cutSpan: spanCutter(d, key, `chunk-${chunkId}`),
+            pauses: pausesOf(d, key),
+            priority: chunk.source === "PORTAL_AUDIO" ? "live" : "upload",
+          });
+          await recordRetries(d, chunk.conversation_id, "live", result.retry);
+          await updateChunk(d, chunkId, chunk.conversation_id, {
+            transcript: result.transcript,
+            // A new reading replaces the old times too; none (Gemini, redacted) clears them.
+            segments: result.segments ?? null,
+            diarization: {
+              schema: "Dembrane-26-07-gemini",
+              data: { note: result.note, raw: {}, error: null, models: result.models },
+            },
+          });
+          return { ok: true };
+        } catch (err) {
+          return failChunk(d, chunkId, chunk.conversation_id, err);
+        }
+      },
+    ),
   );
 }
 
@@ -655,42 +705,44 @@ export async function redactTypedChunk(
   if (!chunk) return { ok: false, reason: "gone" };
   const text = chunk.pending_text;
   if (chunk.transcript !== null || chunk.error !== null || text === null) return { ok: true };
-  return withStatus(
-    d,
-    { conversationId: chunk.conversation_id },
-    "task_transcribe_chunk",
-    `for chunk ${chunkId}`,
-    async () => {
-      try {
-        const [conv] = await d.db
-          .select({
-            language: project.language,
-            prompt: project.default_conversation_transcript_prompt,
-            anonymize: project.anonymize_transcripts,
-          })
-          .from(conversation)
-          .innerJoin(project, eq(project.id, conversation.project_id))
-          .where(eq(conversation.id, chunk.conversation_id))
-          .limit(1);
-        if (!conv) throw new Error("Conversation not found");
-        const result = await d.transcriber.redactText({
-          text,
-          language: conv.language || "en",
-          hotwords: conv.prompt ? conv.prompt.split(",").map((w) => w.trim()) : null,
-          usePiiRedaction: opts.usePiiRedaction,
-          anonymizeTranscripts: opts.anonymize || Boolean(conv.anonymize),
-          customGuidancePrompt: conv.prompt,
-        });
-        // One write: the redacted text arrives as the raw text goes.
-        await updateChunk(d, chunkId, chunk.conversation_id, {
-          transcript: result.transcript,
-          pending_text: null,
-        });
-        return { ok: true };
-      } catch (err) {
-        return failChunk(d, chunkId, chunk.conversation_id, err);
-      }
-    },
+  return withSpeech(d, chunk.conversation_id, (d) =>
+    withStatus(
+      d,
+      { conversationId: chunk.conversation_id },
+      "task_transcribe_chunk",
+      `for chunk ${chunkId}`,
+      async () => {
+        try {
+          const [conv] = await d.db
+            .select({
+              language: project.language,
+              prompt: project.default_conversation_transcript_prompt,
+              anonymize: project.anonymize_transcripts,
+            })
+            .from(conversation)
+            .innerJoin(project, eq(project.id, conversation.project_id))
+            .where(eq(conversation.id, chunk.conversation_id))
+            .limit(1);
+          if (!conv) throw new Error("Conversation not found");
+          const result = await d.transcriber.redactText({
+            text,
+            language: conv.language || "en",
+            hotwords: conv.prompt ? conv.prompt.split(",").map((w) => w.trim()) : null,
+            usePiiRedaction: opts.usePiiRedaction,
+            anonymizeTranscripts: opts.anonymize || Boolean(conv.anonymize),
+            customGuidancePrompt: conv.prompt,
+          });
+          // One write: the redacted text arrives as the raw text goes.
+          await updateChunk(d, chunkId, chunk.conversation_id, {
+            transcript: result.transcript,
+            pending_text: null,
+          });
+          return { ok: true };
+        } catch (err) {
+          return failChunk(d, chunkId, chunk.conversation_id, err);
+        }
+      },
+    ),
   );
 }
 
@@ -719,6 +771,11 @@ async function pendingChunks(db: Db, conversationId: string): Promise<number> {
  * transaction.
  */
 export async function handOver(d: PipelineDeps, conversationId: string): Promise<boolean> {
+  // The final pass that runs is the one of the provider the conversation is on now.
+  return withSpeech(d, conversationId, (d) => handOverWith(d, conversationId));
+}
+
+async function handOverWith(d: PipelineDeps, conversationId: string): Promise<boolean> {
   return transaction(d.db, async (tx) => {
     const locked = await tx.sql<
       {

@@ -8,6 +8,7 @@
  * that made it, so a profile is never changed in place once deployed.
  */
 import { withoutTrailingSlashes } from "./compat";
+import { type ProviderId, providerOfKind } from "./providers";
 
 export type SpeechProvider = "whisper" | "gemini";
 
@@ -94,14 +95,42 @@ export function profileOf(s: {
   return p;
 }
 
+/**
+ * The profile a conversation on this provider is transcribed with. The deployment's default
+ * provider uses the profile the deployment names (TRANSCRIPTION_PROFILE) or its own; any other
+ * provider uses its natural one: Whisper on Scaleway, Gemini on Google.
+ */
+export function profileForProvider(
+  s: {
+    readonly provider: "vertex" | "openai-compatible";
+    readonly transcriptionProfile?: string | undefined;
+  },
+  id: ProviderId,
+): TranscriptionProfile {
+  if (providerOfKind(s.provider) === id) return profileOf(s);
+  return id === "google"
+    ? PROFILES["dembrane-26-10-gemini"]
+    : PROFILES["dembrane-26-10-whisper-eu"];
+}
+
 /** Whether anything runs after a conversation of this kind ends. */
 export const improves = (p: TranscriptionProfile, upload: boolean) =>
   (upload ? p.uploads : p.recordings) !== "none";
 
-/** Providers the profile calls, for the boot check. */
-function needs(p: TranscriptionProfile) {
+/** Every speech provider the profile calls, wherever in the pipeline. */
+export function speechProvidersOf(p: TranscriptionProfile): SpeechProvider[] {
   const speech = new Set<SpeechProvider>([p.live.provider]);
   if (p.redo && (p.recordings === "redo" || p.uploads === "redo")) speech.add(p.redo.provider);
+  return [...speech];
+}
+
+/** The speech provider that belongs to an AI provider: Whisper is Scaleway's, Gemini is Google's. */
+export const ownSpeech = (id: ProviderId): SpeechProvider =>
+  id === "google" ? "gemini" : "whisper";
+
+/** Providers the profile calls, for the boot check. */
+function needs(p: TranscriptionProfile) {
+  const speech = new Set(speechProvidersOf(p));
   return { compatible: speech.has("whisper") || p.cleanUp !== null, vertex: speech.has("gemini") };
 }
 

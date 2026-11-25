@@ -1,9 +1,16 @@
 import { isoTimestamp } from "@dembrane/legacy-shape";
-import type { Completer, CompletionRequest, Embedder } from "@dembrane/llm";
+import {
+  type Completer,
+  type CompletionRequest,
+  completerIdentity,
+  type Embedder,
+  EmbeddingRouteChanged,
+} from "@dembrane/llm";
 import type { Json } from "../contracts";
 import { q } from "../db";
 import {
   type EmbeddingIdentity,
+  EmbeddingService,
   embedWithRetry,
   INPUT_NORMALIZATION,
   probeIdentity,
@@ -26,12 +33,13 @@ export const MODEL_GROUP = "MULTI_MODAL_FAST";
 export interface ProducerServices {
   readonly transcripts: (projectId: string) => Promise<Transcript[]>;
   readonly completer: Completer;
-  readonly probe: () => Promise<EmbeddingIdentity>;
+  /** The identity of the embedder this project's calls reach; `known` remembers dimensions per provider across calls. */
+  readonly probe: (known?: Map<string, number>) => Promise<EmbeddingIdentity>;
   readonly embed: (text: string) => Promise<number[]>;
-  /** The embedding deployment as configured, without a network call: what a run pins first. */
-  readonly embeddingSettings: () => Json;
-  /** The language model deployment producers' model steps use; part of their cache keys. */
-  readonly modelDeployment: () => Json;
+  /** The embedding deployment the project's provider uses, without a network call: what a run pins first. */
+  readonly embeddingSettings: () => Promise<Json>;
+  /** The language model deployment the project's provider uses for producers' model steps; part of their cache keys. */
+  readonly modelDeployment: () => Promise<Json>;
   /** One structured completion on the producers' model group. */
   readonly complete: (
     request: Omit<CompletionRequest, "group">,
@@ -42,6 +50,31 @@ export function producerServices(services: RecipeServices): ProducerServices {
   const found = services[PRODUCERS_KEY];
   if (!found) throw new Error(`services['${PRODUCERS_KEY}'] is not configured`);
   return found as ProducerServices;
+}
+
+/**
+ * Runs one embedding batch for the project's current provider: the identity is probed, then
+ * `run` embeds against it. A project that switches provider while the batch runs makes the
+ * pinned embedder refuse its next vector (EmbeddingRouteChanged), and the batch is dropped and
+ * run once more from a new probe, on the provider the project has now. A second change in a
+ * row fails the step, which the run reports as it does any other failure. Vectors already
+ * stored under the old identity stay under its key.
+ */
+export async function embeddingBatch<T>(
+  store: AnalysisStore,
+  services: Pick<ProducerServices, "probe" | "embed">,
+  run: (service: EmbeddingService, identity: EmbeddingIdentity) => Promise<T>,
+): Promise<T> {
+  const once = async () => {
+    const identity = await services.probe();
+    return run(new EmbeddingService(store, identity, services.embed), identity);
+  };
+  try {
+    return await once();
+  } catch (err) {
+    if (!(err instanceof EmbeddingRouteChanged)) throw err;
+    return once();
+  }
 }
 
 /** Every conversation of a project with transcribed text, oldest first, as Map reads them. */
@@ -124,24 +157,30 @@ export function defaultProducerServices(cfg: ProducerConfig): ProducerServices {
   return {
     transcripts: (projectId) => loadTranscripts(cfg.store, projectId),
     completer,
-    probe: () => probeIdentity(cfg.embedder),
+    probe: (known) => probeIdentity(cfg.embedder, known),
     embed: (text) => embedWithRetry(cfg.embedder, text),
-    embeddingSettings: () => ({
-      model: cfg.embeddingModel,
-      baseUrl: cfg.embeddingBaseUrl,
-      apiVersion: null,
-      inputNormalization: INPUT_NORMALIZATION,
-    }),
-    modelDeployment: () => ({
+    // The deployment of the provider the project's calls go to, not the environment's default:
+    // a project on another provider embeds with other models, and what a run records and caches
+    // on has to be the ones that made its output.
+    embeddingSettings: async () => {
+      const pin = await cfg.embedder.pinned?.();
+      return {
+        model: pin?.identity.model ?? cfg.embeddingModel,
+        baseUrl: pin?.identity.baseUrl ?? cfg.embeddingBaseUrl,
+        apiVersion: null,
+        inputNormalization: INPUT_NORMALIZATION,
+      };
+    },
+    modelDeployment: async () => ({
       group: MODEL_GROUP,
-      model: completer.modelIdentity("multi_modal_fast"),
+      model: await completerIdentity(completer, "multi_modal_fast"),
     }),
     complete: (request) => completer.complete({ ...request, group: "multi_modal_fast" }),
   };
 }
 
 /** The recipe's model identity; producers without services configured record none. */
-export function modelDeployment(services: RecipeServices): Json {
+export async function modelDeployment(services: RecipeServices): Promise<Json> {
   const found = services[PRODUCERS_KEY] as ProducerServices | undefined;
-  return found ? found.modelDeployment() : {};
+  return found ? await found.modelDeployment() : {};
 }

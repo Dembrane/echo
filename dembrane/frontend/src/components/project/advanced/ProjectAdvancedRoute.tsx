@@ -19,6 +19,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { isReadOnlyRole } from "@/lib/roles";
 import { testId } from "@/lib/testUtils";
 import type { Tier } from "@/lib/tiers";
+import { ProjectAiProvider } from "./ProjectAiProvider";
 
 /**
  * Manage, Advanced (ECHO-1060): webhooks (once the Automation page), the experimental
@@ -116,6 +117,7 @@ export const ProjectAdvancedRoute = () => {
 									/>
 								</>
 							)}
+							<ProjectAiProvider projectId={projectQuery.data.id} />
 							<Divider />
 							<ProjectMoveWorkspace project={projectQuery.data} />
 							<Divider />

@@ -6,7 +6,8 @@
   "dembrane": {
     "layer": "namespace",
     "allow": {
-      "billing": "Staff rollups and support tools read and change billing state."
+      "billing": "Staff rollups and support tools read and change billing state.",
+      "ai-providers": "Staff set which AI providers an account may use, through the namespace that owns the setting."
     }
   },
   "exports": {
@@ -17,6 +18,7 @@
   },
   "dependencies": {
     "@dembrane/access": "workspace:*",
+    "@dembrane/ai-providers": "workspace:*",
     "@dembrane/allowance": "workspace:*",
     "@dembrane/billing": "workspace:*",
     "@dembrane/core": "workspace:*",
@@ -24,6 +26,7 @@
     "@dembrane/http": "workspace:*",
     "@dembrane/i18n": "workspace:*",
     "@dembrane/legacy-shape": "workspace:*",
+    "@dembrane/llm": "workspace:*",
     "@dembrane/mail": "workspace:*",
     "@dembrane/metering": "workspace:*",
     "@dembrane/observability": "workspace:*",

@@ -14,23 +14,24 @@ import {
   loadSections,
   publicValues,
 } from "@dembrane/config";
-import { conversationApiJobs } from "@dembrane/conversations";
+import { buildSpeechKit, conversationApiJobs, type SpeechRouter } from "@dembrane/conversations";
 import { bootAssets } from "@dembrane/core";
 import { connect, createDb, withDatabase } from "@dembrane/db";
 import { localeOfEmail } from "@dembrane/i18n";
 import {
+  bootGaps,
   checkProfileModels,
-  createModels,
-  type LlmSettings,
-  modelsConfigOf,
-  profileGaps,
-  profileOf,
+  decide,
+  groundingPossible,
+  settingsFor,
 } from "@dembrane/llm";
 import { type Mailer, MemoryMailer, mailerFromSettings, missingMailKey } from "@dembrane/mail";
 import { mapJobs } from "@dembrane/map";
 import {
+  aiRouting,
   configuredModels,
   httpText,
+  listedUnitCosts,
   modelCallRecorder,
   modelCallTable,
   priceBook,
@@ -46,7 +47,6 @@ import { Hub } from "@dembrane/realtime";
 import { samplesApiJobs } from "@dembrane/samples/jobs";
 import { FilesystemStorage, requireBucket, S3Storage } from "@dembrane/storage";
 import { tenancyApiJobs } from "@dembrane/tenancy";
-import { GeminiTranscriber } from "@dembrane/transcription";
 import { httpDeliver, samInboxAll, webhookJobs } from "@dembrane/webhooks";
 import { buildApp } from "./app";
 import { API_ASSETS } from "./assets";
@@ -267,23 +267,6 @@ const metering = modelCallRecorder({
   prices,
   alerts: costAlerts,
 });
-// The transcription profile the worker runs: the API transcribes typed text and short audio
-// with the same live model, and refuses to start when the deployment lacks what it needs.
-const profile = (() => {
-  try {
-    const p = profileOf(config.llm);
-    const gap = profileGaps(p, config.llm);
-    if (gap) throw new Error(gap);
-    return p;
-  } catch (err) {
-    logger.fatal({ signal: "api.boot_failed" }, (err as Error).message);
-    logger.flush();
-    process.exit(1);
-  }
-})();
-void checkProfileModels(profile, config.llm, (line) =>
-  logger.warn({ signal: "transcription.profile_models", profile: profile.name }, line),
-);
 // One structured line per request to a speech model, as the worker logs them.
 const logSpeech = (e: object) => logger.info({ signal: "speech.request", ...e }, "speech request");
 const modelHooks = {
@@ -292,7 +275,47 @@ const modelHooks = {
   onObserverFault: (err: unknown) =>
     logger.warn({ err }, "model call metering failed; later faults are silent"),
 };
-const models = createModels(modelsConfigOf(config.llm, profile), modelHooks);
+// The configuration says which AI providers exist and which is the default; each call goes
+// to the provider its project resolves to. A provider the deployment lacks credentials or a
+// transcription profile for stops the API here, naming what is missing.
+const ai = (() => {
+  try {
+    const routing = aiRouting({ settings: config.llm, db: database.db, hooks: modelHooks });
+    const gaps = bootGaps(config.llm, routing.policy, routing.profileOf);
+    if (gaps.length) throw new Error(gaps.join("; "));
+    return routing;
+  } catch (err) {
+    logger.fatal({ signal: "api.boot_failed" }, (err as Error).message);
+    logger.flush();
+    process.exit(1);
+  }
+})();
+for (const id of ai.policy.providers) {
+  const profile = ai.profileOf(id);
+  void checkProfileModels(profile, config.llm, (line) =>
+    logger.warn({ signal: "transcription.profile_models", profile: profile.name }, line),
+  );
+}
+// The API transcribes typed text and short audio with each provider's live model.
+const speech: SpeechRouter = {
+  default: ai.policy.default,
+  kits: Object.fromEntries(
+    ai.policy.providers.map((id) => [
+      id,
+      buildSpeechKit({
+        settings: config.llm,
+        profile: ai.profileOf(id),
+        hooks: modelHooks,
+        logger,
+        withFinal: false,
+      }),
+    ]),
+  ),
+  decide: (who) => decide(ai.resolver, ai.policy, "transcription", who),
+  decideAnalysis: (who) => decide(ai.resolver, ai.policy, "analysis", who),
+};
+const defaultKit = speech.kits[ai.policy.default];
+if (!defaultKit) throw new Error("the default provider has no speech kit");
 // Serving waits for the prices to load (one read); a first sync and the missing-price check
 // run in the background.
 await priceStartup(
@@ -306,22 +329,10 @@ await priceStartup(
     now: () => new Date(),
   },
   prices,
-  configuredModels(config.llm, profile),
+  ai.policy.providers.flatMap((id) =>
+    configuredModels(settingsFor(config.llm, id), ai.profileOf(id)),
+  ),
 );
-const liveSettings: LlmSettings = {
-  ...config.llm,
-  provider: profile.live.provider === "whisper" ? "openai-compatible" : "vertex",
-  ...(profile.live.provider === "gemini" && {
-    multiModalPro: [
-      profile.live.model,
-      ...config.llm.multiModalPro.filter((m) => m !== profile.live.model),
-    ],
-  }),
-};
-const liveModels =
-  liveSettings.provider === config.llm.provider && profile.live.provider === "whisper"
-    ? models
-    : createModels(modelsConfigOf(liveSettings, profile), modelHooks);
 
 const app = buildApp({
   config,
@@ -334,7 +345,18 @@ const app = buildApp({
   principalFor: principalLookup(database.db),
   access: new Access(new DrizzleAccessStore(database.db)),
   db: database.db,
-  models,
+  models: ai.kit.models,
+  ai: {
+    policy: ai.policy,
+    completer: ai.kit.completer,
+    embedder: ai.kit.embedder,
+    speech,
+    transcriptionProviderFor: async (projectId) =>
+      (await decide(ai.resolver, ai.policy, "transcription", { ref: "project", id: projectId }))
+        .provider,
+    groundingPossible: groundingPossible(config.llm, ai.policy),
+    priceList: () => listedUnitCosts(prices.current(), config.llm, ai.profileOf),
+  },
   queue: enqueuer,
   deliverWebhook: httpDeliver({ allowPrivate: config.webhooks.allowPrivateTargets }),
   identity: identityAccount(auth, database.db),
@@ -357,7 +379,7 @@ const app = buildApp({
   siteToken: config.site.apiToken ?? config.support.forwardWebhookToken ?? null,
   audio,
   media,
-  transcriber: new GeminiTranscriber(liveModels, logger),
+  transcriber: defaultKit.transcriber,
   hub,
 });
 

@@ -5,6 +5,7 @@ import { renderPrompt } from "@dembrane/prompts";
 import { pythonJson } from "@dembrane/webhooks";
 import { type FilePart, streamText, type TextPart } from "ai";
 import type { ConversationsDeps } from "../deps";
+import { type AnalysisClip, audioForAnalysis } from "../speech";
 import { type V1Store, v1Store } from "./storage";
 import { countTokens } from "./token-count";
 
@@ -18,7 +19,7 @@ import { countTokens } from "./token-count";
 
 export type ReplyDeps = Pick<
   ConversationsDeps,
-  "db" | "models" | "audio" | "audioUrls" | "logger" | "now"
+  "db" | "models" | "audio" | "audioUrls" | "logger" | "now" | "speech"
 >;
 
 const TOKEN_LIMIT = 80_000;
@@ -219,25 +220,36 @@ export async function* generateReply(
     : "";
   const prompt = replyPrompt({ project, language, current, others });
 
-  const content: (TextPart | FilePart)[] = [{ type: "text", text: prompt }];
+  const clips: AnalysisClip[] = [];
   for (const chunk of audioChunks) {
-    content.push({
-      type: "text",
-      text: `Audio chunk ${chunk.id} captured at ${isoTimestamp(chunk.timestamp)}`,
-    });
     try {
       const blob = await d.audio.get(d.audioUrls.keyOf(chunk.path as string));
       if (!blob) throw new Error("audio object missing");
-      // Labelled audio/mp3 whatever the container, as the Python API sent it.
-      content.push({
-        type: "file",
-        data: new Uint8Array(await blob.arrayBuffer()),
-        mediaType: "audio/mp3",
+      clips.push({
+        label: `Audio chunk ${chunk.id} captured at ${isoTimestamp(chunk.timestamp)}`,
+        audio: new Uint8Array(await blob.arrayBuffer()),
       });
     } catch (err) {
       d.logger.warn({ err, chunk: chunk.id }, "failed to attach audio chunk");
     }
   }
+  // Audio rides in the request when one provider has both jobs; otherwise it is read to text
+  // first, so the prompt and the other conversations only ever reach the analysis provider.
+  const hotwords = project.default_conversation_transcript_prompt;
+  const audio = await audioForAnalysis(
+    d,
+    { ref: "conversation", id: conversationId },
+    clips,
+    {
+      language: project.language || "en",
+      hotwords: hotwords ? hotwords.split(",").map((w) => w.trim()) : null,
+      anonymize: Boolean(conv.is_anonymized || project.anonymize_transcripts),
+      customGuidancePrompt: hotwords,
+    },
+    // Labelled audio/mp3 whatever the container, as the Python API sent it.
+    (clip) => ({ type: "file", data: clip.audio, mediaType: "audio/mp3" }),
+  );
+  const content: (TextPart | FilePart)[] = [{ type: "text", text: prompt }, ...audio];
 
   let answer = "";
   for await (const text of replyText(d.models, language, content)) {

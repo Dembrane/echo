@@ -1,9 +1,25 @@
 import type { ModelGroup, ModelsConfig } from "./models";
-import { profileOf, type TranscriptionProfile } from "./profiles";
+import { profileForProvider, profileOf, type TranscriptionProfile } from "./profiles";
+import {
+  isProviderId,
+  JOBS,
+  type PerJob,
+  PROVIDERS,
+  type ProviderId,
+  providerOfKind,
+  type RoutingPolicy,
+  serves,
+} from "./providers";
 
 /** The `llm` section of the platform config, as far as model wiring reads it. */
 export interface LlmSettings {
+  /** The environment's default provider: where a call goes when nothing says otherwise. */
   readonly provider: "vertex" | "openai-compatible";
+  /**
+   * The providers this deployment has credentials for (LLM_PROVIDERS). Unset: only the default,
+   * which is what every deployment before per-account providers was.
+   */
+  readonly providers?: readonly string[] | undefined;
   readonly baseUrl?: string | undefined;
   readonly apiKey?: string | undefined;
   /** TRANSCRIPTION_PROFILE: the transcription pipeline by name (profiles.ts). */
@@ -115,3 +131,67 @@ export const embedderConfigOf = (s: LlmSettings) => ({
   provider: s.provider,
   baseUrl: s.baseUrl,
 });
+
+/**
+ * The providers this deployment has and its default. The environment decides this, never the
+ * database: an account can only choose among what is listed here.
+ */
+export function routingPolicyOf(s: Pick<LlmSettings, "provider" | "providers">): RoutingPolicy {
+  const def = providerOfKind(s.provider);
+  const named = (s.providers ?? []).map((p) => p.trim()).filter(Boolean);
+  const unknown = named.filter((p) => !isProviderId(p));
+  if (unknown.length)
+    throw new Error(`LLM_PROVIDERS names ${unknown.join(", ")}, which is not a provider`);
+  const lacking = JOBS.filter((j) => !serves(def, j));
+  if (lacking.length)
+    throw new Error(`The default provider ${def} does not serve ${lacking.join(" and ")}`);
+  const providers = [...new Set<ProviderId>([def, ...(named as ProviderId[])])];
+  return { providers, default: def };
+}
+
+/** The settings as one provider sees them: its own kind, its own model lists. */
+export const settingsFor = (s: LlmSettings, id: ProviderId): LlmSettings => ({
+  ...s,
+  provider: PROVIDERS[id].kind,
+});
+
+/**
+ * What a deployment lacks to call a provider, as one line, or null when it has it all.
+ * Scaleway needs its URL and key; Google needs a Vertex project.
+ */
+export function providerGaps(
+  s: Pick<LlmSettings, "baseUrl" | "apiKey" | "vertexProject">,
+  id: ProviderId,
+): string | null {
+  const missing =
+    id === "scaleway"
+      ? [...(s.baseUrl ? [] : ["LLM_BASE_URL"]), ...(s.apiKey ? [] : ["LLM_API_KEY"])]
+      : s.vertexProject
+        ? []
+        : ["LLM_VERTEX_PROJECT"];
+  return missing.length
+    ? `provider ${id} needs ${missing.join(" and ")}, which ${missing.length > 1 ? "are" : "is"} not set`
+    : null;
+}
+
+/**
+ * The model ids a provider uses on this deployment for each job, without repeats, so a screen
+ * can name them from the config instead of from a copy: transcription is the speech-to-text
+ * model, analysis the text models. Only Scaleway's are open models worth naming; Google's
+ * lists are empty.
+ */
+export function providerModelsOf(s: LlmSettings, id: ProviderId): PerJob<string[]> {
+  if (id !== "scaleway") return { transcription: [], analysis: [] };
+  const profile = profileForProvider(s, id);
+  const speech = [profile.live, profile.redo]
+    .filter((x) => x?.provider === "whisper")
+    .map((x) => x?.model);
+  const compat = groupsOf(settingsFor(s, id));
+  const once = (list: (string | undefined)[]) => [
+    ...new Set(list.filter((m): m is string => Boolean(m))),
+  ];
+  return {
+    transcription: once(speech),
+    analysis: once([...compat.text_fast, ...compat.multi_modal_fast, ...compat.multi_modal_pro]),
+  };
+}
