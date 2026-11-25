@@ -51,6 +51,8 @@ export function mediaApp(media: Media, logger: Logger) {
       const parsed = schemas[op].safeParse(await c.req.json().catch(() => null));
       if (!parsed.success) return c.json({ kind: "value", message: parsed.error.message }, 400);
       const started = performance.now();
+      // The stored name of the input (its bucket key carries the chunk id), for the log.
+      const input = (parsed.data as { source?: { name?: string } }).source?.name;
       try {
         // Aborts when the caller disconnects: a queued job is skipped, a running one killed.
         const signal = c.req.raw.signal;
@@ -58,18 +60,18 @@ export function mediaApp(media: Media, logger: Logger) {
           if (signal.aborted) throw new AudioError("transient", "caller went away");
           return dispatch(media, op, parsed.data, signal);
         });
-        logger.info({ op, ms: Math.round(performance.now() - started) }, "media job done");
+        logger.info({ op, input, ms: Math.round(performance.now() - started) }, "media job done");
         return c.json(result ?? null);
       } catch (err) {
         if (err instanceof AudioError) {
-          logger.warn({ op, kind: err.kind, err: err.message }, "media job failed");
+          logger.warn({ op, input, kind: err.kind, err: err.message }, "media job failed");
           // 422 for bad input the caller must not retry; 503 for what a retry can fix.
           return c.json(
             { kind: err.kind, message: err.message },
             err.kind === "transient" ? 503 : 422,
           );
         }
-        logger.error({ op, err }, "media job crashed");
+        logger.error({ op, input, err }, "media job crashed");
         return c.json({ kind: "transient", message: (err as Error).message }, 500);
       }
     });
@@ -87,18 +89,18 @@ function dispatch(
     case "probe":
       return media.probe((body as z.output<typeof schemas.probe>).source, { signal });
     case "probe-url":
-      return media.probeUrl((body as z.output<(typeof schemas)["probe-url"]>).url);
+      return media.probeUrl((body as z.output<(typeof schemas)["probe-url"]>).url, { signal });
     case "convert":
-      return media.convert(body as z.output<typeof schemas.convert>);
+      return media.convert(body as z.output<typeof schemas.convert>, { signal });
     case "decoded-seconds":
       return media.decodedSeconds((body as z.output<(typeof schemas)["decoded-seconds"]>).source, {
         signal,
       });
     case "split":
-      return media.split(body as z.output<typeof schemas.split>);
+      return media.split(body as z.output<typeof schemas.split>, { signal });
     case "silences":
-      return media.silences(body as z.output<typeof schemas.silences>);
+      return media.silences(body as z.output<typeof schemas.silences>, { signal });
     case "merge":
-      return media.merge(body as z.output<typeof schemas.merge>);
+      return media.merge(body as z.output<typeof schemas.merge>, { signal });
   }
 }

@@ -26,6 +26,7 @@ export {
   probeUrl,
   pyFloat,
   type Silence,
+  setFfmpegTimeout,
 } from "./ffmpeg";
 export {
   ACCEPTED_AUDIO_FORMATS,
