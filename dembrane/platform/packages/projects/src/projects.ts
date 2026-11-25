@@ -399,33 +399,33 @@ async function moveUnderCap(
 
 /**
  * A move clears the project's AI provider choices (they were made under the old account's
- * setting), so each choice it clears is written to the new account's history as a change to
- * null: the daily provider check rebuilds a project's choice from these events, and without
- * one it would still see the old choice and call a legitimate call a leak.
+ * setting), so each choice it clears is written as a change to null to the history of both
+ * accounts, the one it leaves and the one it joins: the daily provider check rebuilds a
+ * project's choice from these events, and a project that comes back to the account it left
+ * would otherwise still carry the choice that account last recorded for it.
  */
 function clearedChoiceEvents(
   p: { id: string; ai_transcription_provider: string | null; ai_analysis_provider: string | null },
-  orgId: string,
+  orgIds: readonly (string | null | undefined)[],
   who: Signed,
   at: Date,
 ) {
   const before = { transcription: p.ai_transcription_provider, analysis: p.ai_analysis_provider };
+  const orgs = [...new Set(orgIds.filter((o): o is string => Boolean(o)))];
   return (["transcription", "analysis"] as const).flatMap((job) =>
     before[job] === null
       ? []
-      : [
-          {
-            id: newId(),
-            orgId,
-            actorKind: who.isStaff ? "staff" : "customer",
-            actorUserId: who.directusUserId,
-            type: PROJECT_PROVIDER_EVENT,
-            subjectType: "project",
-            subjectId: p.id,
-            detail: { job, before: before[job], after: null, cause: "project_move" },
-            createdAt: at,
-          },
-        ],
+      : orgs.map((orgId) => ({
+          id: newId(),
+          orgId,
+          actorKind: who.isStaff ? "staff" : "customer",
+          actorUserId: who.directusUserId,
+          type: PROJECT_PROVIDER_EVENT,
+          subjectType: "project",
+          subjectId: p.id,
+          detail: { job, before: before[job], after: null, cause: "project_move" },
+          createdAt: at,
+        })),
   );
 }
 
@@ -445,7 +445,10 @@ export async function moveProject(
   const now = d.now();
   const by = who.appUserId;
   await moveUnderCap(d, who, targetId, [project], async (store) => {
-    await store.insertAccountEvents(clearedChoiceEvents(project, target.org_id, who, now));
+    const from = src ? await store.workspace(src) : null;
+    await store.insertAccountEvents(
+      clearedChoiceEvents(project, [from?.org_id, target.org_id], who, now),
+    );
     await store.updateProject(projectId, {
       workspace_id: targetId,
       // The choices were made under the old account's setting; the new account's defaults apply until a project admin chooses.
@@ -499,13 +502,20 @@ export async function bulkMoveProjects(
   const me = await d.store.appUser(who.appUserId);
   const byLabel = me?.display_name || me?.email || null;
   const names = new Map<string, string | null>();
+  const orgs = new Map<string, string | null>();
   const now = d.now();
   const moved: string[] = [];
   const projects = pending.map((x) => x.project);
   await moveUnderCap(d, who, targetId, projects, async (store) => {
     for (const { project, src } of pending) {
-      if (src && !names.has(src)) names.set(src, (await store.workspace(src))?.name ?? null);
-      await store.insertAccountEvents(clearedChoiceEvents(project, target.org_id, who, now));
+      if (src && !names.has(src)) {
+        const from = await store.workspace(src);
+        names.set(src, from?.name ?? null);
+        orgs.set(src, from?.org_id ?? null);
+      }
+      await store.insertAccountEvents(
+        clearedChoiceEvents(project, [src ? orgs.get(src) : null, target.org_id], who, now),
+      );
       await store.updateProject(project.id, {
         workspace_id: targetId,
         // The choices were made under the old account's setting; the new account's defaults apply until a project admin chooses.

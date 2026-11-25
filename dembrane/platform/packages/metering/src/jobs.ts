@@ -167,6 +167,15 @@ export async function runProviderCheck(d: {
       where recorded_at >= ${since}::timestamptz and recorded_at < ${until}::timestamptz
         and provider = 'vertex'
     ),
+    -- A project's choices as every account recorded them: a project that moved away and came
+    -- back has events in each, and the latest one is its choice, whichever account wrote it.
+    project_choices as (
+      select e.subject_id, e.detail::jsonb ->> 'job' as job, e.created_at as at,
+        e.detail::jsonb ->> 'after' as choice
+      from account_event e
+      where e.type = 'project.ai_provider.changed'
+        and e.subject_id in (select project_id::text from calls where project_id is not null)
+    ),
     judged as (
       select c.*,
         -- The account's setting when the call was made; none recorded means the deployment's own.
@@ -189,11 +198,9 @@ export async function runProviderCheck(d: {
           and (e.detail::jsonb -> 'before' -> 'enabled' -> c.job) @> '["google"]'::jsonb
           and not ((e.detail::jsonb -> 'after' -> 'enabled' -> c.job) @> '["google"]'::jsonb)) rm on true
       left join lateral (
-        select e.created_at as at, e.detail::jsonb ->> 'after' as choice from account_event e
-        where e.org_id = c.organisation_id and e.type = 'project.ai_provider.changed'
-          and e.subject_id = c.project_id::text and e.detail::jsonb ->> 'job' = c.job
-          and e.created_at <= c.started_at
-        order by e.created_at desc limit 1) pe on true
+        select e.at, e.choice from project_choices e
+        where e.subject_id = c.project_id::text and e.job = c.job and e.at <= c.started_at
+        order by e.at desc limit 1) pe on true
       left join lateral (
         select v.ai_transcription_provider from conversation v where v.id = c.routing_conversation_id) cv on true
     )
