@@ -27,6 +27,12 @@ export interface MigrateOptions {
    * an unset value counts as not exempt.
    */
   readonly appEnv: string | undefined;
+  /**
+   * How long a statement of a no-transaction migration may wait on a lock (a concurrent index
+   * build waits for every transaction that could still write the table) before it is tried again
+   * and, after `LOCK_ATTEMPTS`, fails. Postgres interval syntax; the default is `NO_TRANSACTION_LOCK_TIMEOUT`.
+   */
+  readonly noTransactionLockTimeout?: string;
 }
 
 /**
@@ -82,9 +88,9 @@ export interface MigrateResult {
  * later migrations run normally. An advisory lock keeps two jobs from racing.
  */
 export async function migrate(url: string, opts: MigrateOptions): Promise<MigrateResult> {
-  const sql = connect(url, { max: 1, onnotice: () => {} });
+  const session = await lockedSession(url);
+  const { sql } = session;
   try {
-    await sql`select pg_advisory_lock(${LOCK_KEY})`;
     // An empty database has no data a contract migration could drop, so a new environment
     // (a new region, a new cluster) starts without an archive.
     const empty = !(await one<boolean>(sql`select to_regclass('public.project') is not null as v`));
@@ -97,11 +103,74 @@ export async function migrate(url: string, opts: MigrateOptions): Promise<Migrat
       const unarchived = await unarchivedContracts(sql, pending);
       if (unarchived.length) throw new ContractArchiveMissing(unarchived, opts.appEnv);
     }
-    await apply(sql, pending);
+    await apply(session, pending, opts.noTransactionLockTimeout ?? NO_TRANSACTION_LOCK_TIMEOUT);
     return { adoptedBaseline, applied: pending.length };
   } finally {
+    session.close();
     await sql`select pg_advisory_unlock(${LOCK_KEY})`.catch(() => {});
     await sql.end();
+  }
+}
+
+/**
+ * The migration lost the connection that holds its advisory lock. The driver opens a new
+ * connection by itself, which holds no lock: carrying on there would run migrations beside
+ * another job. Nothing more was run; the migrate job is safe to run again.
+ */
+export class MigrationLockLost extends Error {
+  constructor() {
+    super(
+      "the migration's database connection dropped, and the advisory lock that keeps two migrate jobs apart went with it. Nothing more was run; run the migrate job again.",
+    );
+    this.name = "MigrationLockLost";
+  }
+}
+
+/** The one connection a migration runs on, and a check that it is still the one that took the lock. */
+export interface LockedSession {
+  readonly sql: postgres.Sql;
+  /** Backend process of the connection that took the lock. */
+  readonly pid: number;
+  /** Throws MigrationLockLost when that connection is gone, before anything runs on a new one. */
+  check(): Promise<void>;
+  /** The caller is closing the connection on purpose. */
+  close(): void;
+}
+
+/**
+ * Connects and takes the advisory lock. The lock belongs to the connection, so the connection is
+ * watched: the driver's close callback marks it lost the moment it drops, and the backend
+ * process is compared before each step, so a silent reconnect is never taken for the same session.
+ */
+export async function lockedSession(url: string): Promise<LockedSession> {
+  let lost = false;
+  let closing = false;
+  const sql = connect(url, {
+    max: 1,
+    onnotice: () => {},
+    onclose: () => {
+      if (!closing) lost = true;
+    },
+  });
+  try {
+    await sql`select pg_advisory_lock(${LOCK_KEY})`;
+    const pid = await one<number>(sql`select pg_backend_pid()::int as v`);
+    return {
+      sql,
+      pid,
+      close: () => {
+        closing = true;
+      },
+      async check() {
+        if (lost) throw new MigrationLockLost();
+        if ((await one<number>(sql`select pg_backend_pid()::int as v`)) !== pid)
+          throw new MigrationLockLost();
+      },
+    };
+  } catch (err) {
+    closing = true;
+    await sql.end().catch(() => {});
+    throw err;
   }
 }
 
@@ -163,7 +232,12 @@ const outsideTransaction = (m: Migration) => NO_TRANSACTION.test(m.sql[0] ?? "")
  * one marked no-transaction ends the run before it, runs alone outside a transaction, and the
  * ones after it start a new run.
  */
-async function apply(sql: postgres.Sql, pending: readonly Migration[]): Promise<void> {
+async function apply(
+  session: LockedSession,
+  pending: readonly Migration[],
+  noTransactionLockTimeout: string,
+): Promise<void> {
+  const { sql } = session;
   await sql`create schema if not exists drizzle`;
   await sql`create table if not exists drizzle.__drizzle_migrations (id serial primary key, hash text not null, created_at bigint)`;
   let run: Migration[] = [];
@@ -172,19 +246,79 @@ async function apply(sql: postgres.Sql, pending: readonly Migration[]): Promise<
       run.push(m);
       continue;
     }
-    await applyInTransaction(sql, run);
+    await applyInTransaction(session, run);
     run = [];
-    for (const statement of m.sql) await sql.unsafe(statement);
-    await sql`insert into drizzle.__drizzle_migrations (hash, created_at) values (${m.hash}, ${m.folderMillis})`;
+    await applyOutsideTransaction(session, m, noTransactionLockTimeout);
   }
-  await applyInTransaction(sql, run);
+  await applyInTransaction(session, run);
 }
 
-async function applyInTransaction(sql: postgres.Sql, pending: readonly Migration[]): Promise<void> {
+/**
+ * A migration marked no-transaction, statement by statement. A statement waits for a lock for
+ * at most `lockTimeout` (a concurrent build waits for every transaction that could still write
+ * the table, and a long-open one must not hold a deploy), and is tried again a few times like a
+ * transactional run. Before each build the index it names is looked at: a valid one is left for
+ * `IF NOT EXISTS` to skip, so a deploy that follows a build which outlived its job does not
+ * start it over; only an invalid leftover (a build that failed or was cancelled) is dropped.
+ */
+async function applyOutsideTransaction(
+  session: LockedSession,
+  m: Migration,
+  lockTimeout: string,
+): Promise<void> {
+  const { sql } = session;
+  await session.check();
+  await sql.unsafe(`set lock_timeout = '${lockTimeout}'`);
+  try {
+    for (const statement of m.sql) {
+      for (let attempt = 1; ; attempt++) {
+        try {
+          await session.check();
+          await dropInvalidIndexOf(sql, statement);
+          await sql.unsafe(statement);
+          break;
+        } catch (err) {
+          if (!isRetryableLock(err) || attempt >= LOCK_ATTEMPTS) throw err;
+          await Bun.sleep(LOCK_BACKOFF_MS * attempt + Math.random() * LOCK_BACKOFF_MS);
+        }
+      }
+    }
+    await session.check();
+    await sql`insert into drizzle.__drizzle_migrations (hash, created_at) values (${m.hash}, ${m.folderMillis})`;
+  } finally {
+    await sql.unsafe("reset lock_timeout").catch(() => {});
+  }
+}
+
+// The first statement of a file carries the comment lines above it.
+const BUILDS_AN_INDEX =
+  /^(?:\s*--[^\n]*\n)*\s*create\s+(?:unique\s+)?index\s+concurrently\s+(?:if\s+not\s+exists\s+)?"?([A-Za-z0-9_]+)"?/i;
+
+/** Drops the index a CREATE INDEX CONCURRENTLY statement names when it exists but is invalid; a valid one stays. */
+async function dropInvalidIndexOf(sql: postgres.Sql, statement: string): Promise<void> {
+  const name = BUILDS_AN_INDEX.exec(statement)?.[1];
+  if (!name) return;
+  const [row] = await sql<{ valid: boolean }[]>`
+    select i.indisvalid as valid
+    from pg_index i
+    join pg_class c on c.oid = i.indexrelid
+    join pg_namespace n on n.oid = c.relnamespace
+    where c.relname = ${name} and n.nspname = current_schema()`;
+  if (row && !row.valid) await sql.unsafe(`drop index concurrently if exists "${name}"`);
+}
+
+async function applyInTransaction(
+  session: LockedSession,
+  pending: readonly Migration[],
+): Promise<void> {
   if (!pending.length) return;
   for (let attempt = 1; ; attempt++) {
     try {
-      await drizzle(sql).transaction(async (tx) => {
+      await session.check();
+      await drizzle(session.sql).transaction(async (tx) => {
+        // The transaction began on the connection that holds the lock, or it does not run.
+        const [me] = await tx.execute(raw`select pg_backend_pid()::int as pid`);
+        if ((me as { pid: number } | undefined)?.pid !== session.pid) throw new MigrationLockLost();
         // Fail fast instead of queueing live traffic behind a lock we wait for.
         await tx.execute(raw.raw(`set local lock_timeout = '${LOCK_TIMEOUT}'`));
         for (const m of pending) {
@@ -204,6 +338,8 @@ async function applyInTransaction(sql: postgres.Sql, pending: readonly Migration
 }
 
 const LOCK_TIMEOUT = "5s";
+/** A concurrent build waits for old transactions, so it waits longer than a transactional run; three tries stay well inside the job's limit. */
+export const NO_TRANSACTION_LOCK_TIMEOUT = "30s";
 export const LOCK_ATTEMPTS = 3;
 const LOCK_BACKOFF_MS = 1000;
 
