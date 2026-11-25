@@ -3,7 +3,14 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+	act,
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { ProjectTagsInput } from "./ProjectTagsInput";
 
@@ -242,5 +249,42 @@ describe("ProjectTagsInput reordering", () => {
 		await waitFor(() => expect(server.saved).toEqual({ a: 3, b: 2, c: 1 }));
 		await waitFor(() => expect(order()).toEqual(["tag-c", "tag-b", "tag-a"]));
 		expect(notify).not.toHaveBeenCalled();
+	});
+});
+
+describe("ProjectTagsInput adding tags", () => {
+	it("keeps only the tag that failed to save in the input when the network drops", async () => {
+		const posted: string[] = [];
+		const unhandled = vi.fn();
+		process.on("unhandledRejection", unhandled);
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (url: string, init?: RequestInit) => {
+				if (init?.method === "POST" && String(url).endsWith("/v2/bff/tags")) {
+					const { text } = JSON.parse(String(init.body));
+					posted.push(text);
+					if (text === "lost") throw new TypeError("Failed to fetch");
+					return new Response(JSON.stringify({ id: text, text }));
+				}
+				return new Response(
+					JSON.stringify({
+						id: "p1",
+						tags: [{ id: "a", sort: 1, text: "tag-a" }],
+					}),
+				);
+			}),
+		);
+		renderTags();
+		await screen.findByText("tag-a");
+
+		const input = screen.getByTestId("portal-editor-tags-input");
+		fireEvent.change(input, { target: { value: "saved, lost" } });
+		fireEvent.click(screen.getByTestId("portal-editor-add-tag-button"));
+
+		await waitFor(() => expect(input).toHaveProperty("value", "lost"));
+		expect(posted).toEqual(["saved", "lost"]);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		process.off("unhandledRejection", unhandled);
+		expect(unhandled).not.toHaveBeenCalled();
 	});
 });
