@@ -3,6 +3,8 @@ import postgres from "postgres";
 import {
   ContractArchiveMissing,
   LOCK_ATTEMPTS,
+  lockedSession,
+  MigrationLockLost,
   migrate,
   recordContractArchive,
 } from "../src/migrate";
@@ -45,6 +47,10 @@ run("migrate", () => {
       "mig_lock",
       "mig_lock_retry",
       "mig_concurrent",
+      "mig_keep",
+      "mig_rebuild",
+      "mig_build_timeout",
+      "mig_lost",
     ]) {
       await sql.unsafe(`drop database if exists ${db}`);
       await sql.unsafe(`create database ${db}`);
@@ -153,6 +159,119 @@ run("migrate", () => {
       expect(again?.valid).toBe(true);
     } finally {
       await db.end({ timeout: 5 });
+    }
+  }, 30_000);
+
+  const INDEXES = ["model_call_recorded_at_idx", "model_call_org_started_idx"] as const;
+  /** Each index's catalog identity and validity: a rebuilt index has a new oid. */
+  const indexState = async (db: postgres.Sql) => {
+    const rows = await db<{ name: string; oid: number; valid: boolean }[]>`
+      select c.relname as name, c.oid::int as oid, i.indisvalid as valid
+      from pg_index i join pg_class c on c.oid = i.indexrelid
+      where c.relname = any(${[...INDEXES]}) order by c.relname`;
+    return Object.fromEntries(rows.map((r) => [r.name, { oid: r.oid, valid: r.valid }]));
+  };
+  /** Forgets the last migration, as a deploy that did not finish it would leave the history. */
+  const forgetLast = async (db: postgres.Sql) => {
+    const [m] = await db<{ created_at: string }[]>`
+      select created_at from drizzle.__drizzle_migrations order by created_at desc limit 1`;
+    await db`delete from drizzle.__drizzle_migrations where created_at = ${m?.created_at ?? 0}`;
+  };
+
+  test("an index that is already built and valid is kept, not dropped and built again", async () => {
+    // A build that outlived its job finishes after it; the next deploy runs the migration again.
+    const url = `${base}/mig_keep`;
+    await migrate(url, { appEnv: "test" });
+    const db = postgres(url, { max: 1, onnotice: () => {} });
+    try {
+      const before = await indexState(db);
+      await forgetLast(db);
+      expect(await migrate(url, { appEnv: "test" })).toEqual({
+        adoptedBaseline: false,
+        applied: 1,
+      });
+      expect(await indexState(db)).toEqual(before);
+      expect(Object.values(before).every((i) => i.valid)).toBe(true);
+    } finally {
+      await db.end({ timeout: 5 });
+    }
+  }, 30_000);
+
+  test("only an invalid index is dropped and built again", async () => {
+    const url = `${base}/mig_rebuild`;
+    await migrate(url, { appEnv: "test" });
+    const db = postgres(url, { max: 1, onnotice: () => {} });
+    try {
+      const before = await indexState(db);
+      await forgetLast(db);
+      await db`update pg_index set indisvalid = false where indexrelid = 'model_call_org_started_idx'::regclass`;
+      await migrate(url, { appEnv: "test" });
+      const after = await indexState(db);
+      expect(after.model_call_org_started_idx?.valid).toBe(true);
+      expect(after.model_call_org_started_idx?.oid).not.toBe(
+        before.model_call_org_started_idx?.oid,
+      );
+      // The other one was valid and stayed as it was.
+      expect(after.model_call_recorded_at_idx).toEqual(before.model_call_recorded_at_idx as never);
+    } finally {
+      await db.end({ timeout: 5 });
+    }
+  }, 30_000);
+
+  test("a build waits for a long-open transaction only as long as the lock timeout, then fails and heals on the next run", async () => {
+    const url = `${base}/mig_build_timeout`;
+    await migrate(url, { appEnv: "test" });
+    const db = postgres(url, { max: 2, onnotice: () => {} });
+    try {
+      await forgetLast(db);
+      await db`drop index concurrently "model_call_recorded_at_idx"`;
+      await db`drop index concurrently "model_call_org_started_idx"`;
+      // A transaction that writes model_call and never finishes: the build waits for it.
+      const holder = await db.reserve();
+      await holder`begin`;
+      await holder`lock table model_call in row exclusive mode`;
+      const started = Date.now();
+      const outcome = await migrate(url, {
+        appEnv: "test",
+        noTransactionLockTimeout: "1s",
+      }).then(
+        () => "applied",
+        (e: unknown) => e,
+      );
+      const elapsed = Date.now() - started;
+      await holder`rollback`;
+      holder.release();
+      const err = outcome as { code?: string; cause?: { code?: string } };
+      expect(err.code ?? err.cause?.code).toBe("55P03");
+      // Each attempt gave up after the timeout, and there are LOCK_ATTEMPTS of them.
+      expect(elapsed).toBeGreaterThanOrEqual(LOCK_ATTEMPTS * 1_000);
+      expect(elapsed).toBeLessThan(20_000);
+      // The failed build left no history row, so the next run starts again, and its lock was released.
+      expect(await migrate(url, { appEnv: "test" })).toEqual({
+        adoptedBaseline: false,
+        applied: 1,
+      });
+      expect(Object.values(await indexState(db)).map((i) => i.valid)).toEqual([true, true]);
+    } finally {
+      await db.end({ timeout: 5 });
+    }
+  }, 60_000);
+
+  test("a dropped connection is an error, not a new connection without the advisory lock", async () => {
+    const url = `${base}/mig_lost`;
+    const session = await lockedSession(url);
+    const killer = postgres(url, { max: 1, onnotice: () => {} });
+    try {
+      await session.check();
+      await killer`select pg_terminate_backend(${session.pid})`;
+      await Bun.sleep(300);
+      // The driver would reconnect for the next query and run it unlocked; check refuses.
+      await expect(session.check()).rejects.toBeInstanceOf(MigrationLockLost);
+      await expect(session.check()).rejects.toBeInstanceOf(MigrationLockLost);
+    } finally {
+      session.close();
+      await session.sql.end({ timeout: 5 }).catch(() => {});
+      await killer.end({ timeout: 5 });
     }
   }, 30_000);
 
