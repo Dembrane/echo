@@ -130,7 +130,7 @@ export const OptionStepper = ({
 					const titleId = `${baseId}-${option.key}-title`;
 					const summaryId = `${baseId}-${option.key}-summary`;
 					const title = (
-						<Title order={5} m={0} style={{ minWidth: 0 }}>
+						<Title order={5} m={0} style={{ display: "inline", minWidth: 0 }}>
 							<Text
 								component="span"
 								id={titleId}
@@ -197,15 +197,13 @@ export const OptionStepper = ({
 									<Caret size={16} aria-hidden />
 									<div className={isOpen ? "col-span-2 min-w-0" : "min-w-0"}>
 										{option.explainer ? (
-											// The "i" is taller than a line of text: pulled in so the row keeps its height.
-											<div className="-my-1">
-												<Explainer
-													name={option.explainer.name}
-													label={option.explainer.label}
-												>
-													{title}
-												</Explainer>
-											</div>
+											<Explainer
+												inline
+												name={option.explainer.name}
+												label={option.explainer.label}
+											>
+												{title}
+											</Explainer>
 										) : (
 											title
 										)}

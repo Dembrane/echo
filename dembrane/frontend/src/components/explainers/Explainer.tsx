@@ -1,4 +1,4 @@
-import { ActionIcon, Group, Popover } from "@mantine/core";
+import { ActionIcon, Box, Group, Popover } from "@mantine/core";
 import { Info } from "@phosphor-icons/react";
 import {
 	type LazyExoticComponent,
@@ -47,11 +47,14 @@ export function Explainer({
 	name,
 	label,
 	children,
+	inline,
 }: {
 	name: ExplainerName;
 	/** What the "i" says to a screen reader, e.g. "How Verify works". */
 	label: string;
 	children: ReactNode;
+	/** The title is running text that can wrap: the "i" follows its last word, in the line. */
+	inline?: boolean;
 }) {
 	const [opened, setOpened] = useState(false);
 	const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -64,6 +67,33 @@ export function Explainer({
 	};
 	useEffect(() => () => clearTimeout(timer.current), []);
 	const Player = players[name];
+	const target = (
+		<Popover.Target>
+			<ActionIcon
+				variant="subtle"
+				color="gray"
+				aria-label={label}
+				// Back on where the title is not pressable (a stepper row draws its
+				// title non-interactive, so only the "i" plays the loop).
+				className="pointer-events-auto"
+				style={
+					inline
+						? {
+								display: "inline-flex",
+								marginInlineStart: 4,
+								verticalAlign: "middle",
+							}
+						: undefined
+				}
+				onFocus={() => setOpened(true)}
+				onBlur={() => setOpened(false)}
+				onClick={() => setOpened((o) => !o)}
+				{...testId(`explainer-${name}`)}
+			>
+				<Info size={20} />
+			</ActionIcon>
+		</Popover.Target>
+	);
 	return (
 		<Popover
 			opened={opened}
@@ -72,30 +102,25 @@ export function Explainer({
 			shadow="md"
 			withArrow
 		>
-			<Group
-				gap={4}
-				wrap="nowrap"
-				onMouseEnter={() => later(true)}
-				onMouseLeave={() => later(false)}
-			>
-				{children}
-				<Popover.Target>
-					<ActionIcon
-						variant="subtle"
-						color="gray"
-						aria-label={label}
-						// Back on where the title is not pressable (a stepper row draws its
-						// title non-interactive, so only the "i" plays the loop).
-						className="pointer-events-auto"
-						onFocus={() => setOpened(true)}
-						onBlur={() => setOpened(false)}
-						onClick={() => setOpened((o) => !o)}
-						{...testId(`explainer-${name}`)}
-					>
-						<Info size={20} />
-					</ActionIcon>
-				</Popover.Target>
-			</Group>
+			{inline ? (
+				<span
+					onMouseEnter={() => later(true)}
+					onMouseLeave={() => later(false)}
+				>
+					{children}
+					{target}
+				</Box>
+			) : (
+				<Group
+					gap={4}
+					wrap="nowrap"
+					onMouseEnter={() => later(true)}
+					onMouseLeave={() => later(false)}
+				>
+					{children}
+					{target}
+				</Group>
+			)}
 			<Popover.Dropdown
 				p="sm"
 				w={380}
