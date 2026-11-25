@@ -150,13 +150,9 @@ function Row({
 				<Text size="sm" truncate>
 					{name}
 				</Text>
+				{/* The line wraps rather than truncates: cut short on a phone it loses the time. */}
 				{detail && (
-					<Text
-						size="xs"
-						c="dimmed"
-						truncate
-						data-testid="staff-support-detail"
-					>
+					<Text size="xs" c="dimmed" data-testid="staff-support-detail">
 						{detail}
 					</Text>
 				)}

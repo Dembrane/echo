@@ -376,6 +376,12 @@ for (const size of sizes)
 			await page.waitForTimeout(300);
 			await shoot(page, "account-support", size, lang);
 			await noSideScroll(page);
+			// A phone shows only the first rows under Tasks; the rest from the section's top.
+			if (size.name === "phone") {
+				await section.evaluate((el) => el.scrollIntoView({ block: "start" }));
+				await page.waitForTimeout(300);
+				await shoot(page, "account-support-rows", size, lang);
+			}
 
 			// The two modes, explained beside the title.
 			await page.getByTestId("staff-support-info").focus();
