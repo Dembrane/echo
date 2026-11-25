@@ -3,7 +3,8 @@ import { store } from "../storage";
 
 /**
  * Whether a demo may go into an organisation its contact already works in: the organisation
- * exists and is not deleted, and the contact has an account and is a live member of it.
+ * exists and is not deleted, and the contact has an account (not suspended pending
+ * deletion) and is a live member of it.
  * Asked when staff start the demo (a refusal is a field error on `org_id`) and again by the
  * seed step, which may run later (a refusal is a sentence staff read on the demo's page).
  */
@@ -11,7 +12,9 @@ export async function placement(c: Conn, orgId: string, contactEmail: string) {
   const org = await store.org(c, orgId);
   if (!org) return { ok: false, problem: "organisation_missing" } as const;
   if (org.deleted_at) return { ok: false, problem: "organisation_deleted" } as const;
-  const identity = await store.identityByEmail(c, contactEmail.trim());
+  const found = await store.identityByEmail(c, contactEmail.trim());
+  // An account its owner asked to delete is suspended until the purge: it counts as gone.
+  const identity = found && !["suspended", "archived"].includes(found.status ?? "") ? found : null;
   const contact = identity ? await store.appUserByDirectusId(c, identity.id) : null;
   if (!identity || !contact) return { ok: false, problem: "no_account" } as const;
   const [membership] = await store.liveOrganisationsOf(c, contact.id, { orgId });

@@ -141,10 +141,12 @@ export const store = {
     return row ?? null;
   },
 
+  /** The identity with that address, and its Directus status ("suspended" once its owner asked to delete it). */
   async identityByEmail(c: Conn, email: string) {
     const [row] = await c
-      .select({ id: auth_user.id })
+      .select({ id: auth_user.id, status: schema.directus_users.status })
       .from(auth_user)
+      .leftJoin(schema.directus_users, eq(schema.directus_users.id, auth_user.id))
       .where(sql`lower(${auth_user.email}) = ${email.toLowerCase()}`)
       .limit(1);
     return row ?? null;

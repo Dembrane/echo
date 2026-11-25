@@ -439,6 +439,53 @@ run("a demo placed in an organisation the contact already works in", () => {
       await setOrganisationDeleted(w, org.id, false);
     });
 
+    /** With the email on refused as above; then with the email off it still publishes. */
+    const refusedThenPublishedWithoutEmail = async (
+      view: K.DemoStatusT,
+      workspaceId: string,
+      contact: Person,
+    ) => {
+      w.jobs.jobs.length = 0;
+      await refusedReadably(view.id, /account|member/i, "demo.contact_not_in_organisation");
+      await nothingChanged(view.id, workspaceId, contact);
+      const r = await publish(view.id, false);
+      expect(r.status).toBe(200);
+      expect(K.DemoStatus.parse(r.data).links.public[0]?.live).toBe(true);
+      expect(await heldFor(workspaceId)).toEqual([view.id, "private"]);
+      expect(await placesIn(w, workspaceId, contact)).toEqual([]);
+      expect(emailsQueued(w)).toEqual([]);
+    };
+
+    test("a contact whose account was erased since the build is refused readably, and the email off still publishes", async () => {
+      const { org, contact } = await organisation("member");
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      const where = await placedIn(view, org.id);
+      // Staff's privacy erasure (staff/src/privacy-storage.ts erase) removes the account with
+      // these three deletes; the memberships go with the app_user.
+      await w.db.delete(schema.app_user).where(eq(schema.app_user.id, contact.appUserId as string));
+      await w.db.delete(schema.auth_user).where(eq(schema.auth_user.id, contact.directusUserId));
+      await w.db
+        .delete(schema.directus_users)
+        .where(eq(schema.directus_users.id, contact.directusUserId));
+      await refusedThenPublishedWithoutEmail(view, where.workspace_id as string, contact);
+    });
+
+    test("a contact who asked to delete their account since the build is refused readably, and the email off still publishes", async () => {
+      const { org, contact } = await organisation("member");
+      const view = await draftIn(org.id, contact, { sign_in: true });
+      const where = await placedIn(view, org.id);
+      // "Delete account" in the app (account/src/settings.ts) suspends the person until the
+      // purge, with these writes (auth/src/account.ts suspend). Their rows stay.
+      await w.db
+        .update(schema.directus_users)
+        .set({ status: "suspended", description: "deletion requested in-app" })
+        .where(eq(schema.directus_users.id, contact.directusUserId));
+      await w.db
+        .delete(schema.auth_session)
+        .where(eq(schema.auth_session.userId, contact.directusUserId));
+      await refusedThenPublishedWithoutEmail(view, where.workspace_id as string, contact);
+    });
+
     test("publishing with the email off stays allowed: the link goes live and the workspace stays held", async () => {
       const { org, contact } = await organisation("member");
       const view = await draftIn(org.id, contact, { sign_in: true });
