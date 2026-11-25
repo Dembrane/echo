@@ -313,7 +313,7 @@ export function registrations(deps: {
       onTranscribed: finishReads({
         flags: popcornFlags(config),
         logger,
-        free: popcornAllowance(db),
+        free: popcornAllowance,
       }),
     }),
     canvasWorker({
