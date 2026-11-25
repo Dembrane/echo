@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Writable } from "node:stream";
 import { Access, DrizzleAccessStore, DrizzleStaffAudit, resolveProject } from "@dembrane/access";
+import { type AccountApiDeps, accountRoutes } from "@dembrane/account";
 import {
   type AccountsDeps,
   accountsRoutes,
@@ -22,7 +23,7 @@ import { createDb, migrate, schema } from "@dembrane/db";
 import type { Env, Signed } from "@dembrane/http";
 import { FakeCompleter } from "@dembrane/llm";
 import { MemoryMailer } from "@dembrane/mail";
-import { audiences } from "@dembrane/notifications";
+import { audiences, Notifier } from "@dembrane/notifications";
 import { createLogger } from "@dembrane/observability";
 import {
   draftDeckRoutes,
@@ -34,7 +35,7 @@ import {
 import { projectRoutes, projectsStorage } from "@dembrane/projects";
 import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
 import { backfillBestPractices, seedBestPractices } from "@dembrane/samples";
-import { staffRoutes } from "@dembrane/staff";
+import { accountMonthlyForecast, staffRoutes } from "@dembrane/staff";
 import { computeStats, statsStorage } from "@dembrane/stats";
 import { FilesystemStorage } from "@dembrane/storage";
 import { MemoryJobSink, tenancyRoutes } from "@dembrane/tenancy";
@@ -333,6 +334,26 @@ run("a staff demo where the deployment is production", () => {
         logger,
         config: { http: { dashboardUrl } },
       }),
+    );
+    // The account routes last, for the invite dialog's seat preview: every path the routes
+    // above answer stays theirs.
+    app.route(
+      "/",
+      accountRoutes({
+        db,
+        access,
+        auth: { api: {} },
+        identity: {},
+        notifier: new Notifier(db),
+        limiter: deps.limiter,
+        jobs: { enqueue: async () => "job" },
+        files: {},
+        config: {
+          account: { inviteHashSecret: "h".repeat(32), onboardingFollowupInbox: "" },
+          http: { dashboardUrl },
+          files: { directusLocation: "local" },
+        },
+      } as unknown as AccountApiDeps),
     );
     // The API's handler, as apps/api/src/middleware/errors.ts has it.
     app.onError((err, c) =>
@@ -1439,14 +1460,64 @@ run("a staff demo where the deployment is production", () => {
         expect((await send(maker, "GET", `/api/v2/orgs/${prospect.view.org_id}`)).status).toBe(403);
       });
 
-      test("the maker's place takes a seat on the prospect's account: no rule leaves dembrane staff out of seats", async () => {
+      /** The prospect's account as a paid one billed offline, so reconcile records its count. */
+      let accountId = "";
+      const prospectSeats = async () => {
+        await billing.service.reconcileAccountSeats(accountId);
+        const r = (await get(people.staff, "/api/v2/admin/billing-rollup")).data as {
+          rows: { workspace_id: string; seat_count: number; external_count: number }[];
+          accounts: { billing_account_id: string; total_forecast_eur: number }[];
+        };
+        const row = r.rows.find((x) => x.workspace_id === prospect.workspace);
+        return {
+          seats: await billing.service.countAccountSeats(accountId),
+          emails: [...(await billing.service.accountActiveSeatEmails(accountId))].sort(),
+          provisioned: (
+            await db
+              .select({ n: schema.billing_account.provisioned_seats })
+              .from(schema.billing_account)
+              .where(eq(schema.billing_account.id, accountId))
+          )[0]?.n,
+          rollup_workspace: (row?.seat_count ?? 0) + (row?.external_count ?? 0),
+          rollup_forecast: r.accounts.find((a) => a.billing_account_id === accountId)
+            ?.total_forecast_eur,
+        };
+      };
+
+      test("the maker takes no seat on the prospect's account, also once it pays", async () => {
         const [account] = await db
           .select({ id: schema.billing_account.id })
           .from(schema.billing_account)
           .where(eq(schema.billing_account.org_id, prospect.view.org_id as string));
-        const emails = await billing.service.accountActiveSeatEmails(account?.id as string);
-        expect([...emails]).toEqual(["maker@dembrane.com"]);
-        expect(await billing.service.countAccountSeats(account?.id as string)).toBe(1);
+        accountId = account?.id as string;
+        await db
+          .update(schema.billing_account)
+          .set({
+            tier: "innovator",
+            status: "active",
+            payment_mode: "offline",
+            provisioned_seats: 1,
+          })
+          .where(eq(schema.billing_account.id, accountId));
+        expect(await prospectSeats()).toEqual({
+          seats: 0,
+          emails: [],
+          // Reconcile never records fewer than one seat.
+          provisioned: 1,
+          rollup_workspace: 0,
+          rollup_forecast: accountMonthlyForecast("innovator", 0, "annual", null),
+        });
+        // The invite preview: the maker again adds none, someone new adds one.
+        const estimate = async (emails: string) =>
+          (
+            await send(
+              maker,
+              "GET",
+              `/api/v2/workspaces/${prospect.workspace}/seat-estimate?emails=${encodeURIComponent(emails)}`,
+            )
+          ).data.added_seats;
+        expect(await estimate("maker@dembrane.com")).toBe(0);
+        expect(await estimate("new@saltmarsh.example")).toBe(1);
       });
 
       test("released by a publish with sign-in: the contact joins as before and the member list shows both", async () => {
@@ -1463,6 +1534,14 @@ run("a staff demo where the deployment is production", () => {
         expect(await memberList(sky, prospect.workspace)).toEqual(expected);
         expect(await memberList(maker, prospect.workspace)).toEqual(expected);
         expect((await theirList(sky)).find((w) => w.id === prospect.workspace)?.role).toBe("admin");
+        // Released, the contact takes their one seat and the maker still none.
+        expect(await prospectSeats()).toEqual({
+          seats: 1,
+          emails: ["sky@saltmarsh.example"],
+          provisioned: 1,
+          rollup_workspace: 1,
+          rollup_forecast: accountMonthlyForecast("innovator", 1, "annual", null),
+        });
       });
     });
 
@@ -1710,6 +1789,140 @@ run("a staff demo where the deployment is production", () => {
       expect(
         (await send(owner, "GET", `/api/v2/workspaces/${demo.workspace}/settings`)).status,
       ).toBe(404);
+    });
+
+    // Seats on a paid account (offline, so reconcile records what it counts), read where
+    // the customer and staff read them: billing's count, the active seat emails, reconcile,
+    // the invite dialog's preview and the staff billing rollup.
+    describe("seats of dembrane people on a customer's account", () => {
+      const quay = { org: newId(), billing: newId(), workspace: newId() };
+      const q = {} as Record<"owner" | "insider" | "guest" | "helper", Person>;
+      const seats = () => billing.service.countAccountSeats(quay.billing);
+      const seatEmails = async () =>
+        [...(await billing.service.accountActiveSeatEmails(quay.billing))].sort();
+      const provisioned = async () => {
+        await billing.service.reconcileAccountSeats(quay.billing);
+        return (
+          await db
+            .select({ n: schema.billing_account.provisioned_seats })
+            .from(schema.billing_account)
+            .where(eq(schema.billing_account.id, quay.billing))
+        )[0]?.n;
+      };
+      const preview = async (emails: string) =>
+        (
+          await send(
+            q.owner,
+            "GET",
+            `/api/v2/workspaces/${quay.workspace}/seat-estimate?emails=${encodeURIComponent(emails)}`,
+          )
+        ).data.added_seats;
+      const rollup = async () => {
+        const r = (await get(people.staff, "/api/v2/admin/billing-rollup")).data as {
+          rows: { workspace_id: string; seat_count: number; external_count: number }[];
+          accounts: {
+            billing_account_id: string;
+            seat_count: number;
+            external_count: number;
+            total_forecast_eur: number;
+          }[];
+        };
+        const row = r.rows.find((x) => x.workspace_id === quay.workspace);
+        const account = r.accounts.find((x) => x.billing_account_id === quay.billing);
+        return {
+          workspace: (row?.seat_count ?? 0) + (row?.external_count ?? 0),
+          account: (account?.seat_count ?? 0) + (account?.external_count ?? 0),
+          forecast: account?.total_forecast_eur,
+        };
+      };
+      const join = (who: Person, role: string) =>
+        db.insert(schema.workspace_membership).values({
+          id: newId(),
+          workspace_id: quay.workspace,
+          user_id: who.appUserId as string,
+          role,
+          source: "direct",
+        });
+
+      beforeAll(async () => {
+        q.owner = await somebody("owner@quay.example", "Quay Owner");
+        // A dembrane person who works in the organisation itself.
+        q.insider = await somebody("insider@dembrane.com", "Inside Dembrane");
+        // Someone from elsewhere, on one workspace only.
+        q.guest = await somebody("guest@elsewhere.example", "Guest Elsewhere");
+        // A dembrane person the customer adds to one workspace for help.
+        q.helper = await somebody(" Helper@Dembrane.com ", "Helper Dembrane");
+        await db
+          .insert(schema.org)
+          .values({ id: quay.org, name: "Quay Side", account_stage: "customer" });
+        await db.insert(schema.billing_account).values({
+          id: quay.billing,
+          org_id: quay.org,
+          tier: "innovator",
+          status: "active",
+          payment_mode: "offline",
+          provisioned_seats: 3,
+        });
+        await db.insert(schema.workspace).values({
+          id: quay.workspace,
+          org_id: quay.org,
+          name: "Quay Side",
+          billing_account_id: quay.billing,
+          visibility: "open_to_organisation",
+          is_default: true,
+        });
+        for (const [who, role] of [
+          [q.owner, "owner"],
+          [q.insider, "member"],
+        ] as const)
+          await db.insert(schema.org_membership).values({
+            id: newId(),
+            org_id: quay.org,
+            user_id: who.appUserId as string,
+            role,
+          });
+        await join(q.owner, "admin");
+        await join(q.insider, "member");
+        await join(q.guest, "external");
+      });
+
+      test("a dembrane person who is a member of the organisation and an external from elsewhere each take a seat, as before", async () => {
+        expect(await seats()).toBe(3);
+        expect(await seatEmails()).toEqual([
+          "guest@elsewhere.example",
+          "insider@dembrane.com",
+          "owner@quay.example",
+        ]);
+        expect(await provisioned()).toBe(3);
+        // Inviting someone new adds one; inviting a seat holder again adds none.
+        expect(await preview("new@quay.example")).toBe(1);
+        expect(await preview("insider@dembrane.com,guest@elsewhere.example")).toBe(0);
+        expect(await rollup()).toEqual({
+          workspace: 3,
+          account: 3,
+          forecast: accountMonthlyForecast("innovator", 3, "annual", null),
+        });
+      });
+
+      test("a dembrane person the customer adds to one workspace for help takes no seat, wherever seats are read", async () => {
+        await join(q.helper, "external");
+        expect(await seats()).toBe(3);
+        expect(await seatEmails()).toEqual([
+          "guest@elsewhere.example",
+          "insider@dembrane.com",
+          "owner@quay.example",
+        ]);
+        expect(await provisioned()).toBe(3);
+        // Inviting them, or another dembrane person outside the organisation, adds none.
+        expect(await preview("helper@dembrane.com")).toBe(0);
+        expect(await preview(" Another@Dembrane.com ")).toBe(0);
+        expect(await preview("new@quay.example")).toBe(1);
+        expect(await rollup()).toEqual({
+          workspace: 3,
+          account: 3,
+          forecast: accountMonthlyForecast("innovator", 3, "annual", null),
+        });
+      });
     });
   });
 });

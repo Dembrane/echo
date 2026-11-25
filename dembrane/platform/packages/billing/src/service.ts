@@ -1,4 +1,4 @@
-import { madeForDemo } from "@dembrane/access";
+import { madeForDemo, ORG_ROLES, staffGuestTakesNoSeat } from "@dembrane/access";
 import { withoutTrailingSlashes } from "@dembrane/core";
 import { directusTime, parseTime, pyRound } from "@dembrane/legacy-shape";
 import type { Mailer } from "@dembrane/mail";
@@ -154,7 +154,9 @@ export class BillingService {
 
   /**
    * Distinct direct seat holders of one live workspace. A workspace dembrane made for a demo
-   * (@dembrane/access madeForDemo) has none: its people take a seat only where they work.
+   * (@dembrane/access madeForDemo) has none: its people take a seat only where they work. A
+   * dembrane person outside the workspace's organisation takes none either
+   * (staffGuestTakesNoSeat, a commercial rule).
    */
   async workspaceSeatUserIds(workspaceId: string): Promise<Set<string>> {
     const ws = await this.store.workspace(workspaceId);
@@ -163,7 +165,37 @@ export class BillingService {
     for (const r of await this.store.directMemberships(workspaceId))
       if (r.user_id && r.source !== "staff_support" && SEAT_ROLES.has(r.role ?? ""))
         ids.add(r.user_id);
+    const members = await this.orgMemberIds(ws.org_id);
+    const outside = [...ids].filter((u) => !members.has(u));
+    if (outside.length)
+      for (const u of await this.store.appUsers(outside))
+        if (staffGuestTakesNoSeat(u.email, false)) ids.delete(u.id);
     return ids;
+  }
+
+  /** Everyone with a live membership of the organisation, whatever their role. */
+  private async orgMemberIds(orgId: string | null | undefined): Promise<Set<string>> {
+    if (!orgId) return new Set();
+    return new Set(
+      (await this.store.orgMemberships(orgId, ORG_ROLES)).flatMap((m) =>
+        m.user_id ? [m.user_id] : [],
+      ),
+    );
+  }
+
+  /** The live members' addresses of every organisation whose workspaces the account covers. */
+  private async accountOrgMemberEmails(accountId: string): Promise<Set<string>> {
+    const orgs = new Set<string>();
+    for (const id of await this.store.accountWorkspaceIds(accountId)) {
+      const org = (await this.store.workspace(id))?.org_id;
+      if (org) orgs.add(org);
+    }
+    const ids = new Set<string>();
+    for (const org of orgs) for (const u of await this.orgMemberIds(org)) ids.add(u);
+    const emails = new Set<string>();
+    for (const u of await this.store.appUsers([...ids]))
+      if (u.email) emails.add(u.email.trim().toLowerCase());
+    return emails;
   }
 
   /**
@@ -212,7 +244,9 @@ export class BillingService {
     if (!cleaned.size) return 0;
     const already = await this.accountActiveSeatEmails(accountId);
     for (const e of await this.accountPendingInviteEmails(accountId)) already.add(e);
-    return [...cleaned].filter((e) => !already.has(e)).length;
+    const members = await this.accountOrgMemberEmails(accountId);
+    return [...cleaned].filter((e) => !already.has(e) && !staffGuestTakesNoSeat(e, members.has(e)))
+      .length;
   }
 
   // ── Read models ──────────────────────────────────────────────────────

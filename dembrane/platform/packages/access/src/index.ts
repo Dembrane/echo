@@ -28,6 +28,7 @@ export {
   resolveWorkspace,
   type WorkspaceAccess,
 } from "./resolve";
+export { staffGuestTakesNoSeat } from "./seats";
 export {
   DrizzleStaffAudit,
   hasStaffPolicy,

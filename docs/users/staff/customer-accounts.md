@@ -66,8 +66,7 @@ select "Open the draft (EN)" to look through the demo, then select "Publish".
   the organisation), so you can open the draft project in the dashboard and change it before you
   publish. Only a @dembrane.com account is added, and only you: an account manager who did not
   start the demo is not. You stay in the workspace after publishing, in its member list like
-  anyone, and its admins can remove you. In a new organisation your place counts as a seat on its
-  account like anyone's.
+  anyone, and its admins can remove you. You take no seat there.
 - "Publish" makes the public demo link live. With "Send the sign-in invitation" on, the contact
   gets the email "Your dembrane account for {org_name}" and signs in with a code. With it off, the
   page says "No email went out; share the demo link yourself."
@@ -109,6 +108,9 @@ picks the first of their own organisations.
   contact gets nothing; share the link yourself.
 - The demo's workspace takes no seats, before or after publishing: the contact and you add none
   to the organisation's bill, and someone who already has a seat there keeps that one seat.
+- A @dembrane.com account in a customer's workspace takes no seat on its account unless it is a
+  member of the customer's organisation: that covers you in a demo's workspace and anyone at
+  dembrane a customer adds to a workspace for help.
 - If the contact has left the organisation, or the organisation was deleted, before the build
   reached "Seeding", that step fails and says why. Fix it and select "Retry", or start a new demo.
   Publishing with the email on checks the same again: if either changed since, nothing is
