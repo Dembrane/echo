@@ -50,4 +50,4 @@ Open `links.projects` (the demo in the dashboard) and read `research` in the sta
 curl -sf "${H[@]}" -X POST "$API/api/v2/admin/accounts/demos/$ID/publish" -d '{}' | jq '{status, links}'
 ```
 
-Pass `{"sign_in": true}` or `false` to override the choice made at the start. Return `links.public` (the live presentation per language), `links.account` and `links.continue_url`. Do not send outreach unless a person says send.
+Pass `{"sign_in": true}` or `false` to override the choice made at the start. With sign-in, the contact also becomes an admin of the demo's workspace and the demo project is pinned there, so their organisation page shows it on every visit. Return `links.public` (the live presentation per language), `links.account` and `links.continue_url`. Do not send outreach unless a person says send.

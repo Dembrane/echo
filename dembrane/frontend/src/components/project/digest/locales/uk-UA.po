@@ -21,11 +21,11 @@ msgstr "Прийняти й далі"
 msgid "Accept the rest"
 msgstr "Прийняти решту"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:175
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:176
 msgid "Add a link"
 msgstr "Додати посилання"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:126
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:127
 msgid "Add from a file"
 msgstr "Додати з файлу"
 
@@ -41,7 +41,7 @@ msgstr "Усі шаблони"
 msgid "Also fits:"
 msgstr "Також підходить:"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:197
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:198
 msgid "An invitation or project page. dembrane reads it once."
 msgstr "Запрошення або сторінка проєкту. dembrane прочитає її один раз."
 
@@ -74,8 +74,12 @@ msgstr "Змінити: {part}"
 #~ msgstr "Перевір кожну частину, зміни те, що не так, і вимкни те, що не потрібно. Нічого не зберігається, доки ти не створиш проєкт."
 
 #: src/components/project/digest/DigestConnected.tsx:226
-msgid "Choose a format below to continue."
-msgstr "Обери формат нижче, щоб продовжити."
+#~ msgid "Choose a format below to continue."
+#~ msgstr "Обери формат нижче, щоб продовжити."
+
+#: src/components/project/digest/DigestConnected.tsx:226
+msgid "Choose a template above to continue."
+msgstr "Обери шаблон вище, щоб продовжити."
 
 #: src/components/project/digest/DigestConnected.tsx:204
 #~ msgid "Choose a template below to continue."
@@ -101,11 +105,11 @@ msgstr "dembrane не змогла знайти тут нічого, що мож
 msgid "dembrane couldn't set the project up from this."
 msgstr "dembrane не змогла налаштувати проєкт за цим матеріалом."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:128
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:129
 msgid "Drop files here, or choose them"
 msgstr "Перетягни файли сюди або обери їх"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:112
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:113
 msgid "Drop files or choose them"
 msgstr "Перетягни файли або обери їх"
 
@@ -122,7 +126,7 @@ msgstr "Редагувати"
 msgid "Explore question"
 msgstr "Питання Explore"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:228
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:229
 msgid "Files stay on your device. Only their text is sent to dembrane's model provider to prepare the setup. Don't drop material you may not share."
 msgstr "Файли залишаються на твоєму пристрої. Лише їхній текст надсилається постачальнику моделей dembrane, щоб підготувати налаштування. Не додавай матеріали, якими не можна ділитися."
 
@@ -150,7 +154,7 @@ msgstr "Ціль"
 #~ msgid "Have an agenda or invitation? Drop it here and dembrane sets the project up."
 #~ msgstr "Маєш порядок денний чи запрошення? Перетягни сюди, і dembrane налаштує проєкт."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:97
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:98
 msgid "Have an agenda, invitation or run sheet? Drop it here and dembrane sets the project up."
 msgstr "Маєш порядок денний, запрошення чи сценарій заходу? Перетягни сюди, і dembrane налаштує проєкт."
 
@@ -171,7 +175,7 @@ msgstr "Ключові терміни"
 msgid "Larger than 10 MB. Try a shorter version, or paste the part that matters."
 msgstr "Більше ніж 10 МБ. Спробуй коротшу версію або встав потрібну частину."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:196
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:197
 msgid "Link to a page about it"
 msgstr "Посилання на сторінку про це"
 
@@ -217,20 +221,20 @@ msgstr "Або обери інший"
 msgid "Participants tap the round they are in before they record."
 msgstr "Учасники торкаються свого раунду перед записом."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:157
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:158
 msgid "Paste text"
 msgstr "Вставити текст"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:183
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:184
 msgid "Paste the agenda, the invitation or the brief."
 msgstr "Встав порядок денний, запрошення або бриф."
 
 #: src/components/project/digest/useDigestRun.ts:117
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:182
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:183
 msgid "Pasted text"
 msgstr "Вставлений текст"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:132
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:133
 msgid "PDF, Word, PowerPoint or text. Up to {MAX_FILES} files of 10 MB."
 msgstr "PDF, Word, PowerPoint або текст. До {MAX_FILES} файлів по 10 МБ."
 
@@ -281,7 +285,7 @@ msgstr "Готово до створення"
 msgid "Rounds as tags"
 msgstr "Раунди як теги"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:216
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:217
 msgid "Set up from this"
 msgstr "Налаштувати за цим"
 
@@ -429,8 +433,12 @@ msgid "Your material was long, so dembrane read its start and a condensed versio
 msgstr "Твій матеріал був довгим, тож dembrane прочитала початок і стислу версію. Перевір, чи нічого важливого не бракує."
 
 #: src/components/project/digest/DigestConnected.tsx:221
-msgid "Your text is in the project context: choose a format below to continue."
-msgstr "Твій текст у контексті проєкту: обери формат нижче, щоб продовжити."
+#~ msgid "Your text is in the project context: choose a format below to continue."
+#~ msgstr "Твій текст у контексті проєкту: обери формат нижче, щоб продовжити."
+
+#: src/components/project/digest/DigestConnected.tsx:221
+msgid "Your text is in the project context: choose a template above to continue."
+msgstr "Твій текст у контексті проєкту: обери шаблон вище, щоб продовжити."
 
 #: src/components/project/digest/DigestConnected.tsx:199
 #~ msgid "Your text is in the project context: choose a template below to continue."

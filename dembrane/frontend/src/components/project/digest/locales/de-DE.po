@@ -21,11 +21,11 @@ msgstr "Übernehmen und weiter"
 msgid "Accept the rest"
 msgstr "Den Rest übernehmen"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:175
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:176
 msgid "Add a link"
 msgstr "Link hinzufügen"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:126
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:127
 msgid "Add from a file"
 msgstr "Aus einer Datei hinzufügen"
 
@@ -41,7 +41,7 @@ msgstr "Alle Vorlagen"
 msgid "Also fits:"
 msgstr "Passt auch:"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:197
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:198
 msgid "An invitation or project page. dembrane reads it once."
 msgstr "Eine Einladung oder Projektseite. dembrane liest sie einmal."
 
@@ -74,8 +74,12 @@ msgstr "Ändern: {part}"
 #~ msgstr "Prüf jeden Teil, ändere, was nicht stimmt, und schalte aus, was du nicht willst. Gespeichert wird erst, wenn du das Projekt erstellst."
 
 #: src/components/project/digest/DigestConnected.tsx:226
-msgid "Choose a format below to continue."
-msgstr "Wähl unten ein Format, um weiterzumachen."
+#~ msgid "Choose a format below to continue."
+#~ msgstr "Wähl unten ein Format, um weiterzumachen."
+
+#: src/components/project/digest/DigestConnected.tsx:226
+msgid "Choose a template above to continue."
+msgstr "Wähl oben eine Vorlage, um weiterzumachen."
 
 #: src/components/project/digest/DigestConnected.tsx:204
 #~ msgid "Choose a template below to continue."
@@ -101,11 +105,11 @@ msgstr "dembrane konnte daraus nichts zum Hinzufügen lesen."
 msgid "dembrane couldn't set the project up from this."
 msgstr "dembrane konnte das Projekt damit nicht einrichten."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:128
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:129
 msgid "Drop files here, or choose them"
 msgstr "Zieh Dateien hierher oder wähl sie aus"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:112
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:113
 msgid "Drop files or choose them"
 msgstr "Dateien ablegen oder auswählen"
 
@@ -122,7 +126,7 @@ msgstr "Bearbeiten"
 msgid "Explore question"
 msgstr "Erkunden-Frage"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:228
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:229
 msgid "Files stay on your device. Only their text is sent to dembrane's model provider to prepare the setup. Don't drop material you may not share."
 msgstr "Dateien bleiben auf deinem Gerät. Nur ihr Text geht an den Modellanbieter von dembrane, um die Einrichtung vorzubereiten. Leg kein Material ab, das du nicht teilen darfst."
 
@@ -150,7 +154,7 @@ msgstr "Ziel"
 #~ msgid "Have an agenda or invitation? Drop it here and dembrane sets the project up."
 #~ msgstr "Hast du eine Tagesordnung oder Einladung? Leg sie hier ab und dembrane richtet das Projekt ein."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:97
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:98
 msgid "Have an agenda, invitation or run sheet? Drop it here and dembrane sets the project up."
 msgstr "Hast du eine Tagesordnung, Einladung oder ein Drehbuch? Leg es hier ab und dembrane richtet das Projekt ein."
 
@@ -171,7 +175,7 @@ msgstr "Schlüsselbegriffe"
 msgid "Larger than 10 MB. Try a shorter version, or paste the part that matters."
 msgstr "Größer als 10 MB. Versuch eine kürzere Fassung oder füg den wichtigen Teil ein."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:196
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:197
 msgid "Link to a page about it"
 msgstr "Link zu einer Seite darüber"
 
@@ -217,20 +221,20 @@ msgstr "Oder wähl eine andere"
 msgid "Participants tap the round they are in before they record."
 msgstr "Teilnehmende tippen vor der Aufnahme auf ihre Runde."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:157
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:158
 msgid "Paste text"
 msgstr "Text einfügen"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:183
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:184
 msgid "Paste the agenda, the invitation or the brief."
 msgstr "Füg die Tagesordnung, die Einladung oder das Briefing ein."
 
 #: src/components/project/digest/useDigestRun.ts:117
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:182
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:183
 msgid "Pasted text"
 msgstr "Eingefügter Text"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:132
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:133
 msgid "PDF, Word, PowerPoint or text. Up to {MAX_FILES} files of 10 MB."
 msgstr "PDF, Word, PowerPoint oder Text. Bis zu {MAX_FILES} Dateien mit je 10 MB."
 
@@ -281,7 +285,7 @@ msgstr "Bereit zum Erstellen"
 msgid "Rounds as tags"
 msgstr "Runden als Tags"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:216
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:217
 msgid "Set up from this"
 msgstr "Damit einrichten"
 
@@ -429,8 +433,12 @@ msgid "Your material was long, so dembrane read its start and a condensed versio
 msgstr "Dein Material war lang, also hat dembrane den Anfang und eine gekürzte Fassung gelesen. Prüf, ob nichts Wichtiges fehlt."
 
 #: src/components/project/digest/DigestConnected.tsx:221
-msgid "Your text is in the project context: choose a format below to continue."
-msgstr "Dein Text steht im Projektkontext: Wähl unten ein Format, um weiterzumachen."
+#~ msgid "Your text is in the project context: choose a format below to continue."
+#~ msgstr "Dein Text steht im Projektkontext: Wähl unten ein Format, um weiterzumachen."
+
+#: src/components/project/digest/DigestConnected.tsx:221
+msgid "Your text is in the project context: choose a template above to continue."
+msgstr "Dein Text steht im Projektkontext: Wähl oben eine Vorlage, um weiterzumachen."
 
 #: src/components/project/digest/DigestConnected.tsx:199
 #~ msgid "Your text is in the project context: choose a template below to continue."

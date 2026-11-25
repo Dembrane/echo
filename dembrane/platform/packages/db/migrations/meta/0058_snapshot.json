@@ -1,5 +1,5 @@
 {
-  "id": "14123d04-052c-4be9-a582-4924dc3dfb65",
+  "id": "ba30c86b-a91e-4be0-bb05-308692d420db",
   "prevId": "2adbd708-f851-42de-ab9a-057d4842d05a",
   "version": "7",
   "dialect": "postgresql",
@@ -4645,12 +4645,6 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
-        },
-        "ai_provider": {
-          "name": "ai_provider",
-          "type": "varchar(32)",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
@@ -4672,12 +4666,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "conversation_ai_provider_check": {
-          "name": "conversation_ai_provider_check",
-          "value": "\"conversation\".\"ai_provider\" is null or \"conversation\".\"ai_provider\" in ('scaleway', 'google')"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.conversation_artifact": {
@@ -9844,18 +9833,6 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
-        },
-        "ai_providers": {
-          "name": "ai_providers",
-          "type": "text[]",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "ai_default_provider": {
-          "name": "ai_default_provider",
-          "type": "varchar(32)",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
@@ -9891,14 +9868,6 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "org_ai_providers_check": {
-          "name": "org_ai_providers_check",
-          "value": "\"org\".\"ai_providers\" is null or \"org\".\"ai_providers\" <@ array['scaleway', 'google']::text[]"
-        },
-        "org_ai_default_provider_check": {
-          "name": "org_ai_default_provider_check",
-          "value": "\"org\".\"ai_default_provider\" is null or \"org\".\"ai_default_provider\" in ('scaleway', 'google')"
-        },
         "org_account_stage_check": {
           "name": "org_account_stage_check",
           "value": "\"org\".\"account_stage\" is null or \"org\".\"account_stage\" in ('prospect', 'customer', 'churned')"
@@ -10868,12 +10837,6 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
-        },
-        "ai_provider": {
-          "name": "ai_provider",
-          "type": "varchar(32)",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
@@ -10921,12 +10884,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "project_ai_provider_check": {
-          "name": "project_ai_provider_check",
-          "value": "\"project\".\"ai_provider\" is null or \"project\".\"ai_provider\" in ('scaleway', 'google')"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.project_agentic_run": {
@@ -17398,30 +17356,6 @@
         "price_id": {
           "name": "price_id",
           "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "organisation_id": {
-          "name": "organisation_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "routed_provider": {
-          "name": "routed_provider",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "routing_reason": {
-          "name": "routing_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "routing_allowed": {
-          "name": "routing_allowed",
-          "type": "text[]",
           "primaryKey": false,
           "notNull": false
         }

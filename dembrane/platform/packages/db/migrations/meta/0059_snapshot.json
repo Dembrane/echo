@@ -1,6 +1,6 @@
 {
-  "id": "b73b10e3-15b9-4c99-8679-905b03d81fc3",
-  "prevId": "14123d04-052c-4be9-a582-4924dc3dfb65",
+  "id": "14123d04-052c-4be9-a582-4924dc3dfb65",
+  "prevId": "ba30c86b-a91e-4be0-bb05-308692d420db",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -16925,31 +16925,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.ai_provider_check": {
-      "name": "ai_provider_check",
-      "schema": "",
-      "columns": {
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "checked_through": {
-          "name": "checked_through",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.ai_spend_daily": {
       "name": "ai_spend_daily",
       "schema": "",
@@ -17447,12 +17422,6 @@
         "routing_allowed": {
           "name": "routing_allowed",
           "type": "text[]",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "routing_conversation_id": {
-          "name": "routing_conversation_id",
-          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         }

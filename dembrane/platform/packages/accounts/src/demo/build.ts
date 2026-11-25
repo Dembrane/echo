@@ -335,6 +335,10 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
       // numbers; its AI use still spends the AI budget. Its sample_version stays empty, which
       // is what keeps the best-practices updater (it selects by that stamp) away from it.
       sample: true,
+      // Pinned in the prospect's own workspace, so the contact opens it from the workspace's
+      // card on every visit, long after the onboarding step that led there is done. A shared
+      // staff workspace is not theirs, and staff's pins there are left alone.
+      ...(!d.demo.workspaceId && { pinOrder: 1 }),
       workspaceId,
       // The popcorn read acts as the project's owner and must reach the project. In the
       // prospect's own workspace that is the contact (its admin once released; the build

@@ -1,0 +1,20 @@
+/* On a phone (below 48em, the app's phone breakpoint) Create is a plus only: the same
+ * filled pill, round, with no label or caret, so the lede beside it keeps its line. It is
+ * 44px across, the touch height rules.css gives pressable things on a phone.
+ * CSS rather than a media query hook, so nothing changes shape after load. */
+@media (max-width: 47.99em) {
+	.button {
+		--button-height: 44px;
+		padding-inline: 0;
+		width: var(--button-height);
+	}
+
+	.button .label,
+	.button .section[data-position="right"] {
+		display: none;
+	}
+
+	.button .section[data-position="left"] {
+		margin-inline-end: 0;
+	}
+}
