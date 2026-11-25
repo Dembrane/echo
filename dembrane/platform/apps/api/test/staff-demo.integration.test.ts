@@ -1521,6 +1521,7 @@ run("a staff demo where the deployment is production", () => {
       });
 
       test("released by a publish with sign-in: the contact joins as before and the member list shows both", async () => {
+        const emailsBefore = (deps.jobs as MemoryJobs).of("account.send-email").length;
         const res = await send(
           maker,
           "POST",
@@ -1528,6 +1529,22 @@ run("a staff demo where the deployment is production", () => {
           { sign_in: true },
         );
         expect(res.status).toBe(200);
+        // Nothing tells the contact, now an admin, that the maker is in the workspace: the
+        // only email is their own invitation, and no notification names the workspace.
+        expect(
+          (deps.jobs as MemoryJobs)
+            .of("account.send-email")
+            .slice(emailsBefore)
+            .map((e) => [(e as { to: string }).to, (e as { template: string }).template]),
+        ).toEqual([["sky@saltmarsh.example", "account_invite"]]);
+        expect(
+          await db
+            .select({ id: schema.notification.id })
+            .from(schema.notification)
+            .where(
+              sql`${schema.notification.ref_workspace_id} = ${prospect.workspace} or ${schema.notification.audience_user_id} = ${sky.appUserId}`,
+            ),
+        ).toEqual([]);
         const expected = [inList(maker, "admin"), inList(sky, "admin")].sort((a, b) =>
           a.user_id.localeCompare(b.user_id),
         );

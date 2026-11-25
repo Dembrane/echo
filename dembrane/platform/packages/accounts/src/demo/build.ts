@@ -279,7 +279,8 @@ export async function buildDemo(
  * its billing and the contact's role stay as they are. Either way the @dembrane.com staff
  * member who made the demo becomes an admin of the demo's own workspace (never of the
  * organisation), so they can open and tune the draft in the dashboard; a shared staff demo
- * workspace is staff's already and gets no row.
+ * workspace is staff's already and gets no row, and a maker who is the demo's contact waits
+ * for the hand-over or release like any contact.
  */
 async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
   const staffApp = await store.appUserByDirectusId(d.db, row.createdBy);
@@ -440,9 +441,14 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
     // The staff member who made the demo, as an admin of its own workspace from the draft
     // on, under joinDemoWorkspace's rule (any row of theirs there is left as it is). Only a
     // @dembrane.com user, as for defaultManager. A held workspace stays held: a direct row
-    // opens it to them alone, and it takes no seat (MADE_FOR_DEMO).
-    if (!sharedWorkspace && staffApp && isStaffEmail(staffApp.email))
-      await joinDemoWorkspace(tx, orgId, workspaceId, staffApp.id, d.now().toISOString());
+    // opens it to them alone, and it takes no seat (MADE_FOR_DEMO). A maker who is also the
+    // demo's contact is held like any contact and gets their place at hand-over or release.
+    const staffAdded =
+      !sharedWorkspace &&
+      staffApp !== null &&
+      isStaffEmail(staffApp.email) &&
+      row.createdBy !== contact.id &&
+      (await joinDemoWorkspace(tx, orgId, workspaceId, staffApp.id, d.now().toISOString()));
     // The prospect's way from the demo into the product. Only a demo in their own
     // workspace can be opened by them; one in staff's workspace has no "Explore" step. An
     // organisation people already work in is no newcomer and gets no onboarding.
@@ -457,7 +463,14 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
       orgId,
       actor: { kind: "staff", userId: row.createdBy },
       type: "demo.seeded",
-      detail: { slug, demo_id: row.id, links: seeded.result, published: false },
+      detail: {
+        slug,
+        demo_id: row.id,
+        links: seeded.result,
+        published: false,
+        // Who from dembrane joined the customer's workspace, when this seed added them.
+        ...(staffAdded && { staff_member_added_to_workspace: staffApp?.id }),
+      },
     });
   });
   const out: SeedOutput = {

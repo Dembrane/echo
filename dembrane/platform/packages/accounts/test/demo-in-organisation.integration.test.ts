@@ -769,6 +769,16 @@ run("a demo placed in an organisation the contact already works in", () => {
         .from(schema.notification)
         .where(eq(schema.notification.ref_workspace_id, workspaceId));
       expect(notices).toEqual([]);
+      // The account's timeline says a dembrane person joined the customer's workspace.
+      const [seeded] = await w.db
+        .select({ detail: schema.account_event.detail })
+        .from(schema.account_event)
+        .where(
+          and(eq(schema.account_event.orgId, org.id), eq(schema.account_event.type, "demo.seeded")),
+        );
+      expect(
+        (seeded?.detail as Record<string, unknown> | undefined)?.staff_member_added_to_workspace,
+      ).toBe(builder.appUserId);
     });
 
     test("a builder who already has a live row there keeps it as it is when the seed runs again", async () => {
@@ -815,6 +825,35 @@ run("a demo placed in an organisation the contact already works in", () => {
       expect(await placesIn(w, workspaceId, contact)).toEqual([ADMIN_PLACE]);
       expect(await placesIn(w, workspaceId, builder)).toEqual([ADMIN_PLACE]);
       expect(emailsQueued(w).filter((e) => e.to === builder.email)).toEqual([]);
+    });
+
+    test("a builder who is also the demo's contact gets no place at the seed, only at hand-over", async () => {
+      const owner = await personWithAccount(w, "selfowner");
+      const org = await existingOrganisation(w, {
+        name: "Demos self",
+        stage: "customer",
+        members: [
+          { person: owner, role: "owner" },
+          { person: builder, role: "member" },
+        ],
+      });
+      w.jobs.jobs.length = 0;
+      const view = await draftByBuilder(org.id, builder);
+      const workspaceId = (await placedIn(view, org.id)).workspace_id as string;
+      expect(await placesIn(w, workspaceId, builder)).toEqual([]);
+      expect(await workspaceRole(builder, workspaceId)).toBeNull();
+      const [seeded] = await w.db
+        .select({ detail: schema.account_event.detail })
+        .from(schema.account_event)
+        .where(
+          and(eq(schema.account_event.orgId, org.id), eq(schema.account_event.type, "demo.seeded")),
+        );
+      expect(seeded?.detail).not.toHaveProperty("staff_member_added_to_workspace");
+      expect((await publish(view.id, true)).status).toBe(200);
+      expect(await placesIn(w, workspaceId, builder)).toEqual([ADMIN_PLACE]);
+      expect(emailsQueued(w).map((e) => [e.to, e.template])).toEqual([
+        [builder.email, "account_demo_ready"],
+      ]);
     });
   });
 

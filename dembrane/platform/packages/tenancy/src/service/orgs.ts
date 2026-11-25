@@ -603,8 +603,10 @@ export function orgService(deps: TenancyDeps) {
       let isMember = callerRole !== null;
       if (isMember && !isManager && (await isOrgExternalOnly(db, orgId, member.appUserId)))
         isMember = false;
-      // The caller's own rows: a guest sees only those, and anyone sees a workspace held
-      // for a demo they are a direct member of (the staff member who made it).
+      // The caller's own rows: a guest sees only those, and a workspace held for a demo
+      // they are a direct member of (the staff member who made it) is not left out. The
+      // private-workspace rule below still applies: a plain member of the organisation
+      // gets no card for a private workspace, held or not, even with a direct row.
       const mine = (await membershipsOfUser(db, member.appUserId)).map((m) => m.workspace_id);
       let accessible: string[] | null = null;
       if (!isMember) {

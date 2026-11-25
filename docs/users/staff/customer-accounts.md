@@ -63,10 +63,14 @@ select "Open the draft (EN)" to look through the demo, then select "Publish".
 - The build creates the prospect's organisation, with your contact as its admin. Nothing reaches
   them until you publish.
 - The build makes you, the staff member who started it, an admin of the demo's workspace (not of
-  the organisation), so you can open the draft project in the dashboard and change it before you
-  publish. Only a @dembrane.com account is added, and only you: an account manager who did not
-  start the demo is not. You stay in the workspace after publishing, in its member list like
-  anyone, and its admins can remove you. You take no seat there.
+  the organisation), so the draft is in your own workspace list before you publish. Only a
+  @dembrane.com account is added, and only you: an account manager who did not start the demo
+  is not. If you are the demo's contact yourself, you are not added at the build: you get your
+  place when it is published, like any contact. You stay in the workspace after publishing, in
+  its member list like anyone, and its admins can remove you. You take no seat there.
+- Outside the customer's organisation the dashboard shows you as "External" there. You can open
+  the demo project, change it in the portal editor and edit its brief. You cannot open the
+  workspace's settings, make a new project or a copy, pin a project or delete a conversation.
 - "Publish" makes the public demo link live. With "Send the sign-in invitation" on, the contact
   gets the email "Your dembrane account for {org_name}" and signs in with a code. With it off, the
   page says "No email went out; share the demo link yourself."
@@ -97,8 +101,8 @@ picks the first of their own organisations.
   stops you from building.
 - While the demo builds and while it is a draft, nobody in that organisation sees the workspace or
   the project, its owner included, and nobody gets an email or a notification about it. You do:
-  the build made you its admin, so it is in your own workspace list and the draft project opens
-  in the dashboard. Support access to it cannot be asked for.
+  the build made you its admin, so it is in your own workspace list and the demo project opens
+  for you, as above. Support access to it cannot be asked for.
 - "Email them the demo" on: publishing adds the contact to the workspace as an admin, opens the
   workspace to the organisation like any new workspace, and sends them "Your demo is ready:
   {demo_name}" in their own language, with a button that opens the demo project (they sign in
@@ -116,9 +120,10 @@ picks the first of their own organisations.
   Publishing with the email on checks the same again: if either changed since, nothing is
   published and the page says why. Publishing with the email off still works.
 - A draft never published, or published with the email off, leaves its workspace hidden from
-  the organisation. There is no button to discard it yet. When an organisation is deleted its
-  hidden demo workspace goes with it: it is not one of the workspaces the customer has to empty
-  and delete first, and they could not see it to do so.
+  the organisation. There is no button to discard it yet. You stay its only admin and cannot
+  leave it; nobody in the organisation can see it to remove you. When an organisation is
+  deleted its hidden demo workspace goes with it: it is not one of the workspaces the customer
+  has to empty and delete first, and they could not see it to do so.
 
 ## Send an offer
 

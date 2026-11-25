@@ -155,8 +155,7 @@ withdrawn. An organisation that signed up by itself does not get these tasks, un
 dembrane adds them.
 
 The person at dembrane who made the demo is a member of the demo's workspace, so they can
-help you with it. They are not a member of your organisation. A workspace admin can remove
-them, like any member.
+help you with it. A workspace admin can remove them, like any member.
 
 ### A demo in an organisation you already work in
 

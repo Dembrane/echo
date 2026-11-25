@@ -10,7 +10,7 @@ import { SALES_PORTAL } from "../src/demo/sales-portal";
 import { createDemo } from "../src/demo/service";
 import { accountManagerPayload } from "../src/events";
 import { onboardingSignals } from "../src/onboarding";
-import { ensureUser } from "../src/prospect";
+import { ensureUser, joinDemoWorkspace } from "../src/prospect";
 import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
 import { admin, call, dropDatabase, type World, world } from "./helpers";
@@ -427,6 +427,21 @@ run("demos made in echo", () => {
         (a) => a.role,
         () => null,
       );
+    /** The demo's "demo.seeded" event detail on the account's timeline. */
+    const seededDetail = async (view: K.DemoStatusT) => {
+      const rows = await w.db
+        .select({ detail: schema.account_event.detail })
+        .from(schema.account_event)
+        .where(
+          and(
+            eq(schema.account_event.orgId, view.org_id as string),
+            eq(schema.account_event.type, "demo.seeded"),
+            sql`${schema.account_event.detail}->>'demo_id' = ${view.id}`,
+          ),
+        );
+      expect(rows).toHaveLength(1);
+      return rows[0]?.detail as Record<string, unknown>;
+    };
 
     test("a new prospect: after the seed the @dembrane.com builder is an admin of the demo's workspace and opens the draft project", async () => {
       const view = await draftBy(builder.directusUserId, "maker1@voorbeeldstad.example");
@@ -454,6 +469,8 @@ run("demos made in echo", () => {
         .from(schema.project)
         .where(eq(schema.project.id, view.links.projects[0]?.project_id as string));
       expect(project?.owner).toBe((await seedOf(view.id)).contact_user_id);
+      // The account's timeline says a dembrane person joined the customer's workspace.
+      expect((await seededDetail(view)).staff_member_added_to_workspace).toBe(builder.appUserId);
     });
 
     test("a builder whose address is not @dembrane.com gets no place", async () => {
@@ -465,6 +482,7 @@ run("demos made in echo", () => {
         .from(schema.workspace_membership)
         .where(eq(schema.workspace_membership.workspace_id, workspace_id));
       expect(rows).toEqual([]);
+      expect(await seededDetail(view)).not.toHaveProperty("staff_member_added_to_workspace");
     });
 
     test("a demo in staff's shared demo workspace adds nobody there", async () => {
@@ -530,6 +548,57 @@ run("demos made in echo", () => {
       const { workspace_id } = await seedOf(view.id);
       expect((await publish(view.id)).status).toBe(200);
       expect(await placesIn(workspace_id, "maker5@voorbeeldstad.example")).toEqual([ADMIN_PLACE]);
+      expect(await placesIn(workspace_id, builder.email)).toEqual([ADMIN_PLACE]);
+    });
+
+    test("a builder who is also the demo's contact is held like any contact, and joins at release", async () => {
+      const self = await w.db.transaction((tx) =>
+        ensureUser(tx, {
+          email: "maker-self@dembrane.com",
+          name: "Self Maker",
+          passwordHash: null,
+          nowIso: w.clock.now.toISOString(),
+        }),
+      );
+      const view = await draftBy(self.userId, "maker-self@dembrane.com");
+      const seed = (await load(view.id))?.seed as { workspace_id: string; contact_held: boolean };
+      expect(seed.contact_held).toBe(true);
+      expect(await placesIn(seed.workspace_id, "maker-self@dembrane.com")).toEqual([]);
+      expect(await seededDetail(view)).not.toHaveProperty("staff_member_added_to_workspace");
+      expect((await publish(view.id)).status).toBe(200);
+      expect(await placesIn(seed.workspace_id, "maker-self@dembrane.com")).toEqual([ADMIN_PLACE]);
+      expect(
+        (await store.members(w.db, view.org_id as string)).find(
+          (m) => m.appUserId === self.appUserId,
+        )?.role,
+      ).toBe("admin");
+    });
+
+    test("two runs adding the same person at once leave one row: the second waits for the first", async () => {
+      const view = await draftBy(w.people.staff.directusUserId, "maker6@voorbeeldstad.example");
+      const { workspace_id } = await seedOf(view.id);
+      const orgId = view.org_id as string;
+      const at = w.clock.now.toISOString();
+      let commitFirst: () => void = () => {};
+      let firstJoined: () => void = () => {};
+      const joined = new Promise<void>((r) => {
+        firstJoined = r;
+      });
+      const first = w.db.transaction(async (tx) => {
+        await joinDemoWorkspace(tx, orgId, workspace_id, builder.appUserId as string, at);
+        firstJoined();
+        await new Promise<void>((r) => {
+          commitFirst = r;
+        });
+      });
+      await joined;
+      const second = w.db.transaction((tx) =>
+        joinDemoWorkspace(tx, orgId, workspace_id, builder.appUserId as string, at),
+      );
+      // Without the lock the second would insert now, before the first commits.
+      await new Promise((r) => setTimeout(r, 300));
+      commitFirst();
+      await Promise.all([first, second]);
       expect(await placesIn(workspace_id, builder.email)).toEqual([ADMIN_PLACE]);
     });
   });
