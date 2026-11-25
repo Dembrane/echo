@@ -103,7 +103,8 @@ export function Explainer({
 			withArrow
 		>
 			{inline ? (
-				<span
+				<Box
+					component="span"
 					onMouseEnter={() => later(true)}
 					onMouseLeave={() => later(false)}
 				>
