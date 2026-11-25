@@ -24,6 +24,14 @@ msgstr ""
 #~ msgid "dashboard.dembrane.concrete.beta"
 #~ msgstr "Beta"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:127
+msgid "{asking} in this project goes to Google in the EU, billed on top of your plan, about EUR {amount} a month at your last 30 days of use."
+msgstr "{asking} in diesem Projekt geht an Google in der EU und wird zusätzlich zu Ihrem Tarif abgerechnet, basierend auf Ihrer Nutzung der letzten 30 Tage etwa {amount} EUR pro Monat."
+
+#: src/components/project/advanced/ProjectAiProvider.tsx:133
+msgid "{asking} in this project goes to Google in the EU, billed on top of your plan."
+msgstr "{asking} in diesem Projekt geht an Google in der EU und wird zusätzlich zu Ihrem Tarif abgerechnet."
+
 #: src/components/project/portal-editor/sectionLabels.ts:31
 msgid "A question from dembrane, when a group asks for one, to go deeper."
 msgstr "Eine Frage von dembrane, um tiefer zu gehen, wenn eine Gruppe danach fragt."
@@ -44,7 +52,7 @@ msgstr "Über die Vorschau"
 msgid "About Try it"
 msgstr "Über Ausprobieren"
 
-#: src/components/project/advanced/ProjectAiProvider.tsx:60
+#: src/components/project/advanced/ProjectAiProvider.tsx:107
 msgid "Account default"
 msgstr "Konto-Standard"
 
@@ -64,8 +72,7 @@ msgstr "Erweitert (Tipps und Best Practices)"
 msgid "After"
 msgstr "Danach"
 
-#: src/components/project/advanced/ProjectAiProvider.tsx:37
-#: src/components/project/advanced/ProjectAiProvider.tsx:43
+#: src/components/project/advanced/ProjectAiProvider.tsx:74
 msgid "AI provider"
 msgstr "KI-Anbieter"
 
@@ -341,8 +348,8 @@ msgid "Name and tags"
 msgstr "Name und Tags"
 
 #: src/components/project/advanced/ProjectAiProvider.tsx:75
-msgid "New conversations and all analysis in this project go to Google in the EU, billed per use."
-msgstr "Neue Gespräche und alle Analysen in diesem Projekt gehen an Google in der EU, abgerechnet nach Nutzung."
+#~ msgid "New conversations and all analysis in this project go to Google in the EU, billed per use."
+#~ msgstr "Neue Gespräche und alle Analysen in diesem Projekt gehen an Google in der EU, abgerechnet nach Nutzung."
 
 #: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:223
 msgid "Next"
@@ -639,13 +646,17 @@ msgstr "Tutorial-Karten"
 msgid "Ukrainian (only ECHO features, transcription and summaries)"
 msgstr "Ukrainisch (nur ECHO-Funktionen, Transkription und Zusammenfassungen)"
 
-#: src/components/project/advanced/ProjectAiProvider.tsx:80
+#: src/components/project/advanced/ProjectAiProvider.tsx:139
 msgid "Use Google"
 msgstr "Google verwenden"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:124
+msgid "Use Google Vertex AI for {asking}?"
+msgstr "Google Vertex AI für {asking} verwenden?"
+
 #: src/components/project/advanced/ProjectAiProvider.tsx:73
-msgid "Use Google Vertex AI for this project?"
-msgstr "Google Vertex AI für dieses Projekt verwenden?"
+#~ msgid "Use Google Vertex AI for this project?"
+#~ msgstr "Google Vertex AI für dieses Projekt verwenden?"
 
 #. js-lingui-explicit-id
 #: src/components/project/portal-editor/sectionLabels.ts:15

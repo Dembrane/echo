@@ -24,6 +24,14 @@ msgstr ""
 #~ msgid "dashboard.dembrane.concrete.beta"
 #~ msgstr "Beta"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:127
+msgid "{asking} in this project goes to Google in the EU, billed on top of your plan, about EUR {amount} a month at your last 30 days of use."
+msgstr "{asking} v tomto projektu zpracovává Google v EU a účtuje se nad rámec vašeho tarifu, podle vašeho využití za posledních 30 dní zhruba {amount} EUR měsíčně."
+
+#: src/components/project/advanced/ProjectAiProvider.tsx:133
+msgid "{asking} in this project goes to Google in the EU, billed on top of your plan."
+msgstr "{asking} v tomto projektu zpracovává Google v EU a účtuje se nad rámec vašeho tarifu."
+
 #: src/components/project/portal-editor/sectionLabels.ts:31
 msgid "A question from dembrane, when a group asks for one, to go deeper."
 msgstr "Otázka od dembrane, která pomůže jít do hloubky, když o ni skupina požádá."
@@ -44,7 +52,7 @@ msgstr "O náhledu"
 msgid "About Try it"
 msgstr "O funkci Vyzkoušet"
 
-#: src/components/project/advanced/ProjectAiProvider.tsx:60
+#: src/components/project/advanced/ProjectAiProvider.tsx:107
 msgid "Account default"
 msgstr "Výchozí nastavení účtu"
 
@@ -64,8 +72,7 @@ msgstr "Pokročilé (tipy a osvědčené postupy)"
 msgid "After"
 msgstr "Potom"
 
-#: src/components/project/advanced/ProjectAiProvider.tsx:37
-#: src/components/project/advanced/ProjectAiProvider.tsx:43
+#: src/components/project/advanced/ProjectAiProvider.tsx:74
 msgid "AI provider"
 msgstr "Poskytovatel AI"
 
@@ -341,8 +348,8 @@ msgid "Name and tags"
 msgstr "Jméno a štítky"
 
 #: src/components/project/advanced/ProjectAiProvider.tsx:75
-msgid "New conversations and all analysis in this project go to Google in the EU, billed per use."
-msgstr "Nové rozhovory a veškeré analýzy v tomto projektu se zpracovávají přes Google v EU, účtováno dle využití."
+#~ msgid "New conversations and all analysis in this project go to Google in the EU, billed per use."
+#~ msgstr "Nové rozhovory a veškeré analýzy v tomto projektu se zpracovávají přes Google v EU, účtováno dle využití."
 
 #: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:223
 msgid "Next"
@@ -639,13 +646,17 @@ msgstr "Karty návodu"
 msgid "Ukrainian (only ECHO features, transcription and summaries)"
 msgstr "Ukrajinština (pouze funkce ECHO, přepis a shrnutí)"
 
-#: src/components/project/advanced/ProjectAiProvider.tsx:80
+#: src/components/project/advanced/ProjectAiProvider.tsx:139
 msgid "Use Google"
 msgstr "Použít Google"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:124
+msgid "Use Google Vertex AI for {asking}?"
+msgstr "Používat pro {asking} Google Vertex AI?"
+
 #: src/components/project/advanced/ProjectAiProvider.tsx:73
-msgid "Use Google Vertex AI for this project?"
-msgstr "Použít pro tento projekt Google Vertex AI?"
+#~ msgid "Use Google Vertex AI for this project?"
+#~ msgstr "Použít pro tento projekt Google Vertex AI?"
 
 #. js-lingui-explicit-id
 #: src/components/project/portal-editor/sectionLabels.ts:15

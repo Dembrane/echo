@@ -24,6 +24,14 @@ msgstr ""
 #~ msgid "dashboard.dembrane.concrete.beta"
 #~ msgstr "Bèta"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:127
+msgid "{asking} in this project goes to Google in the EU, billed on top of your plan, about EUR {amount} a month at your last 30 days of use."
+msgstr "{asking} in dit project gaat naar Google in de EU, gefactureerd bovenop je abonnement, ongeveer EUR {amount} per maand op basis van je gebruik in de afgelopen 30 dagen."
+
+#: src/components/project/advanced/ProjectAiProvider.tsx:133
+msgid "{asking} in this project goes to Google in the EU, billed on top of your plan."
+msgstr "{asking} in dit project gaat naar Google in de EU, gefactureerd bovenop je abonnement."
+
 #: src/components/project/portal-editor/sectionLabels.ts:31
 msgid "A question from dembrane, when a group asks for one, to go deeper."
 msgstr "Een vraag van dembrane om dieper te gaan, als een groep erom vraagt."
@@ -44,7 +52,7 @@ msgstr "Over de voorvertoning"
 msgid "About Try it"
 msgstr "Over Probeer het"
 
-#: src/components/project/advanced/ProjectAiProvider.tsx:60
+#: src/components/project/advanced/ProjectAiProvider.tsx:107
 msgid "Account default"
 msgstr "Standaard voor account"
 
@@ -64,8 +72,7 @@ msgstr "Geavanceerd (tips en best practices)"
 msgid "After"
 msgstr "Na"
 
-#: src/components/project/advanced/ProjectAiProvider.tsx:37
-#: src/components/project/advanced/ProjectAiProvider.tsx:43
+#: src/components/project/advanced/ProjectAiProvider.tsx:74
 msgid "AI provider"
 msgstr "AI-provider"
 
@@ -341,8 +348,8 @@ msgid "Name and tags"
 msgstr "Naam en tags"
 
 #: src/components/project/advanced/ProjectAiProvider.tsx:75
-msgid "New conversations and all analysis in this project go to Google in the EU, billed per use."
-msgstr "Nieuwe gesprekken en alle analyses in dit project gaan naar Google in de EU, gefactureerd per gebruik."
+#~ msgid "New conversations and all analysis in this project go to Google in the EU, billed per use."
+#~ msgstr "Nieuwe gesprekken en alle analyses in dit project gaan naar Google in de EU, gefactureerd per gebruik."
 
 #: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:223
 msgid "Next"
@@ -639,13 +646,17 @@ msgstr "Uitlegkaarten"
 msgid "Ukrainian (only ECHO features, transcription and summaries)"
 msgstr "Oekraïens (alleen ECHO-functies, transcriptie en samenvattingen)"
 
-#: src/components/project/advanced/ProjectAiProvider.tsx:80
+#: src/components/project/advanced/ProjectAiProvider.tsx:139
 msgid "Use Google"
 msgstr "Google gebruiken"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:124
+msgid "Use Google Vertex AI for {asking}?"
+msgstr "Google Vertex AI gebruiken voor {asking}?"
+
 #: src/components/project/advanced/ProjectAiProvider.tsx:73
-msgid "Use Google Vertex AI for this project?"
-msgstr "Google Vertex AI gebruiken voor dit project?"
+#~ msgid "Use Google Vertex AI for this project?"
+#~ msgstr "Google Vertex AI gebruiken voor dit project?"
 
 #. js-lingui-explicit-id
 #: src/components/project/portal-editor/sectionLabels.ts:15

@@ -825,6 +825,10 @@ msgstr "{m}m"
 #~ msgid "{n} min"
 #~ msgstr "{n} min"
 
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:46
+msgid "{name} for {what}"
+msgstr "{name} voor {what}"
+
 #: src/components/workspace/OrganisationUsageRollup.tsx:987
 msgid "{name} has used this month's free recording hours. Recording is paused until the month resets."
 msgstr "{name} heeft de gratis opname-uren van deze maand verbruikt. Opnemen is gepauzeerd totdat de nieuwe maand begint."
@@ -895,20 +899,32 @@ msgid "{pickedCount, plural, one {Using # conversation} other {Using # conversat
 msgstr "{pickedCount, plural, one {# gesprek in gebruik} other {# gesprekken in gebruik}}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:21
-msgid "{provider} added by Dembrane, {on}"
-msgstr "{provider} toegevoegd door dembrane, {on}"
+#~ msgid "{provider} added by Dembrane, {on}"
+#~ msgstr "{provider} toegevoegd door dembrane, {on}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:20
-msgid "{provider} added by Dembrane, {on}, at your request of {asked}"
-msgstr "{provider} toegevoegd door dembrane, {on}, op jouw verzoek van {asked}"
+#~ msgid "{provider} added by Dembrane, {on}, at your request of {asked}"
+#~ msgstr "{provider} toegevoegd door dembrane, {on}, op jouw verzoek van {asked}"
+
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:35
+msgid "{provider} enabled for {job}"
+msgstr "{provider} ingeschakeld voor {job}"
+
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:37
+msgid "{provider} is now the default for {job}"
+msgstr "{provider} is nu de standaard voor {job}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:25
-msgid "{provider} removed by Dembrane, {on}"
-msgstr "{provider} verwijderd door dembrane, {on}"
+#~ msgid "{provider} removed by Dembrane, {on}"
+#~ msgstr "{provider} verwijderd door dembrane, {on}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:24
-msgid "{provider} removed by Dembrane, {on}, at your request of {asked}"
-msgstr "{provider} verwijderd door dembrane, {on}, op jouw verzoek van {asked}"
+#~ msgid "{provider} removed by Dembrane, {on}, at your request of {asked}"
+#~ msgstr "{provider} verwijderd door dembrane, {on}, op jouw verzoek van {asked}"
+
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:36
+msgid "{provider} removed from {job}"
+msgstr "{provider} verwijderd van {job}"
 
 #: src/components/results/resultContent.ts:262
 msgid "{quotes, plural, one {# quote from {name}} other {# quotes from {name}}}"
@@ -1321,6 +1337,10 @@ msgstr "een werkruimte"
 #: src/features/sidebar/views/project/ProjectPortalView.tsx:21
 msgid "About"
 msgstr "Over"
+
+#: src/components/ai-provider/hooks.ts:170
+msgid "About EUR {n} a month at your last 30 days of use, billed on top"
+msgstr "Ongeveer EUR {n} per maand op basis van je laatste 30 dagen gebruik, apart gefactureerd"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:432
 msgid "About the suggested project update: {hostNote}"
@@ -1941,7 +1961,7 @@ msgstr "AI-functies en nieuwe opnames zijn gepauzeerd tot volgende maand."
 #~ msgstr "AI-functies en nieuwe opnames zijn gepauzeerd tot volgende maand. Upgrade om nu verder te gaan."
 
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:64
-#: src/components/ai-provider/OrgAiProviderPanel.tsx:46
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:93
 msgid "AI provider"
 msgstr "AI-provider"
 
@@ -2201,6 +2221,7 @@ msgid "Analyse now"
 msgstr "Nu analyseren"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:899
+#: src/components/ai-provider/hooks.ts:146
 msgid "Analysis"
 msgstr "Analyse"
 
@@ -2968,8 +2989,8 @@ msgid "Billed on its own plan, not your organisation's. Manage it from this work
 msgstr "Wordt op een eigen abonnement gefactureerd, niet dat van je organisatie. Beheer dit via de facturering van deze werkruimte."
 
 #: src/components/ai-provider/ProviderCard.tsx:91
-msgid "Billed per use"
-msgstr "Gefactureerd per gebruik"
+#~ msgid "Billed per use"
+#~ msgstr "Gefactureerd per gebruik"
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:375
 msgid "Billed separately"
@@ -5000,7 +5021,7 @@ msgstr "Deep Dive"
 #: src/routes/admin/AdminSettingsRoute.tsx:3077
 #: src/routes/admin/AdminSettingsRoute.tsx:3093
 #: src/components/chat/CanvasSuggestionCard.tsx:106
-#: src/components/ai-provider/OrgAiProviderPanel.tsx:61
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:118
 msgid "Default"
 msgstr "Standaard"
 
@@ -5016,12 +5037,12 @@ msgid "Default {defaultNodes}"
 msgstr "Standaard {defaultNodes}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:28
-msgid "Default changed to {provider} by Dembrane, {on}"
-msgstr "Standaard gewijzigd naar {provider} door dembrane, {on}"
+#~ msgid "Default changed to {provider} by Dembrane, {on}"
+#~ msgstr "Standaard gewijzigd naar {provider} door dembrane, {on}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:27
-msgid "Default changed to {provider} by Dembrane, {on}, at your request of {asked}"
-msgstr "Standaard gewijzigd naar {provider} door dembrane, {on}, op jouw verzoek van {asked}"
+#~ msgid "Default changed to {provider} by Dembrane, {on}, at your request of {asked}"
+#~ msgstr "Standaard gewijzigd naar {provider} door dembrane, {on}, op jouw verzoek van {asked}"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:271
 msgid "Default: {defaultValue}"
@@ -5877,7 +5898,7 @@ msgstr "Tweestapsverificatie inschakelen"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:293
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:927
-#: src/components/ai-provider/OrgAiProviderPanel.tsx:63
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:120
 msgid "Enabled"
 msgstr "Ingeschakeld"
 
@@ -6017,6 +6038,14 @@ msgstr "EU"
 #: src/lib/tiers.ts:104
 msgid "EU hosted LLMs included"
 msgstr "In de EU gehoste taalmodellen inbegrepen"
+
+#: src/components/ai-provider/hooks.ts:178
+msgid "EUR {n} per 100 questions"
+msgstr "EUR {n} per 100 vragen"
+
+#: src/components/ai-provider/hooks.ts:174
+msgid "EUR {n} per hour of audio"
+msgstr "EUR {n} per uur audio"
 
 #: src/components/pricing/questions.ts:217
 msgid "Event help from the dembrane team"
@@ -7144,7 +7173,7 @@ msgstr "Doel opgeslagen"
 msgid "Good finding"
 msgstr "Goede bevinding"
 
-#: src/components/ai-provider/ProviderCard.tsx:97
+#: src/components/ai-provider/ProviderCard.tsx:96
 msgid "Good for English and Dutch"
 msgstr "Goed voor Engels en Nederlands"
 
@@ -7152,7 +7181,7 @@ msgstr "Goed voor Engels en Nederlands"
 msgid "Good response"
 msgstr "Goed antwoord"
 
-#: src/components/ai-provider/hooks.ts:104
+#: src/components/ai-provider/hooks.ts:143
 msgid "Google Vertex AI"
 msgstr "Google Vertex AI"
 
@@ -7604,6 +7633,10 @@ msgstr "Inbegrepen uren opgebruikt"
 #: src/components/workspace/OrganisationUsageRollup.tsx:343
 msgid "Included hours used up this month"
 msgstr "Inbegrepen uren deze maand opgebruikt"
+
+#: src/components/ai-provider/hooks.ts:167
+msgid "Included in your plan"
+msgstr "Inbegrepen in je abonnement"
 
 #: src/components/map/attributes.ts:381
 msgid "Inconclusive"
@@ -10142,7 +10175,7 @@ msgstr "Niet beoordeeld"
 msgid "participant.ai_unavailable"
 msgstr "Nu niet beschikbaar"
 
-#: src/components/ai-provider/OrgAiProviderPanel.tsx:59
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:116
 msgid "Not enabled"
 msgstr "Niet ingeschakeld"
 
@@ -10603,7 +10636,7 @@ msgstr "Kaart openen"
 msgid "Open menu"
 msgstr "Menu openen"
 
-#: src/components/ai-provider/ProviderCard.tsx:96
+#: src/components/ai-provider/ProviderCard.tsx:95
 msgid "Open models: {names}"
 msgstr "Open modellen: {names}"
 
@@ -11418,6 +11451,10 @@ msgstr "Controleer later of contacteer de eigenaar van het project voor meer inf
 #: src/components/form/SaveStatus.tsx:39
 msgid "Please check your inputs for errors."
 msgstr "Controleer uw invoer voor fouten."
+
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:45
+msgid "Please enable {name} for {what} on our account."
+msgstr "Schakel alsjeblieft {name} in voor {what} op ons account."
 
 #: src/components/project/ProjectQRCode.tsx:97
 msgid "Please enable participation to enable sharing"
@@ -12880,7 +12917,7 @@ msgstr "Rapporten"
 msgid "Reports publish, schedule and notify as expected."
 msgstr "Rapporten worden gepubliceerd, ingepland en gemeld zoals verwacht."
 
-#: src/components/ai-provider/ProviderCard.tsx:207
+#: src/components/ai-provider/ProviderCard.tsx:223
 msgid "Request"
 msgstr "Aanvragen"
 
@@ -12957,6 +12994,7 @@ msgstr "Verzoek ingetrokken."
 
 #: src/components/training/StaffTrainingPanel.tsx:125
 #: src/components/training/StaffTrainingPanel.tsx:152
+#: src/components/ai-provider/ProviderCard.tsx:223
 msgid "Requested"
 msgstr "Aangevraagd"
 
@@ -13360,7 +13398,7 @@ msgid "Runs"
 msgstr "Runs"
 
 #: src/components/ai-provider/ProviderCard.tsx:88
-#: src/components/ai-provider/ProviderCard.tsx:95
+#: src/components/ai-provider/ProviderCard.tsx:94
 msgid "Runs in the EU"
 msgstr "Draait in de EU"
 
@@ -13495,7 +13533,7 @@ msgstr "Zeg het in je eigen woorden. Typ, of druk op opnemen en praat."
 msgid "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 msgstr "Vertel waar de sessie over gaat, wie er meedoen en waar; je kunt een agenda of uitnodiging plakken. dembrane gebruikt dit om chatantwoorden, reacties aan deelnemers en Popcorn bij jouw vraag te houden, en om kernbegrippen voor te stellen."
 
-#: src/components/ai-provider/hooks.ts:104
+#: src/components/ai-provider/hooks.ts:143
 msgid "Scaleway"
 msgstr "Scaleway"
 
@@ -16323,6 +16361,10 @@ msgstr "Hiermee zet je de training op geannuleerd. Je kunt hem later via hetzelf
 msgid "This month"
 msgstr "Deze maand"
 
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:148
+msgid "This month: Scaleway included, Google EUR {google}"
+msgstr "Deze maand: Scaleway inbegrepen, Google EUR {google}"
+
 #: src/components/report/reportError.ts:9
 msgid "This month's AI budget is used up."
 msgstr "Het AI-budget voor deze maand is op."
@@ -16936,8 +16978,9 @@ msgstr "transcriptfragment"
 msgid "Transcript retrieval and conversation summaries finish before dependent work continues."
 msgstr "Het ophalen van transcripties en gesprekssamenvattingen wordt afgerond voordat afhankelijke stappen doorgaan."
 
-#~ msgid "Transcription"
-#~ msgstr "Transcriptie"
+#: src/components/ai-provider/hooks.ts:146
+msgid "Transcription"
+msgstr "Transcriptie"
 
 #: src/features/processes/copy.ts:11
 msgid "Transcription done"
@@ -18047,7 +18090,7 @@ msgstr "We konden je betaalmethode niet belasten"
 msgid "We couldn't find the page you were looking for. It may have moved."
 msgstr "We konden de pagina die je zocht niet vinden. Misschien is hij verplaatst."
 
-#: src/components/ai-provider/OrgAiProviderPanel.tsx:39
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:71
 msgid "We couldn't load the AI provider."
 msgstr "We konden de AI-provider niet laden."
 

@@ -24,6 +24,14 @@ msgstr ""
 #~ msgid "dashboard.dembrane.concrete.beta"
 #~ msgstr "Beta"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:127
+msgid "{asking} in this project goes to Google in the EU, billed on top of your plan, about EUR {amount} a month at your last 30 days of use."
+msgstr "{asking} in this project goes to Google in the EU, billed on top of your plan, about EUR {amount} a month at your last 30 days of use."
+
+#: src/components/project/advanced/ProjectAiProvider.tsx:133
+msgid "{asking} in this project goes to Google in the EU, billed on top of your plan."
+msgstr "{asking} in this project goes to Google in the EU, billed on top of your plan."
+
 #: src/components/project/portal-editor/sectionLabels.ts:31
 msgid "A question from dembrane, when a group asks for one, to go deeper."
 msgstr "A question from dembrane, when a group asks for one, to go deeper."
@@ -44,7 +52,7 @@ msgstr "About the preview"
 msgid "About Try it"
 msgstr "About Try it"
 
-#: src/components/project/advanced/ProjectAiProvider.tsx:60
+#: src/components/project/advanced/ProjectAiProvider.tsx:107
 msgid "Account default"
 msgstr "Account default"
 
@@ -64,8 +72,7 @@ msgstr "Advanced (tips and best practices)"
 msgid "After"
 msgstr "After"
 
-#: src/components/project/advanced/ProjectAiProvider.tsx:37
-#: src/components/project/advanced/ProjectAiProvider.tsx:43
+#: src/components/project/advanced/ProjectAiProvider.tsx:74
 msgid "AI provider"
 msgstr "AI provider"
 
@@ -341,8 +348,8 @@ msgid "Name and tags"
 msgstr "Name and tags"
 
 #: src/components/project/advanced/ProjectAiProvider.tsx:75
-msgid "New conversations and all analysis in this project go to Google in the EU, billed per use."
-msgstr "New conversations and all analysis in this project go to Google in the EU, billed per use."
+#~ msgid "New conversations and all analysis in this project go to Google in the EU, billed per use."
+#~ msgstr "New conversations and all analysis in this project go to Google in the EU, billed per use."
 
 #: src/components/project/portal-editor/OptionStepper/OptionStepper.tsx:223
 msgid "Next"
@@ -640,13 +647,17 @@ msgstr "Tutorial cards"
 msgid "Ukrainian (only ECHO features, transcription and summaries)"
 msgstr "Ukrainian (only ECHO features, transcription and summaries)"
 
-#: src/components/project/advanced/ProjectAiProvider.tsx:80
+#: src/components/project/advanced/ProjectAiProvider.tsx:139
 msgid "Use Google"
 msgstr "Use Google"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:124
+msgid "Use Google Vertex AI for {asking}?"
+msgstr "Use Google Vertex AI for {asking}?"
+
 #: src/components/project/advanced/ProjectAiProvider.tsx:73
-msgid "Use Google Vertex AI for this project?"
-msgstr "Use Google Vertex AI for this project?"
+#~ msgid "Use Google Vertex AI for this project?"
+#~ msgstr "Use Google Vertex AI for this project?"
 
 #. js-lingui-explicit-id
 #: src/components/project/portal-editor/sectionLabels.ts:15

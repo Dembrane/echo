@@ -825,6 +825,10 @@ msgstr "{m} Min."
 #~ msgid "{n} min"
 #~ msgstr "{n} Min."
 
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:46
+msgid "{name} for {what}"
+msgstr "{name} für {what}"
+
 #: src/components/workspace/OrganisationUsageRollup.tsx:987
 msgid "{name} has used this month's free recording hours. Recording is paused until the month resets."
 msgstr "{name} hat die kostenlosen Aufnahmestunden dieses Monats aufgebraucht. Die Aufnahme wird pausiert, bis der Monat zurückgesetzt wird."
@@ -895,20 +899,32 @@ msgid "{pickedCount, plural, one {Using # conversation} other {Using # conversat
 msgstr "{pickedCount, plural, one {# Gespräch wird verwendet} other {# Gespräche werden verwendet}}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:21
-msgid "{provider} added by Dembrane, {on}"
-msgstr "{provider} von dembrane hinzugefügt am {on}"
+#~ msgid "{provider} added by Dembrane, {on}"
+#~ msgstr "{provider} von dembrane hinzugefügt am {on}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:20
-msgid "{provider} added by Dembrane, {on}, at your request of {asked}"
-msgstr "{provider} von dembrane hinzugefügt am {on}, auf Ihre Anfrage vom {asked}"
+#~ msgid "{provider} added by Dembrane, {on}, at your request of {asked}"
+#~ msgstr "{provider} von dembrane hinzugefügt am {on}, auf Ihre Anfrage vom {asked}"
+
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:35
+msgid "{provider} enabled for {job}"
+msgstr "{provider} für {job} aktiviert"
+
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:37
+msgid "{provider} is now the default for {job}"
+msgstr "{provider} ist jetzt die Standardauswahl für {job}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:25
-msgid "{provider} removed by Dembrane, {on}"
-msgstr "{provider} von dembrane entfernt am {on}"
+#~ msgid "{provider} removed by Dembrane, {on}"
+#~ msgstr "{provider} von dembrane entfernt am {on}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:24
-msgid "{provider} removed by Dembrane, {on}, at your request of {asked}"
-msgstr "{provider} von dembrane entfernt am {on}, auf Ihre Anfrage vom {asked}"
+#~ msgid "{provider} removed by Dembrane, {on}, at your request of {asked}"
+#~ msgstr "{provider} von dembrane entfernt am {on}, auf Ihre Anfrage vom {asked}"
+
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:36
+msgid "{provider} removed from {job}"
+msgstr "{provider} für {job} entfernt"
 
 #: src/components/results/resultContent.ts:262
 msgid "{quotes, plural, one {# quote from {name}} other {# quotes from {name}}}"
@@ -1321,6 +1337,10 @@ msgstr "ein Arbeitsbereich"
 #: src/features/sidebar/views/project/ProjectPortalView.tsx:21
 msgid "About"
 msgstr "Angaben"
+
+#: src/components/ai-provider/hooks.ts:170
+msgid "About EUR {n} a month at your last 30 days of use, billed on top"
+msgstr "Ca. {n} EUR pro Monat basierend auf Ihren letzten 30 Tagen, zusätzlich abgerechnet"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:432
 msgid "About the suggested project update: {hostNote}"
@@ -1941,7 +1961,7 @@ msgstr "KI-Funktionen und neue Aufnahmen sind bis zum nächsten Monat pausiert."
 #~ msgstr "KI-Funktionen und neue Aufnahmen sind bis zum nächsten Monat pausiert. Upgraden Sie jetzt, um direkt weiterzumachen."
 
 #: src/features/sidebar/views/org/OrgSettingsView.tsx:64
-#: src/components/ai-provider/OrgAiProviderPanel.tsx:46
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:93
 msgid "AI provider"
 msgstr "KI-Anbieter"
 
@@ -2201,6 +2221,7 @@ msgid "Analyse now"
 msgstr "Jetzt analysieren"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:899
+#: src/components/ai-provider/hooks.ts:146
 msgid "Analysis"
 msgstr "Analyse"
 
@@ -2971,8 +2992,8 @@ msgid "Billed on its own plan, not your organisation's. Manage it from this work
 msgstr "Wird über einen eigenen Tarif abgerechnet, nicht über den deiner Organisation. Verwalte ihn über die Abrechnung dieses Arbeitsbereichs."
 
 #: src/components/ai-provider/ProviderCard.tsx:91
-msgid "Billed per use"
-msgstr "Abrechnung nach Nutzung"
+#~ msgid "Billed per use"
+#~ msgstr "Abrechnung nach Nutzung"
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:375
 msgid "Billed separately"
@@ -5003,7 +5024,7 @@ msgstr "Deep Dive"
 #: src/routes/admin/AdminSettingsRoute.tsx:3077
 #: src/routes/admin/AdminSettingsRoute.tsx:3093
 #: src/components/chat/CanvasSuggestionCard.tsx:106
-#: src/components/ai-provider/OrgAiProviderPanel.tsx:61
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:118
 msgid "Default"
 msgstr "Standard"
 
@@ -5019,12 +5040,12 @@ msgid "Default {defaultNodes}"
 msgstr "Standard {defaultNodes}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:28
-msgid "Default changed to {provider} by Dembrane, {on}"
-msgstr "Standard von dembrane geändert zu {provider} am {on}"
+#~ msgid "Default changed to {provider} by Dembrane, {on}"
+#~ msgstr "Standard von dembrane geändert zu {provider} am {on}"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:27
-msgid "Default changed to {provider} by Dembrane, {on}, at your request of {asked}"
-msgstr "Standard von dembrane geändert zu {provider} am {on}, auf Ihre Anfrage vom {asked}"
+#~ msgid "Default changed to {provider} by Dembrane, {on}, at your request of {asked}"
+#~ msgstr "Standard von dembrane geändert zu {provider} am {on}, auf Ihre Anfrage vom {asked}"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:271
 msgid "Default: {defaultValue}"
@@ -5880,7 +5901,7 @@ msgstr "Zwei-Faktor-Authentifizierung aktivieren"
 
 #: src/components/settings/TwoFactorSettingsCard.tsx:293
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:927
-#: src/components/ai-provider/OrgAiProviderPanel.tsx:63
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:120
 msgid "Enabled"
 msgstr "Aktiviert"
 
@@ -6020,6 +6041,14 @@ msgstr "EU"
 #: src/lib/tiers.ts:104
 msgid "EU hosted LLMs included"
 msgstr "In der EU gehostete LLMs inbegriffen"
+
+#: src/components/ai-provider/hooks.ts:178
+msgid "EUR {n} per 100 questions"
+msgstr "{n} EUR pro 100 Fragen"
+
+#: src/components/ai-provider/hooks.ts:174
+msgid "EUR {n} per hour of audio"
+msgstr "{n} EUR pro Audiostunde"
 
 #: src/components/pricing/questions.ts:217
 msgid "Event help from the dembrane team"
@@ -7147,7 +7176,7 @@ msgstr "Ziel gespeichert"
 msgid "Good finding"
 msgstr "Gute Erkenntnis"
 
-#: src/components/ai-provider/ProviderCard.tsx:97
+#: src/components/ai-provider/ProviderCard.tsx:96
 msgid "Good for English and Dutch"
 msgstr "Gut für Englisch und Niederländisch"
 
@@ -7155,7 +7184,7 @@ msgstr "Gut für Englisch und Niederländisch"
 msgid "Good response"
 msgstr "Gute Antwort"
 
-#: src/components/ai-provider/hooks.ts:104
+#: src/components/ai-provider/hooks.ts:143
 msgid "Google Vertex AI"
 msgstr "Google Vertex AI"
 
@@ -7607,6 +7636,10 @@ msgstr "Enthaltene Stunden aufgebraucht"
 #: src/components/workspace/OrganisationUsageRollup.tsx:343
 msgid "Included hours used up this month"
 msgstr "Enthaltene Stunden in diesem Monat aufgebraucht"
+
+#: src/components/ai-provider/hooks.ts:167
+msgid "Included in your plan"
+msgstr "In Ihrem Tarif enthalten"
 
 #: src/components/map/attributes.ts:381
 msgid "Inconclusive"
@@ -10145,7 +10178,7 @@ msgstr "Nicht bewertet"
 msgid "participant.ai_unavailable"
 msgstr "Zurzeit nicht verfügbar"
 
-#: src/components/ai-provider/OrgAiProviderPanel.tsx:59
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:116
 msgid "Not enabled"
 msgstr "Nicht aktiviert"
 
@@ -10606,7 +10639,7 @@ msgstr "Karte öffnen"
 msgid "Open menu"
 msgstr "Menü öffnen"
 
-#: src/components/ai-provider/ProviderCard.tsx:96
+#: src/components/ai-provider/ProviderCard.tsx:95
 msgid "Open models: {names}"
 msgstr "Offene Modelle: {names}"
 
@@ -11421,6 +11454,10 @@ msgstr "Bitte prüfe später erneut oder wende dich an den Projektbesitzer für 
 #: src/components/form/SaveStatus.tsx:39
 msgid "Please check your inputs for errors."
 msgstr "Bitte überprüfe deine Eingaben auf Fehler."
+
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:45
+msgid "Please enable {name} for {what} on our account."
+msgstr "Bitte aktivieren Sie {name} für {what} in unserem Konto."
 
 #: src/components/project/ProjectQRCode.tsx:97
 msgid "Please enable participation to enable sharing"
@@ -12883,7 +12920,7 @@ msgstr "Berichte"
 msgid "Reports publish, schedule and notify as expected."
 msgstr "Berichte werden wie erwartet veröffentlicht, geplant und gemeldet."
 
-#: src/components/ai-provider/ProviderCard.tsx:207
+#: src/components/ai-provider/ProviderCard.tsx:223
 msgid "Request"
 msgstr "Anfragen"
 
@@ -12960,6 +12997,7 @@ msgstr "Anfrage zurückgezogen."
 
 #: src/components/training/StaffTrainingPanel.tsx:125
 #: src/components/training/StaffTrainingPanel.tsx:152
+#: src/components/ai-provider/ProviderCard.tsx:223
 msgid "Requested"
 msgstr "Angefragt"
 
@@ -13363,7 +13401,7 @@ msgid "Runs"
 msgstr "Durchläufe"
 
 #: src/components/ai-provider/ProviderCard.tsx:88
-#: src/components/ai-provider/ProviderCard.tsx:95
+#: src/components/ai-provider/ProviderCard.tsx:94
 msgid "Runs in the EU"
 msgstr "Läuft in der EU"
 
@@ -13498,7 +13536,7 @@ msgstr "Sage es mit deinen eigenen Worten. Tippe, oder drücke auf Aufnahme und 
 msgid "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 msgstr "Sage, worum es in der Sitzung geht, wer teilnimmt und wo; du kannst eine Tagesordnung oder Einladung einfügen. dembrane nutzt das, damit Chat-Antworten, Antworten an Teilnehmende und Popcorn bei deiner Frage bleiben, und um Schlüsselbegriffe vorzuschlagen."
 
-#: src/components/ai-provider/hooks.ts:104
+#: src/components/ai-provider/hooks.ts:143
 msgid "Scaleway"
 msgstr "Scaleway"
 
@@ -16327,6 +16365,10 @@ msgstr "Damit wird die Schulung als abgesagt markiert. Du kannst sie später üb
 msgid "This month"
 msgstr "Diesen Monat"
 
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:148
+msgid "This month: Scaleway included, Google EUR {google}"
+msgstr "Diesen Monat: Scaleway inklusive, Google {google} EUR"
+
 #: src/components/report/reportError.ts:9
 msgid "This month's AI budget is used up."
 msgstr "Das KI-Guthaben für diesen Monat ist aufgebraucht."
@@ -16940,8 +16982,9 @@ msgstr "Transkriptauszug"
 msgid "Transcript retrieval and conversation summaries finish before dependent work continues."
 msgstr "Das Abrufen von Transkripten und Gesprächszusammenfassungen wird abgeschlossen, bevor abhängige Aufgaben fortgesetzt werden."
 
-#~ msgid "Transcription"
-#~ msgstr "Transkription"
+#: src/components/ai-provider/hooks.ts:146
+msgid "Transcription"
+msgstr "Transkription"
 
 #: src/features/processes/copy.ts:11
 msgid "Transcription done"
@@ -18051,7 +18094,7 @@ msgstr "Deine Zahlungsmethode konnte nicht belastet werden"
 msgid "We couldn't find the page you were looking for. It may have moved."
 msgstr "Wir konnten die gesuchte Seite nicht finden. Möglicherweise wurde sie verschoben."
 
-#: src/components/ai-provider/OrgAiProviderPanel.tsx:39
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:71
 msgid "We couldn't load the AI provider."
 msgstr "Der KI-Anbieter konnte nicht geladen werden."
 
