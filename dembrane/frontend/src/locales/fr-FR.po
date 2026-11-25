@@ -97,10 +97,9 @@ msgstr "(inconnu)"
 msgid "(You)"
 msgstr "(Vous)"
 
-#. placeholder {0}: joinable.length
 #: src/components/workspace/DiscoverableWorkspaces.tsx:257
-msgid "{0, plural, one {(# workspace)} other {(# workspaces)}}"
-msgstr "{0, plural, one {(# espace de travail)} other {(# espaces de travail)}}"
+#~ msgid "{0, plural, one {(# workspace)} other {(# workspaces)}}"
+#~ msgstr "{0, plural, one {(# espace de travail)} other {(# espaces de travail)}}"
 
 #. placeholder {0}: rows.length
 #: src/routes/admin/AdminSettingsRoute.tsx:2332
@@ -165,8 +164,7 @@ msgstr "{0, plural, one {# en direct} other {# en direct}}"
 #. placeholder {0}: workspace.member_count
 #. placeholder {0}: ws.member_count
 #: src/routes/project/ProjectsHome.tsx:270
-#: src/components/workspace/DiscoverableWorkspaces.tsx:313
-#: src/components/workspace/DiscoverableWorkspaces.tsx:369
+#: src/components/workspace/DiscoverableWorkspaces.tsx:278
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# membre} other {# membres}}"
 
@@ -228,7 +226,7 @@ msgstr "{0, plural, one {# place payée} other {# places payées}} pour cette p�
 #. placeholder {0}: selection.count
 #. placeholder {0}: selectedIds.length
 #: src/routes/project/ProjectsHome.tsx:425
-#: src/components/workspace/DiscoverableWorkspaces.tsx:338
+#: src/components/workspace/DiscoverableWorkspaces.tsx:370
 msgid "{0, plural, one {# selected} other {# selected}}"
 msgstr "{0, plural, one {# sélectionné} other {# sélectionnés}}"
 
@@ -376,7 +374,7 @@ msgid "{0} accounts, {1} workspaces, {2} active"
 msgstr "{0} comptes, {1} espaces de travail, {2} actifs"
 
 #. placeholder {0}: displayRole(reached[0].role as string)
-#: src/routes/organisation/OrganisationRoute.tsx:1809
+#: src/routes/organisation/OrganisationRoute.tsx:1816
 msgid "{0} across all"
 msgstr "{0} partout"
 
@@ -456,7 +454,7 @@ msgstr "{0} ne fait pas encore partie de cet espace de travail. Demandez à un a
 #. placeholder {0}: organisation.name
 #. placeholder {0}: workspace.name
 #: src/routes/organisation/OrganisationRoute.tsx:764
-#: src/routes/organisation/OrganisationRoute.tsx:1622
+#: src/routes/organisation/OrganisationRoute.tsx:1629
 msgid "{0} logo"
 msgstr "Logo {0}"
 
@@ -880,7 +878,7 @@ msgstr "{peopleCount, plural, one {# membre} other {# membres}}"
 msgid "{percent}% used"
 msgstr "{percent} % utilisé"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1868
+#: src/routes/organisation/OrganisationRoute.tsx:1875
 msgid "{person} will lose access to every workspace in this organisation. Direct-only workspace invites stay intact."
 msgstr "{person} perdra l'accès à tous les espaces de travail de cette organisation. Les invitations directes à un espace de travail sont conservées."
 
@@ -1503,10 +1501,10 @@ msgstr "Filtres actifs"
 msgid "Activity"
 msgstr "Activité"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2095
 #: src/routes/organisation/OrganisationRoute.tsx:2102
-#: src/routes/organisation/OrganisationRoute.tsx:2115
-#: src/routes/organisation/OrganisationRoute.tsx:2138
+#: src/routes/organisation/OrganisationRoute.tsx:2109
+#: src/routes/organisation/OrganisationRoute.tsx:2122
+#: src/routes/organisation/OrganisationRoute.tsx:2145
 #: src/portal/routes/ParticipantPostConversation.tsx:199
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:185
 #: src/components/billing/BillingManager.tsx:1392
@@ -1518,8 +1516,8 @@ msgstr "Ajouter"
 #. placeholder {1}: ws.name
 #. placeholder {2}: displayRole("external")
 #. placeholder {2}: displayRole(roleOpt)
-#: src/routes/organisation/OrganisationRoute.tsx:2085
-#: src/routes/organisation/OrganisationRoute.tsx:2126
+#: src/routes/organisation/OrganisationRoute.tsx:2092
+#: src/routes/organisation/OrganisationRoute.tsx:2133
 msgid "Add {0} to {1} as <0>{2}</0>?"
 msgstr "Ajouter {0} à {1} en tant que <0>{2}</0> ?"
 
@@ -1644,8 +1642,8 @@ msgid "Add tip"
 msgstr "Ajouter un conseil"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2098
-#: src/routes/organisation/OrganisationRoute.tsx:2142
+#: src/routes/organisation/OrganisationRoute.tsx:2105
+#: src/routes/organisation/OrganisationRoute.tsx:2149
 msgid "Add to {0}?"
 msgstr "Ajouter à {0} ?"
 
@@ -1728,16 +1726,16 @@ msgstr "E-mails ajoutés"
 msgid "Added to workspace"
 msgstr "Ajouté à l'espace de travail"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:170
+#: src/components/workspace/DiscoverableWorkspaces.tsx:187
 msgid "Added you to {okCount} workspaces"
 msgstr "Vous avez été ajouté à {okCount} espaces de travail"
 
 #. placeholder {0}: failedIds.length
-#: src/components/workspace/DiscoverableWorkspaces.tsx:178
+#: src/components/workspace/DiscoverableWorkspaces.tsx:195
 msgid "Added you to {okCount}. {0} couldn't be added, try again."
 msgstr "Ajout effectué pour {okCount}. Impossible d'ajouter {0}, veuillez réessayer."
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:169
+#: src/components/workspace/DiscoverableWorkspaces.tsx:186
 msgid "Added you to 1 workspace"
 msgstr "Vous avez été ajouté à 1 espace de travail"
 
@@ -1806,7 +1804,7 @@ msgstr "Administrateur"
 msgid "Admin dashboard"
 msgstr "Tableau de bord d'administration"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2020
+#: src/routes/organisation/OrganisationRoute.tsx:2027
 msgid "Admin here via organisation role"
 msgstr "Administrateur ici via le rôle dans l'organisation"
 
@@ -3103,12 +3101,12 @@ msgstr "Appels sans compte associé"
 #: src/routes/project/ProjectsHome.tsx:454
 #: src/routes/project/CreateProjectRoute.tsx:492
 #: src/routes/project/report/ProjectReportRoute.tsx:281
-#: src/routes/organisation/OrganisationRoute.tsx:1833
-#: src/routes/organisation/OrganisationRoute.tsx:1856
-#: src/routes/organisation/OrganisationRoute.tsx:1879
-#: src/routes/organisation/OrganisationRoute.tsx:2055
-#: src/routes/organisation/OrganisationRoute.tsx:2095
-#: src/routes/organisation/OrganisationRoute.tsx:2137
+#: src/routes/organisation/OrganisationRoute.tsx:1840
+#: src/routes/organisation/OrganisationRoute.tsx:1863
+#: src/routes/organisation/OrganisationRoute.tsx:1886
+#: src/routes/organisation/OrganisationRoute.tsx:2062
+#: src/routes/organisation/OrganisationRoute.tsx:2102
+#: src/routes/organisation/OrganisationRoute.tsx:2144
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/admin/AdminSettingsRoute.tsx:867
 #: src/routes/admin/AdminSettingsRoute.tsx:1181
@@ -3283,13 +3281,13 @@ msgstr "Modifier"
 
 #. placeholder {0}: displayRole(member.role)
 #. placeholder {1}: displayRole(next)
-#: src/routes/organisation/OrganisationRoute.tsx:1827
+#: src/routes/organisation/OrganisationRoute.tsx:1834
 msgid "Change {person}'s organisation role from <0>{0}</0> to <1>{1}</1>?"
 msgstr "Modifier le rôle de {person} dans l'organisation de <0>{0}</0> à <1>{1}</1> ?"
 
 #. placeholder {0}: displayRole(currentRole)
 #. placeholder {1}: displayRole(next)
-#: src/routes/organisation/OrganisationRoute.tsx:1850
+#: src/routes/organisation/OrganisationRoute.tsx:1857
 msgid "Change {person}'s role on {wsName} from <0>{0}</0> to <1>{1}</1>?"
 msgstr "Modifier le rôle de {person} sur {wsName} de <0>{0}</0> à <1>{1}</1> ?"
 
@@ -3297,7 +3295,7 @@ msgstr "Modifier le rôle de {person} sur {wsName} de <0>{0}</0> à <1>{1}</1> ?
 msgid "Change anyway"
 msgstr "Modifier quand même"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2019
+#: src/routes/organisation/OrganisationRoute.tsx:2026
 msgid "Change in workspace settings"
 msgstr "Modifier dans les paramètres de l'espace de travail"
 
@@ -3305,7 +3303,7 @@ msgstr "Modifier dans les paramètres de l'espace de travail"
 msgid "Change language"
 msgstr "Changer de langue"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1835
+#: src/routes/organisation/OrganisationRoute.tsx:1842
 msgid "Change organisation role?"
 msgstr "Modifier le rôle dans l'organisation ?"
 
@@ -3322,8 +3320,8 @@ msgstr "Changer de moyen de paiement"
 msgid "change project settings"
 msgstr "modifier les paramètres du projet"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1833
-#: src/routes/organisation/OrganisationRoute.tsx:1856
+#: src/routes/organisation/OrganisationRoute.tsx:1840
+#: src/routes/organisation/OrganisationRoute.tsx:1863
 msgid "Change role"
 msgstr "Modifier le rôle"
 
@@ -3338,7 +3336,7 @@ msgstr "Changez les mots, lisez les preuves, ou gardez un résultat hors de cett
 msgid "Change tier"
 msgstr "Changer de niveau"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1858
+#: src/routes/organisation/OrganisationRoute.tsx:1865
 msgid "Change workspace role?"
 msgstr "Modifier le rôle dans l'espace de travail ?"
 
@@ -4132,7 +4130,7 @@ msgstr "Continuer sur dembrane.com"
 msgid "Controls how far charge forces act (higher = more global)"
 msgstr "Contrôle la portée des forces de charge (plus élevé = plus global)"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1662
+#: src/routes/organisation/OrganisationRoute.tsx:1669
 msgid "conversation"
 msgstr "conversation"
 
@@ -4226,7 +4224,7 @@ msgstr "Les étiquettes de conversation sont plus lisibles."
 msgid "Conversation transcribed"
 msgstr "Conversation transcrite"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1662
+#: src/routes/organisation/OrganisationRoute.tsx:1669
 #: src/components/report/CreateReportForm.tsx:210
 #: src/components/chat/NavigationSuggestionCard.tsx:57
 msgid "conversations"
@@ -5312,7 +5310,7 @@ msgstr "Mentions légales"
 msgid "Discount"
 msgstr "Réduction"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:230
+#: src/components/workspace/DiscoverableWorkspaces.tsx:247
 msgid "Discoverable in this organisation"
 msgstr "Visible dans cette organisation"
 
@@ -6046,7 +6044,7 @@ msgstr "Tous les membres de {0} peuvent trouver et ouvrir ce projet."
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1908
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:387
-#: src/components/workspace/DiscoverableWorkspaces.tsx:305
+#: src/components/workspace/DiscoverableWorkspaces.tsx:271
 msgid "Everyone in your organisation"
 msgstr "Tous les membres de votre organisation"
 
@@ -6172,7 +6170,7 @@ msgstr "Prolonger de 24h"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1026
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1318
 #: src/routes/organisation/OrganisationRoute.tsx:1437
-#: src/routes/organisation/OrganisationRoute.tsx:1928
+#: src/routes/organisation/OrganisationRoute.tsx:1935
 #: src/routes/organisation/OrganisationExternalView.tsx:62
 #: src/lib/roles.ts:15
 #: src/features/sidebar/views/user/UserHomeView.tsx:116
@@ -7214,7 +7212,7 @@ msgstr "Masquer"
 msgid "Hide data"
 msgstr "Masquer les données"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1944
+#: src/routes/organisation/OrganisationRoute.tsx:1951
 msgid "Hide detail"
 msgstr "Masquer le détail"
 
@@ -7695,7 +7693,7 @@ msgstr "Invitez des membres à collaborer sur les projets et conversations de ce
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1927
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:393
-#: src/components/workspace/DiscoverableWorkspaces.tsx:307
+#: src/components/workspace/DiscoverableWorkspaces.tsx:273
 msgid "Invite only"
 msgstr "Sur invitation uniquement"
 
@@ -7879,23 +7877,23 @@ msgstr "Jean"
 msgid "john@doe.com"
 msgstr "jean@dupont.fr"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2055
-#: src/routes/organisation/OrganisationRoute.tsx:2061
+#: src/routes/organisation/OrganisationRoute.tsx:2062
+#: src/routes/organisation/OrganisationRoute.tsx:2068
 msgid "Join"
 msgstr "Rejoindre"
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2049
+#: src/routes/organisation/OrganisationRoute.tsx:2056
 msgid "Join {0} as <0>admin</0>? It'll show in your sidebar right after."
 msgstr "Rejoindre {0} en tant qu'<0>administrateur</0> ? Il apparaîtra aussitôt dans votre barre latérale."
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2067
+#: src/routes/organisation/OrganisationRoute.tsx:2074
 msgid "Join {0} as an admin first to add others."
 msgstr "Rejoignez d'abord {0} en tant qu'administrateur pour ajouter d'autres personnes."
 
 #. placeholder {0}: ws.name
-#: src/routes/organisation/OrganisationRoute.tsx:2057
+#: src/routes/organisation/OrganisationRoute.tsx:2064
 msgid "Join {0}?"
 msgstr "Rejoindre {0} ?"
 
@@ -7903,16 +7901,16 @@ msgstr "Rejoindre {0} ?"
 msgid "Join {subjectFromUrl} | dembrane"
 msgstr "Rejoindre {subjectFromUrl} | dembrane"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:335
-#: src/components/workspace/DiscoverableWorkspaces.tsx:418
+#: src/components/workspace/DiscoverableWorkspaces.tsx:367
+#: src/components/workspace/DiscoverableWorkspaces.tsx:433
 msgid "Join as admin"
 msgstr "Rejoindre en tant qu'administrateur"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:404
+#: src/components/workspace/DiscoverableWorkspaces.tsx:419
 msgid "Join as admin?"
 msgstr "Rejoindre en tant qu'administrateur ?"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2072
+#: src/routes/organisation/OrganisationRoute.tsx:2079
 msgid "Join first"
 msgstr "Rejoindre d'abord"
 
@@ -9389,7 +9387,7 @@ msgstr "Jamais modifié"
 msgid "new"
 msgstr "nouveau"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1695
+#: src/routes/organisation/OrganisationRoute.tsx:1702
 #: src/components/workspace/TierStatusBadge.tsx:38
 msgid "New"
 msgstr "Nouveau"
@@ -9506,7 +9504,7 @@ msgstr "Page suivante"
 msgid "No"
 msgstr "Non"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2154
+#: src/routes/organisation/OrganisationRoute.tsx:2161
 msgid "No access"
 msgstr "Aucun accès"
 
@@ -9817,7 +9815,7 @@ msgstr "Partagé avec personne pour l'instant"
 msgid "No one's on the workspace yet."
 msgstr "Il n'y a encore personne sur cet espace de travail."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1923
+#: src/routes/organisation/OrganisationRoute.tsx:1930
 msgid "No organisation role. Access via workspace invites."
 msgstr "Aucun rôle dans l'organisation. Accès via les invitations à l'espace de travail."
 
@@ -10029,7 +10027,7 @@ msgstr "Aucun webhook trouvé"
 msgid "No webhooks yet. Add a webhook to automatically receive conversation data when events happen."
 msgstr "Aucun webhook pour l'instant. Ajoutez un webhook pour recevoir automatiquement les données de conversation lorsque des événements se produisent."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1806
+#: src/routes/organisation/OrganisationRoute.tsx:1813
 msgid "No workspace access yet"
 msgstr "Pas encore d'accès à l'espace de travail"
 
@@ -10037,7 +10035,7 @@ msgstr "Pas encore d'accès à l'espace de travail"
 msgid "No workspace picked. They'll be added to {orgName} and can request workspace access themselves."
 msgstr "Aucun espace de travail sélectionné. Cette personne sera ajoutée à {orgName} et pourra demander un accès elle-même."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1988
+#: src/routes/organisation/OrganisationRoute.tsx:1995
 msgid "No workspace role change. Add this person to the organisation, then re-invite from the workspace."
 msgstr "Aucun changement de rôle dans l'espace de travail. Ajoutez cette personne à l'organisation, puis réinvitez-la depuis l'espace de travail."
 
@@ -11047,7 +11045,7 @@ msgstr "Les participants reçoivent un rappel pour vérifier avant de clore une 
 msgid "Participants will be able to select tags when creating conversations"
 msgstr "Les participants pourront sélectionner des étiquettes lors de la création de conversations"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1645
+#: src/routes/organisation/OrganisationRoute.tsx:1652
 msgid "partner"
 msgstr "partenaire"
 
@@ -11061,7 +11059,7 @@ msgstr "Partenaire"
 msgid "Partner organisation"
 msgstr "Organisation partenaire"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1641
+#: src/routes/organisation/OrganisationRoute.tsx:1648
 msgid "Partner workspace, billed on its own and not part of the organisation's plan."
 msgstr "Espace de travail partenaire, facturé séparément et non inclus dans le forfait de l'organisation."
 
@@ -11209,7 +11207,7 @@ msgstr "Personnes, groupes et ce qui compte pour eux"
 msgid "Per-recipient results:"
 msgstr "Résultats par destinataire :"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1959
+#: src/routes/organisation/OrganisationRoute.tsx:1966
 msgid "Per-workspace access"
 msgstr "Accès par espace de travail"
 
@@ -11723,7 +11721,7 @@ msgstr "URL de la politique de confidentialité"
 #: src/routes/project/CreateProjectRoute.tsx:653
 #: src/routes/project/CreateProjectRoute.tsx:706
 #: src/components/workspace/OrganisationProjectsTable.tsx:246
-#: src/components/workspace/DiscoverableWorkspaces.tsx:309
+#: src/components/workspace/DiscoverableWorkspaces.tsx:275
 #: src/components/sharing/StatusLine.tsx:93
 #: src/components/project/ProjectSharingStrip.tsx:59
 msgid "Private"
@@ -11780,7 +11778,7 @@ msgstr "Traitement de votre demande de retranscription..."
 msgid "Procurement help"
 msgstr "Aide aux achats"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1655
+#: src/routes/organisation/OrganisationRoute.tsx:1662
 msgid "project"
 msgstr "projet"
 
@@ -11920,7 +11918,7 @@ msgstr "Total mensuel estimé"
 msgid "Projected yearly total"
 msgstr "Total annuel estimé"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1655
+#: src/routes/organisation/OrganisationRoute.tsx:1662
 #: src/routes/organisation/OrganisationExternalView.tsx:105
 msgid "projects"
 msgstr "projets"
@@ -12541,7 +12539,7 @@ msgstr "Rappel envoyé : accès d'assistance toujours activé"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1665
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1732
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1812
-#: src/routes/organisation/OrganisationRoute.tsx:1879
+#: src/routes/organisation/OrganisationRoute.tsx:1886
 #: src/components/settings/WhitelabelLogoCard.tsx:146
 #: src/components/settings/WhitelabelLogoCard.tsx:180
 #: src/components/settings/AccountSettingsCard.tsx:163
@@ -12599,11 +12597,11 @@ msgstr "Supprimer le fichier"
 msgid "Remove from chat"
 msgstr "Retirer du chat"
 
-#: src/routes/organisation/OrganisationRoute.tsx:2172
+#: src/routes/organisation/OrganisationRoute.tsx:2179
 msgid "Remove from organisation"
 msgstr "Retirer de l'organisation"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1881
+#: src/routes/organisation/OrganisationRoute.tsx:1888
 msgid "Remove from organisation?"
 msgstr "Retirer de l'organisation ?"
 
@@ -12836,7 +12834,7 @@ msgid "Request a training"
 msgstr "Demander une formation"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:1146
-#: src/components/workspace/DiscoverableWorkspaces.tsx:385
+#: src/components/workspace/DiscoverableWorkspaces.tsx:340
 msgid "Request access"
 msgstr "Demander l'accès"
 
@@ -12872,8 +12870,8 @@ msgstr "Demander la réinitialisation du mot de passe | dembrane"
 #~ msgid "Request Password Reset | dembrane"
 #~ msgstr "Demander le Réinitialisation du Mot de Passe | dembrane"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:221
-#: src/components/workspace/DiscoverableWorkspaces.tsx:390
+#: src/components/workspace/DiscoverableWorkspaces.tsx:238
+#: src/components/workspace/DiscoverableWorkspaces.tsx:345
 msgid "Request sent"
 msgstr "Demande envoyée"
 
@@ -13779,7 +13777,7 @@ msgid "Select a workspace"
 msgstr "Sélectionner un espace de travail"
 
 #: src/routes/project/ProjectsHome.tsx:431
-#: src/components/workspace/DiscoverableWorkspaces.tsx:279
+#: src/components/workspace/DiscoverableWorkspaces.tsx:298
 #: src/components/conversation/ConversationAccordion.tsx:1442
 msgid "Select all"
 msgstr "Tout sélectionner"
@@ -14299,7 +14297,7 @@ msgstr "Afficher les arguments actuels"
 msgid "Show data"
 msgstr "Afficher les données"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1944
+#: src/routes/organisation/OrganisationRoute.tsx:1951
 msgid "Show detail"
 msgstr "Afficher les détails"
 
@@ -16322,11 +16320,11 @@ msgstr "Cette page concerne uniquement {orgName}. Pour obtenir votre URL MCP ou 
 msgid "This part of the page failed to load. Reloading usually fixes it. If it keeps happening, head back home."
 msgstr "Cette partie de la page n'a pas pu se charger. Recharger la page règle souvent le problème. Si cela continue, revenez à l'accueil."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1823
-#: src/routes/organisation/OrganisationRoute.tsx:1846
-#: src/routes/organisation/OrganisationRoute.tsx:1863
-#: src/routes/organisation/OrganisationRoute.tsx:2089
-#: src/routes/organisation/OrganisationRoute.tsx:2130
+#: src/routes/organisation/OrganisationRoute.tsx:1830
+#: src/routes/organisation/OrganisationRoute.tsx:1853
+#: src/routes/organisation/OrganisationRoute.tsx:1870
+#: src/routes/organisation/OrganisationRoute.tsx:2096
+#: src/routes/organisation/OrganisationRoute.tsx:2137
 msgid "this person"
 msgstr "cette personne"
 
@@ -16754,7 +16752,7 @@ msgstr "Titre basé sur le sujet décrivant ce qui a été discuté"
 #~ msgid "Topics"
 #~ msgstr "Sujets"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1658
+#: src/routes/organisation/OrganisationRoute.tsx:1665
 msgid "total"
 msgstr "total"
 
@@ -17174,7 +17172,7 @@ msgid "Unknown device"
 msgstr "Appareil inconnu"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:926
-#: src/routes/organisation/OrganisationRoute.tsx:1906
+#: src/routes/organisation/OrganisationRoute.tsx:1913
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:99
 #: src/components/agent-access/AgentGrantsCard.tsx:127
 msgid "Unknown member"
@@ -17249,7 +17247,7 @@ msgstr "Jusqu'au"
 msgid "until {0}"
 msgstr "jusqu'au {0}"
 
-#: src/routes/organisation/OrganisationRoute.tsx:1681
+#: src/routes/organisation/OrganisationRoute.tsx:1688
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:123
 #: src/components/workspace/OrganisationUsageRollup.tsx:848
 #: src/components/workspace/OrganisationProjectsTable.tsx:242
@@ -18603,7 +18601,7 @@ msgstr "Espaces de travail facturés séparément"
 msgid "Workspaces in this account"
 msgstr "Espaces de travail de ce compte"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:269
+#: src/components/workspace/DiscoverableWorkspaces.tsx:263
 msgid "Workspaces in this organisation you haven't joined yet. As an admin you can add yourself to manage them."
 msgstr "Espaces de travail de cette organisation que vous n'avez pas encore rejoints. En tant qu'administrateur, vous pouvez vous y ajouter pour les gérer."
 
@@ -18611,7 +18609,7 @@ msgstr "Espaces de travail de cette organisation que vous n'avez pas encore rejo
 msgid "Workspaces shared with you"
 msgstr "Espaces de travail partagés avec vous"
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:229
+#: src/components/workspace/DiscoverableWorkspaces.tsx:246
 msgid "Workspaces you can join"
 msgstr "Espaces de travail que vous pouvez rejoindre"
 
@@ -18729,7 +18727,7 @@ msgstr "Tu peux désormais importer des enregistrements Dictaphone d'Apple (fich
 msgid "You can only upload up to {MAX_FILES} files at a time. Only the first {0} files will be added."
 msgstr "Vous ne pouvez télécharger que jusqu'à {MAX_FILES} fichiers à la fois. Seuls les premiers {0} fichiers seront ajoutés."
 
-#: src/routes/organisation/OrganisationRoute.tsx:1874
+#: src/routes/organisation/OrganisationRoute.tsx:1881
 msgid "You can re-invite them later from any workspace."
 msgstr "Vous pourrez les réinviter ultérieurement depuis n'importe quel espace de travail."
 
@@ -18923,11 +18921,11 @@ msgid "You were trying to {action}."
 msgstr "Vous vouliez {action}."
 
 #. placeholder {0}: selectedIds.length
-#: src/components/workspace/DiscoverableWorkspaces.tsx:412
+#: src/components/workspace/DiscoverableWorkspaces.tsx:427
 msgid "You'll be added as an admin to {0} private workspaces. They'll appear in your sidebar right after."
 msgstr "Vous serez ajouté en tant qu'administrateur à {0} espaces de travail privés. Ils apparaîtront aussitôt dans votre barre latérale."
 
-#: src/components/workspace/DiscoverableWorkspaces.tsx:407
+#: src/components/workspace/DiscoverableWorkspaces.tsx:422
 msgid "You'll be added as an admin to {singleName}. It'll appear in your sidebar right after."
 msgstr "Vous serez ajouté en tant qu'administrateur à {singleName}. Il apparaîtra aussitôt dans votre barre latérale."
 

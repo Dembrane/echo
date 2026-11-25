@@ -1529,7 +1529,14 @@ function OrganisationOverviewPanel({
 
 			{/* Workspaces in this org the caller isn't a member of but can join or
 			    request access to. Self-hides when there's nothing to surface. */}
-			<DiscoverableWorkspaces orgId={orgId} />
+			{/* Once the viewer's own list is in: with no workspace of theirs it is the
+			    page's workspaces section, otherwise a fold under their cards. */}
+			{!workspacesLoading && (
+				<DiscoverableWorkspaces
+					orgId={orgId}
+					standalone={myCards.length === 0}
+				/>
+			)}
 
 			{hasAccount && (
 				<Suspense fallback={null}>
