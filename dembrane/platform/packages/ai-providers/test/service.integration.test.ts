@@ -43,7 +43,7 @@ run("AI providers: the account's setting and the project's choice", () => {
       db,
       access: new Access(new DrizzleAccessStore(db)),
       policy,
-      models: { scaleway: ["whisper-large-v3", "glm-5.3"] },
+      models: { scaleway: { transcription: ["whisper-large-v3"], analysis: ["glm-5.3"] } },
       now: () => new Date("2026-12-03T10:00:00Z"),
       unitCostTtlMs: 0,
     };
@@ -83,6 +83,7 @@ run("AI providers: the account's setting and the project's choice", () => {
     await sql`insert into workspace_membership (id, workspace_id, user_id, role) values (${randomUUID()}, ${workspaceId}, ${member.appUserId}, 'member')`;
     const ticket = randomUUID();
     await sql`insert into account_ticket (id, org_id, subject, created_at) values (${ticket}, ${orgId}, 'Google Vertex AI', '2026-12-02T09:00:00Z')`;
+    await sql`insert into account_ticket_message (id, ticket_id, from_staff, body, created_at) values (${randomUUID()}, ${ticket}, false, 'Please enable Google.', '2026-12-02T09:00:00Z')`;
     return { orgId, workspaceId, projectId, owner, orgAdmin, billing, member, outsider, ticket };
   }
 
@@ -133,7 +134,7 @@ run("AI providers: the account's setting and the project's choice", () => {
       serves: { scaleway: ["transcription", "analysis"], google: ["transcription", "analysis"] },
       enabled: { transcription: ["scaleway"], analysis: ["scaleway"] },
       defaults: { transcription: "scaleway", analysis: "scaleway" },
-      models: { scaleway: ["whisper-large-v3", "glm-5.3"] },
+      models: { scaleway: { transcription: ["whisper-large-v3"], analysis: ["glm-5.3"] } },
       history: [],
     });
     expect((await readOrg(d, w.orgAdmin, w.orgId)).enabled.analysis).toEqual(["scaleway"]);
@@ -180,7 +181,9 @@ run("AI providers: the account's setting and the project's choice", () => {
     });
     const forStaff = await readOrgForStaff(d, w.orgId);
     expect(forStaff.tickets.map((t) => t.id)).toEqual([w.ticket]);
-    expect(forStaff.models).toEqual({ scaleway: ["whisper-large-v3", "glm-5.3"] });
+    expect(forStaff.models).toEqual({
+      scaleway: { transcription: ["whisper-large-v3"], analysis: ["glm-5.3"] },
+    });
   });
 
   test("the history has one line per job and change, and a default change reads as one", async () => {
@@ -247,7 +250,7 @@ run("AI providers: the account's setting and the project's choice", () => {
     ).rejects.toThrow(/request ticket/);
     await expect(
       setOrg(d, staff, w.orgId, { ...SCALEWAY_ONLY, requestTicketId: other.ticket }),
-    ).rejects.toThrow(/not one of this account/);
+    ).rejects.toThrow(/not one the account's customer opened/);
     await expect(
       setOrg(d, staff, w.orgId, {
         enabled: { transcription: ["orai"], analysis: ["orai"] },
@@ -255,6 +258,21 @@ run("AI providers: the account's setting and the project's choice", () => {
         requestTicketId: w.ticket,
       }),
     ).rejects.toThrow(/Not an AI provider/);
+    expect((await events(w.orgId)).length).toBe(0);
+  });
+
+  test("a ticket staff opened is no request: it cannot be cited and is not offered to cite", async () => {
+    const w = await world();
+    const staff = randomUUID();
+    const own = randomUUID();
+    await sql`insert into account_ticket (id, org_id, subject, created_at) values (${own}, ${w.orgId}, 'Staff note', '2026-12-02T10:00:00Z')`;
+    await sql`insert into account_ticket_message (id, ticket_id, from_staff, body, created_at) values (${randomUUID()}, ${own}, true, 'Enabling Google.', '2026-12-02T10:00:00Z')`;
+    // The customer answering a staff-opened ticket does not turn it into their request.
+    await sql`insert into account_ticket_message (id, ticket_id, from_staff, body, created_at) values (${randomUUID()}, ${own}, false, 'ok', '2026-12-02T10:05:00Z')`;
+    await expect(setOrg(d, staff, w.orgId, { ...BOTH, requestTicketId: own })).rejects.toThrow(
+      /not one the account's customer opened/,
+    );
+    expect((await readOrgForStaff(d, w.orgId)).tickets.map((t) => t.id)).toEqual([w.ticket]);
     expect((await events(w.orgId)).length).toBe(0);
   });
 
@@ -301,7 +319,7 @@ run("AI providers: the account's setting and the project's choice", () => {
         analysis: { options: ["scaleway"], effective: "scaleway" },
       },
       can_change: true,
-      models: { scaleway: ["whisper-large-v3", "glm-5.3"] },
+      models: { scaleway: { transcription: ["whisper-large-v3"], analysis: ["glm-5.3"] } },
     });
     await expect(setProject(d, w.owner, w.projectId, "analysis", "google")).rejects.toThrow(
       /has not enabled google for analysis/,
@@ -407,14 +425,26 @@ run("AI providers: the account's setting and the project's choice", () => {
       at: string,
       micro: number,
       extra: string,
+      org = w.orgId,
     ) =>
       sql`insert into model_call (started_at, service, model_group, model, kind, status, attempt, ms, provider, routed_provider, routing_job, organisation_id, project_id, payer, audio_seconds, input_tokens, output_tokens, cost_micro_eur)
         values (${at}::timestamptz, 's', 'g', 'm', ${job === "transcription" ? "speech" : "generate"}, 'ok', 1, 1,
-          ${provider === "google" ? "vertex" : "openai-compatible"}, ${provider}, ${job}, ${w.orgId}, ${w.projectId}, 'account',
+          ${provider === "google" ? "vertex" : "openai-compatible"}, ${provider}, ${job}, ${org}, ${org === w.orgId ? w.projectId : null}, 'account',
           ${extra === "audio" ? 3600 : null}, ${extra === "audio" ? null : 900}, ${extra === "audio" ? null : 100}, ${micro})`;
     await call("scaleway", "transcription", "2026-12-01T09:00:00Z", 180_000, "audio");
     await call("google", "transcription", "2026-12-02T09:00:00Z", 900_000, "audio");
     await call("google", "analysis", "2026-12-02T10:00:00Z", 40_000, "text");
+    // The account's own recordings: two hours of audio.
+    for (const at of ["2026-12-01T08:00:00Z", "2026-12-02T08:00:00Z"])
+      await sql`insert into conversation (id, project_id, source, created_at, duration) values (${randomUUID()}, ${w.projectId}, 'PORTAL_AUDIO', ${at}::timestamptz, 3600)`;
+    // With only this account in the log there is no average to show, and no price list here.
+    const alone = await readOrg(d, w.owner, w.orgId);
+    expect(alone.cost.transcription.google).toMatchObject({ monthly_eur: null });
+    // Two other accounts have used Google at the same price: now it is an average.
+    for (const other of [randomUUID(), randomUUID()]) {
+      await call("google", "transcription", "2026-12-02T09:00:00Z", 900_000, "audio", other);
+      await call("google", "analysis", "2026-12-02T10:00:00Z", 40_000, "text", other);
+    }
     const used = await readOrg(d, w.owner, w.orgId);
     // Two hours of audio in 30 days; Google's average is EUR 0.90 an hour across the log.
     expect(used.cost.transcription.google).toMatchObject({ monthly_eur: 1.8, per_hour_eur: null });

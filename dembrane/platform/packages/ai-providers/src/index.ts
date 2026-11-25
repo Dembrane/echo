@@ -13,6 +13,7 @@ export {
   orgHistory,
   PROJECT_EVENT,
   type ProjectProviders,
+  type ProviderModels,
   readOrg,
   readOrgForStaff,
   readProject,

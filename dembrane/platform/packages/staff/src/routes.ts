@@ -5,7 +5,7 @@ import {
   type StaffPolicy,
   TIERS,
 } from "@dembrane/access";
-import { readOrgForStaff, setOrg } from "@dembrane/ai-providers";
+import { type ProviderModels, readOrgForStaff, setOrg } from "@dembrane/ai-providers";
 import {
   accountWorkspaceIds,
   allowanceForWorkspace,
@@ -37,7 +37,7 @@ import {
 import { type Db, schema } from "@dembrane/db";
 import { type Ctx, type Env, requireUser, v } from "@dembrane/http";
 import { directusTime } from "@dembrane/legacy-shape";
-import { type ProviderId, type RoutingPolicy, routingPolicyOf } from "@dembrane/llm";
+import { type RoutingPolicy, routingPolicyOf } from "@dembrane/llm";
 import type { Mailer } from "@dembrane/mail";
 import type { UnitCosts } from "@dembrane/metering";
 import type { Logger } from "@dembrane/observability";
@@ -60,7 +60,7 @@ export interface StaffRouteDeps {
   /** The AI providers this deployment has and its default; staff can only grant what exists. */
   readonly aiPolicy?: RoutingPolicy;
   /** The model ids each AI provider uses on this deployment, for the cards staff see. */
-  readonly aiModels?: Partial<Record<ProviderId, readonly string[]>>;
+  readonly aiModels?: ProviderModels;
   /** What the price list says each provider costs per unit, for providers with no call history yet. */
   readonly aiPriceList?: () => UnitCosts | null;
 }

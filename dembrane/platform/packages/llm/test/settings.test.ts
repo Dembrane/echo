@@ -110,17 +110,20 @@ const settings = {
   embeddingDimensions: 768,
 } as const;
 
-test("the models a card names are the ones Scaleway runs here for speech and analysis, once each", () => {
-  expect(providerModelsOf(settings, "scaleway")).toEqual(["whisper-large-v3", "glm-5.3"]);
+test("the models a card names are the ones Scaleway runs here for each job, once each", () => {
+  expect(providerModelsOf(settings, "scaleway")).toEqual({
+    transcription: ["whisper-large-v3"],
+    analysis: ["glm-5.3"],
+  });
   expect(
     providerModelsOf({ ...settings, compatTextFast: ["glm-5.3", "other-model"] }, "scaleway"),
-  ).toEqual(["whisper-large-v3", "glm-5.3", "other-model"]);
-  expect(providerModelsOf(settings, "google")).toEqual([]);
+  ).toEqual({ transcription: ["whisper-large-v3"], analysis: ["glm-5.3", "other-model"] });
+  expect(providerModelsOf(settings, "google")).toEqual({ transcription: [], analysis: [] });
 });
 
 test("the models follow the deployment's config when it runs Vertex by default", () => {
-  expect(providerModelsOf({ ...settings, provider: "vertex" }, "scaleway")).toEqual([
-    "whisper-large-v3",
-    "glm-5.3",
-  ]);
+  expect(providerModelsOf({ ...settings, provider: "vertex" }, "scaleway")).toEqual({
+    transcription: ["whisper-large-v3"],
+    analysis: ["glm-5.3"],
+  });
 });

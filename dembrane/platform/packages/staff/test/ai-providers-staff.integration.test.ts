@@ -116,6 +116,8 @@ run("staff AI providers", () => {
     const ticket = randomUUID();
     await sql`insert into account_ticket (id, org_id, subject, created_at)
       values (${ticket}, ${orgId}, 'Google Vertex AI', '2026-12-02T09:00:00Z')`;
+    await sql`insert into account_ticket_message (id, ticket_id, from_staff, body, created_at)
+      values (${randomUUID()}, ${ticket}, false, 'Please enable Google.', '2026-12-02T09:00:00Z')`;
     return { orgId, ticket, url: `/api/v2/admin/orgs/${orgId}/ai-providers` };
   }
 

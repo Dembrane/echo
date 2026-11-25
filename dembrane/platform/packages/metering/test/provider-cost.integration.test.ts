@@ -49,6 +49,8 @@ run("what a provider costs, from the call log", () => {
 
   const ORG_A = randomUUID();
   const ORG_B = randomUUID();
+  const ORG_C = randomUUID();
+  const ORG_D = randomUUID();
   const ORG_NEW = randomUUID();
   const PROJECT_1 = randomUUID();
   const PROJECT_2 = randomUUID();
@@ -74,9 +76,36 @@ run("what a provider costs, from the call log", () => {
         ${r.job}, ${r.org}, ${r.project ?? null}, ${r.payer ?? "account"}, ${r.audioSeconds ?? null},
         ${r.tokens ? r.tokens - Math.floor(r.tokens / 10) : null}, ${r.tokens ? Math.floor(r.tokens / 10) : null}, ${r.micro})`;
 
+  /** An organisation with a workspace and the given projects; conversations are added to them. */
+  async function account(org: string, projects: string[]) {
+    const billing = randomUUID();
+    const workspace = randomUUID();
+    await sql`insert into org (id, name) values (${org}, 'Org')`;
+    await sql`insert into billing_account (id, org_id, tier) values (${billing}, ${org}, 'innovator')`;
+    await sql`insert into workspace (id, name, org_id, billing_account_id) values (${workspace}, 'W', ${org}, ${billing})`;
+    for (const id of projects)
+      await sql`insert into project (id, name, workspace_id, is_conversation_allowed) values (${id}, 'P', ${workspace}, true)`;
+  }
+  const conversation = (
+    project: string,
+    o: { seconds: number | null; at: string; deleted?: boolean },
+  ) =>
+    sql`insert into conversation (id, project_id, source, created_at, duration, deleted_at)
+      values (${randomUUID()}, ${project}, 'PORTAL_AUDIO', ${o.at}::timestamptz, ${o.seconds}, ${o.deleted ? o.at : null}::timestamptz)`;
+
   beforeAll(async () => {
     await sql`delete from model_call`;
-    // Account A: one hour of audio on Scaleway (EUR 0.18 in all), 10 analysis calls of 1000 tokens
+    await account(ORG_A, [PROJECT_1, PROJECT_2]);
+    // Account A's recordings, 30 minutes of audio in all. Its speech rows below add up to one
+    // hour, because the redo and the second listen hear the same audio again.
+    await conversation(PROJECT_1, { seconds: 1200, at: daysAgo(2) });
+    await conversation(PROJECT_1, { seconds: 600, at: daysAgo(5) });
+    // Not part of the estimate: older than the window, deleted, not measured.
+    await conversation(PROJECT_1, { seconds: 7200, at: daysAgo(40) });
+    await conversation(PROJECT_1, { seconds: 7200, at: daysAgo(3), deleted: true });
+    await conversation(PROJECT_1, { seconds: -1, at: daysAgo(3) });
+    await conversation(PROJECT_1, { seconds: null, at: daysAgo(3) });
+    // Account A: one hour of speech rows on Scaleway (EUR 0.18 in all), 10 analysis calls of 1000 tokens
     // on Scaleway (EUR 0.05), spread over two projects; one call 40 days back is outside the window.
     for (let i = 0; i < 6; i++)
       await seed({
@@ -107,34 +136,38 @@ run("what a provider costs, from the call log", () => {
       tokens: 90_000,
       micro: 900_000,
     });
-    // Account B has used Google: 30 minutes of audio at EUR 0.90 and 4 calls of 2000 tokens at EUR 0.02 each.
-    await seed({
-      at: daysAgo(1),
-      org: ORG_B,
-      provider: "google",
-      job: "transcription",
-      audioSeconds: 1800,
-      micro: 900_000,
-    });
-    for (let i = 0; i < 4; i++)
+    // Accounts B, C and D have each used Google: 30 minutes of audio at EUR 0.90 and 4 calls of
+    // 2000 tokens at EUR 0.02 each; three accounts are enough for an average to be shown.
+    for (const org of [ORG_B, ORG_C, ORG_D]) {
       await seed({
         at: daysAgo(1),
-        org: ORG_B,
+        org,
+        provider: "google",
+        job: "transcription",
+        audioSeconds: 1800,
+        micro: 900_000,
+      });
+      for (let i = 0; i < 4; i++)
+        await seed({
+          at: daysAgo(1),
+          org,
+          provider: "google",
+          job: "analysis",
+          tokens: 2000,
+          micro: 20_000,
+        });
+      // A failed call costs money and counts in the average, but not as volume.
+      await seed({
+        at: daysAgo(1),
+        org,
         provider: "google",
         job: "analysis",
         tokens: 2000,
         micro: 20_000,
+        status: "error",
       });
-    // A failed call costs money and counts in the average, but not as volume; an internal one is no account's use.
-    await seed({
-      at: daysAgo(1),
-      org: ORG_B,
-      provider: "google",
-      job: "analysis",
-      tokens: 2000,
-      micro: 20_000,
-      status: "error",
-    });
+    }
+    // An internal payer is no account's use, of the average or of the volume.
     await seed({
       at: daysAgo(1),
       org: ORG_B,
@@ -144,13 +177,30 @@ run("what a provider costs, from the call log", () => {
       micro: 9_000_000,
       payer: "internal",
     });
+    await seed({
+      at: daysAgo(1),
+      org: ORG_A,
+      project: PROJECT_1,
+      provider: "scaleway",
+      job: "analysis",
+      tokens: 50_000,
+      micro: 400_000,
+      payer: "internal",
+    });
   });
 
   test("an account's volume is its last 30 days, per job, and a project's is its own", async () => {
+    // Audio is the conversations' own length, not the speech rows' (which hear it more than once);
+    // text is the account's paid calls, not an internal payer's.
     expect(await accountVolume(db, { organisationId: ORG_A }, NOW)).toEqual({
-      audioSeconds: 3600,
+      audioSeconds: 1800,
       calls: 6,
       tokens: 6000,
+    });
+    expect(await accountVolume(db, { organisationId: ORG_A, projectId: PROJECT_1 }, NOW)).toEqual({
+      audioSeconds: 1800,
+      calls: 4,
+      tokens: 4000,
     });
     expect(await accountVolume(db, { organisationId: ORG_A, projectId: PROJECT_2 }, NOW)).toEqual({
       audioSeconds: 0,
@@ -166,29 +216,49 @@ run("what a provider costs, from the call log", () => {
 
   test("a provider's cost per unit is its average over every account in the window", async () => {
     const unit = await loggedUnitCosts(db, NOW);
-    // Scaleway: EUR 0.18 for 3600 s, EUR 0.03 for 6 calls of 1000 tokens.
-    expect(unit.scaleway.perAudioSecond).toBeCloseTo(0.18 / 3600, 8);
-    expect(unit.scaleway.perCall).toBeCloseTo(0.005, 8);
-    expect(unit.scaleway.perToken).toBeCloseTo(0.005 / 1000, 10);
-    // Google: EUR 0.90 for 1800 s; analysis counts its failed attempt's cost over the calls that succeeded.
+    // Google, three accounts: EUR 0.90 for each 1800 s; analysis counts the failed attempt's cost
+    // over the calls that succeeded.
     expect(unit.google.perAudioSecond).toBeCloseTo(0.9 / 1800, 8);
-    // EUR 0.10 over 4 successful calls and 8000 tokens; the internal payer's EUR 9 is not an account's.
+    // EUR 0.10 over 4 successful calls and 8000 tokens each; the internal payer's EUR 9 is not an account's.
     expect(unit.google.perCall).toBeCloseTo(0.025, 8);
     expect(unit.google.perToken).toBeCloseTo(0.1 / 8000, 10);
+  });
+
+  test("an average over fewer than three accounts is not shown: one account's spend is not another's to read", async () => {
+    // Scaleway has one account in the log, Account A: its own figures are not an average.
+    const one = await loggedUnitCosts(db, NOW);
+    expect(one.scaleway).toEqual({ perAudioSecond: null, perCall: null, perToken: null });
+    // Two accounts still show nothing; a third makes it an average.
+    const scalewayCall = (org: string) =>
+      seed({
+        at: daysAgo(1),
+        org,
+        provider: "scaleway",
+        job: "analysis",
+        tokens: 1000,
+        micro: 5_000,
+      });
+    await scalewayCall(ORG_B);
+    expect((await loggedUnitCosts(db, NOW)).scaleway.perCall).toBeNull();
+    await scalewayCall(ORG_C);
+    const three = await loggedUnitCosts(db, NOW);
+    expect(three.scaleway.perCall).toBeCloseTo(0.005, 8);
+    expect(three.scaleway.perToken).toBeCloseTo(0.005 / 1000, 10);
+    // Audio still has only Account A's rows.
+    expect(three.scaleway.perAudioSecond).toBeNull();
   });
 
   test("the estimate is the account's volume times the provider's average, in euros a month", async () => {
     const volume = await accountVolume(db, { organisationId: ORG_A }, NOW);
     const unit = mergeUnitCosts(await loggedUnitCosts(db, NOW), null);
     const speech = costLine("google", "transcription", volume, unit.google);
-    // One hour of audio at Google's EUR 0.90 per half hour.
-    expect(speech).toMatchObject({ billing: "on_top", monthly_eur: 1.8, per_hour_eur: null });
+    // Half an hour of audio at Google's EUR 0.90 per half hour: the redo's second hearing is not counted.
+    expect(speech).toMatchObject({ billing: "on_top", monthly_eur: 0.9, per_hour_eur: null });
     const text = costLine("google", "analysis", volume, unit.google);
     // 6000 tokens at EUR 0.10 per 8000.
     expect(text.monthly_eur).toBe(0.08);
-    expect(costLine("scaleway", "transcription", volume, unit.scaleway)).toMatchObject({
+    expect(costLine("scaleway", "analysis", volume, unit.scaleway)).toMatchObject({
       billing: "included",
-      monthly_eur: 0.18,
     });
   });
 

@@ -58,40 +58,59 @@ export type UnitCosts = Readonly<Record<ProviderId, UnitCost>>;
 
 const NO_UNIT: UnitCost = { perAudioSecond: null, perCall: null, perToken: null };
 
-/** The account's use of the last 30 days, per job. Empty for an account that has none. */
+/**
+ * The account's use of the last 30 days, per job. Transcription is the audio length of the
+ * conversations started in the window, each counted once: the log's speech rows also carry
+ * the second pass over a recording and the second listen to doubtful stretches, which only
+ * some providers make, so summing them would count the same audio twice for those.
+ * Analysis is the account's paid text calls. Empty for an account that has none.
+ */
 export async function accountVolume(
   db: Db,
   who: { organisationId: string; projectId?: string },
   now: Date,
 ): Promise<Volume> {
   const since = new Date(now.getTime() - WINDOW_DAYS * DAY_MS).toISOString();
-  const rows = await db.execute<{
-    job: string;
-    calls: number;
-    audio: number | null;
-    tokens: number | null;
-  }>(sql`
-    select ${JOB_OF} as job, count(*)::int as calls,
-      sum(${AUDIO_SECONDS})::float8 as audio,
-      sum(coalesce(input_tokens, 0) + coalesce(output_tokens, 0))::float8 as tokens
-    from model_call
-    where started_at >= ${since}::timestamptz and started_at <= ${now.toISOString()}::timestamptz
-      and organisation_id = ${who.organisationId}::uuid
-      and status = 'ok'
-      ${who.projectId ? sql`and project_id = ${who.projectId}::uuid` : sql``}
-    group by 1`);
-  const t = rows.find((r) => r.job === "transcription");
-  const a = rows.find((r) => r.job === "analysis");
+  const [text, audio] = await Promise.all([
+    db.execute<{ calls: number; tokens: number | null }>(sql`
+      select count(*)::int as calls,
+        sum(coalesce(input_tokens, 0) + coalesce(output_tokens, 0))::float8 as tokens
+      from model_call
+      where started_at >= ${since}::timestamptz and started_at <= ${now.toISOString()}::timestamptz
+        and organisation_id = ${who.organisationId}::uuid
+        and payer = 'account'
+        and status = 'ok'
+        and ${JOB_OF} = 'analysis'
+        ${who.projectId ? sql`and project_id = ${who.projectId}::uuid` : sql``}`),
+    db.execute<{ seconds: number | null }>(sql`
+      select sum(c.duration)::float8 as seconds
+      from conversation c
+      join project p on p.id = c.project_id
+      join workspace w on w.id = p.workspace_id
+      where w.org_id = ${who.organisationId}::uuid
+        and c.deleted_at is null and p.deleted_at is null
+        and c.duration > 0
+        and c.created_at >= ${since}::timestamptz and c.created_at <= ${now.toISOString()}::timestamptz
+        ${who.projectId ? sql`and p.id = ${who.projectId}::uuid` : sql``}`),
+  ]);
   return {
-    audioSeconds: Number(t?.audio ?? 0),
-    calls: Number(a?.calls ?? 0),
-    tokens: Number(a?.tokens ?? 0),
+    audioSeconds: Number(audio[0]?.seconds ?? 0),
+    calls: Number(text[0]?.calls ?? 0),
+    tokens: Number(text[0]?.tokens ?? 0),
   };
 }
 
 /**
+ * An average over accounts is shown only when this many distinct accounts stand behind it:
+ * with fewer, the figure would be one account's own spend, which every reader of another
+ * account's page could see. Below it the price list answers.
+ */
+export const MIN_ACCOUNTS_FOR_AVERAGE = 3;
+
+/**
  * Each provider's average cost per unit over the last 30 days across every account in the log.
- * A provider with no history for a job has null there; the price list fills it in.
+ * A provider with too little history for a job (see MIN_ACCOUNTS_FOR_AVERAGE) has null there;
+ * the price list fills it in.
  */
 export async function loggedUnitCosts(db: Db, now: Date): Promise<UnitCosts> {
   const since = new Date(now.getTime() - WINDOW_DAYS * DAY_MS).toISOString();
@@ -100,12 +119,14 @@ export async function loggedUnitCosts(db: Db, now: Date): Promise<UnitCosts> {
     job: string;
     cost: number | null;
     ok_calls: number;
+    accounts: number;
     audio: number | null;
     tokens: number | null;
   }>(sql`
     select ${PROVIDER_OF} as provider, ${JOB_OF} as job,
       sum(coalesce(cost_micro_eur, 0))::float8 as cost,
       count(*) filter (where status = 'ok')::int as ok_calls,
+      count(distinct organisation_id) filter (where status = 'ok')::int as accounts,
       sum(${AUDIO_SECONDS}) filter (where status = 'ok')::float8 as audio,
       sum(coalesce(input_tokens, 0) + coalesce(output_tokens, 0)) filter (where status = 'ok')::float8 as tokens
     from model_call
@@ -114,7 +135,9 @@ export async function loggedUnitCosts(db: Db, now: Date): Promise<UnitCosts> {
     group by 1, 2`);
   const out: Record<ProviderId, UnitCost> = { scaleway: NO_UNIT, google: NO_UNIT };
   for (const id of Object.keys(PROVIDERS) as ProviderId[]) {
-    const own = rows.filter((r) => r.provider === id);
+    const own = rows.filter(
+      (r) => r.provider === id && Number(r.accounts) >= MIN_ACCOUNTS_FOR_AVERAGE,
+    );
     const t = own.find((r) => r.job === "transcription");
     const a = own.find((r) => r.job === "analysis");
     const euros = (r: typeof t) => Number(r?.cost ?? 0) / MICRO;

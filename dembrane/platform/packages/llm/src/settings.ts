@@ -3,6 +3,7 @@ import { profileForProvider, profileOf, type TranscriptionProfile } from "./prof
 import {
   isProviderId,
   JOBS,
+  type PerJob,
   PROVIDERS,
   type ProviderId,
   providerOfKind,
@@ -174,23 +175,23 @@ export function providerGaps(
 }
 
 /**
- * The model ids a provider uses on this deployment for speech-to-text and for analysis,
- * without repeats, so a screen can name them from the config instead of from a copy.
- * Only Scaleway's are open models worth naming; Google's list is empty.
+ * The model ids a provider uses on this deployment for each job, without repeats, so a screen
+ * can name them from the config instead of from a copy: transcription is the speech-to-text
+ * model, analysis the text models. Only Scaleway's are open models worth naming; Google's
+ * lists are empty.
  */
-export function providerModelsOf(s: LlmSettings, id: ProviderId): string[] {
-  if (id !== "scaleway") return [];
+export function providerModelsOf(s: LlmSettings, id: ProviderId): PerJob<string[]> {
+  if (id !== "scaleway") return { transcription: [], analysis: [] };
   const profile = profileForProvider(s, id);
   const speech = [profile.live, profile.redo]
     .filter((x) => x?.provider === "whisper")
     .map((x) => x?.model);
   const compat = groupsOf(settingsFor(s, id));
-  const all = [
-    ...speech,
-    ...(profile.cleanUp ? [profile.cleanUp.model] : []),
-    ...compat.text_fast,
-    ...compat.multi_modal_fast,
-    ...compat.multi_modal_pro,
+  const once = (list: (string | undefined)[]) => [
+    ...new Set(list.filter((m): m is string => Boolean(m))),
   ];
-  return [...new Set(all.filter((m): m is string => Boolean(m)))];
+  return {
+    transcription: once(speech),
+    analysis: once([...compat.text_fast, ...compat.multi_modal_fast, ...compat.multi_modal_pro]),
+  };
 }

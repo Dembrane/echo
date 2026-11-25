@@ -8,7 +8,9 @@ import {
   isProviderId,
   JOBS,
   type Job,
+  ORG_PROVIDER_EVENT,
   type PerJob,
+  PROJECT_PROVIDER_EVENT,
   type ProviderId,
   providersFor,
   type RoutingPolicy,
@@ -29,15 +31,24 @@ import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 
 const refused = (message: string) => new BadRequestError("request.invalid", { message });
 
-const { account_event, account_ticket, app_user, auth_user, org, project, workspace } = schema;
+const {
+  account_event,
+  account_ticket,
+  account_ticket_message,
+  app_user,
+  auth_user,
+  org,
+  project,
+  workspace,
+} = schema;
 
 export interface AiProvidersDeps {
   readonly db: Db;
   readonly access: Access;
   /** What the deployment has and its default: the database only chooses among it. */
   readonly policy: RoutingPolicy;
-  /** The model ids each provider uses here for speech and analysis, from the deployment's config. */
-  readonly models?: Partial<Record<ProviderId, readonly string[]>>;
+  /** The model ids each provider uses here for each job, from the deployment's config. */
+  readonly models?: ProviderModels;
   /** Unit costs from the price list, for a provider the call log has no history for yet. */
   readonly priceList?: () => UnitCosts | null;
   /** How long the log's average costs are kept in the process; ten minutes unless a test says otherwise. */
@@ -45,8 +56,11 @@ export interface AiProvidersDeps {
   readonly now: () => Date;
 }
 
-export const ORG_EVENT = "ai_providers.changed";
-export const PROJECT_EVENT = "project.ai_provider.changed";
+/** The models each provider runs for each job on this deployment, as the cards name them. */
+export type ProviderModels = Partial<Record<ProviderId, PerJob<readonly string[]>>>;
+
+export const ORG_EVENT = ORG_PROVIDER_EVENT;
+export const PROJECT_EVENT = PROJECT_PROVIDER_EVENT;
 
 /** The cost of each provider for each job, as the screens' cost lines read it. */
 export type CostLines = Record<Job, Partial<Record<ProviderId, CostLine>>>;
@@ -66,8 +80,8 @@ export interface OrgProviders extends Setting {
   readonly serves: Record<ProviderId, Job[]>;
   /** What projects use unless the account says otherwise. */
   readonly environment_default: ProviderId;
-  /** The models each provider uses on this deployment, for the cards that name them. */
-  readonly models: Partial<Record<ProviderId, readonly string[]>>;
+  /** The models each provider uses for each job on this deployment, for the cards that name them. */
+  readonly models: ProviderModels;
 }
 
 /** A change of the account's setting, as one line of its history. */
@@ -263,6 +277,14 @@ export async function monthOf(
 
 // ── Accounts ────────────────────────────────────────────────────────
 
+/**
+ * A ticket the customer opened: its first message is the customer's. A ticket staff opened is
+ * staff writing to themselves, not a request.
+ */
+const openedByCustomer = sql`not coalesce((
+  select m.from_staff from ${account_ticket_message} m
+  where m.ticket_id = ${account_ticket.id} order by m.created_at, m.id limit 1), true)`;
+
 /** What an owner or admin reads: the setting, its cost, this month's spend and its history. Only they see it. */
 export async function readOrg(d: AiProvidersDeps, who: Principal, orgId: string) {
   const { role } = await d.access.org(who, orgId, "account:read");
@@ -289,7 +311,7 @@ export async function readOrgForStaff(
       created_at: account_ticket.createdAt,
     })
     .from(account_ticket)
-    .where(eq(account_ticket.orgId, orgId))
+    .where(and(eq(account_ticket.orgId, orgId), openedByCustomer))
     .orderBy(desc(account_ticket.createdAt))
     .limit(50);
   const [cost, month] = await Promise.all([
@@ -315,7 +337,7 @@ export interface SetOrgInput {
 
 /**
  * Staff set what an account has enabled for each job and its default for each, after a written
- * request: the ticket it was made in must be one of the account's. The change and its
+ * request: the ticket it was made in must be one the account's customer opened. The change and its
  * account_event commit together. A provider taken away from a job also clears the projects that
  * chose it for that job, so giving it back later does not send them there again without a
  * project admin choosing it.
@@ -352,9 +374,15 @@ export async function setOrg(
     const [ticket] = await db
       .select({ id: account_ticket.id, createdAt: account_ticket.createdAt })
       .from(account_ticket)
-      .where(and(eq(account_ticket.id, input.requestTicketId), eq(account_ticket.orgId, orgId)))
+      .where(
+        and(
+          eq(account_ticket.id, input.requestTicketId),
+          eq(account_ticket.orgId, orgId),
+          openedByCustomer,
+        ),
+      )
       .limit(1);
-    if (!ticket) throw refused("The request ticket is not one of this account's");
+    if (!ticket) throw refused("The request ticket is not one the account's customer opened");
     const was = settingOf(d.policy, row);
     const removed = (job: Job) => was.enabled[job].filter((p) => !enabled[job].includes(p));
     await db
@@ -439,8 +467,8 @@ export interface JobChoice {
 export interface ProjectProviders {
   readonly jobs: Record<Job, JobChoice>;
   readonly can_change: boolean;
-  /** The models each provider uses on this deployment, for the cards that name them. */
-  readonly models: Partial<Record<ProviderId, readonly string[]>>;
+  /** The models each provider uses for each job on this deployment, for the cards that name them. */
+  readonly models: ProviderModels;
   /** What each provider would cost this project, from its own last 30 days. */
   readonly cost: CostLines;
 }
