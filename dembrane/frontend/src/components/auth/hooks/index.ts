@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useLocation, useSearchParams } from "react-router";
 import { toast } from "@/components/common/Toaster";
+import { resetSupportRequestSeen } from "@/components/workspace/supportRequestPromptState";
 import { API_BASE_URL } from "@/config";
 import { resetPromptSeen } from "@/features/accounts/help/tasksPromptState";
 import { clearAllDrafts } from "@/features/accounts/signing/signingDraft";
@@ -187,9 +188,10 @@ export const useLoginMutation = () => {
 				try {
 					sessionStorage.removeItem("dembrane_ws_selected");
 				} catch {}
-				// A new sign-in may see the tasks banner again, and starts with no
-				// half-filled signing drafts.
+				// A new sign-in may see the tasks banner and the support access
+				// requests again, and starts with no half-filled signing drafts.
 				resetPromptSeen();
+				resetSupportRequestSeen();
 				clearAllDrafts();
 			}
 			emitAuthCacheBoundary();

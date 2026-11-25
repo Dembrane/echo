@@ -427,7 +427,7 @@ msgid "{0} file(s) failed to upload. Try those again."
 msgstr "Impossibile caricare {0} file. Riprova."
 
 #. placeholder {0}: req.requested_by_name
-#: src/components/workspace/SupportAccessSection.tsx:205
+#: src/components/workspace/SupportAccessSection.tsx:148
 msgid "{0} from dembrane"
 msgstr "{0} da dembrane"
 
@@ -824,6 +824,10 @@ msgstr "{m} min"
 
 #~ msgid "{n} min"
 #~ msgstr "{n} min"
+
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:98
+msgid "{name} from dembrane asks for admin access to {workspaceName} for 24 hours, to help you with support. Access ends automatically."
+msgstr "{name} di dembrane chiede l'accesso come amministratore a {workspaceName} per 24 ore, per aiutarti con l'assistenza. L'accesso termina automaticamente."
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:987
 msgid "{name} has used this month's free recording hours. Recording is paused until the month resets."
@@ -1358,27 +1362,27 @@ msgstr "L'accesso termina il"
 msgid "Access expires after"
 msgstr "L'accesso scade dopo"
 
-#: src/components/workspace/SupportAccessSection.tsx:156
+#: src/components/workspace/supportRequests.ts:172
 msgid "Access granted for 24 hours."
 msgstr "Accesso concesso per 24 ore."
 
-#: src/components/workspace/SupportAccessSection.tsx:243
+#: src/components/workspace/SupportAccessSection.tsx:187
 msgid "Access history"
 msgstr "Cronologia degli accessi"
 
-#: src/components/workspace/SupportAccessSection.tsx:46
+#: src/components/workspace/SupportAccessSection.tsx:35
 msgid "Access request approved"
 msgstr "Richiesta di accesso approvata"
 
-#: src/components/workspace/SupportAccessSection.tsx:48
+#: src/components/workspace/SupportAccessSection.tsx:37
 msgid "Access request denied"
 msgstr "Richiesta di accesso rifiutata"
 
-#: src/components/workspace/SupportAccessSection.tsx:50
+#: src/components/workspace/SupportAccessSection.tsx:39
 msgid "Access request expired"
 msgstr "Richiesta di accesso scaduta"
 
-#: src/components/workspace/SupportAccessSection.tsx:52
+#: src/components/workspace/SupportAccessSection.tsx:41
 msgid "Access request withdrawn"
 msgstr "Richiesta di accesso revocata"
 
@@ -1456,7 +1460,7 @@ msgstr "Eseguita da"
 #~ msgid "Action By"
 #~ msgstr "Action By"
 
-#: src/features/sidebar/views/InboxView.tsx:470
+#: src/features/sidebar/views/InboxView.tsx:486
 #: src/components/inbox/Inbox.tsx:442
 msgid "Action needed"
 msgstr "Azione richiesta"
@@ -1984,7 +1988,7 @@ msgstr "Tutti i progetti"
 msgid "All quotes"
 msgstr "Tutte le citazioni"
 
-#: src/features/sidebar/views/InboxView.tsx:179
+#: src/features/sidebar/views/InboxView.tsx:195
 msgid "All read"
 msgstr "Tutto letto"
 
@@ -2384,16 +2388,17 @@ msgstr "Limite quasi raggiunto: {0} / 32.000 caratteri"
 msgid "participant.concrete.action.button.approve"
 msgstr "Approve"
 
-#: src/components/workspace/SupportAccessSection.tsx:219
+#: src/components/workspace/SupportAccessSection.tsx:162
 #: src/components/workspace/AccessRequestsList.tsx:182
 msgid "Approve"
 msgstr "Approva"
 
-#: src/components/workspace/SupportAccessSection.tsx:286
+#: src/components/workspace/SupportAccessSection.tsx:231
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:95
 msgid "Approve for 24 hours"
 msgstr "Approva per 24 ore"
 
-#: src/components/workspace/SupportAccessSection.tsx:284
+#: src/components/workspace/SupportAccessSection.tsx:229
 msgid "Approve support access"
 msgstr "Approva l'accesso per l'assistenza"
 
@@ -3140,7 +3145,7 @@ msgstr "Chiamate non associate ad alcun account"
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
 #: src/components/common/ImageCropModal.tsx:146
-#: src/components/common/ConfirmModal.tsx:63
+#: src/components/common/ConfirmModal.tsx:70
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:675
 #: src/components/chat/AgenticChatPanel.tsx:755
 #: src/components/chat/AgenticChatPanel.tsx:2257
@@ -3955,7 +3960,7 @@ msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Confirm"
 
 #: src/lib/openConfirm.tsx:47
-#: src/components/common/ConfirmModal.tsx:55
+#: src/components/common/ConfirmModal.tsx:62
 msgid "Confirm"
 msgstr "Confirm"
 
@@ -4928,7 +4933,8 @@ msgstr "Date disponibili, contesto, qualsiasi altra informazione"
 
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/invite/MyInvitesRoute.tsx:236
-#: src/components/workspace/SupportAccessSection.tsx:231
+#: src/components/workspace/SupportAccessSection.tsx:175
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:96
 #: src/components/workspace/AccessRequestsList.tsx:195
 msgid "Decline"
 msgstr "Rifiuta"
@@ -5158,23 +5164,23 @@ msgstr "dembrane non è responsabile dell'uso che terze parti fanno di tali cont
 msgid "dembrane reads the first 4,000 characters on every answer, so keep the essentials near the top: the people, the places and the question."
 msgstr "dembrane legge i primi 4.000 caratteri a ogni risposta, quindi metti l'essenziale in alto: le persone, i luoghi e la domanda."
 
-#: src/components/workspace/SupportAccessSection.tsx:60
+#: src/components/workspace/SupportAccessSection.tsx:49
 msgid "dembrane staff access ended automatically"
 msgstr "L'accesso dello staff di dembrane è terminato automaticamente"
 
-#: src/components/workspace/SupportAccessSection.tsx:56
+#: src/components/workspace/SupportAccessSection.tsx:45
 msgid "dembrane staff extended their session"
 msgstr "Il team di dembrane ha prolungato la sessione"
 
-#: src/components/workspace/SupportAccessSection.tsx:54
+#: src/components/workspace/SupportAccessSection.tsx:43
 msgid "dembrane staff joined for support"
 msgstr "Il team di dembrane è entrato per dare supporto"
 
-#: src/components/workspace/SupportAccessSection.tsx:58
+#: src/components/workspace/SupportAccessSection.tsx:47
 msgid "dembrane staff left"
 msgstr "Il team di dembrane è uscito"
 
-#: src/components/workspace/SupportAccessSection.tsx:44
+#: src/components/workspace/SupportAccessSection.tsx:33
 msgid "dembrane staff requested access"
 msgstr "Il team di dembrane ha richiesto l'accesso"
 
@@ -6703,7 +6709,7 @@ msgstr "Per fatture, contratti personalizzati, partnership o altre richieste, sc
 msgid "for the dembrane team"
 msgstr "per il team di dembrane"
 
-#: src/features/sidebar/views/InboxView.tsx:160
+#: src/features/sidebar/views/InboxView.tsx:176
 #: src/components/inbox/Inbox.tsx:214
 msgid "For you"
 msgstr "Per te"
@@ -6985,7 +6991,7 @@ msgid "get started."
 msgstr "iniziare."
 
 #. placeholder {0}: confirmTarget.requested_by_name
-#: src/components/workspace/SupportAccessSection.tsx:288
+#: src/components/workspace/SupportAccessSection.tsx:233
 msgid "Give {0} from dembrane admin access to this workspace for 24 hours? Access ends automatically."
 msgstr "Vuoi concedere a {0} di dembrane l'accesso come amministratore a questo spazio di lavoro per 24 ore? L'accesso terminerà automaticamente."
 
@@ -7530,9 +7536,9 @@ msgstr "Con parole tue"
 msgid "Inactive"
 msgstr "Inattivo"
 
-#: src/features/sidebar/views/InboxView.tsx:142
+#: src/features/sidebar/views/InboxView.tsx:158
 #: src/features/sidebar/blocks/InboxBlock.tsx:37
-#: src/components/layout/BaseLayout.tsx:83
+#: src/components/layout/BaseLayout.tsx:94
 #: src/components/inbox/Inbox.tsx:166
 #: src/components/inbox/Inbox.tsx:181
 msgid "Inbox"
@@ -8877,7 +8883,7 @@ msgstr "I risultati della mappa non sono ancora pronti."
 #~ msgid "Maps per month"
 #~ msgstr "Mappe al mese"
 
-#: src/features/sidebar/views/InboxView.tsx:177
+#: src/features/sidebar/views/InboxView.tsx:193
 msgid "Mark all as read"
 msgstr "Segna tutti come letti"
 
@@ -8889,14 +8895,14 @@ msgstr "Mark all read"
 msgid "Mark as attended"
 msgstr "Segna come presente"
 
-#: src/features/sidebar/views/InboxView.tsx:480
-#: src/features/sidebar/views/InboxView.tsx:571
+#: src/features/sidebar/views/InboxView.tsx:496
+#: src/features/sidebar/views/InboxView.tsx:587
 #: src/components/inbox/Inbox.tsx:397
 #: src/components/announcement/AnnouncementItem.tsx:148
 msgid "Mark as read"
 msgstr "Mark as read"
 
-#: src/features/sidebar/views/InboxView.tsx:571
+#: src/features/sidebar/views/InboxView.tsx:587
 #: src/components/announcement/AnnouncementItem.tsx:137
 msgid "Mark as unread"
 msgstr "Segna come non letto"
@@ -10204,7 +10210,7 @@ msgstr "Note salvate dall'assistente su questo progetto durante le chat. Sono co
 msgid "Notes the assistant saved about this workspace from chats. Everyone in the workspace shares them."
 msgstr "Note salvate dall'assistente su questo spazio di lavoro durante le chat. Sono condivise da tutti nello spazio di lavoro."
 
-#: src/features/sidebar/views/InboxView.tsx:321
+#: src/features/sidebar/views/InboxView.tsx:337
 #: src/components/inbox/Inbox.tsx:259
 msgid "Nothing from dembrane right now."
 msgstr "Nessuna novità da dembrane al momento."
@@ -11169,11 +11175,11 @@ msgstr "in attesa"
 msgid "Pending"
 msgstr "Pending"
 
-#: src/components/workspace/SupportAccessSection.tsx:194
+#: src/components/workspace/SupportAccessSection.tsx:137
 msgid "Pending access requests"
 msgstr "Richieste di accesso in attesa"
 
-#: src/features/sidebar/views/InboxView.tsx:293
+#: src/features/sidebar/views/InboxView.tsx:309
 msgid "Pending action"
 msgstr "Azione in sospeso"
 
@@ -12525,13 +12531,13 @@ msgid "participant.button.reload"
 msgstr "Ricarica pagina"
 
 #: src/features/sidebar/AppSidebar.tsx:122
-#: src/components/layout/BaseLayout.tsx:39
+#: src/components/layout/BaseLayout.tsx:43
 #: src/components/error/ErrorPageContent.tsx:53
 #: src/components/error/ErrorBoundary.tsx:54
 msgid "Reload page"
 msgstr "Ricarica la pagina"
 
-#: src/components/workspace/SupportAccessSection.tsx:62
+#: src/components/workspace/SupportAccessSection.tsx:51
 msgid "Reminder sent: support access still on"
 msgstr "Promemoria inviato: accesso di supporto ancora attivo"
 
@@ -12846,7 +12852,7 @@ msgstr "Richiesta approvata"
 msgid "Request declined"
 msgstr "Richiesta rifiutata"
 
-#: src/components/workspace/SupportAccessSection.tsx:157
+#: src/components/workspace/supportRequests.ts:173
 msgid "Request declined."
 msgstr "Richiesta respinta."
 
@@ -14316,7 +14322,7 @@ msgstr "Mostra introduzione"
 msgid "Show IP addresses"
 msgstr "Show IP addresses"
 
-#: src/features/sidebar/views/InboxView.tsx:565
+#: src/features/sidebar/views/InboxView.tsx:581
 #: src/components/chat/CanvasSuggestionCard.tsx:298
 #: src/components/announcement/AnnouncementItem.tsx:119
 msgid "Show less"
@@ -14325,8 +14331,8 @@ msgstr "Show less"
 #~ msgid "Show live preview text"
 #~ msgstr "Mostra l'anteprima del testo in tempo reale"
 
-#: src/features/sidebar/views/InboxView.tsx:565
-#: src/components/workspace/SupportAccessSection.tsx:262
+#: src/features/sidebar/views/InboxView.tsx:581
+#: src/components/workspace/SupportAccessSection.tsx:206
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:237
 #: src/components/chat/CanvasSuggestionCard.tsx:298
 #: src/components/announcement/AnnouncementItem.tsx:121
@@ -14470,7 +14476,7 @@ msgstr "Visibile nell'intestazione dell'organizzazione e nell'oggetto delle emai
 msgid "Side by side"
 msgstr "Affiancate"
 
-#: src/components/layout/BaseLayout.tsx:31
+#: src/components/layout/BaseLayout.tsx:35
 msgid "Sidebar couldn't load."
 msgstr "Impossibile caricare la barra laterale."
 
@@ -15146,15 +15152,19 @@ msgstr "Accesso di supporto esteso per altre 24 ore."
 msgid "Support access granted. It ends automatically in 24 hours."
 msgstr "Accesso di supporto concesso. Terminerà automaticamente tra 24 ore."
 
-#: src/components/workspace/SupportAccessSection.tsx:40
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:93
+msgid "Support access request"
+msgstr "Richiesta di accesso per l'assistenza"
+
+#: src/components/workspace/SupportAccessSection.tsx:29
 msgid "Support access turned off"
 msgstr "Accesso di supporto disattivato"
 
-#: src/components/workspace/SupportAccessSection.tsx:42
+#: src/components/workspace/SupportAccessSection.tsx:31
 msgid "Support access turned off after the session ended"
 msgstr "Accesso di supporto disattivato al termine della sessione"
 
-#: src/components/workspace/SupportAccessSection.tsx:38
+#: src/components/workspace/SupportAccessSection.tsx:27
 msgid "Support access turned on"
 msgstr "Accesso di supporto attivato"
 
@@ -15933,6 +15943,10 @@ msgstr "Le parole di questo risultato"
 #: src/routes/invite/AcceptInviteRoute.tsx:422
 msgid "The workspace this invite was for has been deleted. There's nothing to join."
 msgstr "Lo spazio di lavoro a cui si riferiva questo invito è stato eliminato. Non c'è nulla a cui unirsi."
+
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:103
+msgid "Their note: {note}"
+msgstr "Il suo messaggio: {note}"
 
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:165
 msgid "Their representative who owns this data. They are added as a free observer and become the handoff contact."
@@ -17346,7 +17360,7 @@ msgstr "Colori, font, icone e logo rinnovati donano a dembrane un look moderno."
 msgid "Updated."
 msgstr "Aggiornato."
 
-#: src/features/sidebar/views/InboxView.tsx:166
+#: src/features/sidebar/views/InboxView.tsx:182
 msgid "Updates"
 msgstr "Aggiornamenti"
 
@@ -18962,7 +18976,7 @@ msgstr "Verificherai il nuovo metodo di pagamento nella schermata successiva. No
 msgid "You're about to change your own role to <0>{0}</0>. You'll immediately lose access to workspace settings, invites, and member management."
 msgstr "Stai per modificare il tuo ruolo in <0>{0}</0>. Perderai subito l'accesso alle impostazioni dello spazio di lavoro, agli inviti e alla gestione dei membri."
 
-#: src/features/sidebar/views/InboxView.tsx:246
+#: src/features/sidebar/views/InboxView.tsx:262
 #: src/components/inbox/Inbox.tsx:236
 msgid "You're all caught up."
 msgstr "Non hai altre notifiche."

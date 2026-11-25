@@ -427,7 +427,7 @@ msgid "{0} file(s) failed to upload. Try those again."
 msgstr "{0} souborů se nepodařilo nahrát. Zkuste to znovu."
 
 #. placeholder {0}: req.requested_by_name
-#: src/components/workspace/SupportAccessSection.tsx:205
+#: src/components/workspace/SupportAccessSection.tsx:148
 msgid "{0} from dembrane"
 msgstr "{0} z dembrane"
 
@@ -824,6 +824,10 @@ msgstr "{m} min"
 
 #~ msgid "{n} min"
 #~ msgstr "{n} min"
+
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:98
+msgid "{name} from dembrane asks for admin access to {workspaceName} for 24 hours, to help you with support. Access ends automatically."
+msgstr "{name} z dembrane žádá o 24hodinový přístup správce k {workspaceName} kvůli podpoře. Přístup skončí automaticky."
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:987
 msgid "{name} has used this month's free recording hours. Recording is paused until the month resets."
@@ -1358,27 +1362,27 @@ msgstr "Přístup končí"
 msgid "Access expires after"
 msgstr "Přístup vyprší za"
 
-#: src/components/workspace/SupportAccessSection.tsx:156
+#: src/components/workspace/supportRequests.ts:172
 msgid "Access granted for 24 hours."
 msgstr "Přístup udělen na 24 hodin."
 
-#: src/components/workspace/SupportAccessSection.tsx:243
+#: src/components/workspace/SupportAccessSection.tsx:187
 msgid "Access history"
 msgstr "Historie přístupů"
 
-#: src/components/workspace/SupportAccessSection.tsx:46
+#: src/components/workspace/SupportAccessSection.tsx:35
 msgid "Access request approved"
 msgstr "Žádost o přístup schválena"
 
-#: src/components/workspace/SupportAccessSection.tsx:48
+#: src/components/workspace/SupportAccessSection.tsx:37
 msgid "Access request denied"
 msgstr "Žádost o přístup zamítnuta"
 
-#: src/components/workspace/SupportAccessSection.tsx:50
+#: src/components/workspace/SupportAccessSection.tsx:39
 msgid "Access request expired"
 msgstr "Žádost o přístup vypršela"
 
-#: src/components/workspace/SupportAccessSection.tsx:52
+#: src/components/workspace/SupportAccessSection.tsx:41
 msgid "Access request withdrawn"
 msgstr "Žádost o přístup stažena"
 
@@ -1456,7 +1460,7 @@ msgstr "Autor akce"
 #~ msgid "Action By"
 #~ msgstr "Action By"
 
-#: src/features/sidebar/views/InboxView.tsx:470
+#: src/features/sidebar/views/InboxView.tsx:486
 #: src/components/inbox/Inbox.tsx:442
 msgid "Action needed"
 msgstr "Action needed"
@@ -1984,7 +1988,7 @@ msgstr "All projects"
 msgid "All quotes"
 msgstr "Všechny citace"
 
-#: src/features/sidebar/views/InboxView.tsx:179
+#: src/features/sidebar/views/InboxView.tsx:195
 msgid "All read"
 msgstr "All read"
 
@@ -2384,16 +2388,17 @@ msgstr "Blížíte se k limitu: {0} / 32 000 znaků"
 msgid "participant.concrete.action.button.approve"
 msgstr "Approve"
 
-#: src/components/workspace/SupportAccessSection.tsx:219
+#: src/components/workspace/SupportAccessSection.tsx:162
 #: src/components/workspace/AccessRequestsList.tsx:182
 msgid "Approve"
 msgstr "Approve"
 
-#: src/components/workspace/SupportAccessSection.tsx:286
+#: src/components/workspace/SupportAccessSection.tsx:231
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:95
 msgid "Approve for 24 hours"
 msgstr "Schválit na 24 hodin"
 
-#: src/components/workspace/SupportAccessSection.tsx:284
+#: src/components/workspace/SupportAccessSection.tsx:229
 msgid "Approve support access"
 msgstr "Schválit přístup pro podporu"
 
@@ -3140,7 +3145,7 @@ msgstr "Volání, ke kterým nebyl přiřazen žádný účet"
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
 #: src/components/common/ImageCropModal.tsx:146
-#: src/components/common/ConfirmModal.tsx:63
+#: src/components/common/ConfirmModal.tsx:70
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:675
 #: src/components/chat/AgenticChatPanel.tsx:755
 #: src/components/chat/AgenticChatPanel.tsx:2257
@@ -3955,7 +3960,7 @@ msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Confirm"
 
 #: src/lib/openConfirm.tsx:47
-#: src/components/common/ConfirmModal.tsx:55
+#: src/components/common/ConfirmModal.tsx:62
 msgid "Confirm"
 msgstr "Confirm"
 
@@ -4928,7 +4933,8 @@ msgstr "Termíny, které se vám hodí, kontext a cokoliv dalšího"
 
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/invite/MyInvitesRoute.tsx:236
-#: src/components/workspace/SupportAccessSection.tsx:231
+#: src/components/workspace/SupportAccessSection.tsx:175
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:96
 #: src/components/workspace/AccessRequestsList.tsx:195
 msgid "Decline"
 msgstr "Decline"
@@ -5158,23 +5164,23 @@ msgstr "dembrane neodpovídá za to, jak s tímto obsahem naloží třetí stran
 msgid "dembrane reads the first 4,000 characters on every answer, so keep the essentials near the top: the people, the places and the question."
 msgstr "dembrane při každé odpovědi čte prvních 4 000 znaků, takže dej to podstatné nahoru: lidi, místa a otázku."
 
-#: src/components/workspace/SupportAccessSection.tsx:60
+#: src/components/workspace/SupportAccessSection.tsx:49
 msgid "dembrane staff access ended automatically"
 msgstr "Přístup týmu dembrane byl automaticky ukončen"
 
-#: src/components/workspace/SupportAccessSection.tsx:56
+#: src/components/workspace/SupportAccessSection.tsx:45
 msgid "dembrane staff extended their session"
 msgstr "Tým dembrane si prodloužil relaci"
 
-#: src/components/workspace/SupportAccessSection.tsx:54
+#: src/components/workspace/SupportAccessSection.tsx:43
 msgid "dembrane staff joined for support"
 msgstr "Tým dembrane se připojil pro podporu"
 
-#: src/components/workspace/SupportAccessSection.tsx:58
+#: src/components/workspace/SupportAccessSection.tsx:47
 msgid "dembrane staff left"
 msgstr "Tým dembrane se odpojil"
 
-#: src/components/workspace/SupportAccessSection.tsx:44
+#: src/components/workspace/SupportAccessSection.tsx:33
 msgid "dembrane staff requested access"
 msgstr "Tým dembrane požádal o přístup"
 
@@ -6703,7 +6709,7 @@ msgstr "Pro faktury, sdílené smlouvy, projednání partnerství nebo individu�
 msgid "for the dembrane team"
 msgstr "pro tým dembrane"
 
-#: src/features/sidebar/views/InboxView.tsx:160
+#: src/features/sidebar/views/InboxView.tsx:176
 #: src/components/inbox/Inbox.tsx:214
 msgid "For you"
 msgstr "For you"
@@ -6985,7 +6991,7 @@ msgid "get started."
 msgstr "get started."
 
 #. placeholder {0}: confirmTarget.requested_by_name
-#: src/components/workspace/SupportAccessSection.tsx:288
+#: src/components/workspace/SupportAccessSection.tsx:233
 msgid "Give {0} from dembrane admin access to this workspace for 24 hours? Access ends automatically."
 msgstr "Udělit uživateli {0} z dembrane přístup správce k tomuto pracovnímu prostoru na 24 hodin? Přístup skončí automaticky."
 
@@ -7530,9 +7536,9 @@ msgstr "Vlastními slovy"
 msgid "Inactive"
 msgstr "Inactive"
 
-#: src/features/sidebar/views/InboxView.tsx:142
+#: src/features/sidebar/views/InboxView.tsx:158
 #: src/features/sidebar/blocks/InboxBlock.tsx:37
-#: src/components/layout/BaseLayout.tsx:83
+#: src/components/layout/BaseLayout.tsx:94
 #: src/components/inbox/Inbox.tsx:166
 #: src/components/inbox/Inbox.tsx:181
 msgid "Inbox"
@@ -8877,7 +8883,7 @@ msgstr "Výsledky mapy ještě nejsou připraveny."
 #~ msgid "Maps per month"
 #~ msgstr "Mapy za měsíc"
 
-#: src/features/sidebar/views/InboxView.tsx:177
+#: src/features/sidebar/views/InboxView.tsx:193
 msgid "Mark all as read"
 msgstr "Mark all as read"
 
@@ -8889,14 +8895,14 @@ msgstr "Mark all read"
 msgid "Mark as attended"
 msgstr "Označit jako absolvované"
 
-#: src/features/sidebar/views/InboxView.tsx:480
-#: src/features/sidebar/views/InboxView.tsx:571
+#: src/features/sidebar/views/InboxView.tsx:496
+#: src/features/sidebar/views/InboxView.tsx:587
 #: src/components/inbox/Inbox.tsx:397
 #: src/components/announcement/AnnouncementItem.tsx:148
 msgid "Mark as read"
 msgstr "Mark as read"
 
-#: src/features/sidebar/views/InboxView.tsx:571
+#: src/features/sidebar/views/InboxView.tsx:587
 #: src/components/announcement/AnnouncementItem.tsx:137
 msgid "Mark as unread"
 msgstr "Mark as unread"
@@ -10204,7 +10210,7 @@ msgstr "Poznámky, které si asistent k tomuto projektu uložil z chatů. Jsou s
 msgid "Notes the assistant saved about this workspace from chats. Everyone in the workspace shares them."
 msgstr "Poznámky, které si asistent k tomuto pracovnímu prostoru uložil z chatů. Jsou sdílené se všemi v pracovním prostoru."
 
-#: src/features/sidebar/views/InboxView.tsx:321
+#: src/features/sidebar/views/InboxView.tsx:337
 #: src/components/inbox/Inbox.tsx:259
 msgid "Nothing from dembrane right now."
 msgstr "Nothing from dembrane right now."
@@ -11169,11 +11175,11 @@ msgstr "pending"
 msgid "Pending"
 msgstr "Pending"
 
-#: src/components/workspace/SupportAccessSection.tsx:194
+#: src/components/workspace/SupportAccessSection.tsx:137
 msgid "Pending access requests"
 msgstr "Čekající žádosti o přístup"
 
-#: src/features/sidebar/views/InboxView.tsx:293
+#: src/features/sidebar/views/InboxView.tsx:309
 msgid "Pending action"
 msgstr "Čeká na akci"
 
@@ -12525,13 +12531,13 @@ msgid "participant.button.reload"
 msgstr "Znovu načíst stránku"
 
 #: src/features/sidebar/AppSidebar.tsx:122
-#: src/components/layout/BaseLayout.tsx:39
+#: src/components/layout/BaseLayout.tsx:43
 #: src/components/error/ErrorPageContent.tsx:53
 #: src/components/error/ErrorBoundary.tsx:54
 msgid "Reload page"
 msgstr "Reload page"
 
-#: src/components/workspace/SupportAccessSection.tsx:62
+#: src/components/workspace/SupportAccessSection.tsx:51
 msgid "Reminder sent: support access still on"
 msgstr "Připomínka odeslána: přístup podpory je stále aktivní"
 
@@ -12846,7 +12852,7 @@ msgstr "Request approved"
 msgid "Request declined"
 msgstr "Request declined"
 
-#: src/components/workspace/SupportAccessSection.tsx:157
+#: src/components/workspace/supportRequests.ts:173
 msgid "Request declined."
 msgstr "Žádost byla zamítnuta."
 
@@ -14316,7 +14322,7 @@ msgstr "Zobrazit úvod"
 msgid "Show IP addresses"
 msgstr "Show IP addresses"
 
-#: src/features/sidebar/views/InboxView.tsx:565
+#: src/features/sidebar/views/InboxView.tsx:581
 #: src/components/chat/CanvasSuggestionCard.tsx:298
 #: src/components/announcement/AnnouncementItem.tsx:119
 msgid "Show less"
@@ -14325,8 +14331,8 @@ msgstr "Show less"
 #~ msgid "Show live preview text"
 #~ msgstr "Zobrazit živý náhled textu"
 
-#: src/features/sidebar/views/InboxView.tsx:565
-#: src/components/workspace/SupportAccessSection.tsx:262
+#: src/features/sidebar/views/InboxView.tsx:581
+#: src/components/workspace/SupportAccessSection.tsx:206
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:237
 #: src/components/chat/CanvasSuggestionCard.tsx:298
 #: src/components/announcement/AnnouncementItem.tsx:121
@@ -14470,7 +14476,7 @@ msgstr "Shown in the organisation header and in email subject lines."
 msgid "Side by side"
 msgstr "Vedle sebe"
 
-#: src/components/layout/BaseLayout.tsx:31
+#: src/components/layout/BaseLayout.tsx:35
 msgid "Sidebar couldn't load."
 msgstr "Postranní panel se nepodařilo načíst."
 
@@ -15146,15 +15152,19 @@ msgstr "Přístup podpory byl prodloužen o dalších 24 hodin."
 msgid "Support access granted. It ends automatically in 24 hours."
 msgstr "Přístup podpory byl udělen. Automaticky skončí za 24 hodin."
 
-#: src/components/workspace/SupportAccessSection.tsx:40
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:93
+msgid "Support access request"
+msgstr "Žádost o přístup pro podporu"
+
+#: src/components/workspace/SupportAccessSection.tsx:29
 msgid "Support access turned off"
 msgstr "Přístup podpory byl vypnut"
 
-#: src/components/workspace/SupportAccessSection.tsx:42
+#: src/components/workspace/SupportAccessSection.tsx:31
 msgid "Support access turned off after the session ended"
 msgstr "Přístup podpory byl vypnut po skončení relace"
 
-#: src/components/workspace/SupportAccessSection.tsx:38
+#: src/components/workspace/SupportAccessSection.tsx:27
 msgid "Support access turned on"
 msgstr "Přístup podpory byl zapnut"
 
@@ -15932,6 +15942,10 @@ msgstr "Slova tohoto zjištění"
 #: src/routes/invite/AcceptInviteRoute.tsx:422
 msgid "The workspace this invite was for has been deleted. There's nothing to join."
 msgstr "The workspace this invite was for has been deleted. There's nothing to join."
+
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:103
+msgid "Their note: {note}"
+msgstr "Jejich zpráva: {note}"
 
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:165
 msgid "Their representative who owns this data. They are added as a free observer and become the handoff contact."
@@ -17345,7 +17359,7 @@ msgstr "Nové barvy, písma, ikony a logo dávají dembrane svěží vzhled."
 msgid "Updated."
 msgstr "Aktualizováno."
 
-#: src/features/sidebar/views/InboxView.tsx:166
+#: src/features/sidebar/views/InboxView.tsx:182
 msgid "Updates"
 msgstr "Updates"
 
@@ -18960,7 +18974,7 @@ msgstr "Novou platební metodu ověříte na další obrazovce. Nic vám nenaú�
 msgid "You're about to change your own role to <0>{0}</0>. You'll immediately lose access to workspace settings, invites, and member management."
 msgstr "You're about to change your own role to <0>{0}</0>. You'll immediately lose access to workspace settings, invites, and member management."
 
-#: src/features/sidebar/views/InboxView.tsx:246
+#: src/features/sidebar/views/InboxView.tsx:262
 #: src/components/inbox/Inbox.tsx:236
 msgid "You're all caught up."
 msgstr "You're all caught up."

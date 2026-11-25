@@ -13,8 +13,12 @@ type ConfirmModalProps = {
 	opened: boolean;
 	onClose: () => void;
 	onConfirm: () => void;
+	/** The second button, when it answers differently from closing (Decline). */
+	onCancel?: () => void;
 	title: string;
 	message: ReactNode;
+	/** A second paragraph under the message, such as the note someone wrote. */
+	detail?: ReactNode;
 	confirmLabel?: ReactNode;
 	cancelLabel?: ReactNode;
 	confirmColor?: string;
@@ -26,8 +30,10 @@ export const ConfirmModal = ({
 	opened,
 	onClose,
 	onConfirm,
+	onCancel,
 	title,
 	message,
+	detail,
 	confirmLabel,
 	cancelLabel,
 	confirmColor = "primary",
@@ -44,6 +50,7 @@ export const ConfirmModal = ({
 	>
 		<Stack gap="md">
 			<Text size="sm">{message}</Text>
+			{detail && <Text size="sm">{detail}</Text>}
 			<Group gap="sm">
 				<Button
 					variant="filled"
@@ -57,7 +64,7 @@ export const ConfirmModal = ({
 				<Button
 					variant="subtle"
 					color="gray"
-					onClick={onClose}
+					onClick={onCancel ?? onClose}
 					data-testid={dataTestId ? `${dataTestId}-cancel` : undefined}
 				>
 					{cancelLabel ?? <Trans>Cancel</Trans>}

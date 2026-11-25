@@ -28,6 +28,11 @@ import {
 } from "@/components/announcement/hooks/useProcessedAnnouncements";
 import { useFormatDate } from "@/components/announcement/utils/dateUtils";
 import { Markdown } from "@/components/common/Markdown";
+import { openSupportRequest } from "@/components/workspace/supportRequestPromptState";
+import {
+	SUPPORT_REQUEST_EVENT,
+	useWaitingSupportRequests,
+} from "@/components/workspace/supportRequests";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useLanguage } from "@/hooks/useLanguage";
 import {
@@ -113,8 +118,19 @@ export const InboxView = () => {
 		}
 	}, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+	const waitingSupportRequests = useWaitingSupportRequests();
+
 	const handleNotificationClick = (row: NotificationRow) => {
 		if (!row.read) markNotifRead.mutate(row.id);
+		// A support access request that still waits is answered in the consent dialog, here.
+		const requestId = row.params?.request_id;
+		if (
+			row.event_code === SUPPORT_REQUEST_EVENT &&
+			waitingSupportRequests.some((r) => r.id === requestId)
+		) {
+			openSupportRequest(requestId as string);
+			return;
+		}
 		const href = resolveNotificationHref(row);
 		if (href) navigate(href);
 	};

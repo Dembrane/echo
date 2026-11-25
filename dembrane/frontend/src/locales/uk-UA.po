@@ -427,7 +427,7 @@ msgid "{0} file(s) failed to upload. Try those again."
 msgstr "Не вдалося завантажити {0} файл(ів). Спробуйте ще раз."
 
 #. placeholder {0}: req.requested_by_name
-#: src/components/workspace/SupportAccessSection.tsx:205
+#: src/components/workspace/SupportAccessSection.tsx:148
 msgid "{0} from dembrane"
 msgstr "{0} з dembrane"
 
@@ -824,6 +824,10 @@ msgstr "{m} хв"
 
 #~ msgid "{n} min"
 #~ msgstr "{n} хв"
+
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:98
+msgid "{name} from dembrane asks for admin access to {workspaceName} for 24 hours, to help you with support. Access ends automatically."
+msgstr "{name} з dembrane просить доступ адміністратора до {workspaceName} на 24 години, щоб допомогти вам із підтримкою. Доступ припиниться автоматично."
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:987
 msgid "{name} has used this month's free recording hours. Recording is paused until the month resets."
@@ -1358,27 +1362,27 @@ msgstr "Доступ діє до"
 msgid "Access expires after"
 msgstr "Термін дії доступу закінчується через"
 
-#: src/components/workspace/SupportAccessSection.tsx:156
+#: src/components/workspace/supportRequests.ts:172
 msgid "Access granted for 24 hours."
 msgstr "Доступ надано на 24 години."
 
-#: src/components/workspace/SupportAccessSection.tsx:243
+#: src/components/workspace/SupportAccessSection.tsx:187
 msgid "Access history"
 msgstr "Історія доступу"
 
-#: src/components/workspace/SupportAccessSection.tsx:46
+#: src/components/workspace/SupportAccessSection.tsx:35
 msgid "Access request approved"
 msgstr "Запит на доступ схвалено"
 
-#: src/components/workspace/SupportAccessSection.tsx:48
+#: src/components/workspace/SupportAccessSection.tsx:37
 msgid "Access request denied"
 msgstr "Запит на доступ відхилено"
 
-#: src/components/workspace/SupportAccessSection.tsx:50
+#: src/components/workspace/SupportAccessSection.tsx:39
 msgid "Access request expired"
 msgstr "Термін дії запиту на доступ минув"
 
-#: src/components/workspace/SupportAccessSection.tsx:52
+#: src/components/workspace/SupportAccessSection.tsx:41
 msgid "Access request withdrawn"
 msgstr "Запит на доступ скасовано"
 
@@ -1456,7 +1460,7 @@ msgstr "Виконавець"
 #~ msgid "Action By"
 #~ msgstr "Action By"
 
-#: src/features/sidebar/views/InboxView.tsx:470
+#: src/features/sidebar/views/InboxView.tsx:486
 #: src/components/inbox/Inbox.tsx:442
 msgid "Action needed"
 msgstr "Потрібна дія"
@@ -1984,7 +1988,7 @@ msgstr "Усі проєкти"
 msgid "All quotes"
 msgstr "Усі цитати"
 
-#: src/features/sidebar/views/InboxView.tsx:179
+#: src/features/sidebar/views/InboxView.tsx:195
 msgid "All read"
 msgstr "Усе прочитано"
 
@@ -2384,16 +2388,17 @@ msgstr "Наближення до ліміту: {0} / 32 000 символів"
 msgid "participant.concrete.action.button.approve"
 msgstr "Approve"
 
-#: src/components/workspace/SupportAccessSection.tsx:219
+#: src/components/workspace/SupportAccessSection.tsx:162
 #: src/components/workspace/AccessRequestsList.tsx:182
 msgid "Approve"
 msgstr "Схвалити"
 
-#: src/components/workspace/SupportAccessSection.tsx:286
+#: src/components/workspace/SupportAccessSection.tsx:231
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:95
 msgid "Approve for 24 hours"
 msgstr "Схвалити на 24 години"
 
-#: src/components/workspace/SupportAccessSection.tsx:284
+#: src/components/workspace/SupportAccessSection.tsx:229
 msgid "Approve support access"
 msgstr "Схвалити доступ для підтримки"
 
@@ -3140,7 +3145,7 @@ msgstr "Запити, яким не вдалося підібрати акаун
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
 #: src/components/common/ImageCropModal.tsx:146
-#: src/components/common/ConfirmModal.tsx:63
+#: src/components/common/ConfirmModal.tsx:70
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:675
 #: src/components/chat/AgenticChatPanel.tsx:755
 #: src/components/chat/AgenticChatPanel.tsx:2257
@@ -3955,7 +3960,7 @@ msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Confirm"
 
 #: src/lib/openConfirm.tsx:47
-#: src/components/common/ConfirmModal.tsx:55
+#: src/components/common/ConfirmModal.tsx:62
 msgid "Confirm"
 msgstr "Confirm"
 
@@ -4928,7 +4933,8 @@ msgstr "Зручні дати, контекст, будь-що інше"
 
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/invite/MyInvitesRoute.tsx:236
-#: src/components/workspace/SupportAccessSection.tsx:231
+#: src/components/workspace/SupportAccessSection.tsx:175
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:96
 #: src/components/workspace/AccessRequestsList.tsx:195
 msgid "Decline"
 msgstr "Відхилити"
@@ -5158,23 +5164,23 @@ msgstr "dembrane не несе відповідальності за дії тр
 msgid "dembrane reads the first 4,000 characters on every answer, so keep the essentials near the top: the people, the places and the question."
 msgstr "dembrane читає перші 4000 символів у кожній відповіді, тож постав головне на початок: людей, місця і питання."
 
-#: src/components/workspace/SupportAccessSection.tsx:60
+#: src/components/workspace/SupportAccessSection.tsx:49
 msgid "dembrane staff access ended automatically"
 msgstr "Доступ команди dembrane завершився автоматично"
 
-#: src/components/workspace/SupportAccessSection.tsx:56
+#: src/components/workspace/SupportAccessSection.tsx:45
 msgid "dembrane staff extended their session"
 msgstr "Команда dembrane продовжила свою сесію"
 
-#: src/components/workspace/SupportAccessSection.tsx:54
+#: src/components/workspace/SupportAccessSection.tsx:43
 msgid "dembrane staff joined for support"
 msgstr "Команда dembrane приєдналася для підтримки"
 
-#: src/components/workspace/SupportAccessSection.tsx:58
+#: src/components/workspace/SupportAccessSection.tsx:47
 msgid "dembrane staff left"
 msgstr "Команда dembrane вийшла"
 
-#: src/components/workspace/SupportAccessSection.tsx:44
+#: src/components/workspace/SupportAccessSection.tsx:33
 msgid "dembrane staff requested access"
 msgstr "Команда dembrane надіслала запит на доступ"
 
@@ -6703,7 +6709,7 @@ msgstr "Щодо рахунків, спільного договору, обго
 msgid "for the dembrane team"
 msgstr "для команди dembrane"
 
-#: src/features/sidebar/views/InboxView.tsx:160
+#: src/features/sidebar/views/InboxView.tsx:176
 #: src/components/inbox/Inbox.tsx:214
 msgid "For you"
 msgstr "Для вас"
@@ -6985,7 +6991,7 @@ msgid "get started."
 msgstr "почати роботу."
 
 #. placeholder {0}: confirmTarget.requested_by_name
-#: src/components/workspace/SupportAccessSection.tsx:288
+#: src/components/workspace/SupportAccessSection.tsx:233
 msgid "Give {0} from dembrane admin access to this workspace for 24 hours? Access ends automatically."
 msgstr "Надати користувачу {0} з dembrane права адміністратора для цього робочого простору на 24 години? Доступ припиниться автоматично."
 
@@ -7530,9 +7536,9 @@ msgstr "Своїми словами"
 msgid "Inactive"
 msgstr "Неактивний"
 
-#: src/features/sidebar/views/InboxView.tsx:142
+#: src/features/sidebar/views/InboxView.tsx:158
 #: src/features/sidebar/blocks/InboxBlock.tsx:37
-#: src/components/layout/BaseLayout.tsx:83
+#: src/components/layout/BaseLayout.tsx:94
 #: src/components/inbox/Inbox.tsx:166
 #: src/components/inbox/Inbox.tsx:181
 msgid "Inbox"
@@ -8877,7 +8883,7 @@ msgstr "Результати карти ще не готові."
 #~ msgid "Maps per month"
 #~ msgstr "Мапи на місяць"
 
-#: src/features/sidebar/views/InboxView.tsx:177
+#: src/features/sidebar/views/InboxView.tsx:193
 msgid "Mark all as read"
 msgstr "Позначити все як прочитане"
 
@@ -8889,14 +8895,14 @@ msgstr "Mark all read"
 msgid "Mark as attended"
 msgstr "Позначити як присутнього"
 
-#: src/features/sidebar/views/InboxView.tsx:480
-#: src/features/sidebar/views/InboxView.tsx:571
+#: src/features/sidebar/views/InboxView.tsx:496
+#: src/features/sidebar/views/InboxView.tsx:587
 #: src/components/inbox/Inbox.tsx:397
 #: src/components/announcement/AnnouncementItem.tsx:148
 msgid "Mark as read"
 msgstr "Mark as read"
 
-#: src/features/sidebar/views/InboxView.tsx:571
+#: src/features/sidebar/views/InboxView.tsx:587
 #: src/components/announcement/AnnouncementItem.tsx:137
 msgid "Mark as unread"
 msgstr "Позначити як непрочитане"
@@ -10204,7 +10210,7 @@ msgstr "Нотатки про цей проєкт, збережені поміч
 msgid "Notes the assistant saved about this workspace from chats. Everyone in the workspace shares them."
 msgstr "Нотатки про цей робочий простір, збережені помічником під час розмов. Спільні для всіх у цьому робочому просторі."
 
-#: src/features/sidebar/views/InboxView.tsx:321
+#: src/features/sidebar/views/InboxView.tsx:337
 #: src/components/inbox/Inbox.tsx:259
 msgid "Nothing from dembrane right now."
 msgstr "Зараз від dembrane нічого немає."
@@ -11169,11 +11175,11 @@ msgstr "очікує"
 msgid "Pending"
 msgstr "Pending"
 
-#: src/components/workspace/SupportAccessSection.tsx:194
+#: src/components/workspace/SupportAccessSection.tsx:137
 msgid "Pending access requests"
 msgstr "Запити на доступ, що очікують розгляду"
 
-#: src/features/sidebar/views/InboxView.tsx:293
+#: src/features/sidebar/views/InboxView.tsx:309
 msgid "Pending action"
 msgstr "Очікує на дію"
 
@@ -12525,13 +12531,13 @@ msgid "participant.button.reload"
 msgstr "Перезавантажити сторінку"
 
 #: src/features/sidebar/AppSidebar.tsx:122
-#: src/components/layout/BaseLayout.tsx:39
+#: src/components/layout/BaseLayout.tsx:43
 #: src/components/error/ErrorPageContent.tsx:53
 #: src/components/error/ErrorBoundary.tsx:54
 msgid "Reload page"
 msgstr "Перезавантажити сторінку"
 
-#: src/components/workspace/SupportAccessSection.tsx:62
+#: src/components/workspace/SupportAccessSection.tsx:51
 msgid "Reminder sent: support access still on"
 msgstr "Нагадування надіслано: доступ підтримки все ще активний"
 
@@ -12846,7 +12852,7 @@ msgstr "Запит схвалено"
 msgid "Request declined"
 msgstr "Запит відхилено"
 
-#: src/components/workspace/SupportAccessSection.tsx:157
+#: src/components/workspace/supportRequests.ts:173
 msgid "Request declined."
 msgstr "Запит відхилено."
 
@@ -14316,7 +14322,7 @@ msgstr "Показати вступ"
 msgid "Show IP addresses"
 msgstr "Show IP addresses"
 
-#: src/features/sidebar/views/InboxView.tsx:565
+#: src/features/sidebar/views/InboxView.tsx:581
 #: src/components/chat/CanvasSuggestionCard.tsx:298
 #: src/components/announcement/AnnouncementItem.tsx:119
 msgid "Show less"
@@ -14325,8 +14331,8 @@ msgstr "Show less"
 #~ msgid "Show live preview text"
 #~ msgstr "Показувати текст попереднього перегляду наживо"
 
-#: src/features/sidebar/views/InboxView.tsx:565
-#: src/components/workspace/SupportAccessSection.tsx:262
+#: src/features/sidebar/views/InboxView.tsx:581
+#: src/components/workspace/SupportAccessSection.tsx:206
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:237
 #: src/components/chat/CanvasSuggestionCard.tsx:298
 #: src/components/announcement/AnnouncementItem.tsx:121
@@ -14470,7 +14476,7 @@ msgstr "Відображається в заголовку організаці�
 msgid "Side by side"
 msgstr "Поруч"
 
-#: src/components/layout/BaseLayout.tsx:31
+#: src/components/layout/BaseLayout.tsx:35
 msgid "Sidebar couldn't load."
 msgstr "Не вдалося завантажити бічну панель."
 
@@ -15146,15 +15152,19 @@ msgstr "Доступ для підтримки подовжено ще на 24 �
 msgid "Support access granted. It ends automatically in 24 hours."
 msgstr "Доступ для підтримки надано. Він автоматично завершиться через 24 години."
 
-#: src/components/workspace/SupportAccessSection.tsx:40
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:93
+msgid "Support access request"
+msgstr "Запит на доступ для підтримки"
+
+#: src/components/workspace/SupportAccessSection.tsx:29
 msgid "Support access turned off"
 msgstr "Доступ для підтримки вимкнено"
 
-#: src/components/workspace/SupportAccessSection.tsx:42
+#: src/components/workspace/SupportAccessSection.tsx:31
 msgid "Support access turned off after the session ended"
 msgstr "Доступ для підтримки вимкнено після завершення сесії"
 
-#: src/components/workspace/SupportAccessSection.tsx:38
+#: src/components/workspace/SupportAccessSection.tsx:27
 msgid "Support access turned on"
 msgstr "Доступ для підтримки ввімкнено"
 
@@ -15933,6 +15943,10 @@ msgstr "Слова цього висновку"
 #: src/routes/invite/AcceptInviteRoute.tsx:422
 msgid "The workspace this invite was for has been deleted. There's nothing to join."
 msgstr "Робочий простір із цього запрошення видалено. Приєднуватися нікуди."
+
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:103
+msgid "Their note: {note}"
+msgstr "Їхнє повідомлення: {note}"
 
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:165
 msgid "Their representative who owns this data. They are added as a free observer and become the handoff contact."
@@ -17346,7 +17360,7 @@ msgstr "Оновлені кольори, шрифти, піктограми та
 msgid "Updated."
 msgstr "Оновлено."
 
-#: src/features/sidebar/views/InboxView.tsx:166
+#: src/features/sidebar/views/InboxView.tsx:182
 msgid "Updates"
 msgstr "Оновлення"
 
@@ -18962,7 +18976,7 @@ msgstr "Ви підтвердите новий спосіб оплати на н
 msgid "You're about to change your own role to <0>{0}</0>. You'll immediately lose access to workspace settings, invites, and member management."
 msgstr "Ви збираєтеся змінити власну роль на <0>{0}</0>. Ви одразу втратите доступ до налаштувань робочого простору, запрошень і керування учасниками."
 
-#: src/features/sidebar/views/InboxView.tsx:246
+#: src/features/sidebar/views/InboxView.tsx:262
 #: src/components/inbox/Inbox.tsx:236
 msgid "You're all caught up."
 msgstr "Усе переглянуто."
