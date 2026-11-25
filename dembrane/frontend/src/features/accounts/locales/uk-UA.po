@@ -519,8 +519,12 @@ msgid "Ask a question"
 msgstr "Поставити запитання"
 
 #: src/features/accounts/staff/SupportAccess.tsx:59
-msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read only."
-msgstr "Попросіть адміністраторів робочого простору впустити вас. Якщо вони схвалять запит, ви зможете вносити зміни протягом 24 годин. Якщо вони самі ввімкнули доступ для підтримки, ви можете приєднатися лише для перегляду."
+#~ msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read only."
+#~ msgstr "Попросіть адміністраторів робочого простору впустити вас. Якщо вони схвалять запит, ви зможете вносити зміни протягом 24 годин. Якщо вони самі ввімкнули доступ для підтримки, ви можете приєднатися лише для перегляду."
+
+#: src/features/accounts/staff/SupportAccess.tsx:59
+msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read, and still ask for more."
+msgstr "Попросіть адміністраторів робочого простору впустити вас. Якщо вони схвалять запит, ви зможете вносити зміни протягом 24 годин. Якщо вони самі ввімкнули доступ для підтримки, ви можете приєднатися для перегляду й однаково попросити більше."
 
 #: src/features/accounts/signing/SignGate.tsx:760
 msgid "Ask the person who invited you to send a new one."
@@ -658,6 +662,10 @@ msgstr "Дзвінок"
 #: src/features/accounts/staff/AccountCardRoute.tsx:920
 msgid "Call booked"
 msgstr "Дзвінок заплановано"
+
+#: src/features/accounts/staff/SupportAccess.tsx:288
+msgid "Can make changes"
+msgstr "Може вносити зміни"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:71
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
@@ -1739,8 +1747,8 @@ msgid "Join for support (24h)"
 msgstr "Приєднатися для підтримки (24 год)"
 
 #: src/features/accounts/staff/SupportAccess.tsx:286
-msgid "Joined"
-msgstr "Приєднано"
+#~ msgid "Joined"
+#~ msgstr "Приєднано"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:874
 #: src/features/accounts/customer/BillingForm.tsx:438
@@ -2651,6 +2659,10 @@ msgstr "Запитання"
 msgid "Read"
 msgstr "Читати"
 
+#: src/features/accounts/staff/SupportAccess.tsx:298
+msgid "Read only"
+msgstr "Лише перегляд"
+
 #~ msgid "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link."
 #~ msgstr "Ознайомтеся з пропозицією та підпишіть її тут. За вашу організацію підписує хтось інший? Вкажіть цю людину в пропозиції, і вона отримає власне посилання."
 
@@ -2773,7 +2785,7 @@ msgstr "Представляє працівників чи зацікавлен�
 msgid "Request access"
 msgstr "Запросити доступ"
 
-#: src/features/accounts/staff/SupportAccess.tsx:296
+#: src/features/accounts/staff/SupportAccess.tsx:308
 msgid "Request sent"
 msgstr "Запит надіслано"
 
@@ -2978,7 +2990,7 @@ msgstr "Надіслано"
 msgid "Sent {0}"
 msgstr "Надіслано {0}"
 
-#: src/features/accounts/staff/SupportAccess.tsx:292
+#: src/features/accounts/staff/SupportAccess.tsx:304
 msgid "Sent {sent}"
 msgstr "Надіслано {sent}"
 
@@ -3325,7 +3337,7 @@ msgstr "Проміжний підсумок"
 msgid "Support access"
 msgstr "Доступ для підтримки"
 
-#: src/features/accounts/staff/SupportAccess.tsx:303
+#: src/features/accounts/staff/SupportAccess.tsx:316
 msgid "Support access is on"
 msgstr "Доступ для підтримки ввімкнено"
 
@@ -3821,9 +3833,14 @@ msgstr "Скасувати публікацію"
 #~ msgid "Unsigned"
 #~ msgstr "Не підписано"
 
-#: src/features/accounts/staff/SupportAccess.tsx:282
+#: src/features/accounts/staff/SupportAccess.tsx:284
+#: src/features/accounts/staff/SupportAccess.tsx:294
 msgid "Until {until}"
 msgstr "До {until}"
+
+#: src/features/accounts/staff/SupportAccess.tsx:293
+msgid "Until {until}. Request sent"
+msgstr "До {until}. Запит надіслано"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:687
 msgid "Upgrade account"

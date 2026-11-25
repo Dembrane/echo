@@ -25,21 +25,23 @@ export function SupportRequestNoteModal({
 			title={t`Request support access`}
 			data-testid="support-access-request-modal"
 		>
-			<Stack gap="sm">
-				<Text size="sm">
-					<Trans>
-						Tell the workspace admins what you need access for. This note is
-						optional.
-					</Trans>
-				</Text>
-				<Textarea
-					value={note}
-					onChange={(e) => setNote(e.currentTarget.value)}
-					placeholder={t`e.g. investigating the report issue you emailed about`}
-					autosize
-					minRows={3}
-					data-testid="support-access-request-note"
-				/>
+			<Stack gap="lg">
+				<Stack gap="sm">
+					<Text size="sm">
+						<Trans>
+							Tell the workspace admins what you need access for. This note is
+							optional.
+						</Trans>
+					</Text>
+					<Textarea
+						value={note}
+						onChange={(e) => setNote(e.currentTarget.value)}
+						placeholder={t`e.g. investigating the report issue you emailed about`}
+						autosize
+						minRows={3}
+						data-testid="support-access-request-note"
+					/>
+				</Stack>
 				<Group justify="flex-start" gap="sm">
 					<Button
 						variant="filled"

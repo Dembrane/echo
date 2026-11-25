@@ -519,8 +519,12 @@ msgid "Ask a question"
 msgstr "Ask a question"
 
 #: src/features/accounts/staff/SupportAccess.tsx:59
-msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read only."
-msgstr "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read only."
+#~ msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read only."
+#~ msgstr "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read only."
+
+#: src/features/accounts/staff/SupportAccess.tsx:59
+msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read, and still ask for more."
+msgstr "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read, and still ask for more."
 
 #: src/features/accounts/signing/SignGate.tsx:760
 msgid "Ask the person who invited you to send a new one."
@@ -658,6 +662,10 @@ msgstr "Call"
 #: src/features/accounts/staff/AccountCardRoute.tsx:920
 msgid "Call booked"
 msgstr "Call booked"
+
+#: src/features/accounts/staff/SupportAccess.tsx:288
+msgid "Can make changes"
+msgstr "Can make changes"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:71
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
@@ -1739,8 +1747,8 @@ msgid "Join for support (24h)"
 msgstr "Join for support (24h)"
 
 #: src/features/accounts/staff/SupportAccess.tsx:286
-msgid "Joined"
-msgstr "Joined"
+#~ msgid "Joined"
+#~ msgstr "Joined"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:874
 #: src/features/accounts/customer/BillingForm.tsx:438
@@ -2651,6 +2659,10 @@ msgstr "Questions"
 msgid "Read"
 msgstr "Read"
 
+#: src/features/accounts/staff/SupportAccess.tsx:298
+msgid "Read only"
+msgstr "Read only"
+
 #~ msgid "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link."
 #~ msgstr "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link."
 
@@ -2773,7 +2785,7 @@ msgstr "Represents staff or stakeholders"
 msgid "Request access"
 msgstr "Request access"
 
-#: src/features/accounts/staff/SupportAccess.tsx:296
+#: src/features/accounts/staff/SupportAccess.tsx:308
 msgid "Request sent"
 msgstr "Request sent"
 
@@ -2978,7 +2990,7 @@ msgstr "Sent"
 msgid "Sent {0}"
 msgstr "Sent {0}"
 
-#: src/features/accounts/staff/SupportAccess.tsx:292
+#: src/features/accounts/staff/SupportAccess.tsx:304
 msgid "Sent {sent}"
 msgstr "Sent {sent}"
 
@@ -3325,7 +3337,7 @@ msgstr "Subtotal"
 msgid "Support access"
 msgstr "Support access"
 
-#: src/features/accounts/staff/SupportAccess.tsx:303
+#: src/features/accounts/staff/SupportAccess.tsx:316
 msgid "Support access is on"
 msgstr "Support access is on"
 
@@ -3821,9 +3833,14 @@ msgstr "Unpublish"
 #~ msgid "Unsigned"
 #~ msgstr "Unsigned"
 
-#: src/features/accounts/staff/SupportAccess.tsx:282
+#: src/features/accounts/staff/SupportAccess.tsx:284
+#: src/features/accounts/staff/SupportAccess.tsx:294
 msgid "Until {until}"
 msgstr "Until {until}"
+
+#: src/features/accounts/staff/SupportAccess.tsx:293
+msgid "Until {until}. Request sent"
+msgstr "Until {until}. Request sent"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:687
 msgid "Upgrade account"

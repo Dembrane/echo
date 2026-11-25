@@ -895,6 +895,7 @@ function BillingModeControl({
  * Staff self-join a workspace for support (ECHO-863). Only works when the
  * customer has enabled allow_support_access (else the endpoint 403s with a
  * clear message). Access is granted as admin and auto-revokes after 24h.
+ * A request, approved by the customer, lets the visit make changes.
  */
 function JoinSupportControl({ row }: { row: BillingRow }) {
 	const { setWorkspace } = useWorkspace();
@@ -908,6 +909,8 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 		active,
 		supportEnabled,
 		pendingRequest,
+		canChange,
+		loading,
 		busy,
 		join: joinMutation,
 		leave: leaveMutation,
@@ -982,7 +985,9 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 							</Anchor>
 						</>
 					)}
-					{!supportEnabled && !active && pendingRequest && (
+					{/* Asking is how a read-only visit gets to make changes, so it is offered
+					    whenever the visit cannot change anything yet. */}
+					{!loading && !canChange && pendingRequest && (
 						<>
 							<Text size="xs">
 								<Trans>Request sent. Waiting for the workspace admins.</Trans>
@@ -999,7 +1004,7 @@ function JoinSupportControl({ row }: { row: BillingRow }) {
 							</Button>
 						</>
 					)}
-					{!supportEnabled && !active && !pendingRequest && (
+					{!loading && !canChange && !pendingRequest && (
 						<Button size="xs" disabled={busy} onClick={openRequestModal}>
 							<Trans>Request access</Trans>
 						</Button>

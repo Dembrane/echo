@@ -20,9 +20,10 @@ sees every step.
 | Status | It means | Next step |
 |---|---|---|
 | (none) | Support access is off and you have not asked. | "Request access". An admin of the workspace decides. |
-| "Support access is on" | The customer has support access switched on. | "Join for support (24h)". Your session starts at once. |
+| "Support access is on" | The customer has support access switched on. | "Join for support (24h)". Your session starts at once. "Request access" is under the three-dot button. |
 | "Request sent" | You asked and the admins have not answered yet. | "Cancel request" takes it back. |
-| "Joined" | Your session is open, until the time under the name. | "Open workspace". "Extend 24h" and "Leave now" are under the three-dot button. |
+| "Read only" | Your session is open to read, until the time under the name. | "Open workspace". "Request access" (or "Cancel request"), "Extend 24h" and "Leave now" are under the three-dot button. |
+| "Can make changes" | An admin approved your request, until the time under the name. | "Open workspace". "Extend 24h" (while the switch is on) and "Leave now" are under the three-dot button. |
 | "Demo not published" | The workspace holds a demo that is not published yet. | Nothing. Open the draft from the demo's page. |
 
 The same steps still sit in "Usage and billing": expand the account, select the three-dot button
@@ -50,6 +51,8 @@ The workspace's admins get a notification and the email "dembrane staff requeste
 - While you wait, the screen shows "Request sent. Waiting for the workspace admins." and "Cancel
   request".
 - When an admin approves, your session starts at once and lasts 24 hours.
+- You can also ask while you are in to read. When an admin approves, the same session can make
+  changes for 24 hours from the approval.
 - A request nobody answers expires after 7 days.
 - If the customer switches support access on while you wait, the request is cancelled and you
   can join directly.
@@ -59,7 +62,7 @@ The workspace's admins get a notification and the email "dembrane staff requeste
 | How it started | What you can do |
 |---|---|
 | You joined while support access was switched on | View projects, conversations, reports and usage. Nothing else. |
-| An admin approved your request | What a workspace admin can do, except invite people, manage members, change workspace settings, or delete projects, reports and conversations. |
+| An admin approved your request, before you joined or while you were in to read | What a workspace admin can do, except invite people, manage members, change workspace settings, or delete projects, reports and conversations. |
 
 No session can turn support access on or off, approve or decline a support request, approve who
 joins the workspace, remove members, change roles, share projects or delete the workspace.
@@ -72,8 +75,9 @@ Open the workspace actions again. An open session shows "You have support access
 workspace. It ends automatically on" and the date and time.
 
 - "Extend 24h" restarts the 24 hours and notifies the admins. It shows while the customer has
-  support access switched on. A session that came from an approved request has no extend button:
-  when it ends, send a new request.
+  support access switched on. It does not extend the right to make changes: that still ends 24
+  hours after the approval, and the rest of the session reads only. With the switch off there is
+  no extend button: when the session ends, send a new request.
 - "Leave now" ends your session. Leave when you are done.
 
 ## How it ends

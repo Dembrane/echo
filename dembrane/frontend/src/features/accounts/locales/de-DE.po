@@ -519,8 +519,12 @@ msgid "Ask a question"
 msgstr "Eine Frage stellen"
 
 #: src/features/accounts/staff/SupportAccess.tsx:59
-msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read only."
-msgstr "Bitte die Admins eines Arbeitsbereichs, dich hineinzulassen. Genehmigen sie deine Anfrage, kannst du 24 Stunden lang Änderungen vornehmen. Haben sie den Support-Zugriff selbst eingeschaltet, kannst du beitreten, aber nur lesen."
+#~ msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read only."
+#~ msgstr "Bitte die Admins eines Arbeitsbereichs, dich hineinzulassen. Genehmigen sie deine Anfrage, kannst du 24 Stunden lang Änderungen vornehmen. Haben sie den Support-Zugriff selbst eingeschaltet, kannst du beitreten, aber nur lesen."
+
+#: src/features/accounts/staff/SupportAccess.tsx:59
+msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read, and still ask for more."
+msgstr "Bitte die Admins eines Arbeitsbereichs, dich hineinzulassen. Genehmigen sie deine Anfrage, kannst du 24 Stunden lang Änderungen vornehmen. Haben sie den Support-Zugriff selbst eingeschaltet, kannst du zum Lesen beitreten und trotzdem um mehr bitten."
 
 #: src/features/accounts/signing/SignGate.tsx:760
 msgid "Ask the person who invited you to send a new one."
@@ -658,6 +662,10 @@ msgstr "Anruf"
 #: src/features/accounts/staff/AccountCardRoute.tsx:920
 msgid "Call booked"
 msgstr "Anruf gebucht"
+
+#: src/features/accounts/staff/SupportAccess.tsx:288
+msgid "Can make changes"
+msgstr "Kann ändern"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:71
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
@@ -1739,8 +1747,8 @@ msgid "Join for support (24h)"
 msgstr "Für Support beitreten (24 Std.)"
 
 #: src/features/accounts/staff/SupportAccess.tsx:286
-msgid "Joined"
-msgstr "Beigetreten"
+#~ msgid "Joined"
+#~ msgstr "Beigetreten"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:874
 #: src/features/accounts/customer/BillingForm.tsx:438
@@ -2651,6 +2659,10 @@ msgstr "Fragen"
 msgid "Read"
 msgstr "Lesen"
 
+#: src/features/accounts/staff/SupportAccess.tsx:298
+msgid "Read only"
+msgstr "Nur lesen"
+
 #~ msgid "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link."
 #~ msgstr "Lesen Sie das Angebot und unterschreiben Sie es hier. Jemand anderes unterschreibt für Ihre Organisation? Geben Sie die Person im Angebot an; sie erhält einen eigenen Link."
 
@@ -2773,7 +2785,7 @@ msgstr "Vertritt Mitarbeitende oder Beteiligte"
 msgid "Request access"
 msgstr "Zugriff anfragen"
 
-#: src/features/accounts/staff/SupportAccess.tsx:296
+#: src/features/accounts/staff/SupportAccess.tsx:308
 msgid "Request sent"
 msgstr "Anfrage gesendet"
 
@@ -2978,7 +2990,7 @@ msgstr "Gesendet"
 msgid "Sent {0}"
 msgstr "Gesendet am {0}"
 
-#: src/features/accounts/staff/SupportAccess.tsx:292
+#: src/features/accounts/staff/SupportAccess.tsx:304
 msgid "Sent {sent}"
 msgstr "Gesendet am {sent}"
 
@@ -3325,7 +3337,7 @@ msgstr "Zwischensumme"
 msgid "Support access"
 msgstr "Support-Zugriff"
 
-#: src/features/accounts/staff/SupportAccess.tsx:303
+#: src/features/accounts/staff/SupportAccess.tsx:316
 msgid "Support access is on"
 msgstr "Support-Zugriff ist an"
 
@@ -3821,9 +3833,14 @@ msgstr "Veröffentlichung zurücknehmen"
 #~ msgid "Unsigned"
 #~ msgstr "Nicht unterzeichnet"
 
-#: src/features/accounts/staff/SupportAccess.tsx:282
+#: src/features/accounts/staff/SupportAccess.tsx:284
+#: src/features/accounts/staff/SupportAccess.tsx:294
 msgid "Until {until}"
 msgstr "Bis {until}"
+
+#: src/features/accounts/staff/SupportAccess.tsx:293
+msgid "Until {until}. Request sent"
+msgstr "Bis {until}. Anfrage gesendet"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:687
 msgid "Upgrade account"

@@ -14,6 +14,8 @@ import { ApiRequestError } from "@/lib/errors/read";
 export type SupportVisitStatus = {
 	active: boolean;
 	expires_at: string | null;
+	/** The visit rests on an approved request: the customer let this person make changes. */
+	can_change?: boolean;
 };
 
 export type SupportRequestStatus = {
@@ -135,6 +137,8 @@ export function useSupportVisit(workspaceId: string) {
 			leave.isPending ||
 			sendRequest.isPending ||
 			cancelRequest.isPending,
+		/** False on a visit that only reads: joined while the switch was on, never approved. */
+		canChange: active && (visit.data?.can_change ?? false),
 		cancelRequest,
 		expiresAt: visit.data?.expires_at ?? null,
 		join,

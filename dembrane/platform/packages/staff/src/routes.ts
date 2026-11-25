@@ -1,4 +1,6 @@
 import {
+  type AccessStore,
+  DrizzleAccessStore,
   heldForDemo,
   requireStaff,
   type StaffAudit,
@@ -129,6 +131,7 @@ export function staffRoutes(deps: StaffRouteDeps) {
     return out;
   }
 
+  const accessStore: AccessStore = new DrizzleAccessStore(deps.db);
   const support = new SupportAccess({
     db: deps.db,
     storage: s,
@@ -679,14 +682,18 @@ export function staffRoutes(deps: StaffRouteDeps) {
     const live = isUuid(id)
       ? (await s.supportRows(id, me.id)).filter((r) => !membershipExpired(r.expires_at, now))
       : [];
-    if (!live.length) return c.json({ active: false, membership_id: null, expires_at: null });
+    if (!live.length)
+      return c.json({ active: false, membership_id: null, expires_at: null, can_change: false });
     const row = live.reduce((a, b) =>
       String(b.expires_at ?? "") > String(a.expires_at ?? "") ? b : a,
     );
+    // Read only, or changes: the rule the access check itself applies to this visit.
+    const membership = await accessStore.workspaceMembership(id, me.id, now);
     return c.json({
       active: true,
       membership_id: row.id,
       expires_at: directusTime(row.expires_at),
+      can_change: membership?.supportApproved === true,
     });
   });
 
@@ -754,7 +761,8 @@ export function staffRoutes(deps: StaffRouteDeps) {
         message:
           "This workspace holds a demo that is not published yet, so nobody in the organisation can see it or answer a request. Open the demo's draft from the demos page instead.",
       });
-    if (ws.allow_support_access) throw new ConflictError("staff.support_access_already_on");
+    // With the switch on a request still counts: approving it lets a read-only visitor
+    // make changes.
     const me = await appUser(who.directusUserId);
     const [existing] = await s.ownRequests(id, me.id, "pending");
     if (existing) return c.json(requestOut(existing));

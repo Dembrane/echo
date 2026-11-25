@@ -33,8 +33,8 @@ export const orgWorkspacesKey = (orgId: string) =>
 
 /**
  * Staff: getting into one of the organisation's workspaces to help, one row per workspace.
- * Each row shows where the visit stands and offers the likely next step, the rest under its
- * menu, as Documents does.
+ * Each row shows where the visit stands (read only, or able to make changes) and offers the
+ * likely next step, the rest under its menu, as Documents does.
  */
 export function SupportAccess({ orgId }: { orgId: string }) {
 	const { data, isLoading, isError } = useQuery({
@@ -55,11 +55,11 @@ export function SupportAccess({ orgId }: { orgId: string }) {
 			title={<Trans>Support access</Trans>}
 			testId="staff-support-access"
 			info={
-				<InfoTip label={t`About support access`}>
+				<InfoTip label={t`About support access`} testId="staff-support-info">
 					<Trans>
 						Ask a workspace's admins to let you in. When they approve your
 						request you can make changes for 24 hours. When they turned support
-						access on themselves, you can join to read only.
+						access on themselves, you can join to read, and still ask for more.
 					</Trans>
 				</InfoTip>
 			}
@@ -278,12 +278,24 @@ function VisitRow({ ws }: { ws: OrgWorkspace }) {
 		if (visit.loading) return { state: "loading" };
 		if (visit.active) {
 			const until = formatDateTime(visit.expiresAt, i18n.locale);
+			const extendLeave = on ? [extend, leave] : [leave];
+			if (visit.canChange)
+				return {
+					detail: t`Until ${until}`,
+					more: extendLeave,
+					next: open,
+					state: "change",
+					status: <Trans>Can make changes</Trans>,
+				};
+			// A read-only visit can still ask the admins to let it make changes.
 			return {
-				detail: t`Until ${until}`,
-				more: on ? [extend, leave] : [leave],
+				detail: pendingRequest
+					? t`Until ${until}. Request sent`
+					: t`Until ${until}`,
+				more: [pendingRequest ? cancel : request, ...extendLeave],
 				next: open,
-				state: "visit",
-				status: <Trans>Joined</Trans>,
+				state: "read",
+				status: <Trans>Read only</Trans>,
 			};
 		}
 		if (pendingRequest) {
@@ -298,6 +310,7 @@ function VisitRow({ ws }: { ws: OrgWorkspace }) {
 		}
 		if (on)
 			return {
+				more: [request],
 				next: join,
 				state: "on",
 				status: <Trans>Support access is on</Trans>,

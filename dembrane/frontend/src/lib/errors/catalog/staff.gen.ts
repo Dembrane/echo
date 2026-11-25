@@ -24,12 +24,6 @@ export const staff = {
     audience: "staff",
     description: "Staff tried to join a workspace whose admins have not allowed support access.",
   },
-  "staff.support_access_already_on": {
-    action: "none",
-    detail: "Support access is already on for this workspace; join directly.",
-    audience: "staff",
-    description: "Staff asked for support access to a workspace that already allows it.",
-  },
   "staff.active_subscription": {
     action: "none",
     detail:

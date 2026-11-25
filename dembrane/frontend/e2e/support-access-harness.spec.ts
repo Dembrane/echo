@@ -252,7 +252,10 @@ for (const size of sizes)
 
 const ORG = "5f1a2b3c-0d4e-4f60-8a71-92b3c4d5e6f7";
 const inADay = () => new Date(Date.now() + 20 * 3_600_000).toISOString();
-/** One workspace in each main state: no access, request sent, switch on, on a visit. */
+/**
+ * One workspace in each main state: no access, request sent, switch on, a read-only visit
+ * that asked for more, and a visit that can make changes.
+ */
 const WORKSPACES = [
 	{
 		join: { active: false, can_change: false, expires_at: null },
@@ -274,6 +277,13 @@ const WORKSPACES = [
 		on: true,
 		request: null,
 		workspace_id: "ws-on",
+	},
+	{
+		join: { active: true, can_change: false, expires_at: inADay() },
+		name: "Climate assembly",
+		on: true,
+		request: { created_at: hoursAgo(1), id: "rq2", status: "pending" },
+		workspace_id: "ws-read",
 	},
 	{
 		join: { active: true, can_change: true, expires_at: inADay() },
@@ -328,7 +338,7 @@ for (const size of sizes)
 			await page.goto(account);
 			const section = page.getByTestId("staff-support-access");
 			await expect(section.getByTestId("staff-support-workspace")).toHaveCount(
-				4,
+				5,
 			);
 			await expect(
 				section.locator(
@@ -343,9 +353,16 @@ for (const size of sizes)
 			await shoot(page, "account-support", size, lang);
 			await noSideScroll(page);
 
-			// The rest of a row's steps sit under its menu.
+			// The two modes, explained beside the title.
+			await page.getByTestId("staff-support-info").focus();
+			await expect(page.getByTestId("staff-support-info-tip")).toBeVisible();
+			await page.waitForTimeout(300);
+			await shoot(page, "account-support-info", size, lang);
+			await page.getByTestId("staff-support-info").blur();
+
+			// The rest of a row's steps sit under its menu: a read-only visit can still ask.
 			await section
-				.locator("[data-state=visit]")
+				.locator("[data-state=read]")
 				.getByTestId("staff-support-menu")
 				.click();
 			await expect(page.getByRole("menuitem")).not.toHaveCount(0);

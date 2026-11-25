@@ -31,9 +31,10 @@ Staff who come in this way can only read.
 
 ### A request
 
-While the switch is off, a staff member can ask for access. Workspace admins get a
-notification and the email "dembrane staff requested access to {workspace_name}", with the
-staff member's note if they wrote one.
+A staff member can ask for access at any time. When the switch is on and they are already
+in to read, approving their request lets that person make changes for 24 hours. Workspace
+admins get a notification and the email "dembrane staff requested access to
+{workspace_name}", with the staff member's note if they wrote one.
 
 While a request waits, workspace admins also see the dialog "Support access request" in
 dembrane: "{name} from dembrane asks for admin access to {workspace_name} for 24 hours, to

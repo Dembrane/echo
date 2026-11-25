@@ -519,8 +519,12 @@ msgid "Ask a question"
 msgstr "Poser une question"
 
 #: src/features/accounts/staff/SupportAccess.tsx:59
-msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read only."
-msgstr "Demandez aux administrateurs d'un espace de travail de vous laisser entrer. S'ils approuvent votre demande, vous pouvez faire des modifications pendant 24 heures. S'ils ont activé eux-mêmes l'accès pour l'assistance, vous pouvez rejoindre en lecture seule."
+#~ msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read only."
+#~ msgstr "Demandez aux administrateurs d'un espace de travail de vous laisser entrer. S'ils approuvent votre demande, vous pouvez faire des modifications pendant 24 heures. S'ils ont activé eux-mêmes l'accès pour l'assistance, vous pouvez rejoindre en lecture seule."
+
+#: src/features/accounts/staff/SupportAccess.tsx:59
+msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read, and still ask for more."
+msgstr "Demandez aux administrateurs d'un espace de travail de vous laisser entrer. S'ils approuvent votre demande, vous pouvez faire des modifications pendant 24 heures. S'ils ont activé eux-mêmes l'accès pour l'assistance, vous pouvez rejoindre en lecture, et demander quand même davantage."
 
 #: src/features/accounts/signing/SignGate.tsx:760
 msgid "Ask the person who invited you to send a new one."
@@ -658,6 +662,10 @@ msgstr "Appel"
 #: src/features/accounts/staff/AccountCardRoute.tsx:920
 msgid "Call booked"
 msgstr "Appel réservé"
+
+#: src/features/accounts/staff/SupportAccess.tsx:288
+msgid "Can make changes"
+msgstr "Peut modifier"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:71
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
@@ -1739,8 +1747,8 @@ msgid "Join for support (24h)"
 msgstr "Rejoindre pour l'assistance (24 h)"
 
 #: src/features/accounts/staff/SupportAccess.tsx:286
-msgid "Joined"
-msgstr "Rejoint"
+#~ msgid "Joined"
+#~ msgstr "Rejoint"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:874
 #: src/features/accounts/customer/BillingForm.tsx:438
@@ -2651,6 +2659,10 @@ msgstr "Questions"
 msgid "Read"
 msgstr "Lire"
 
+#: src/features/accounts/staff/SupportAccess.tsx:298
+msgid "Read only"
+msgstr "Lecture seule"
+
 #~ msgid "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link."
 #~ msgstr "Lisez l'offre et signez-la ici. Quelqu'un d'autre signe pour votre organisation ? Indiquez son nom sur l'offre ; cette personne recevra son propre lien."
 
@@ -2773,7 +2785,7 @@ msgstr "Représente le personnel ou les parties prenantes"
 msgid "Request access"
 msgstr "Demander l'accès"
 
-#: src/features/accounts/staff/SupportAccess.tsx:296
+#: src/features/accounts/staff/SupportAccess.tsx:308
 msgid "Request sent"
 msgstr "Demande envoyée"
 
@@ -2978,7 +2990,7 @@ msgstr "Envoyé"
 msgid "Sent {0}"
 msgstr "Envoyé le {0}"
 
-#: src/features/accounts/staff/SupportAccess.tsx:292
+#: src/features/accounts/staff/SupportAccess.tsx:304
 msgid "Sent {sent}"
 msgstr "Envoyée le {sent}"
 
@@ -3325,7 +3337,7 @@ msgstr "Sous-total"
 msgid "Support access"
 msgstr "Accès pour l'assistance"
 
-#: src/features/accounts/staff/SupportAccess.tsx:303
+#: src/features/accounts/staff/SupportAccess.tsx:316
 msgid "Support access is on"
 msgstr "Accès pour l'assistance activé"
 
@@ -3821,9 +3833,14 @@ msgstr "Dépublier"
 #~ msgid "Unsigned"
 #~ msgstr "Non signé"
 
-#: src/features/accounts/staff/SupportAccess.tsx:282
+#: src/features/accounts/staff/SupportAccess.tsx:284
+#: src/features/accounts/staff/SupportAccess.tsx:294
 msgid "Until {until}"
 msgstr "Jusqu'au {until}"
+
+#: src/features/accounts/staff/SupportAccess.tsx:293
+msgid "Until {until}. Request sent"
+msgstr "Jusqu'au {until}. Demande envoyée"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:687
 msgid "Upgrade account"
