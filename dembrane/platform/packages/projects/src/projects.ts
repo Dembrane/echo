@@ -446,9 +446,6 @@ export async function moveProject(
   const by = who.appUserId;
   await moveUnderCap(d, who, targetId, [project], async (store) => {
     const from = src ? await store.workspace(src) : null;
-    await store.insertAccountEvents(
-      clearedChoiceEvents(project, [from?.org_id, target.org_id], who, now),
-    );
     await store.updateProject(projectId, {
       workspace_id: targetId,
       // The choices were made under the old account's setting; the new account's defaults apply until a project admin chooses.
@@ -468,6 +465,12 @@ export async function moveProject(
       ),
       updated_at: now.toISOString(),
     });
+    // Stamped here, as the last write before the commit and not when the request began: the
+    // daily check treats a project as cleared from this moment, so a call that started while
+    // the move waited for a lock, still on the old choice, is not read as made after it.
+    await store.insertAccountEvents(
+      clearedChoiceEvents(project, [from?.org_id, target.org_id], who, d.now()),
+    );
   });
   return { project_id: projectId, workspace_id: targetId };
 }
@@ -513,9 +516,6 @@ export async function bulkMoveProjects(
         names.set(src, from?.name ?? null);
         orgs.set(src, from?.org_id ?? null);
       }
-      await store.insertAccountEvents(
-        clearedChoiceEvents(project, [src ? orgs.get(src) : null, target.org_id], who, now),
-      );
       await store.updateProject(project.id, {
         workspace_id: targetId,
         // The choices were made under the old account's setting; the new account's defaults apply until a project admin chooses.
@@ -537,6 +537,12 @@ export async function bulkMoveProjects(
       });
       moved.push(project.id);
     }
+    // As in moveProject: stamped at the end of the transaction, after any wait for a lock.
+    const at = d.now();
+    for (const { project, src } of pending)
+      await store.insertAccountEvents(
+        clearedChoiceEvents(project, [src ? orgs.get(src) : null, target.org_id], who, at),
+      );
   });
   return { moved, count: moved.length };
 }

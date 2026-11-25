@@ -400,31 +400,46 @@ export async function setOrg(
       .where(eq(workspace.org_id, orgId));
     let reset = 0;
     const gone = { transcription: removed("transcription"), analysis: removed("analysis") };
-    if (gone.transcription.length) {
-      const cleared = await db
+    const column = {
+      transcription: project.ai_transcription_provider,
+      analysis: project.ai_analysis_provider,
+    } as const;
+    // Each cleared choice is written to the account's history as a change to null, in this
+    // transaction: the daily provider check reads a project's choice from these events, and a
+    // project that later moves to another account carries no event there to say it was cleared.
+    for (const job of JOBS) {
+      if (!gone[job].length) continue;
+      const col = column[job];
+      const key = job === "transcription" ? "ai_transcription_provider" : "ai_analysis_provider";
+      const chosen = await db
+        .select({ id: project.id, before: col })
+        .from(project)
+        .where(and(inArray(col, gone[job]), inArray(project.workspace_id, inAccount)))
+        .for("update");
+      if (!chosen.length) continue;
+      await db
         .update(project)
-        .set({ ai_transcription_provider: null })
+        .set({ [key]: null })
         .where(
-          and(
-            inArray(project.ai_transcription_provider, gone.transcription),
-            inArray(project.workspace_id, inAccount),
+          inArray(
+            project.id,
+            chosen.map((c) => c.id),
           ),
-        )
-        .returning({ id: project.id });
-      reset += cleared.length;
-    }
-    if (gone.analysis.length) {
-      const cleared = await db
-        .update(project)
-        .set({ ai_analysis_provider: null })
-        .where(
-          and(
-            inArray(project.ai_analysis_provider, gone.analysis),
-            inArray(project.workspace_id, inAccount),
-          ),
-        )
-        .returning({ id: project.id });
-      reset += cleared.length;
+        );
+      await db.insert(account_event).values(
+        chosen.map((c) => ({
+          id: newId(),
+          orgId,
+          actorKind: "staff",
+          actorUserId: staffUserId,
+          type: PROJECT_EVENT,
+          subjectType: "project",
+          subjectId: c.id,
+          detail: { job, before: c.before, after: null, cause: "provider_removed" },
+          createdAt: d.now(),
+        })),
+      );
+      reset += chosen.length;
     }
     await db.insert(account_event).values({
       id: newId(),
