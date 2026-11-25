@@ -145,9 +145,16 @@ export const providerName = (p: AiProvider): string =>
 export const jobName = (job: AiJob): string =>
 	job === "transcription" ? t`Transcription` : t`Analysis`;
 
-/** "12", "9" or "1.80": whole euros from ten up and for a whole number, else cents. */
-export const euros = (n: number, locale: string): string => {
-	const whole = n >= 10 || Number.isInteger(n);
+/**
+ * Euros in the reader's format. An estimate is a whole number from one euro up ("About EUR 9"),
+ * a price or an amount spent is exact to the cent ("EUR 1.80").
+ */
+export const euros = (
+	n: number,
+	locale: string,
+	style: "estimate" | "exact" = "exact",
+): string => {
+	const whole = style === "estimate" && n >= 1;
 	return new Intl.NumberFormat(locale.startsWith("en") ? "en-GB" : locale, {
 		maximumFractionDigits: whole ? 0 : 2,
 		minimumFractionDigits: whole ? 0 : 2,
@@ -166,7 +173,7 @@ export const costText = (
 	if (!line) return null;
 	if (line.billing === "included") return t`Included in your plan`;
 	if (line.monthly_eur !== null) {
-		const n = euros(line.monthly_eur, locale);
+		const n = euros(line.monthly_eur, locale, "estimate");
 		return t`About EUR ${n} a month at your last 30 days of use, billed on top`;
 	}
 	if (line.per_hour_eur !== null) {

@@ -64,7 +64,7 @@ export const ProjectAiProvider = ({
 	const monthly = pending ? data.cost[pending.job].google?.monthly_eur : null;
 	const amount =
 		monthly !== null && monthly !== undefined
-			? euros(monthly, i18n.locale)
+			? euros(monthly, i18n.locale, "estimate")
 			: null;
 
 	return (

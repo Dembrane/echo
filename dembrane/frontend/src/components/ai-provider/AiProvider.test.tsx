@@ -205,7 +205,7 @@ it("an account with only Scaleway shows two jobs, Scaleway as default and Google
 	expect(screen.getByText("EUR 2.50 per 100 questions")).toBeTruthy();
 	expect(screen.getAllByText("Request")).toHaveLength(2);
 	expect(
-		screen.getByText("This month: Scaleway included, Google EUR 0"),
+		screen.getByText("This month: Scaleway included, Google EUR 0.00"),
 	).toBeTruthy();
 });
 
@@ -297,7 +297,7 @@ it("Google enabled for analysis only: Default and Enabled badges, the price at l
 	expect(within(analysis).queryByText("Not enabled")).toBeNull();
 	expect(
 		within(analysis).getByText(
-			"About EUR 9.40 a month at your last 30 days of use, billed on top",
+			"About EUR 9 a month at your last 30 days of use, billed on top",
 		),
 	).toBeTruthy();
 	expect(
@@ -309,7 +309,7 @@ it("Google enabled for analysis only: Default and Enabled badges, the price at l
 		screen.getByText("3 Dec 2026 · Google Vertex AI enabled for Analysis"),
 	).toBeTruthy();
 	expect(
-		screen.getByText("This month: Scaleway included, Google EUR 12"),
+		screen.getByText("This month: Scaleway included, Google EUR 12.40"),
 	).toBeTruthy();
 });
 
