@@ -17,24 +17,32 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { SupportRequestNoteModal } from "@/components/workspace/SupportRequestNoteModal";
 import {
 	orgWorkspacesKey,
-	useSupportVisit,
+	type SupportVisitStatus,
+	useSupportVisitActions,
 } from "@/components/workspace/supportVisit";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { formatDate, formatDateTime } from "../format";
 import { Section } from "../ui";
 
+/** One workspace of the organisation, with the caller's own visit and waiting request. */
 export type OrgWorkspace = {
 	workspace_id: string;
 	name: string;
 	support_access_enabled: boolean;
 	held_for_demo: boolean;
+	visit: SupportVisitStatus;
+	request: {
+		id: string;
+		created_at: string | null;
+		expires_at: string | null;
+	} | null;
 };
 
 /**
  * Staff: getting into one of the organisation's workspaces to help, one row per workspace.
- * Each row shows where the visit stands (read only, or able to make changes) and offers the
- * likely next step, the rest under its menu, as Documents does.
+ * Each row says what access the staff member has there and offers the likely next step,
+ * the rest under its menu, as Documents does. The whole list is one read.
  */
 export function SupportAccess({ orgId }: { orgId: string }) {
 	const { data, isLoading, isError } = useQuery({
@@ -57,9 +65,9 @@ export function SupportAccess({ orgId }: { orgId: string }) {
 			info={
 				<InfoTip label={t`About support access`} testId="staff-support-info">
 					<Trans>
-						Ask a workspace's admins to let you in. When they approve your
-						request you can make changes for 24 hours. When they turned support
-						access on themselves, you can join to read, and still ask for more.
+						Ask a workspace's admins to let you in. If they approve your
+						request, you can edit for 24 hours. If they have turned support
+						access on themselves, you can join to read, and still ask to edit.
 					</Trans>
 				</InfoTip>
 			}
@@ -73,32 +81,25 @@ export function SupportAccess({ orgId }: { orgId: string }) {
 					<Trans>No workspaces.</Trans>
 				</Text>
 			) : (
+				// The grid of Tasks above (Status 150, actions 190 from sm), the actions split
+				// into the next step and the menu slot that Documents keeps at the right edge.
 				<Table verticalSpacing="xs" layout="fixed">
 					<Table.Thead>
 						<Table.Tr>
 							<Table.Th>
 								<Trans>Workspace</Trans>
 							</Table.Th>
-							<Table.Th w={180} visibleFrom="sm">
+							<Table.Th w={150} visibleFrom="sm">
 								<Trans>Status</Trans>
 							</Table.Th>
-							<Table.Th w={250} visibleFrom="md" />
+							<Table.Th w={{ base: 136, sm: 146 }} />
 							<Table.Th w={44} />
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>
-						{workspaces.map((ws) =>
-							ws.held_for_demo ? (
-								<Row
-									key={ws.workspace_id}
-									name={ws.name}
-									status={<Trans>Demo not published</Trans>}
-									state="demo"
-								/>
-							) : (
-								<VisitRow key={ws.workspace_id} ws={ws} />
-							),
-						)}
+						{workspaces.map((ws) => (
+							<VisitRow key={ws.workspace_id} ws={ws} />
+						))}
 					</Table.Tbody>
 				</Table>
 			)}
@@ -106,7 +107,7 @@ export function SupportAccess({ orgId }: { orgId: string }) {
 	);
 }
 
-/** A step a row offers: a button, or an item under the row's menu. */
+/** A step a row offers: the button in the row, or an item under its menu. */
 type Step = {
 	label: ReactNode;
 	testId: string;
@@ -119,10 +120,13 @@ type Step = {
 };
 
 /**
- * One workspace: its name and detail, its status, the next step and the rest under the
- * menu. Below the two-column card the next step joins the menu, so a long label (Dutch
- * "Join for support" is 245px) never pushes the name off.
+ * What the badge says, and its tint: green while the staff member is in the workspace,
+ * blue while their request waits on the admins (as a sent offer waits on its signer on
+ * this page), grey otherwise.
  */
+type Status = { label: ReactNode; color: "green" | "blue" | "gray" };
+
+/** One workspace: name, the line under it, its badge, the next step and the rest. */
 function Row({
 	name,
 	detail,
@@ -134,28 +138,12 @@ function Row({
 }: {
 	name: string;
 	detail?: string;
-	status?: ReactNode;
+	status: Status;
 	next?: Step;
 	more?: Step[];
 	disabled?: boolean;
 	state: string;
 }) {
-	const item = (step: Step, narrowOnly = false) => {
-		const props = {
-			disabled,
-			hiddenFrom: narrowOnly ? "md" : undefined,
-			onClick: step.onClick,
-		};
-		return step.to ? (
-			<Menu.Item key={step.testId} component={I18nLink} to={step.to} {...props}>
-				{step.label}
-			</Menu.Item>
-		) : (
-			<Menu.Item key={step.testId} {...props}>
-				{step.label}
-			</Menu.Item>
-		);
-	};
 	return (
 		<Table.Tr data-testid="staff-support-workspace" data-state={state}>
 			<Table.Td>
@@ -163,25 +151,37 @@ function Row({
 					{name}
 				</Text>
 				{detail && (
-					<Text size="xs" c="dimmed" truncate>
+					<Text
+						size="xs"
+						c="dimmed"
+						truncate
+						data-testid="staff-support-detail"
+					>
 						{detail}
 					</Text>
 				)}
 				{/* On a phone the status sits under the name. */}
-				{status && (
-					<Badge hiddenFrom="sm" size="xs" variant="light" color="gray" mt="xs">
-						{status}
-					</Badge>
-				)}
+				<Badge
+					hiddenFrom="sm"
+					size="xs"
+					variant="light"
+					color={status.color}
+					mt="xs"
+				>
+					{status.label}
+				</Badge>
 			</Table.Td>
 			<Table.Td visibleFrom="sm">
-				{status && (
-					<Badge size="sm" variant="light" color="gray">
-						{status}
-					</Badge>
-				)}
+				<Badge
+					size="sm"
+					variant="light"
+					color={status.color}
+					data-testid="staff-support-status"
+				>
+					{status.label}
+				</Badge>
 			</Table.Td>
-			<Table.Td ta="right" visibleFrom="md">
+			<Table.Td ta="right">
 				{next?.to ? (
 					<Button
 						size="compact-xs"
@@ -208,21 +208,28 @@ function Row({
 				) : null}
 			</Table.Td>
 			<Table.Td>
-				{(next || more.length > 0) && (
+				{more.length > 0 && (
 					<Menu position="bottom-end" withinPortal>
 						<Menu.Target>
 							<UnstyledButton
 								aria-label={t`Actions`}
 								p={4}
-								hiddenFrom={more.length ? undefined : "md"}
 								data-testid="staff-support-menu"
 							>
 								<DotsThreeIcon size={20} />
 							</UnstyledButton>
 						</Menu.Target>
 						<Menu.Dropdown>
-							{next && item(next, true)}
-							{more.map((step) => item(step))}
+							{more.map((step) => (
+								<Menu.Item
+									key={step.testId}
+									disabled={disabled}
+									onClick={step.onClick}
+									data-testid={step.testId}
+								>
+									{step.label}
+								</Menu.Item>
+							))}
 						</Menu.Dropdown>
 					</Menu>
 				)}
@@ -231,32 +238,33 @@ function Row({
 	);
 }
 
-function VisitRow({ ws }: { ws: OrgWorkspace }) {
+/** One workspace's row, from the list's own data; the steps change it through the actions. */
+export function VisitRow({ ws }: { ws: OrgWorkspace }) {
 	const { i18n } = useLingui();
 	const { setWorkspace } = useWorkspace();
-	const visit = useSupportVisit(ws.workspace_id);
+	const actions = useSupportVisitActions(ws.workspace_id);
 	const [noteOpen, setNoteOpen] = useState(false);
 	const on = ws.support_access_enabled;
-	const { pendingRequest } = visit;
+	const { visit, request: waiting } = ws;
 
 	const join: Step = {
-		label: <Trans>Join for support (24h)</Trans>,
-		loading: visit.join.isPending,
-		onClick: () => visit.join.mutate(),
+		label: <Trans>Join read-only</Trans>,
+		loading: actions.join.isPending,
+		onClick: () => actions.join.mutate(),
 		testId: "staff-support-join",
 	};
 	const extend: Step = {
-		label: <Trans>Extend 24h</Trans>,
-		onClick: () => visit.join.mutate(),
+		label: <Trans>Extend visit by 24 hours</Trans>,
+		onClick: () => actions.join.mutate(),
 		testId: "staff-support-extend",
 	};
 	const leave: Step = {
-		label: <Trans>Leave now</Trans>,
-		onClick: () => visit.leave.mutate(),
+		label: <Trans>End visit now</Trans>,
+		onClick: () => actions.leave.mutate(),
 		testId: "staff-support-leave",
 	};
 	const open: Step = {
-		label: <Trans>Open workspace</Trans>,
+		label: <Trans context="verb">Open</Trans>,
 		onClick: () => setWorkspace(ws.workspace_id),
 		testId: "staff-support-open",
 		to: `/w/${ws.workspace_id}/home`,
@@ -268,44 +276,60 @@ function VisitRow({ ws }: { ws: OrgWorkspace }) {
 	};
 	const cancel: Step = {
 		label: <Trans>Cancel request</Trans>,
-		loading: visit.cancelRequest.isPending,
-		onClick: () => visit.cancelRequest.mutate(),
+		loading: actions.cancelRequest.isPending,
+		onClick: () => actions.cancelRequest.mutate(),
 		quiet: true,
 		testId: "staff-support-cancel",
 	};
 
-	const row = (() => {
-		if (visit.loading) return { state: "loading" };
+	const row = ((): {
+		state: string;
+		status: Status;
+		detail?: string;
+		next?: Step;
+		more?: Step[];
+	} => {
+		if (ws.held_for_demo)
+			return {
+				state: "demo",
+				status: { color: "gray", label: <Trans>Demo draft</Trans> },
+			};
 		if (visit.active) {
-			const until = formatDateTime(visit.expiresAt, i18n.locale);
+			// Extending needs the switch on, as joining does.
 			const extendLeave = on ? [extend, leave] : [leave];
-			if (visit.canChange)
+			if (visit.can_change) {
+				const until = formatDateTime(
+					visit.change_until ?? visit.expires_at,
+					i18n.locale,
+				);
 				return {
 					detail: t`Until ${until}`,
 					more: extendLeave,
 					next: open,
 					state: "change",
-					status: <Trans>Can make changes</Trans>,
+					status: { color: "green", label: <Trans>Can edit</Trans> },
 				};
-			// A read-only visit can still ask the admins to let it make changes.
+			}
+			// A read-only visit can still ask the admins to let it edit.
+			const until = formatDateTime(visit.expires_at, i18n.locale);
 			return {
-				detail: pendingRequest
-					? t`Until ${until}. Request sent`
+				detail: waiting
+					? t`Until ${until}. Request to edit sent`
 					: t`Until ${until}`,
-				more: [pendingRequest ? cancel : request, ...extendLeave],
+				more: [waiting ? cancel : request, ...extendLeave],
 				next: open,
 				state: "read",
-				status: <Trans>Read only</Trans>,
+				status: { color: "green", label: <Trans>Read only</Trans> },
 			};
 		}
-		if (pendingRequest) {
-			const sent = formatDate(pendingRequest.created_at, i18n.locale);
+		if (waiting) {
+			const date = formatDate(waiting.expires_at, i18n.locale);
 			return {
-				detail: sent ? t`Sent ${sent}` : undefined,
+				detail: date ? t`Expires ${date}` : undefined,
 				more: on ? [join] : [],
 				next: cancel,
 				state: "request",
-				status: <Trans>Request sent</Trans>,
+				status: { color: "blue", label: <Trans>Request sent</Trans> },
 			};
 		}
 		if (on)
@@ -313,18 +337,22 @@ function VisitRow({ ws }: { ws: OrgWorkspace }) {
 				more: [request],
 				next: join,
 				state: "on",
-				status: <Trans>Support access is on</Trans>,
+				status: { color: "gray", label: <Trans>Read access on</Trans> },
 			};
-		return { next: request, state: "none" };
+		return {
+			next: request,
+			state: "none",
+			status: { color: "gray", label: <Trans>No access</Trans> },
+		};
 	})();
 
 	return (
 		<>
-			<Row name={ws.name} disabled={visit.busy} {...row} />
+			<Row name={ws.name} disabled={actions.busy} {...row} />
 			<SupportRequestNoteModal
 				opened={noteOpen}
 				onClose={() => setNoteOpen(false)}
-				visit={visit}
+				visit={actions}
 				workspaceName={ws.name}
 			/>
 		</>

@@ -296,7 +296,7 @@ msgstr "Una respuesta de texto"
 msgid "A workspace in {name}."
 msgstr "Un espacio de trabajo en {name}."
 
-#: src/features/accounts/staff/SupportAccess.tsx:58
+#: src/features/accounts/staff/SupportAccess.tsx:66
 msgid "About support access"
 msgstr "Acerca del acceso de soporte"
 
@@ -518,13 +518,17 @@ msgstr "Aprobar y colocar la oferta"
 msgid "Ask a question"
 msgstr "Hacer una pregunta"
 
+#: src/features/accounts/staff/SupportAccess.tsx:67
+msgid "Ask a workspace's admins to let you in. If they approve your request, you can edit for 24 hours. If they have turned support access on themselves, you can join to read, and still ask to edit."
+msgstr "Pide a los administradores de un espacio de trabajo que te dejen entrar. Si aprueban tu solicitud, puedes editar durante 24 horas. Si ellos mismos activaron el acceso de soporte, puedes unirte para leer, y aun así pedir editar."
+
 #: src/features/accounts/staff/SupportAccess.tsx:59
 #~ msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read only."
 #~ msgstr "Pide a los administradores de un espacio de trabajo que te dejen entrar. Si aprueban tu solicitud, puedes hacer cambios durante 24 horas. Si ellos mismos activaron el acceso de soporte, puedes unirte solo para leer."
 
 #: src/features/accounts/staff/SupportAccess.tsx:59
-msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read, and still ask for more."
-msgstr "Pide a los administradores de un espacio de trabajo que te dejen entrar. Si aprueban tu solicitud, puedes hacer cambios durante 24 horas. Si ellos mismos activaron el acceso de soporte, puedes unirte para leer, y aun así pedir más."
+#~ msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read, and still ask for more."
+#~ msgstr "Pide a los administradores de un espacio de trabajo que te dejen entrar. Si aprueban tu solicitud, puedes hacer cambios durante 24 horas. Si ellos mismos activaron el acceso de soporte, puedes unirte para leer, y aun así pedir más."
 
 #: src/features/accounts/signing/SignGate.tsx:760
 msgid "Ask the person who invited you to send a new one."
@@ -663,9 +667,13 @@ msgstr "Llamada"
 msgid "Call booked"
 msgstr "Llamada programada"
 
+#: src/features/accounts/staff/SupportAccess.tsx:310
+msgid "Can edit"
+msgstr "Puede editar"
+
 #: src/features/accounts/staff/SupportAccess.tsx:288
-msgid "Can make changes"
-msgstr "Puede hacer cambios"
+#~ msgid "Can make changes"
+#~ msgstr "Puede hacer cambios"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:71
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
@@ -679,7 +687,7 @@ msgstr "Puede hacer cambios"
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: src/features/accounts/staff/SupportAccess.tsx:270
+#: src/features/accounts/staff/SupportAccess.tsx:278
 msgid "Cancel request"
 msgstr "Cancelar solicitud"
 
@@ -1045,6 +1053,7 @@ msgstr "Demo"
 msgid "Demo | dembrane"
 msgstr "Demo | dembrane"
 
+#: src/features/accounts/staff/SupportAccess.tsx:295
 #: src/features/accounts/staff/DemoDraftRoute.tsx:89
 msgid "Demo draft"
 msgstr "Borrador de la demo"
@@ -1054,8 +1063,8 @@ msgid "Demo language"
 msgstr "Idioma de la demo"
 
 #: src/features/accounts/staff/SupportAccess.tsx:95
-msgid "Demo not published"
-msgstr "Demo no publicada"
+#~ msgid "Demo not published"
+#~ msgstr "Demo no publicada"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:921
 msgid "Demo opened by staff"
@@ -1285,6 +1294,10 @@ msgstr "Vacío: la de la plantilla. Una línea en blanco empieza un párrafo."
 #~ msgid "Enable it to push offers and tasks. They get an Account page with a billing details step."
 #~ msgstr "Habilítala para enviar ofertas y tareas. Recibirán una página de Cuenta con un paso para los datos de facturación."
 
+#: src/features/accounts/staff/SupportAccess.tsx:262
+msgid "End visit now"
+msgstr "Terminar la visita ahora"
+
 #: src/features/accounts/signing/SignGate.tsx:485
 msgid "Enter the six-digit code we sent to {email}."
 msgstr "Introduce el código de seis dígitos que enviamos a {email}."
@@ -1310,12 +1323,20 @@ msgstr "Justificante"
 msgid "Exactly one"
 msgstr "Exactamente una"
 
+#: src/features/accounts/staff/SupportAccess.tsx:328
+msgid "Expires {date}"
+msgstr "Caduca el {date}"
+
 #~ msgid "Explore your demo"
 #~ msgstr "Explora tu demo"
 
 #: src/features/accounts/staff/SupportAccess.tsx:249
-msgid "Extend 24h"
-msgstr "Ampliar 24 h"
+#~ msgid "Extend 24h"
+#~ msgstr "Ampliar 24 h"
+
+#: src/features/accounts/staff/SupportAccess.tsx:257
+msgid "Extend visit by 24 hours"
+msgstr "Ampliar la visita 24 horas"
 
 #: src/features/accounts/staff/DemoRoute.tsx:57
 msgid "Extraction"
@@ -1743,8 +1764,12 @@ msgid "Job title"
 msgstr "Cargo"
 
 #: src/features/accounts/staff/SupportAccess.tsx:243
-msgid "Join for support (24h)"
-msgstr "Unirse para soporte (24 h)"
+#~ msgid "Join for support (24h)"
+#~ msgstr "Unirse para soporte (24 h)"
+
+#: src/features/accounts/staff/SupportAccess.tsx:251
+msgid "Join read-only"
+msgstr "Unirse para leer"
 
 #: src/features/accounts/staff/SupportAccess.tsx:286
 #~ msgid "Joined"
@@ -1801,8 +1826,8 @@ msgstr "Apellidos"
 #~ msgstr "Dejar un comentario"
 
 #: src/features/accounts/staff/SupportAccess.tsx:254
-msgid "Leave now"
-msgstr "Salir ahora"
+#~ msgid "Leave now"
+#~ msgstr "Salir ahora"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:866
 msgid "Legal name"
@@ -1979,6 +2004,10 @@ msgstr "Siguiente: {next}"
 msgid "No"
 msgstr "No"
 
+#: src/features/accounts/staff/SupportAccess.tsx:345
+msgid "No access"
+msgstr "Sin acceso"
+
 #: src/features/accounts/format.ts:125
 msgid "No account"
 msgstr "Sin cuenta"
@@ -2030,7 +2059,7 @@ msgstr "Aún no hay preguntas."
 msgid "No tasks."
 msgstr "Sin tareas."
 
-#: src/features/accounts/staff/SupportAccess.tsx:73
+#: src/features/accounts/staff/SupportAccess.tsx:81
 msgid "No workspaces."
 msgstr "Sin espacios de trabajo."
 
@@ -2240,6 +2269,11 @@ msgstr "Solo los administradores y los contactos de facturación de la organizac
 msgid "Open"
 msgstr "Abierta"
 
+#: src/features/accounts/staff/SupportAccess.tsx:267
+msgctxt "verb"
+msgid "Open"
+msgstr "Abrir"
+
 #: src/features/accounts/staff/DocumentRoute.tsx:271
 msgid "Open evidence"
 msgstr "Abrir justificante"
@@ -2319,8 +2353,8 @@ msgid "Open to sign"
 msgstr "Abrir para firmar"
 
 #: src/features/accounts/staff/SupportAccess.tsx:259
-msgid "Open workspace"
-msgstr "Abrir espacio de trabajo"
+#~ msgid "Open workspace"
+#~ msgstr "Abrir espacio de trabajo"
 
 #: src/features/accounts/staff/TaskModals.tsx:70
 #: src/features/accounts/customer/NextSteps.tsx:472
@@ -2659,7 +2693,11 @@ msgstr "Preguntas"
 msgid "Read"
 msgstr "Leer"
 
-#: src/features/accounts/staff/SupportAccess.tsx:298
+#: src/features/accounts/staff/SupportAccess.tsx:340
+msgid "Read access on"
+msgstr "Lectura activada"
+
+#: src/features/accounts/staff/SupportAccess.tsx:322
 msgid "Read only"
 msgstr "Solo lectura"
 
@@ -2781,11 +2819,11 @@ msgstr "representar al personal o a las partes interesadas"
 msgid "Represents staff or stakeholders"
 msgstr "Representa al personal o a las partes interesadas"
 
-#: src/features/accounts/staff/SupportAccess.tsx:265
+#: src/features/accounts/staff/SupportAccess.tsx:273
 msgid "Request access"
 msgstr "Solicitar acceso"
 
-#: src/features/accounts/staff/SupportAccess.tsx:308
+#: src/features/accounts/staff/SupportAccess.tsx:332
 msgid "Request sent"
 msgstr "Solicitud enviada"
 
@@ -2991,8 +3029,8 @@ msgid "Sent {0}"
 msgstr "Enviado el {0}"
 
 #: src/features/accounts/staff/SupportAccess.tsx:304
-msgid "Sent {sent}"
-msgstr "Enviada el {sent}"
+#~ msgid "Sent {sent}"
+#~ msgstr "Enviada el {sent}"
 
 #: src/features/accounts/customer/NextSteps.tsx:477
 msgid "Sent {when}. We are on it."
@@ -3291,7 +3329,7 @@ msgstr "Comenzar"
 #~ msgid "Start a project of your own and record a few minutes, with a colleague or on your own."
 #~ msgstr "Crea un proyecto propio y graba unos minutos, con alguien de tu equipo o por tu cuenta."
 
-#: src/features/accounts/staff/SupportAccess.tsx:83
+#: src/features/accounts/staff/SupportAccess.tsx:93
 #: src/features/accounts/staff/AccountCardRoute.tsx:360
 #: src/features/accounts/staff/AccountCardRoute.tsx:510
 msgid "Status"
@@ -3333,13 +3371,13 @@ msgstr "Suscripción"
 msgid "Subtotal"
 msgstr "Subtotal"
 
-#: src/features/accounts/staff/SupportAccess.tsx:55
+#: src/features/accounts/staff/SupportAccess.tsx:63
 msgid "Support access"
 msgstr "Acceso de soporte"
 
 #: src/features/accounts/staff/SupportAccess.tsx:316
-msgid "Support access is on"
-msgstr "Acceso de soporte activado"
+#~ msgid "Support access is on"
+#~ msgstr "Acceso de soporte activado"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:1005
 msgid "System"
@@ -3573,7 +3611,7 @@ msgstr "La cláusula"
 msgid "The terms, SLA and DPA versions in force today are pinned."
 msgstr "Se fijan las versiones de los términos, el SLA y el DPA vigentes hoy."
 
-#: src/features/accounts/staff/SupportAccess.tsx:69
+#: src/features/accounts/staff/SupportAccess.tsx:77
 msgid "The workspaces could not be loaded."
 msgstr "No se pudieron cargar los espacios de trabajo."
 
@@ -3833,14 +3871,18 @@ msgstr "Retirar la publicación"
 #~ msgid "Unsigned"
 #~ msgstr "Sin firmar"
 
-#: src/features/accounts/staff/SupportAccess.tsx:284
-#: src/features/accounts/staff/SupportAccess.tsx:294
+#: src/features/accounts/staff/SupportAccess.tsx:306
+#: src/features/accounts/staff/SupportAccess.tsx:318
 msgid "Until {until}"
 msgstr "Hasta el {until}"
 
 #: src/features/accounts/staff/SupportAccess.tsx:293
-msgid "Until {until}. Request sent"
-msgstr "Hasta el {until}. Solicitud enviada"
+#~ msgid "Until {until}. Request sent"
+#~ msgstr "Hasta el {until}. Solicitud enviada"
+
+#: src/features/accounts/staff/SupportAccess.tsx:317
+msgid "Until {until}. Request to edit sent"
+msgstr "Hasta el {until}. Solicitud para editar enviada"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:687
 msgid "Upgrade account"
@@ -4244,7 +4286,7 @@ msgstr "Retirar"
 msgid "Withdrawn"
 msgstr "Retirado"
 
-#: src/features/accounts/staff/SupportAccess.tsx:80
+#: src/features/accounts/staff/SupportAccess.tsx:90
 msgid "Workspace"
 msgstr "Espacio de trabajo"
 

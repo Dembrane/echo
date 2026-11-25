@@ -20,11 +20,8 @@ const LANGS = ["en-US", "nl-NL"];
 
 const NOTE =
 	"We would like to look at why the report of your residents evening does not load.";
-const LONG_NOTE =
-	`${"We saw the report for the residents evening fail to load three times this week, and your colleague asked us to look. ".repeat(4)}Thank you.`.slice(
-		0,
-		400,
-	);
+// About 400 characters, ending on a full sentence: the dialog shows a note whole.
+const LONG_NOTE = `${"We saw the report for the residents evening fail to load three times this week, and your colleague asked us to look. ".repeat(3)}Could we open it with you tomorrow morning? Thank you.`;
 const LONG_WORKSPACE =
 	"Wijkpanels Lindenwijk, Oosterpark en Havenkwartier 2026-2027".slice(0, 60);
 
@@ -252,45 +249,88 @@ for (const size of sizes)
 
 const ORG = "5f1a2b3c-0d4e-4f60-8a71-92b3c4d5e6f7";
 const inADay = () => new Date(Date.now() + 20 * 3_600_000).toISOString();
-/**
- * One workspace in each main state: no access, request sent, switch on, a read-only visit
- * that asked for more, and a visit that can make changes.
- */
+const inDays = (days: number) =>
+	new Date(Date.now() + days * 86_400_000).toISOString();
+const NO_VISIT = {
+	active: false,
+	can_change: false,
+	change_until: null,
+	expires_at: null,
+};
+const READ_VISIT = {
+	active: true,
+	can_change: false,
+	change_until: null,
+	expires_at: inADay(),
+};
+const waiting = (id: string) => ({
+	created_at: hoursAgo(3),
+	expires_at: inDays(6),
+	id,
+});
+/** One workspace in each row of the state table, as the organisation's list answers it. */
 const WORKSPACES = [
 	{
-		join: { active: false, can_change: false, expires_at: null },
 		name: "Neighbourhood panels",
 		on: false,
 		request: null,
+		visit: NO_VISIT,
 		workspace_id: "ws-none",
 	},
 	{
-		join: { active: false, can_change: false, expires_at: null },
 		name: "Youth council",
 		on: false,
-		request: { created_at: hoursAgo(3), id: "rq1", status: "pending" },
+		request: waiting("rq1"),
+		visit: NO_VISIT,
 		workspace_id: "ws-request",
 	},
 	{
-		join: { active: false, can_change: false, expires_at: null },
 		name: "Research",
 		on: true,
 		request: null,
+		visit: NO_VISIT,
 		workspace_id: "ws-on",
 	},
 	{
-		join: { active: true, can_change: false, expires_at: inADay() },
+		name: "Mobility lab",
+		on: true,
+		request: waiting("rq2"),
+		visit: NO_VISIT,
+		workspace_id: "ws-on-request",
+	},
+	{
 		name: "Climate assembly",
 		on: true,
-		request: { created_at: hoursAgo(1), id: "rq2", status: "pending" },
+		request: null,
+		visit: READ_VISIT,
 		workspace_id: "ws-read",
 	},
 	{
-		join: { active: true, can_change: true, expires_at: inADay() },
+		name: "Green roofs",
+		on: true,
+		request: waiting("rq3"),
+		visit: READ_VISIT,
+		workspace_id: "ws-read-request",
+	},
+	{
 		name: "Wijkpanels Lindenwijk, Oosterpark en Havenkwartier 2026-2027",
 		on: false,
 		request: null,
-		workspace_id: "ws-visit",
+		visit: {
+			active: true,
+			can_change: true,
+			change_until: inADay(),
+			expires_at: inADay(),
+		},
+		workspace_id: "ws-change",
+	},
+	{
+		demo: true,
+		name: "Demo for the council",
+		on: false,
+		request: null,
+		visit: NO_VISIT,
+		workspace_id: "ws-demo",
 	},
 ];
 
@@ -299,27 +339,16 @@ async function answerStaffApi(page: Page, workspaces = WORKSPACES) {
 		route.fulfill({
 			json: {
 				workspaces: workspaces.map((w) => ({
-					held_for_demo: false,
+					held_for_demo: "demo" in w,
 					name: w.name,
+					request: w.request,
 					support_access_enabled: w.on,
+					visit: w.visit,
 					workspace_id: w.workspace_id,
 				})),
 			},
 		}),
 	);
-	for (const w of workspaces) {
-		await page.route(
-			`**/v2/admin/workspaces/${w.workspace_id}/join-support`,
-			(route) => route.fulfill({ json: w.join }),
-		);
-		await page.route(
-			`**/v2/admin/workspaces/${w.workspace_id}/support-access/request`,
-			(route) =>
-				route.fulfill({
-					json: { request: w.request, support_access_enabled: w.on },
-				}),
-		);
-	}
 }
 
 for (const size of sizes)
@@ -338,13 +367,8 @@ for (const size of sizes)
 			await page.goto(account);
 			const section = page.getByTestId("staff-support-access");
 			await expect(section.getByTestId("staff-support-workspace")).toHaveCount(
-				5,
+				WORKSPACES.length,
 			);
-			await expect(
-				section.locator(
-					"[data-testid=staff-support-workspace][data-state=loading]",
-				),
-			).toHaveCount(0);
 			// Tasks above, the whole section below it, in one view.
 			await page
 				.getByTestId("staff-tasks")
@@ -363,6 +387,7 @@ for (const size of sizes)
 			// The rest of a row's steps sit under its menu: a read-only visit can still ask.
 			await section
 				.locator("[data-state=read]")
+				.first()
 				.getByTestId("staff-support-menu")
 				.click();
 			await expect(page.getByRole("menuitem")).not.toHaveCount(0);
@@ -370,18 +395,11 @@ for (const size of sizes)
 			await shoot(page, "account-support-menu", size, lang);
 			await page.keyboard.press("Escape");
 
-			// Request access asks for a note first. On a phone it sits under the row's menu.
-			if (size.name === "phone") {
-				await section
-					.locator("[data-state=none]")
-					.getByTestId("staff-support-menu")
-					.click();
-				await page
-					.getByRole("menuitem", {
-						name: nl ? "Toegang aanvragen" : "Request access",
-					})
-					.click();
-			} else await section.getByTestId("staff-support-request").click();
+			// Request access asks for a note first; the step stays a button on a phone.
+			await section
+				.locator("[data-state=none]")
+				.getByTestId("staff-support-request")
+				.click();
 			await expect(
 				page.getByTestId("support-access-request-modal").getByRole("dialog"),
 			).toBeVisible();

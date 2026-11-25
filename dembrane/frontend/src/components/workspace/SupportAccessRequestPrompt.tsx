@@ -97,13 +97,16 @@ export default function SupportAccessRequestPrompt() {
 			data-testid={TEST_ID}
 			confirmLabel={<Trans>Approve for 24 hours</Trans>}
 			cancelLabel={<Trans>Decline</Trans>}
+			// It opens by itself: focus starts on the text, so nothing is answered by Enter.
+			focusBody
 			message={
 				<Trans>
-					{name} from dembrane asks for admin access to {workspaceName} for 24
-					hours, to help you with support. Access ends automatically.
+					{name} from dembrane asks for admin access to{" "}
+					<strong>{workspaceName}</strong> for 24 hours, to help you with
+					support. Access ends automatically.
 				</Trans>
 			}
-			detail={note ? <Trans>Their note: {note}</Trans> : null}
+			detail={note ? <Trans>Their note: “{note}”</Trans> : null}
 		/>
 	);
 }

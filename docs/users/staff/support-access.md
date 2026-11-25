@@ -14,25 +14,29 @@ sees every step.
 
 1. Open the organisation's card under "Accounts" in the [staff console](./admin-panel-overview.md)
    (see [customer accounts](./customer-accounts.md)).
-2. Find the workspace under "Support access". Each row shows where you stand and the next step;
-   the three-dot button holds the rest. On a phone the next step is under the three-dot button too.
+2. Find the workspace under "Support access". Each row has one status, the next step as a
+   button, and the rest under the three-dot button. On a phone the status sits under the
+   workspace's name, and the next step stays a button.
 
-| Status | It means | Next step |
-|---|---|---|
-| (none) | Support access is off and you have not asked. | "Request access". An admin of the workspace decides. |
-| "Support access is on" | The customer has support access switched on. | "Join for support (24h)". Your session starts at once. "Request access" is under the three-dot button. |
-| "Request sent" | You asked and the admins have not answered yet. | "Cancel request" takes it back. |
-| "Read only" | Your session is open to read, until the time under the name. | "Open workspace". "Request access" (or "Cancel request"), "Extend 24h" and "Leave now" are under the three-dot button. |
-| "Can make changes" | An admin approved your request, until the time under the name. | "Open workspace". "Extend 24h" (while the switch is on) and "Leave now" are under the three-dot button. |
-| "Demo not published" | The workspace holds a demo that is not published yet. | Nothing. Open the draft from the demo's page. |
+| Status | It means | Next step | Under the three-dot button |
+|---|---|---|---|
+| "No access" | Support access is off and you have not asked. | "Request access". An admin of the workspace decides. | |
+| "Request sent" | You asked and the admins have not answered yet. The line under the name says when the request expires. | "Cancel request" takes it back. | "Join read-only", while the switch is on |
+| "Read access on" | The customer has support access switched on. | "Join read-only". Your visit starts at once. | "Request access" |
+| "Read only" | You are in to read, until the time under the name. If you asked to edit, the line says "Request to edit sent". | "Open" | "Request access" (or "Cancel request"), "Extend visit by 24 hours", "End visit now" |
+| "Can edit" | An admin approved your request. You can edit until the time under the name. | "Open" | "Extend visit by 24 hours" (while the switch is on), "End visit now" |
+| "Demo draft" | The workspace holds a demo that is not published yet. | Nothing. Open the draft from the demo's page. | |
 
-The same steps still sit in "Usage and billing": expand the account, select the three-dot button
-on the workspace and look under "Join for support".
+A green status means you are in the workspace now. Blue means your request waits on the admins.
+
+The same steps still sit in "Usage and billing", under their older names: expand the account,
+select the three-dot button on the workspace and look under "Join for support". There joining is
+"Join for support (24h)", extending is "Extend 24h" and ending is "Leave now".
 
 ### Join
 
-After "Join for support (24h)" the screen confirms: "Support access granted. It ends automatically
-in 24 hours." Select "Open workspace" to go in.
+After "Join read-only" the row says "Read only", with the time your visit ends under the name.
+Select "Open" to go in.
 
 The workspace's admins get a notification and the email "dembrane staff joined {workspace_name}
 for support".
@@ -40,19 +44,18 @@ for support".
 ### Request access
 
 1. Select "Request access".
-2. Write what you need access for. The note is optional, and the admins read it. For example:
-   "investigating the report issue you emailed about".
+2. Write what you need access for. The note is optional, and the admins of that workspace read
+   it. For example: "investigating the report issue you emailed about".
 3. Select "Send request".
 
 The workspace's admins get a notification and the email "dembrane staff requested access to
-{workspace_name}". In their workspace settings your request shows as "{name} from dembrane" with
-"Approve" and "Decline".
+{workspace_name}". In their workspace a dialog opens with your name, the workspace and your note,
+with "Approve for 24 hours" and "Decline".
 
-- While you wait, the screen shows "Request sent. Waiting for the workspace admins." and "Cancel
-  request".
-- When an admin approves, your session starts at once and lasts 24 hours.
-- You can also ask while you are in to read. When an admin approves, the same session can make
-  changes for 24 hours from the approval.
+- While you wait, the row says "Request sent" and "Cancel request".
+- When an admin approves, your visit starts at once and you can edit for 24 hours.
+- You can also ask while you are in to read. When an admin approves, the same visit can edit for
+  24 hours from the approval.
 - A request nobody answers expires after 7 days.
 - If the customer switches support access on while you wait, the request is cancelled and you
   can join directly.
@@ -69,16 +72,18 @@ joins the workspace, remove members, change roles, share projects or delete the 
 
 You are not listed under the workspace's "Members" and you take no seat.
 
-## Extend or leave
+## Extend or end a visit
 
-Open the workspace actions again. An open session shows "You have support access to this
-workspace. It ends automatically on" and the date and time.
+Open the row's three-dot button. The line under the workspace's name says until when your visit
+runs.
 
-- "Extend 24h" restarts the 24 hours and notifies the admins. It shows while the customer has
-  support access switched on. It does not extend the right to make changes: that still ends 24
-  hours after the approval, and the rest of the session reads only. With the switch off there is
-  no extend button: when the session ends, send a new request.
-- "Leave now" ends your session. Leave when you are done.
+- "Extend visit by 24 hours" restarts the 24 hours and notifies the admins. It shows while the
+  customer has support access switched on. It does not extend the right to edit: that still ends
+  24 hours after the approval, and the rest of the visit reads only. With the switch off there is
+  no extend step: when the visit ends, send a new request.
+- "End visit now" ends your visit. End it when you are done.
+- When a visit ends, so does any approval to edit. Joining again later reads only until an admin
+  approves a new request.
 
 ## How it ends
 
@@ -89,8 +94,8 @@ workspace. It ends automatically on" and the date and time.
 - If the customer turns the switch off, every open session ends at once.
 
 > [!TIP]
-> If yours is the only open session, "Leave now" also turns the customer's switch off. Finish what
-> you came for before you leave.
+> If yours is the only open session, "End visit now" also turns the customer's switch off. Finish
+> what you came for before you end it.
 
 ## What the customer sees
 

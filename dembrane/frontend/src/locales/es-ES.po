@@ -826,8 +826,12 @@ msgstr "{m} min"
 #~ msgstr "{n} min"
 
 #: src/components/workspace/SupportAccessRequestPrompt.tsx:101
-msgid "{name} from dembrane asks for admin access to {workspaceName} for 24 hours, to help you with support. Access ends automatically."
-msgstr "{name} de dembrane pide acceso de administrador a {workspaceName} durante 24 horas, para ayudarte con el soporte. El acceso termina automáticamente."
+#~ msgid "{name} from dembrane asks for admin access to {workspaceName} for 24 hours, to help you with support. Access ends automatically."
+#~ msgstr "{name} de dembrane pide acceso de administrador a {workspaceName} durante 24 horas, para ayudarte con el soporte. El acceso termina automáticamente."
+
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:103
+msgid "{name} from dembrane asks for admin access to <0>{workspaceName}</0> for 24 hours, to help you with support. Access ends automatically."
+msgstr "{name} de dembrane pide acceso de administrador a <0>{workspaceName}</0> durante 24 horas, para ayudarte con el soporte. El acceso terminará automáticamente."
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:987
 msgid "{name} has used this month's free recording hours. Recording is paused until the month resets."
@@ -3145,7 +3149,7 @@ msgstr "Llamadas no asociadas a ninguna cuenta"
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
 #: src/components/common/ImageCropModal.tsx:146
-#: src/components/common/ConfirmModal.tsx:70
+#: src/components/common/ConfirmModal.tsx:83
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:675
 #: src/components/chat/AgenticChatPanel.tsx:755
 #: src/components/chat/AgenticChatPanel.tsx:2257
@@ -3960,7 +3964,7 @@ msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Continuar"
 
 #: src/lib/openConfirm.tsx:47
-#: src/components/common/ConfirmModal.tsx:62
+#: src/components/common/ConfirmModal.tsx:75
 msgid "Confirm"
 msgstr "Confirmar"
 
@@ -15948,9 +15952,13 @@ msgstr "Las palabras de este hallazgo"
 msgid "The workspace this invite was for has been deleted. There's nothing to join."
 msgstr "El espacio de trabajo al que pertenecía esta invitación ha sido eliminado. Ya no hay nada a lo que unirse."
 
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:109
+msgid "Their note: “{note}”"
+msgstr "Su nota: «{note}»"
+
 #: src/components/workspace/SupportAccessRequestPrompt.tsx:106
-msgid "Their note: {note}"
-msgstr "Su mensaje: {note}"
+#~ msgid "Their note: {note}"
+#~ msgstr "Su mensaje: {note}"
 
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:165
 msgid "Their representative who owns this data. They are added as a free observer and become the handoff contact."

@@ -23,6 +23,11 @@ type ConfirmModalProps = {
 	cancelLabel?: ReactNode;
 	confirmColor?: string;
 	loading?: boolean;
+	/**
+	 * For a dialog that opens by itself: focus starts on its text, not on a control, so no
+	 * ring shows and Enter answers nothing by accident.
+	 */
+	focusBody?: boolean;
 	"data-testid"?: string;
 };
 
@@ -38,6 +43,7 @@ export const ConfirmModal = ({
 	cancelLabel,
 	confirmColor = "primary",
 	loading = false,
+	focusBody = false,
 	"data-testid": dataTestId,
 }: ConfirmModalProps) => (
 	<Modal
@@ -48,7 +54,14 @@ export const ConfirmModal = ({
 		zIndex={getDefaultZIndex("modal") + 1}
 		data-testid={dataTestId}
 	>
-		<Stack gap="md">
+		<Stack
+			gap="md"
+			{...(focusBody && {
+				className: "outline-none",
+				"data-autofocus": true,
+				tabIndex: -1,
+			})}
+		>
 			<Text size="sm">{message}</Text>
 			{detail && <Text size="sm">{detail}</Text>}
 			<Group gap="sm">

@@ -296,7 +296,7 @@ msgstr "Een tekstantwoord"
 msgid "A workspace in {name}."
 msgstr "Een werkruimte in {name}."
 
-#: src/features/accounts/staff/SupportAccess.tsx:58
+#: src/features/accounts/staff/SupportAccess.tsx:66
 msgid "About support access"
 msgstr "Over supporttoegang"
 
@@ -518,13 +518,17 @@ msgstr "Goedkeuren en offerte plaatsen"
 msgid "Ask a question"
 msgstr "Stel een vraag"
 
+#: src/features/accounts/staff/SupportAccess.tsx:67
+msgid "Ask a workspace's admins to let you in. If they approve your request, you can edit for 24 hours. If they have turned support access on themselves, you can join to read, and still ask to edit."
+msgstr "Vraag de beheerders van een werkruimte om je toe te laten. Keuren ze je verzoek goed, dan kun je 24 uur lang bewerken. Hebben ze supporttoegang zelf aangezet, dan kun je meelezen en alsnog vragen om te bewerken."
+
 #: src/features/accounts/staff/SupportAccess.tsx:59
 #~ msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read only."
 #~ msgstr "Vraag de beheerders van een werkruimte om je toe te laten. Keuren ze je verzoek goed, dan kun je 24 uur lang wijzigingen maken. Hebben ze supporttoegang zelf aangezet, dan kun je aansluiten om alleen mee te kijken."
 
 #: src/features/accounts/staff/SupportAccess.tsx:59
-msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read, and still ask for more."
-msgstr "Vraag de beheerders van een werkruimte om je toe te laten. Keuren ze je verzoek goed, dan kun je 24 uur lang wijzigingen maken. Hebben ze supporttoegang zelf aangezet, dan kun je aansluiten om mee te kijken, en alsnog om meer vragen."
+#~ msgid "Ask a workspace's admins to let you in. When they approve your request you can make changes for 24 hours. When they turned support access on themselves, you can join to read, and still ask for more."
+#~ msgstr "Vraag de beheerders van een werkruimte om je toe te laten. Keuren ze je verzoek goed, dan kun je 24 uur lang wijzigingen maken. Hebben ze supporttoegang zelf aangezet, dan kun je aansluiten om mee te kijken, en alsnog om meer vragen."
 
 #: src/features/accounts/signing/SignGate.tsx:760
 msgid "Ask the person who invited you to send a new one."
@@ -663,9 +667,13 @@ msgstr "Gesprek"
 msgid "Call booked"
 msgstr "Gesprek gepland"
 
+#: src/features/accounts/staff/SupportAccess.tsx:310
+msgid "Can edit"
+msgstr "Kan bewerken"
+
 #: src/features/accounts/staff/SupportAccess.tsx:288
-msgid "Can make changes"
-msgstr "Kan wijzigen"
+#~ msgid "Can make changes"
+#~ msgstr "Kan wijzigen"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:71
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
@@ -679,7 +687,7 @@ msgstr "Kan wijzigen"
 msgid "Cancel"
 msgstr "Annuleren"
 
-#: src/features/accounts/staff/SupportAccess.tsx:270
+#: src/features/accounts/staff/SupportAccess.tsx:278
 msgid "Cancel request"
 msgstr "Verzoek intrekken"
 
@@ -1045,17 +1053,18 @@ msgstr "Demo"
 msgid "Demo | dembrane"
 msgstr "Demo | dembrane"
 
+#: src/features/accounts/staff/SupportAccess.tsx:295
 #: src/features/accounts/staff/DemoDraftRoute.tsx:89
 msgid "Demo draft"
-msgstr "Concept van de demo"
+msgstr "Democoncept"
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:307
 msgid "Demo language"
 msgstr "Taal van de demo"
 
 #: src/features/accounts/staff/SupportAccess.tsx:95
-msgid "Demo not published"
-msgstr "Demo niet gepubliceerd"
+#~ msgid "Demo not published"
+#~ msgstr "Demo niet gepubliceerd"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:921
 msgid "Demo opened by staff"
@@ -1285,6 +1294,10 @@ msgstr "Leeg: die van de sjabloon. Een lege regel begint een nieuwe alinea."
 #~ msgid "Enable it to push offers and tasks. They get an Account page with a billing details step."
 #~ msgstr "Schakel het in om offertes en taken te sturen. Ze krijgen een accountpagina met een stap voor factuurgegevens."
 
+#: src/features/accounts/staff/SupportAccess.tsx:262
+msgid "End visit now"
+msgstr "Bezoek nu beëindigen"
+
 #: src/features/accounts/signing/SignGate.tsx:485
 msgid "Enter the six-digit code we sent to {email}."
 msgstr "Vul de code van zes cijfers in die we naar {email} stuurden."
@@ -1310,12 +1323,20 @@ msgstr "Bewijs"
 msgid "Exactly one"
 msgstr "Precies één"
 
+#: src/features/accounts/staff/SupportAccess.tsx:328
+msgid "Expires {date}"
+msgstr "Verloopt op {date}"
+
 #~ msgid "Explore your demo"
 #~ msgstr "Bekijk je demo"
 
 #: src/features/accounts/staff/SupportAccess.tsx:249
-msgid "Extend 24h"
-msgstr "24 uur verlengen"
+#~ msgid "Extend 24h"
+#~ msgstr "24 uur verlengen"
+
+#: src/features/accounts/staff/SupportAccess.tsx:257
+msgid "Extend visit by 24 hours"
+msgstr "Bezoek met 24 uur verlengen"
 
 #: src/features/accounts/staff/DemoRoute.tsx:57
 msgid "Extraction"
@@ -1743,8 +1764,12 @@ msgid "Job title"
 msgstr "Functie"
 
 #: src/features/accounts/staff/SupportAccess.tsx:243
-msgid "Join for support (24h)"
-msgstr "Aansluiten voor support (24 uur)"
+#~ msgid "Join for support (24h)"
+#~ msgstr "Aansluiten voor support (24 uur)"
+
+#: src/features/accounts/staff/SupportAccess.tsx:251
+msgid "Join read-only"
+msgstr "Meelezen"
 
 #: src/features/accounts/staff/SupportAccess.tsx:286
 #~ msgid "Joined"
@@ -1801,8 +1826,8 @@ msgstr "Achternaam"
 #~ msgstr "Feedback geven"
 
 #: src/features/accounts/staff/SupportAccess.tsx:254
-msgid "Leave now"
-msgstr "Nu verlaten"
+#~ msgid "Leave now"
+#~ msgstr "Nu verlaten"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:866
 msgid "Legal name"
@@ -1979,6 +2004,10 @@ msgstr "Volgende: {next}"
 msgid "No"
 msgstr "Nee"
 
+#: src/features/accounts/staff/SupportAccess.tsx:345
+msgid "No access"
+msgstr "Geen toegang"
+
 #: src/features/accounts/format.ts:125
 msgid "No account"
 msgstr "Geen account"
@@ -2030,7 +2059,7 @@ msgstr "Nog geen vragen."
 msgid "No tasks."
 msgstr "Geen taken."
 
-#: src/features/accounts/staff/SupportAccess.tsx:73
+#: src/features/accounts/staff/SupportAccess.tsx:81
 msgid "No workspaces."
 msgstr "Geen werkruimtes."
 
@@ -2240,6 +2269,11 @@ msgstr "Alleen de beheerders en factuurcontacten van de organisatie zien deze pa
 msgid "Open"
 msgstr "Open"
 
+#: src/features/accounts/staff/SupportAccess.tsx:267
+msgctxt "verb"
+msgid "Open"
+msgstr "Openen"
+
 #: src/features/accounts/staff/DocumentRoute.tsx:271
 msgid "Open evidence"
 msgstr "Bewijs openen"
@@ -2319,8 +2353,8 @@ msgid "Open to sign"
 msgstr "Openen om te ondertekenen"
 
 #: src/features/accounts/staff/SupportAccess.tsx:259
-msgid "Open workspace"
-msgstr "Werkruimte openen"
+#~ msgid "Open workspace"
+#~ msgstr "Werkruimte openen"
 
 #: src/features/accounts/staff/TaskModals.tsx:70
 #: src/features/accounts/customer/NextSteps.tsx:472
@@ -2659,7 +2693,11 @@ msgstr "Vragen"
 msgid "Read"
 msgstr "Lezen"
 
-#: src/features/accounts/staff/SupportAccess.tsx:298
+#: src/features/accounts/staff/SupportAccess.tsx:340
+msgid "Read access on"
+msgstr "Lezen staat aan"
+
+#: src/features/accounts/staff/SupportAccess.tsx:322
 msgid "Read only"
 msgstr "Alleen lezen"
 
@@ -2781,13 +2819,13 @@ msgstr "de achterban te vertegenwoordigen"
 msgid "Represents staff or stakeholders"
 msgstr "Vertegenwoordigt de achterban"
 
-#: src/features/accounts/staff/SupportAccess.tsx:265
+#: src/features/accounts/staff/SupportAccess.tsx:273
 msgid "Request access"
-msgstr "Toegang aanvragen"
+msgstr "Toegang vragen"
 
-#: src/features/accounts/staff/SupportAccess.tsx:308
+#: src/features/accounts/staff/SupportAccess.tsx:332
 msgid "Request sent"
-msgstr "Aanvraag verzonden"
+msgstr "Verzoek verstuurd"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:414
 msgid "Required"
@@ -2991,8 +3029,8 @@ msgid "Sent {0}"
 msgstr "Verstuurd op {0}"
 
 #: src/features/accounts/staff/SupportAccess.tsx:304
-msgid "Sent {sent}"
-msgstr "Verzonden op {sent}"
+#~ msgid "Sent {sent}"
+#~ msgstr "Verzonden op {sent}"
 
 #: src/features/accounts/customer/NextSteps.tsx:477
 msgid "Sent {when}. We are on it."
@@ -3283,7 +3321,7 @@ msgstr "Beginnen"
 #~ msgid "Start a project of your own and record a few minutes, with a colleague or on your own."
 #~ msgstr "Start een eigen project en neem een paar minuten op, met een collega of alleen."
 
-#: src/features/accounts/staff/SupportAccess.tsx:83
+#: src/features/accounts/staff/SupportAccess.tsx:93
 #: src/features/accounts/staff/AccountCardRoute.tsx:360
 #: src/features/accounts/staff/AccountCardRoute.tsx:510
 msgid "Status"
@@ -3325,13 +3363,13 @@ msgstr "Abonnement"
 msgid "Subtotal"
 msgstr "Subtotaal"
 
-#: src/features/accounts/staff/SupportAccess.tsx:55
+#: src/features/accounts/staff/SupportAccess.tsx:63
 msgid "Support access"
 msgstr "Supporttoegang"
 
 #: src/features/accounts/staff/SupportAccess.tsx:316
-msgid "Support access is on"
-msgstr "Toegang staat aan"
+#~ msgid "Support access is on"
+#~ msgstr "Toegang staat aan"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:1005
 msgid "System"
@@ -3565,7 +3603,7 @@ msgstr "De bepaling"
 msgid "The terms, SLA and DPA versions in force today are pinned."
 msgstr "De versies van de voorwaarden, SLA en DPA die vandaag gelden worden vastgelegd."
 
-#: src/features/accounts/staff/SupportAccess.tsx:69
+#: src/features/accounts/staff/SupportAccess.tsx:77
 msgid "The workspaces could not be loaded."
 msgstr "De werkruimtes konden niet worden geladen."
 
@@ -3825,14 +3863,18 @@ msgstr "Publicatie intrekken"
 #~ msgid "Unsigned"
 #~ msgstr "Niet ondertekend"
 
-#: src/features/accounts/staff/SupportAccess.tsx:284
-#: src/features/accounts/staff/SupportAccess.tsx:294
+#: src/features/accounts/staff/SupportAccess.tsx:306
+#: src/features/accounts/staff/SupportAccess.tsx:318
 msgid "Until {until}"
 msgstr "Tot {until}"
 
 #: src/features/accounts/staff/SupportAccess.tsx:293
-msgid "Until {until}. Request sent"
-msgstr "Tot {until}. Aanvraag verzonden"
+#~ msgid "Until {until}. Request sent"
+#~ msgstr "Tot {until}. Aanvraag verzonden"
+
+#: src/features/accounts/staff/SupportAccess.tsx:317
+msgid "Until {until}. Request to edit sent"
+msgstr "Tot {until}. Verzoek om te bewerken verstuurd"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:687
 msgid "Upgrade account"
@@ -4236,7 +4278,7 @@ msgstr "Intrekken"
 msgid "Withdrawn"
 msgstr "Ingetrokken"
 
-#: src/features/accounts/staff/SupportAccess.tsx:80
+#: src/features/accounts/staff/SupportAccess.tsx:90
 msgid "Workspace"
 msgstr "Werkruimte"
 
