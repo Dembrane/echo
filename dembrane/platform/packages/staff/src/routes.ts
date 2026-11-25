@@ -31,7 +31,7 @@ import {
 import { type Db, schema } from "@dembrane/db";
 import { type Ctx, type Env, requireUser, v } from "@dembrane/http";
 import { directusTime } from "@dembrane/legacy-shape";
-import { type RoutingPolicy, routingPolicyOf } from "@dembrane/llm";
+import { type ProviderId, type RoutingPolicy, routingPolicyOf } from "@dembrane/llm";
 import type { Mailer } from "@dembrane/mail";
 import type { Logger } from "@dembrane/observability";
 import { inArray } from "drizzle-orm";
@@ -52,6 +52,8 @@ export interface StaffRouteDeps {
   readonly clock?: () => Date;
   /** The AI providers this deployment has and its default; staff can only grant what exists. */
   readonly aiPolicy?: RoutingPolicy;
+  /** The model ids each AI provider uses on this deployment, for the cards staff see. */
+  readonly aiModels?: Partial<Record<ProviderId, readonly string[]>>;
 }
 
 const MOLLIE_DASHBOARD_LIVE = "https://www.mollie.com/dashboard/payments";
@@ -437,7 +439,9 @@ export function staffRoutes(deps: StaffRouteDeps) {
   app.get(`${A}/orgs/:org_id/ai-providers`, async (c) => {
     const id = c.req.param("org_id");
     await staff(c, "staff:workspaces", "org.ai_providers.read", ["org", id]);
-    return c.json(await readOrgForStaff({ db: deps.db, policy: aiPolicy }, id));
+    return c.json(
+      await readOrgForStaff({ db: deps.db, policy: aiPolicy, models: deps.aiModels }, id),
+    );
   });
 
   // The allowed providers and the default, set after a written request: the ticket it was made in.
@@ -454,11 +458,16 @@ export function staffRoutes(deps: StaffRouteDeps) {
     const id = c.req.param("org_id");
     const who = await staff(c, "staff:workspaces", "org.ai_providers.set", ["org", id], body);
     return c.json(
-      await setOrg({ db: deps.db, policy: aiPolicy, now: clock }, who.directusUserId, id, {
-        allowed: body.allowed,
-        default: body.default,
-        requestTicketId: body.request_ticket_id,
-      }),
+      await setOrg(
+        { db: deps.db, policy: aiPolicy, models: deps.aiModels, now: clock },
+        who.directusUserId,
+        id,
+        {
+          allowed: body.allowed,
+          default: body.default,
+          requestTicketId: body.request_ticket_id,
+        },
+      ),
     );
   });
 

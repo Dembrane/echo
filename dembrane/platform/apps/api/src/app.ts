@@ -33,6 +33,7 @@ import {
   embeddingModelOf,
   improves,
   profileOf,
+  providerModelsOf,
   routingPolicyOf,
   searchGroundingOn,
   vertexCompleter,
@@ -276,13 +277,15 @@ export function buildApp(deps: Deps) {
   );
   app.route("/", billingRoutes(deps));
   app.route("/", mollieWebhookRoutes(deps));
-  app.route("/", staffRoutes({ ...deps, ...(deps.ai && { aiPolicy: deps.ai.policy }) }));
+  const aiModels = { scaleway: providerModelsOf(deps.config.llm, "scaleway") };
+  app.route("/", staffRoutes({ ...deps, aiModels, ...(deps.ai && { aiPolicy: deps.ai.policy }) }));
   app.route(
     "/",
     aiProviderRoutes({
       db: deps.db,
       access: deps.access,
       policy: deps.ai?.policy ?? routingPolicyOf(deps.config.llm),
+      models: aiModels,
       now: () => new Date(),
     }),
   );

@@ -19,6 +19,8 @@ export interface AiProvidersDeps {
   readonly access: Access;
   /** What the deployment has and its default: the database only chooses among it. */
   readonly policy: RoutingPolicy;
+  /** The model ids each provider uses here for speech and analysis, from the deployment's config. */
+  readonly models?: Partial<Record<ProviderId, readonly string[]>>;
   readonly now: () => Date;
 }
 
@@ -34,6 +36,8 @@ export interface OrgProviders {
   readonly allowed: ProviderId[];
   /** The provider projects follow unless they choose another. */
   readonly default: ProviderId;
+  /** The models each provider uses on this deployment, for the cards that name them. */
+  readonly models: Partial<Record<ProviderId, readonly string[]>>;
 }
 
 interface Setting {
@@ -59,7 +63,7 @@ const isSetting = (v: unknown): v is Setting =>
   isProviderId((v as Setting).default);
 
 export function describe(
-  d: Pick<AiProvidersDeps, "policy">,
+  d: Pick<AiProvidersDeps, "policy" | "models">,
   row: {
     ai_providers: string[] | null;
     ai_default_provider: string | null;
@@ -74,6 +78,7 @@ export function describe(
     environment_default: d.policy.default,
     allowed: a.allowed.length ? a.allowed : [d.policy.default],
     default: a.default ?? d.policy.default,
+    models: d.models ?? {},
   };
 }
 
@@ -141,7 +146,10 @@ export async function readOrg(d: AiProvidersDeps, who: Principal, orgId: string)
 }
 
 /** What staff read: the setting, its history and the account's tickets to cite as the request. */
-export async function readOrgForStaff(d: Pick<AiProvidersDeps, "db" | "policy">, orgId: string) {
+export async function readOrgForStaff(
+  d: Pick<AiProvidersDeps, "db" | "policy" | "models">,
+  orgId: string,
+) {
   const row = await liveOrg(d.db, orgId);
   const tickets = await d.db
     .select({
@@ -173,7 +181,7 @@ export interface SetOrgInput {
  * later does not send them there again without a project admin choosing it.
  */
 export async function setOrg(
-  d: Pick<AiProvidersDeps, "db" | "policy" | "now">,
+  d: Pick<AiProvidersDeps, "db" | "policy" | "models" | "now">,
   staffUserId: string | null,
   orgId: string,
   input: SetOrgInput,
@@ -255,6 +263,8 @@ export interface ProjectProviders {
   readonly current: ProviderId | null;
   readonly effective: ProviderId;
   readonly can_change: boolean;
+  /** The models each provider uses on this deployment, for the cards that name them. */
+  readonly models: Partial<Record<ProviderId, readonly string[]>>;
 }
 
 async function projectContext(db: Db, projectId: string) {
@@ -279,7 +289,7 @@ async function projectContext(db: Db, projectId: string) {
 }
 
 function projectView(
-  d: Pick<AiProvidersDeps, "policy">,
+  d: Pick<AiProvidersDeps, "policy" | "models">,
   row: Awaited<ReturnType<typeof projectContext>>,
   canChange: boolean,
 ): ProjectProviders {
@@ -292,6 +302,7 @@ function projectView(
     current,
     effective: current ?? account.default,
     can_change: canChange,
+    models: account.models,
   };
 }
 

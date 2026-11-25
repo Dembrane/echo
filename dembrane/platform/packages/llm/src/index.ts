@@ -125,6 +125,7 @@ export {
   type LlmSettings,
   modelsConfigOf,
   providerGaps,
+  providerModelsOf,
   routingPolicyOf,
   searchGroundingOn,
   settingsFor,

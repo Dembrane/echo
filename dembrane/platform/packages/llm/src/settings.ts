@@ -1,5 +1,5 @@
 import type { ModelGroup, ModelsConfig } from "./models";
-import { profileOf, type TranscriptionProfile } from "./profiles";
+import { profileForProvider, profileOf, type TranscriptionProfile } from "./profiles";
 import {
   isProviderId,
   PROVIDERS,
@@ -166,4 +166,26 @@ export function providerGaps(
   return missing.length
     ? `provider ${id} needs ${missing.join(" and ")}, which ${missing.length > 1 ? "are" : "is"} not set`
     : null;
+}
+
+/**
+ * The model ids a provider uses on this deployment for speech-to-text and for analysis,
+ * without repeats, so a screen can name them from the config instead of from a copy.
+ * Only Scaleway's are open models worth naming; Google's list is empty.
+ */
+export function providerModelsOf(s: LlmSettings, id: ProviderId): string[] {
+  if (id !== "scaleway") return [];
+  const profile = profileForProvider(s, id);
+  const speech = [profile.live, profile.redo]
+    .filter((x) => x?.provider === "whisper")
+    .map((x) => x?.model);
+  const compat = groupsOf(settingsFor(s, id));
+  const all = [
+    ...speech,
+    ...(profile.cleanUp ? [profile.cleanUp.model] : []),
+    ...compat.text_fast,
+    ...compat.multi_modal_fast,
+    ...compat.multi_modal_pro,
+  ];
+  return [...new Set(all.filter((m): m is string => Boolean(m)))];
 }

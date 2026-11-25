@@ -43,6 +43,7 @@ run("AI providers: the account's setting and the project's choice", () => {
       db,
       access: new Access(new DrizzleAccessStore(db)),
       policy,
+      models: { scaleway: ["whisper-large-v3", "glm-5.3"] },
       now: () => new Date("2026-12-03T10:00:00Z"),
     };
   });
@@ -118,6 +119,7 @@ run("AI providers: the account's setting and the project's choice", () => {
       available: ["scaleway", "google"],
       allowed: ["scaleway"],
       default: "scaleway",
+      models: { scaleway: ["whisper-large-v3", "glm-5.3"] },
       history: [],
     });
     expect((await readOrg(d, w.orgAdmin, w.orgId)).allowed).toEqual(["scaleway"]);
@@ -160,6 +162,7 @@ run("AI providers: the account's setting and the project's choice", () => {
     });
     const forStaff = await readOrgForStaff(d, w.orgId);
     expect(forStaff.tickets.map((t) => t.id)).toEqual([w.ticket]);
+    expect(forStaff.models).toEqual({ scaleway: ["whisper-large-v3", "glm-5.3"] });
   });
 
   test("staff cannot grant what the deployment lacks, name no request, or cite another account's ticket", async () => {
@@ -208,6 +211,7 @@ run("AI providers: the account's setting and the project's choice", () => {
       options: ["scaleway"],
       effective: "scaleway",
       can_change: true,
+      models: { scaleway: ["whisper-large-v3", "glm-5.3"] },
     });
     await expect(setProject(d, w.owner, w.projectId, "google")).rejects.toThrow(
       /does not allow google/,
