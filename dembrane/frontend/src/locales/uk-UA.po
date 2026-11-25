@@ -141,7 +141,7 @@ msgstr "{0, plural, one {# розмова буде прихована разом
 #. placeholder {0}: counts.conversations
 #. placeholder {0}: p.conversation_count
 #. placeholder {0}: project.conversations_count ?? project?.conversations?.length ?? 0
-#: src/routes/project/popcorn/PopcornRoute.tsx:51
+#: src/routes/project/popcorn/PopcornRoute.tsx:50
 #: src/components/workspace/OrganisationUsageRollup.tsx:851
 #: src/components/project/ProjectListItem.tsx:219
 #: src/components/popcorn/PopcornStatus.tsx:41
@@ -192,8 +192,8 @@ msgstr "{0, plural, one {# платіж} few {# платежі} many {# плат
 
 #. placeholder {0}: presentation.counts.phrases
 #. placeholder {0}: counts.phrases
-#: src/routes/project/present/PresentRoute.tsx:904
-#: src/routes/project/popcorn/PopcornRoute.tsx:55
+#: src/routes/project/present/PresentRoute.tsx:907
+#: src/routes/project/popcorn/PopcornRoute.tsx:54
 msgid "{0, plural, one {# phrase} other {# phrases}}"
 msgstr "{0, plural, one {# фраза} few {# фрази} many {# фраз} other {# фрази}}"
 
@@ -437,7 +437,7 @@ msgid "{0} h ago"
 msgstr "{0} год тому"
 
 #. placeholder {0}: counts.held_back
-#: src/routes/project/popcorn/PopcornRoute.tsx:58
+#: src/routes/project/popcorn/PopcornRoute.tsx:57
 msgid "{0} held back"
 msgstr "Притримано: {0}"
 
@@ -554,7 +554,7 @@ msgid "{0} total rises to {1} when {pendingInvites} pending {2} accepted"
 msgstr "{0} підсумок зросте до {1}, коли {pendingInvites} очікуваних {2} прийнято"
 
 #. placeholder {0}: counts.validated ?? 0
-#: src/routes/project/popcorn/PopcornRoute.tsx:56
+#: src/routes/project/popcorn/PopcornRoute.tsx:55
 msgid "{0} validated"
 msgstr "Підтверджено: {0}"
 
@@ -657,7 +657,7 @@ msgstr "{browser} на {platform}"
 msgid "{calls, plural, one {# call} other {# calls}}"
 msgstr "{calls, plural, one {# виклик} few {# виклики} many {# викликів} other {# виклику}}"
 
-#: src/routes/project/present/PresentRoute.tsx:674
+#: src/routes/project/present/PresentRoute.tsx:677
 msgid "{changes, plural, one {# change not shown yet} other {# changes not shown yet}}"
 msgstr "{changes, plural, one {# зміну ще не показано} few {# зміни ще не показано} many {# змін ще не показано} other {# зміни ще не показано}}"
 
@@ -1230,7 +1230,7 @@ msgstr "Для обробки на основі згоди потрібне по
 #~ msgid "A project holds everything for one topic. Share its link with participants, gather voices, then let dembrane turn them into insights."
 #~ msgstr "Проєкт містить усе, що стосується однієї теми. Поділіться посиланням з учасниками, зберіть думки, а dembrane перетворить їх на інсайти."
 
-#: src/routes/project/present/PresentRoute.tsx:818
+#: src/routes/project/present/PresentRoute.tsx:821
 msgid "A public page needs a higher plan. Switch Public page off under Share to show the other changes."
 msgstr "Публічна сторінка потребує вищого тарифу. Вимкни «Публічна сторінка» в розділі «Поділитися», щоб показати інші зміни."
 
@@ -2097,7 +2097,7 @@ msgstr "Також дозволити йому змінювати налашту
 msgid "Always on, it lives on our website"
 msgstr "Працює постійно, розміщено на нашому сайті"
 
-#: src/routes/project/present/PresentRoute.tsx:219
+#: src/routes/project/present/PresentRoute.tsx:220
 msgid "Always on. The screen opens here, so the room has something to read while the rest gets ready."
 msgstr "Працює постійно. Екран відкривається тут, щоб учасники могли почитати, доки решта готується."
 
@@ -2341,7 +2341,7 @@ msgid "Anything you want to add"
 msgstr "Усе, що ви бажаєте додати"
 
 #: src/routes/settings/UserSettingsRoute.tsx:106
-#: src/routes/project/present/PresentRoute.tsx:140
+#: src/routes/project/present/PresentRoute.tsx:141
 #: src/features/sidebar/views/user/UserSettingsView.tsx:28
 #: src/features/sidebar/hooks/useSearchHits.ts:86
 msgid "Appearance"
@@ -2652,11 +2652,11 @@ msgstr "Додати перевірені артефакти"
 msgid "participant.modal.interruption.issue.message"
 msgstr "Attention! We lost the last 60 seconds or so of your recording due to some interruption. Please press the button below to reconnect."
 
-#: src/routes/project/present/PresentRoute.tsx:275
+#: src/routes/project/present/PresentRoute.tsx:276
 msgid "Audience language:"
 msgstr "Мова аудиторії:"
 
-#: src/routes/project/present/PresentRoute.tsx:424
+#: src/routes/project/present/PresentRoute.tsx:425
 msgid "Audience preview"
 msgstr "Попередній перегляд для аудиторії"
 
@@ -2919,7 +2919,7 @@ msgid "participant.modal.verify_reminder.title"
 msgstr "Перш ніж завершити"
 
 #: src/routes/project/ProjectMonitorRoute.tsx:86
-#: src/routes/project/popcorn/PopcornRoute.tsx:114
+#: src/routes/project/popcorn/PopcornRoute.tsx:111
 #: src/routes/project/library/LibraryRoute.tsx:98
 #: src/routes/project/chat/NewChatRoute.tsx:713
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:115
@@ -3385,16 +3385,16 @@ msgstr "Зміни застосовано. Ви можете уточнити ї
 #~ msgid "Changes could not be published. Try again."
 #~ msgstr "Не вдалося опублікувати зміни. Спробуйте знову."
 
-#: src/routes/project/present/PresentRoute.tsx:761
-#: src/routes/project/present/PresentRoute.tsx:819
+#: src/routes/project/present/PresentRoute.tsx:764
+#: src/routes/project/present/PresentRoute.tsx:822
 msgid "Changes could not be shown on the room screen"
 msgstr "Не вдалося показати зміни на екрані зали"
 
-#: src/routes/project/present/PresentRoute.tsx:678
+#: src/routes/project/present/PresentRoute.tsx:681
 msgid "Changes not shown yet"
 msgstr "Зміни ще не показано"
 
-#: src/routes/project/present/PresentRoute.tsx:860
+#: src/routes/project/present/PresentRoute.tsx:863
 msgid "Changes show on the room screen as you make them."
 msgstr "Зміни з’являються на екрані зали одразу, як ви їх вносите."
 
@@ -3618,7 +3618,7 @@ msgstr "Choose from your other projects"
 msgid "Choose Summarize, Brainstorm Ideas or Custom reply modes."
 msgstr "Вибирайте режими відповідей: «Підсумувати», «Генерувати ідеї» чи власний."
 
-#: src/routes/project/present/PresentRoute.tsx:209
+#: src/routes/project/present/PresentRoute.tsx:210
 msgid "Choose the outcomes your audience can explore."
 msgstr "Виберіть результати, доступні для вашої аудиторії."
 
@@ -4456,7 +4456,7 @@ msgstr "Не вдалося завантажити полотно."
 msgid "Could not load the free plan limits."
 msgstr "Не вдалося завантажити ліміти тарифу Free."
 
-#: src/routes/project/present/PresentRoute.tsx:936
+#: src/routes/project/present/PresentRoute.tsx:939
 msgid "Could not load the latest results"
 msgstr "Не вдалося завантажити останні результати"
 
@@ -4914,7 +4914,7 @@ msgstr "Email власника даних"
 msgid "Data ownership"
 msgstr "Право власності на дані"
 
-#: src/routes/project/present/PresentRoute.tsx:136
+#: src/routes/project/present/PresentRoute.tsx:137
 msgid "Data policy"
 msgstr "Політика щодо даних"
 
@@ -5297,7 +5297,7 @@ msgstr "Не отримали лист? Спершу перевірте спам
 msgid "Didn't get it? Check your spam or junk folder. The email comes from dembrane.com."
 msgstr "Не отримали лист? Перевірте папку зі спамом. Лист надходить від dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:224
+#: src/routes/project/present/PresentRoute.tsx:225
 msgid "Different perspectives and trade-offs"
 msgstr "Різні погляди та компроміси"
 
@@ -5759,7 +5759,7 @@ msgstr "Змінено: {editedBy}, {editedOn}"
 msgid "Editing a conversation no longer triggers the affected save error."
 msgstr "Редагування розмови більше не спричиняє помилку збереження."
 
-#: src/routes/project/present/PresentRoute.tsx:165
+#: src/routes/project/present/PresentRoute.tsx:166
 msgid "Editor section"
 msgstr "Розділ редактора"
 
@@ -5882,7 +5882,7 @@ msgstr "Завершено"
 msgid "Ends on {endDate}, then moves to Free"
 msgstr "Діє до {endDate}, потім переходить на Free"
 
-#: src/routes/project/present/PresentRoute.tsx:280
+#: src/routes/project/present/PresentRoute.tsx:281
 msgid "English fallback"
 msgstr "Резервна англійська версія"
 
@@ -5902,7 +5902,7 @@ msgstr "Enter a name for your cloned project"
 msgid "Enter a password"
 msgstr "Введіть пароль"
 
-#: src/routes/project/present/PresentRoute.tsx:389
+#: src/routes/project/present/PresentRoute.tsx:390
 msgid "Enter a presentation title"
 msgstr "Введіть назву презентації"
 
@@ -6687,7 +6687,7 @@ msgstr "У фокусі:"
 msgid "Follow ongoing sessions in the live monitor."
 msgstr "Стежте за поточними сесіями у живому моніторі."
 
-#: src/routes/project/present/PresentRoute.tsx:256
+#: src/routes/project/present/PresentRoute.tsx:257
 msgid "Follow project language"
 msgstr "Використовувати мову проєкту"
 
@@ -7358,7 +7358,7 @@ msgid "host guide"
 msgstr "посібник ведучого"
 
 #: src/routes/project/ProjectHomeRoute.tsx:110
-#: src/routes/project/present/PresentRoute.tsx:137
+#: src/routes/project/present/PresentRoute.tsx:138
 #: src/components/project/ProjectHostGuideLink.tsx:34
 #: src/components/common/settingChange.tsx:31
 msgid "Host guide"
@@ -7411,8 +7411,12 @@ msgid "How many recordings do you expect in your first year?"
 msgstr "Скільки записів ви очікуєте в перший рік?"
 
 #: src/routes/project/popcorn/PopcornRoute.tsx:108
-msgid "How Popcorn works"
-msgstr "Як працює Popcorn"
+#~ msgid "How Popcorn works"
+#~ msgstr "Як працює Popcorn"
+
+#: src/routes/project/present/PresentRoute.tsx:658
+msgid "How Present works"
+msgstr "Як працює Present"
 
 #: src/routes/project/report/ProjectReportRoute.tsx:174
 msgid "How reports work"
@@ -7493,7 +7497,7 @@ msgstr "IBAN"
 msgid "ID"
 msgstr "ID"
 
-#: src/routes/project/present/PresentRoute.tsx:221
+#: src/routes/project/present/PresentRoute.tsx:222
 msgid "Ideas and how they connect"
 msgstr "Ідеї та зв'язки між ними"
 
@@ -7707,7 +7711,7 @@ msgstr "Внутрішні"
 msgid "interview"
 msgstr "інтерв'ю"
 
-#: src/routes/project/present/PresentRoute.tsx:135
+#: src/routes/project/present/PresentRoute.tsx:136
 msgid "Intro"
 msgstr "Вступ"
 
@@ -8197,7 +8201,7 @@ msgstr "Типи знахідок"
 msgid "Knowledge graph"
 msgstr "Граф знань"
 
-#: src/routes/project/present/PresentRoute.tsx:139
+#: src/routes/project/present/PresentRoute.tsx:140
 #: src/features/sidebar/shell/UserMenu.tsx:159
 #: src/components/settings/LanguageSettingsCard.tsx:10
 #: src/components/report/UpdateReportModalButton.tsx:253
@@ -8566,7 +8570,7 @@ msgid "Live until {0}"
 msgstr "Наживо до {0}"
 
 #. placeholder {0}: format(expiry, "EEE d MMM, HH:mm")
-#: src/routes/project/popcorn/PopcornRoute.tsx:64
+#: src/routes/project/popcorn/PopcornRoute.tsx:63
 msgid "live until {0}, reads every {every} min"
 msgstr "активно до {0}, оновлюється кожні {every} хв"
 
@@ -8575,7 +8579,7 @@ msgstr "активно до {0}, оновлюється кожні {every} хв"
 msgid "Live, {0} phrases so far"
 msgstr "Наживо, вже {0} фраз"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:65
+#: src/routes/project/popcorn/PopcornRoute.tsx:64
 msgid "live, reads every {every} min"
 msgstr "активно, оновлюється кожні {every} хв"
 
@@ -8615,7 +8619,7 @@ msgstr "Loading artefact"
 msgid "Loading collections..."
 msgstr "Loading collections..."
 
-#: src/routes/project/present/PresentRoute.tsx:894
+#: src/routes/project/present/PresentRoute.tsx:897
 msgid "Loading draft"
 msgstr "Завантаження чернетки"
 
@@ -8642,8 +8646,8 @@ msgstr "Завантаження методології"
 msgid "Loading microphones..."
 msgstr "Loading microphones..."
 
-#: src/routes/project/present/PresentRoute.tsx:776
-#: src/routes/project/present/PresentRoute.tsx:1010
+#: src/routes/project/present/PresentRoute.tsx:779
+#: src/routes/project/present/PresentRoute.tsx:1013
 msgid "Loading presentation"
 msgstr "Завантаження презентації"
 
@@ -10209,7 +10213,7 @@ msgstr "Не зараз"
 msgid "Not on managed billing. Set to managed to invoice this account at the {tier} tier, with no automatic Mollie charges."
 msgstr "Не на керованому виставленні рахунків. Увімкніть його, щоб виставляти рахунки для цього акаунта за тарифом {tier} без автоматичних списань Mollie."
 
-#: src/routes/project/present/PresentRoute.tsx:432
+#: src/routes/project/present/PresentRoute.tsx:433
 msgid "Not on the room screen yet"
 msgstr "Ще не на екрані зали"
 
@@ -10614,7 +10618,7 @@ msgstr "Відкрити документацію"
 #~ msgid "Open host guide"
 #~ msgstr ""
 
-#: src/routes/project/present/PresentRoute.tsx:929
+#: src/routes/project/present/PresentRoute.tsx:932
 #: src/components/results/ResultItem.tsx:846
 #: src/components/results/curate/RowTools.tsx:344
 #: src/components/results/curate/RowTools.tsx:347
@@ -10935,7 +10939,7 @@ msgstr "Outcome updated!"
 msgid "outcomes"
 msgstr "outcomes"
 
-#: src/routes/project/present/PresentRoute.tsx:138
+#: src/routes/project/present/PresentRoute.tsx:139
 #: src/components/conversation/VerifiedArtefactsSection.tsx:92
 msgid "Outcomes"
 msgstr "Outcomes"
@@ -11291,7 +11295,7 @@ msgstr "Люди"
 msgid "People with access"
 msgstr "Люди з доступом"
 
-#: src/routes/project/present/PresentRoute.tsx:223
+#: src/routes/project/present/PresentRoute.tsx:224
 msgid "People, groups and what matters to them"
 msgstr "Люди, групи та те, що для них важливо"
 
@@ -11565,7 +11569,7 @@ msgstr "Popcorn також доступний такою мовою"
 #~ msgid "Popcorn cadence floor"
 #~ msgstr "Мінімальний темп Popcorn"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:194
+#: src/routes/project/popcorn/PopcornRoute.tsx:191
 msgid "Popcorn could not be loaded"
 msgstr "Не вдалося завантажити Popcorn"
 
@@ -11727,9 +11731,9 @@ msgstr "Готуємо це полотно. Перша версія з'явит�
 msgid "Preparing your experience"
 msgstr "Preparing your experience"
 
-#: src/routes/project/present/PresentRoute.tsx:658
-#: src/routes/project/present/PresentRoute.tsx:733
-#: src/routes/project/present/PresentRoute.tsx:994
+#: src/routes/project/present/PresentRoute.tsx:660
+#: src/routes/project/present/PresentRoute.tsx:736
+#: src/routes/project/present/PresentRoute.tsx:997
 #: src/features/sidebar/views/project/ProjectHomeView.tsx:121
 #: src/components/sharing/PresentButton.tsx:66
 msgid "Present"
@@ -11739,15 +11743,15 @@ msgstr "Презентувати"
 msgid "Presentation activities"
 msgstr "Активності презентації"
 
-#: src/routes/project/present/PresentRoute.tsx:706
+#: src/routes/project/present/PresentRoute.tsx:709
 msgid "Presentation controls"
 msgstr "Керування презентацією"
 
-#: src/routes/project/present/PresentRoute.tsx:159
+#: src/routes/project/present/PresentRoute.tsx:160
 msgid "Presentation editor"
 msgstr "Редактор презентації"
 
-#: src/routes/project/present/PresentRoute.tsx:386
+#: src/routes/project/present/PresentRoute.tsx:387
 msgid "Presentation title"
 msgstr "Назва презентації"
 
@@ -14322,7 +14326,7 @@ msgstr "Коли ти ділишся приватним проєктом із л
 msgid "Sharing this login with a colleague? An admin of your organisation can invite them, so each of you has a login of your own."
 msgstr "Користуєтеся цим входом разом із колегою? Адміністратор вашої організації може запросити колегу, щоб кожен із вас мав власний вхід."
 
-#: src/routes/project/present/PresentRoute.tsx:222
+#: src/routes/project/present/PresentRoute.tsx:223
 msgid "Short phrases from the conversations"
 msgstr "Короткі фрази з розмов"
 
@@ -14493,7 +14497,7 @@ msgstr "Показати посібник ведучого"
 msgid "Show the path to this page"
 msgstr "Показати шлях до цієї сторінки"
 
-#: src/routes/project/present/PresentRoute.tsx:696
+#: src/routes/project/present/PresentRoute.tsx:699
 msgid "Show them"
 msgstr "Показати"
 
@@ -15670,8 +15674,8 @@ msgstr "Стандартний посібник ведучого тепер на
 msgid "the dembrane team"
 msgstr "команда dembrane"
 
-#: src/routes/project/present/PresentRoute.tsx:770
-#: src/routes/project/present/PresentRoute.tsx:829
+#: src/routes/project/present/PresentRoute.tsx:773
+#: src/routes/project/present/PresentRoute.tsx:832
 msgid "The draft could not be loaded"
 msgstr "Не вдалося завантажити чернетку"
 
@@ -15793,7 +15797,7 @@ msgstr "Посібник для ведучого: це те, що фасиліт
 msgid "The host guide screen shows the code to take part. Turn on participation in the portal editor to use it."
 msgstr "Екран посібника ведучого показує код для участі. Увімкніть участь у редакторі порталу, щоб ним скористатися."
 
-#: src/routes/project/present/PresentRoute.tsx:998
+#: src/routes/project/present/PresentRoute.tsx:1001
 msgid "The host hasn’t prepared a presentation yet."
 msgstr "Ведучий ще не підготував презентацію."
 
@@ -15933,14 +15937,14 @@ msgstr "У сценарії учасника перевірка мікрофон
 #~ msgid "The portals will keep working! Your participants are never cut off and nothing they say is lost. Once you are on a paid plan, transcription catches up on everything already recorded."
 #~ msgstr "Портали працюватимуть і далі! Ваші учасники ніколи не відключаються, і ніщо зі сказаного ними не губиться. Щойно ви перейдете на платний тариф, транскрипція опрацює все вже записане."
 
-#: src/routes/project/present/PresentRoute.tsx:979
+#: src/routes/project/present/PresentRoute.tsx:982
 msgid "The presentation could not be loaded"
 msgstr "Не вдалося завантажити презентацію"
 
 #~ msgid "The presentation could not be loaded."
 #~ msgstr "Не вдалося завантажити презентацію."
 
-#: src/routes/project/present/PresentRoute.tsx:972
+#: src/routes/project/present/PresentRoute.tsx:975
 msgid "The presentation could not be opened"
 msgstr "Не вдалося відкрити презентацію"
 
@@ -15959,7 +15963,7 @@ msgstr "Проєкт переходить на ліцензію Business Source 
 msgid "The project context is read by transcription, chat answers and canvas generation, so a change here reaches more than one screen."
 msgstr "Контекст проєкту використовується транскрипцією, відповідями в чаті та генерацією полотен, тому зміна тут впливає на декілька екранів."
 
-#: src/routes/project/present/PresentRoute.tsx:856
+#: src/routes/project/present/PresentRoute.tsx:859
 msgid "The public page is on, so changes wait until you show them."
 msgstr "Публічна сторінка увімкнена, тож зміни чекають, доки ви їх не покажете."
 
@@ -15980,7 +15984,7 @@ msgstr "Звіт завершується запрошенням додати с
 msgid "The report may start up to 5 minutes after the chosen time."
 msgstr "The report may start up to 5 minutes after the chosen time."
 
-#: src/routes/project/present/PresentRoute.tsx:847
+#: src/routes/project/present/PresentRoute.tsx:850
 msgid "The room screen is open, so changes wait until you show them."
 msgstr "Екран зали відкритий, тож зміни чекають, доки ви їх не покажете."
 
@@ -17118,7 +17122,7 @@ msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Не вдається увійти? Напишіть на support@dembrane.com."
 
-#: src/routes/project/present/PresentRoute.tsx:1003
+#: src/routes/project/present/PresentRoute.tsx:1006
 #: src/routes/project/present/PresentResultsPanel.tsx:169
 #: src/routes/project/chat/ProjectChatRoute.tsx:856
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:171
@@ -17723,7 +17727,7 @@ msgstr "Використати успадковане значення"
 msgid "Use Italian for chat, reports, transcription and participant onboarding cards."
 msgstr "Використовуйте італійську для чату, звітів, транскрипції та карток онбордингу учасників."
 
-#: src/routes/project/present/PresentRoute.tsx:917
+#: src/routes/project/present/PresentRoute.tsx:920
 msgid "Use latest results"
 msgstr "Використати останні результати"
 
@@ -18058,7 +18062,7 @@ msgstr "Очікування розмов..."
 msgid "Waiting for inputs"
 msgstr "Очікування вхідних даних"
 
-#: src/routes/project/popcorn/PopcornRoute.tsx:49
+#: src/routes/project/popcorn/PopcornRoute.tsx:48
 msgid "Waiting for the first conversation"
 msgstr "Очікування першої розмови"
 
@@ -19124,7 +19128,7 @@ msgstr "Ви є зовнішнім учасником у цій організа
 msgid "You're in"
 msgstr "Ви всередині"
 
-#: src/routes/project/present/PresentRoute.tsx:852
+#: src/routes/project/present/PresentRoute.tsx:855
 msgid "You’re live, so changes wait until you show them."
 msgstr "Ви в ефірі, тож зміни чекають, доки ви їх не покажете."
 
