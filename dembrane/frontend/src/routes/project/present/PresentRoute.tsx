@@ -30,6 +30,7 @@ import {
 import { useParams, useSearchParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
+import { Explainer } from "@/components/explainers/Explainer";
 import { SaveStatus } from "@/components/form/SaveStatus";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { AiBudgetNotice } from "@/components/popcorn/AiBudgetNotice";
@@ -654,9 +655,11 @@ function Session({
 				>
 					<Stack gap={4} className="min-w-0">
 						<Group gap="sm" align="baseline" wrap="nowrap" className="min-w-0">
-							<Title order={2}>
-								<Trans>Present</Trans>
-							</Title>
+							<Explainer name="popcorn" label={t`How Present works`}>
+								<Title order={2}>
+									<Trans>Present</Trans>
+								</Title>
+							</Explainer>
 							<Text size="sm" c="dimmed" className="min-w-0 truncate">
 								{presentation.name}
 							</Text>

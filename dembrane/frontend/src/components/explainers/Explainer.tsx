@@ -47,14 +47,11 @@ export function Explainer({
 	name,
 	label,
 	children,
-	fill,
 }: {
 	name: ExplainerName;
 	/** What the "i" says to a screen reader, e.g. "How Verify works". */
 	label: string;
 	children: ReactNode;
-	/** The title is a full-width row: it takes the width and the "i" sits at the end. */
-	fill?: boolean;
 }) {
 	const [opened, setOpened] = useState(false);
 	const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -78,7 +75,6 @@ export function Explainer({
 			<Group
 				gap={4}
 				wrap="nowrap"
-				w={fill ? "100%" : undefined}
 				onMouseEnter={() => later(true)}
 				onMouseLeave={() => later(false)}
 			>
@@ -88,6 +84,9 @@ export function Explainer({
 						variant="subtle"
 						color="gray"
 						aria-label={label}
+						// Back on where the title is not pressable (a stepper row draws its
+						// title non-interactive, so only the "i" plays the loop).
+						className="pointer-events-auto"
 						onFocus={() => setOpened(true)}
 						onBlur={() => setOpened(false)}
 						onClick={() => setOpened((o) => !o)}

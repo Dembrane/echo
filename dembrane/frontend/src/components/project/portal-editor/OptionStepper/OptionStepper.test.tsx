@@ -160,8 +160,8 @@ describe("OptionStepper", () => {
 			o.key === "text" ? { ...o, beta: true } : o,
 		);
 		renderStepper("text", { options: beta });
-		const row = screen.getByTestId("portal-option-text-row");
-		expect(row.contains(screen.getByTestId("portal-option-text-beta"))).toBe(
+		const header = screen.getByTestId("portal-option-text-header");
+		expect(header.contains(screen.getByTestId("portal-option-text-beta"))).toBe(
 			true,
 		);
 		expect(screen.queryByTestId("portal-option-title-beta")).toBeNull();
@@ -169,7 +169,7 @@ describe("OptionStepper", () => {
 		renderStepper("title", { options: beta });
 		expect(
 			screen
-				.getByTestId("portal-option-text-row")
+				.getByTestId("portal-option-text-header")
 				.contains(screen.getByTestId("portal-option-text-beta")),
 		).toBe(true);
 	});
@@ -189,5 +189,49 @@ describe("OptionStepper", () => {
 				.getByTestId("portal-option-title-row")
 				.classList.contains("app-do"),
 		).toBe(true);
+	});
+
+	it('puts the explainer\'s "i" right after the name, beside the row button and not in it', async () => {
+		const withLoop = options.map((o) =>
+			o.key === "text"
+				? {
+						...o,
+						beta: true,
+						explainer: { label: "How Text works", name: "explore" as const },
+					}
+				: o,
+		);
+		renderStepper("title", { options: withLoop });
+		const row = screen.getByTestId("portal-option-text-row");
+		const info = screen.getByRole("button", { name: "How Text works" });
+		expect(row.contains(info)).toBe(false);
+		expect(row.getAttribute("aria-labelledby")).toBeTruthy();
+		// The row's button comes first, then the "i", then the other rows.
+		const buttons = screen
+			.getAllByRole("button")
+			.map((b) => b.id || b.ariaLabel);
+		const order = screen.getAllByRole("button");
+		expect(order.indexOf(row)).toBeLessThan(order.indexOf(info));
+		expect(buttons.length).toBeGreaterThan(2);
+		// The name, its Beta badge and the "i" are one run, in that order.
+		const header = screen.getByTestId("portal-option-text-header");
+		const beta = screen.getByTestId("portal-option-text-beta");
+		expect(header.contains(info)).toBe(true);
+		expect(
+			beta.compareDocumentPosition(info) & Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+		// A row without a loop has no "i".
+		expect(
+			screen.queryByRole("button", { name: /How Title works/ }),
+		).toBeNull();
+		// Pressing the row still opens it; pressing the "i" does not.
+		const onOpen = renderStepper("title", { options: withLoop });
+		fireEvent.click(screen.getAllByTestId("portal-option-text-row")[1]);
+		expect(onOpen).toHaveBeenLastCalledWith("text", "row");
+		onOpen.mockClear();
+		fireEvent.click(
+			screen.getAllByRole("button", { name: "How Text works" })[1],
+		);
+		expect(onOpen).not.toHaveBeenCalled();
 	});
 });

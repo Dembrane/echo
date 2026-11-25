@@ -38,7 +38,7 @@ export interface StepperOption {
 	body: ReactNode;
 	/** An early feature: "Beta" beside its name. */
 	beta?: boolean;
-	/** A short loop of what the feature does, behind an "i" at the end of its row. */
+	/** A short loop of what the feature does, behind an "i" right after its name. */
 	explainer?: { name: ExplainerName; label: string };
 }
 
@@ -67,6 +67,8 @@ interface OptionStepperProps {
  * A closed row is a box you press: its name in the first half, its value in the second
  * (cut to one line, never over the name). The open option is one unfolded box (ECHO-1062):
  * its name across the whole row, then its field and its buttons, with no line between.
+ * The row's button lies under its words, so an "i" can sit right after the name without
+ * being inside the button.
  */
 export const OptionStepper = ({
 	options,
@@ -125,65 +127,31 @@ export const OptionStepper = ({
 					const headerId = `${baseId}-${option.key}-header`;
 					const bodyId = `${baseId}-${option.key}-body`;
 					const Caret = isOpen ? CaretDownIcon : CaretRightIcon;
-					const row = (
-						<UnstyledButton
-							ref={(el) => {
-								headers.current[i] = el;
-							}}
-							id={headerId}
-							aria-expanded={isOpen}
-							aria-controls={bodyId}
-							onClick={() => {
-								if (!isOpen) onOpen(option.key, "row");
-							}}
-							onKeyDown={(e) => onRowKey(e, i)}
-							// Closed, the row is the box; open, the item around it is.
-							className={
-								isOpen
-									? "block w-full min-w-0 flex-1"
-									: "app-do block w-full min-w-0 flex-1"
-							}
-							px="sm"
-							py="sm"
-							style={isOpen ? { cursor: "default" } : undefined}
-							{...testId(`${testIdPrefix}-${option.key}-row`)}
-						>
-							<span className="grid grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)] items-baseline gap-x-3">
-								<Caret size={16} aria-hidden />
-								{/* The badge follows the name's last word, on its line. */}
-								<Text
-									component="span"
-									className={isOpen ? "col-span-2" : undefined}
-									style={{ minWidth: 0, overflowWrap: "break-word" }}
-								>
-									{option.title}
-									{option.beta && (
-										<Badge
-											component="span"
-											color="mauve"
-											c="graphite"
-											size="sm"
-											ml="xs"
-											style={{ verticalAlign: "middle" }}
-											{...testId(`${testIdPrefix}-${option.key}-beta`)}
-										>
-											<Trans>Beta</Trans>
-										</Badge>
-									)}
-								</Text>
-								{!isOpen && (
-									<Text
+					const titleId = `${baseId}-${option.key}-title`;
+					const summaryId = `${baseId}-${option.key}-summary`;
+					const title = (
+						<Title order={5} m={0} style={{ minWidth: 0 }}>
+							<Text
+								component="span"
+								id={titleId}
+								style={{ overflowWrap: "break-word" }}
+							>
+								{option.title}
+								{option.beta && (
+									<Badge
 										component="span"
+										color="mauve"
+										c="graphite"
 										size="sm"
-										className="app-muted"
-										truncate="end"
-										{...testId(`${testIdPrefix}-${option.key}-summary`)}
+										ml="xs"
+										style={{ verticalAlign: "middle" }}
+										{...testId(`${testIdPrefix}-${option.key}-beta`)}
 									>
-										{option.summary}
-									</Text>
+										<Trans>Beta</Trans>
+									</Badge>
 								)}
-							</span>
-						</UnstyledButton>
+							</Text>
+						</Title>
 					);
 					return (
 						<li
@@ -195,19 +163,67 @@ export const OptionStepper = ({
 							data-open={isOpen || undefined}
 							{...testId(`${testIdPrefix}-${option.key}`)}
 						>
-							<Title order={5} m={0}>
-								{option.explainer ? (
-									<Explainer
-										name={option.explainer.name}
-										label={option.explainer.label}
-										fill
-									>
-										{row}
-									</Explainer>
-								) : (
-									row
-								)}
-							</Title>
+							{/* The row is one press target (the button under everything) with its words
+							    laid over it. The words let clicks through, so the whole row opens it;
+							    only the "i" takes them, and sits right after the title as the button's
+							    sibling, never inside it. */}
+							<div
+								className="relative"
+								{...testId(`${testIdPrefix}-${option.key}-header`)}
+							>
+								<UnstyledButton
+									ref={(el) => {
+										headers.current[i] = el;
+									}}
+									id={headerId}
+									aria-expanded={isOpen}
+									aria-controls={bodyId}
+									aria-labelledby={titleId}
+									aria-describedby={isOpen ? undefined : summaryId}
+									onClick={() => {
+										if (!isOpen) onOpen(option.key, "row");
+									}}
+									onKeyDown={(e) => onRowKey(e, i)}
+									// Closed, the row is the box; open, the item around it is.
+									className={
+										isOpen
+											? "absolute inset-0 block h-full w-full"
+											: "app-do absolute inset-0 block h-full w-full"
+									}
+									style={isOpen ? { cursor: "default" } : undefined}
+									{...testId(`${testIdPrefix}-${option.key}-row`)}
+								/>
+								<div className="pointer-events-none relative grid grid-cols-[16px_minmax(0,1fr)_minmax(0,1fr)] items-baseline gap-x-3 px-3 py-3">
+									<Caret size={16} aria-hidden />
+									<div className={isOpen ? "col-span-2 min-w-0" : "min-w-0"}>
+										{option.explainer ? (
+											// The "i" is taller than a line of text: pulled in so the row keeps its height.
+											<div className="-my-1">
+												<Explainer
+													name={option.explainer.name}
+													label={option.explainer.label}
+												>
+													{title}
+												</Explainer>
+											</div>
+										) : (
+											title
+										)}
+									</div>
+									{!isOpen && (
+										<Text
+											component="span"
+											id={summaryId}
+											size="sm"
+											className="app-muted"
+											truncate="end"
+											{...testId(`${testIdPrefix}-${option.key}-summary`)}
+										>
+											{option.summary}
+										</Text>
+									)}
+								</div>
+							</div>
 							{isOpen && (
 								<section
 									id={bodyId}
