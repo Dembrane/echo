@@ -148,14 +148,39 @@ async function recordedMigrations(sql: postgres.Sql): Promise<Set<number>> {
 }
 
 /**
- * Runs the pending migrations in journal order in one transaction (retried on a lock
- * timeout or a deadlock) and records each as
- * drizzle's migrator does (same table, hash and created_at), so drizzle-kit and older
- * builds read the same history.
+ * Marks a migration that cannot run inside a transaction (CREATE INDEX CONCURRENTLY): its
+ * first line is this comment. Such a migration runs on its own, statement by statement, after
+ * the ones before it have committed, and is recorded when its last statement has finished.
+ * Write each of its statements so that running it again from the first is safe.
+ */
+const NO_TRANSACTION = /^\s*--\s*migrate:\s*no-transaction\b/;
+const outsideTransaction = (m: Migration) => NO_TRANSACTION.test(m.sql[0] ?? "");
+
+/**
+ * Runs the pending migrations in journal order and records each as drizzle's migrator does
+ * (same table, hash and created_at), so drizzle-kit and older builds read the same history.
+ * Consecutive migrations run in one transaction (retried on a lock timeout or a deadlock);
+ * one marked no-transaction ends the run before it, runs alone outside a transaction, and the
+ * ones after it start a new run.
  */
 async function apply(sql: postgres.Sql, pending: readonly Migration[]): Promise<void> {
   await sql`create schema if not exists drizzle`;
   await sql`create table if not exists drizzle.__drizzle_migrations (id serial primary key, hash text not null, created_at bigint)`;
+  let run: Migration[] = [];
+  for (const m of pending) {
+    if (!outsideTransaction(m)) {
+      run.push(m);
+      continue;
+    }
+    await applyInTransaction(sql, run);
+    run = [];
+    for (const statement of m.sql) await sql.unsafe(statement);
+    await sql`insert into drizzle.__drizzle_migrations (hash, created_at) values (${m.hash}, ${m.folderMillis})`;
+  }
+  await applyInTransaction(sql, run);
+}
+
+async function applyInTransaction(sql: postgres.Sql, pending: readonly Migration[]): Promise<void> {
   if (!pending.length) return;
   for (let attempt = 1; ; attempt++) {
     try {

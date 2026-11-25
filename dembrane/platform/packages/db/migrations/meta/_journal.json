@@ -421,6 +421,20 @@
       "when": 1795616699402,
       "tag": "0059_expand_ai_provider_per_job",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1795625294439,
+      "tag": "0060_expand_model_call_recorded_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1795625303922,
+      "tag": "0061_expand_model_call_indexes_concurrently",
+      "breakpoints": true
     }
   ]
 }

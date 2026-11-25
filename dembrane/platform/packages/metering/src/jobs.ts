@@ -110,7 +110,11 @@ const DAY_MS = 86_400_000;
 
 /** The check's place in ai_provider_check: everything before this instant has been read. */
 const CHECK_NAME = "provider-check";
-/** Rows are written a moment after their call; the check stops this far short of now so none is missed. */
+/**
+ * The check reads rows by when they were written (model_call.recorded_at), which is after the
+ * call ended, so a long call is read by the run after it finishes, never skipped. It still
+ * stops this far short of now: a row's write may commit a moment after its clock reading.
+ */
 const CHECK_LAG_MS = 15 * 60_000;
 
 /**
@@ -154,12 +158,13 @@ export async function runProviderCheck(d: {
     job: string;
     leaks: number;
     organisations: string[] | null;
+    ids: (number | string)[] | null;
   }>(sql`
     with calls as (
       select id, started_at, organisation_id, project_id, routing_conversation_id, routed_provider,
         coalesce(routing_job, '') as job
       from model_call
-      where started_at >= ${since}::timestamptz and started_at < ${until}::timestamptz
+      where recorded_at >= ${since}::timestamptz and recorded_at < ${until}::timestamptz
         and provider = 'vertex'
     ),
     judged as (
@@ -193,7 +198,8 @@ export async function runProviderCheck(d: {
         select v.ai_transcription_provider from conversation v where v.id = c.routing_conversation_id) cv on true
     )
     select job, count(*)::int as leaks,
-      array_agg(distinct organisation_id::text) filter (where organisation_id is not null) as organisations
+      array_agg(distinct organisation_id::text) filter (where organisation_id is not null) as organisations,
+      (array_agg(id order by id))[1:20] as ids
     from judged
     where routed_provider is distinct from 'google'
       or (${optInNeeded} and not (
@@ -213,9 +219,12 @@ export async function runProviderCheck(d: {
   if (leaks > 0) {
     const who = [...new Set(rows.flatMap((r) => r.organisations ?? []))].slice(0, 5).join(", ");
     const jobs = rows.map((r) => `${r.job || "unknown job"}: ${r.leaks}`).join(", ");
+    // The query names the rows it flagged, so it finds exactly those, whichever rule flagged them.
+    const ids = rows.flatMap((r) => (r.ids ?? []).map(Number)).sort((a, b) => a - b);
+    const more = leaks > ids.length ? ` (the first ${ids.length} of ${leaks})` : "";
     await postCostAlert(
       d.alerts,
-      `AI provider check: ${leaks} model call${leaks === 1 ? "" : "s"} since ${since} went to Google (Vertex) for a project the routing did not send there, or that its account's history did not allow Google for that job at that moment (${jobs}). Organisations: ${who || "none recorded"}. Query: select * from model_call where provider = 'vertex' and started_at >= '${since}' and routed_provider is distinct from 'google'.`,
+      `AI provider check: ${leaks} model call${leaks === 1 ? "" : "s"} since ${since} went to Google (Vertex) for a project the routing did not send there, or that its account's history did not allow Google for that job at that moment (${jobs}). Organisations: ${who || "none recorded"}. Rows${more}: select * from model_call where id in (${ids.join(", ")}).`,
       d.logger,
       now,
     );

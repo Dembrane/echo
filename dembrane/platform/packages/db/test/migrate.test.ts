@@ -44,6 +44,7 @@ run("migrate", () => {
       "mig_release_guard",
       "mig_lock",
       "mig_lock_retry",
+      "mig_concurrent",
     ]) {
       await sql.unsafe(`drop database if exists ${db}`);
       await sql.unsafe(`create database ${db}`);
@@ -115,6 +116,41 @@ run("migrate", () => {
         ),
       );
       expect(bad?.message).toMatch(/org_ai_analysis_default_check/);
+    } finally {
+      await db.end({ timeout: 5 });
+    }
+  }, 30_000);
+
+  test("a migration marked no-transaction builds its indexes concurrently and leaves them valid", async () => {
+    const url = `${base}/mig_concurrent`;
+    // A concurrent build cannot run in a transaction: it fails if the runner puts it in one.
+    expect(await migrate(url, { appEnv: "test" })).toEqual({
+      adoptedBaseline: false,
+      applied: TOTAL,
+    });
+    const db = postgres(url, { max: 1, onnotice: () => {} });
+    try {
+      const rows = await db<{ name: string; valid: boolean }[]>`
+        select c.relname as name, i.indisvalid as valid
+        from pg_index i join pg_class c on c.oid = i.indexrelid
+        where c.relname in ('model_call_recorded_at_idx', 'model_call_org_started_idx')
+        order by c.relname`;
+      expect(rows.map((r) => [r.name, r.valid])).toEqual([
+        ["model_call_org_started_idx", true],
+        ["model_call_recorded_at_idx", true],
+      ]);
+      // A run that did not finish leaves an invalid index and no history row: running it again heals it.
+      const [m] = await db<{ created_at: string }[]>`
+        select created_at from drizzle.__drizzle_migrations order by created_at desc limit 1`;
+      await db`delete from drizzle.__drizzle_migrations where created_at = ${m?.created_at ?? 0}`;
+      await db`update pg_index set indisvalid = false where indexrelid = 'model_call_org_started_idx'::regclass`;
+      expect(await migrate(url, { appEnv: "test" })).toEqual({
+        adoptedBaseline: false,
+        applied: 1,
+      });
+      const [again] = await db<{ valid: boolean }[]>`
+        select indisvalid as valid from pg_index where indexrelid = 'model_call_org_started_idx'::regclass`;
+      expect(again?.valid).toBe(true);
     } finally {
       await db.end({ timeout: 5 });
     }

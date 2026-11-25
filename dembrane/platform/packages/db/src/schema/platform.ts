@@ -130,8 +130,15 @@ export const model_call = pgTable(
     routing_allowed: text("routing_allowed").array(),
     /** The conversation the call belongs to, when it did; the daily provider check reads its recorded provider. */
     routing_conversation_id: uuid("routing_conversation_id"),
+    /** When the row was written, which is after the call ended; null on rows from before it was kept. The daily provider check reads the log by this, not by started_at. */
+    recorded_at: timestamp("recorded_at", { withTimezone: true }).default(sql`clock_timestamp()`),
   },
-  (t) => [index("model_call_started_at_idx").on(t.started_at)],
+  (t) => [
+    index("model_call_started_at_idx").on(t.started_at),
+    // Both are built CONCURRENTLY in migration 0061: the provider check windows on the write time, and the per-organisation cost estimate reads an organisation's last 30 days.
+    index("model_call_recorded_at_idx").on(t.recorded_at),
+    index("model_call_org_started_idx").on(t.organisation_id, t.started_at),
+  ],
 );
 
 /** How far a daily check has read the model_call log: the next run starts here, so a day it missed is still covered. */
