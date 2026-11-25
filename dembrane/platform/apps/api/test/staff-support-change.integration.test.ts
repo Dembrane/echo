@@ -232,6 +232,8 @@ run("staff ask to make changes while support access is on", () => {
     expect(request?.membershipId).toBe(joined.data.membership_id as string);
     const approvedAt = new Date(request?.resolvedAt as string).getTime();
     expect(new Date(now.data.expires_at as string).getTime()).toBe(approvedAt + DAY_MS);
+    expect(new Date(now.data.change_until as string).getTime()).toBe(approvedAt + DAY_MS);
+
     const store: AccessStore = new DrizzleAccessStore(db);
     const justBefore = await store.workspaceMembership(
       ws.workspace,
@@ -245,5 +247,33 @@ run("staff ask to make changes while support access is on", () => {
       new Date(approvedAt + DAY_MS + 1000),
     );
     expect(after).toBeNull();
+
+    // Extending moves the end of the visit, not the end of the right to change, and the
+    // account page's list says the same as the visit itself.
+    await new Promise((r) => setTimeout(r, 20));
+    const extended = await call(
+      people.staff,
+      "POST",
+      `/api/v2/admin/workspaces/${ws.workspace}/join-support`,
+    );
+    expect(extended.data.status).toBe("extended");
+    const later = await visit();
+    expect(new Date(later.data.expires_at as string).getTime()).toBeGreaterThan(
+      approvedAt + DAY_MS,
+    );
+    expect(new Date(later.data.change_until as string).getTime()).toBe(approvedAt + DAY_MS);
+    const list = await call(people.staff, "GET", `/api/v2/admin/orgs/${ws.org}/workspaces`);
+    expect(list.status).toBe(200);
+    const row = (list.data.workspaces as { workspace_id: string; visit: unknown }[]).find(
+      (w) => w.workspace_id === ws.workspace,
+    );
+    expect(row?.visit).toEqual(later.data);
+    // Past the approval, the extended visit still reads.
+    const between = await store.workspaceMembership(
+      ws.workspace,
+      people.staff.appUserId as string,
+      new Date((approvedAt + DAY_MS + new Date(later.data.expires_at as string).getTime()) / 2),
+    );
+    expect(between).toMatchObject({ source: "staff_support", supportApproved: false });
   });
 });

@@ -70,8 +70,11 @@ export default function SupportAccessRequestPrompt() {
 		resolve.mutate(
 			{ decision, requestId: current.id, workspaceId: current.workspace_id },
 			{
-				onSettled: () => markRequestSeen(current.id),
+				// Remembered only once answered: after a network error the request still
+				// waits, so the dialog stays to try again. A request answered elsewhere or
+				// expired drops out of the refetched list, and the dialog with it.
 				onSuccess: () => {
+					markRequestSeen(current.id);
 					if (current.notification_id) markRead.mutate(current.notification_id);
 				},
 			},

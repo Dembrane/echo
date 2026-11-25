@@ -8,7 +8,8 @@ import { ApiRequestError } from "@/lib/errors/read";
 /**
  * A staff member's support visit to one customer workspace (ECHO-863): whether they are in
  * and until when, their request for access, and joining, extending, leaving, asking and
- * withdrawing. Used by "Usage and billing" and by the account page, through one cache.
+ * withdrawing. "Usage and billing" reads one workspace here; the account page reads its list
+ * of workspaces in one call and uses only the actions.
  */
 
 export type SupportVisitStatus = {
@@ -16,6 +17,8 @@ export type SupportVisitStatus = {
 	expires_at: string | null;
 	/** The visit rests on an approved request: the customer let this person make changes. */
 	can_change?: boolean;
+	/** When that approval's 24 hours end; extending the visit does not move it. */
+	change_until?: string | null;
 };
 
 export type SupportRequestStatus = {
@@ -31,6 +34,10 @@ export const supportVisitKey = (workspaceId: string) =>
 	["v2", "admin", "support-access", workspaceId] as const;
 export const supportRequestKey = (workspaceId: string) =>
 	["v2", "admin", "support-request", workspaceId] as const;
+/** The account page's list of an organisation's workspaces, with the caller's visits. */
+export const orgWorkspacesKey = (orgId: string) =>
+	["v2", "admin", "org-workspaces", orgId] as const;
+const ORG_WORKSPACES = ["v2", "admin", "org-workspaces"] as const;
 
 async function send<T>(url: string, init: RequestInit): Promise<T> {
 	const res = await fetch(url, { credentials: "include", ...init });
@@ -47,23 +54,17 @@ async function read<T>(url: string): Promise<T> {
 	return res.json();
 }
 
-export function useSupportVisit(workspaceId: string) {
+/**
+ * Joining, extending, leaving, asking and withdrawing, without reading anything: the account
+ * page reads every workspace in one call, and each answer refreshes that list too.
+ */
+export function useSupportVisitActions(workspaceId: string) {
 	const queryClient = useQueryClient();
 	const base = `${API_BASE_URL}/v2/admin/workspaces/${workspaceId}`;
-	const visitKey = supportVisitKey(workspaceId);
-	const requestKey = supportRequestKey(workspaceId);
-
-	// The caller's own visit, so a reopened control shows "until <time>" and Extend
-	// instead of always offering a fresh join.
-	const visit = useQuery({
-		queryFn: () => read<SupportVisitStatus>(`${base}/join-support`),
-		queryKey: visitKey,
-	});
-
-	const request = useQuery({
-		queryFn: () => read<SupportRequestStatus>(`${base}/support-access/request`),
-		queryKey: requestKey,
-	});
+	const refresh = (key: readonly unknown[]) => {
+		queryClient.invalidateQueries({ queryKey: key });
+		queryClient.invalidateQueries({ queryKey: ORG_WORKSPACES });
+	};
 
 	const sendRequest = useMutation({
 		mutationFn: (message: string) =>
@@ -75,7 +76,7 @@ export function useSupportVisit(workspaceId: string) {
 		onError: (e) => void notifyError(e),
 		onSuccess: () => {
 			toast.success(t`Request sent. The workspace admins were notified.`);
-			queryClient.invalidateQueries({ queryKey: requestKey });
+			refresh(supportRequestKey(workspaceId));
 		},
 	});
 
@@ -85,7 +86,7 @@ export function useSupportVisit(workspaceId: string) {
 		onError: (e) => void notifyError(e),
 		onSuccess: () => {
 			toast.success(t`Request withdrawn.`);
-			queryClient.invalidateQueries({ queryKey: requestKey });
+			refresh(supportRequestKey(workspaceId));
 		},
 	});
 
@@ -109,7 +110,7 @@ export function useSupportVisit(workspaceId: string) {
 					t`Support access granted. It ends automatically in 24 hours.`,
 				);
 			}
-			queryClient.invalidateQueries({ queryKey: visitKey });
+			refresh(supportVisitKey(workspaceId));
 			// Refresh the workspace + project lists so the just-joined workspace
 			// shows its projects without a manual refresh.
 			queryClient.invalidateQueries({ queryKey: ["v2", "workspaces-context"] });
@@ -123,29 +124,53 @@ export function useSupportVisit(workspaceId: string) {
 		onError: (e) => void notifyError(e),
 		onSuccess: () => {
 			toast.success(t`Support access ended.`);
-			queryClient.invalidateQueries({ queryKey: visitKey });
+			refresh(supportVisitKey(workspaceId));
 		},
+	});
+
+	return {
+		busy:
+			join.isPending ||
+			leave.isPending ||
+			sendRequest.isPending ||
+			cancelRequest.isPending,
+		cancelRequest,
+		join,
+		leave,
+		sendRequest,
+	};
+}
+
+export type SupportVisitActions = ReturnType<typeof useSupportVisitActions>;
+
+/** The actions above, with the caller's visit and request to one workspace. */
+export function useSupportVisit(workspaceId: string) {
+	const actions = useSupportVisitActions(workspaceId);
+	const base = `${API_BASE_URL}/v2/admin/workspaces/${workspaceId}`;
+
+	// The caller's own visit, so a reopened control shows "until <time>" and Extend
+	// instead of always offering a fresh join.
+	const visit = useQuery({
+		queryFn: () => read<SupportVisitStatus>(`${base}/join-support`),
+		queryKey: supportVisitKey(workspaceId),
+	});
+
+	const request = useQuery({
+		queryFn: () => read<SupportRequestStatus>(`${base}/support-access/request`),
+		queryKey: supportRequestKey(workspaceId),
 	});
 
 	const active = visit.data?.active ?? false;
 	const pendingRequest =
 		request.data?.request?.status === "pending" ? request.data.request : null;
 	return {
+		...actions,
 		active,
-		busy:
-			join.isPending ||
-			leave.isPending ||
-			sendRequest.isPending ||
-			cancelRequest.isPending,
 		/** False on a visit that only reads: joined while the switch was on, never approved. */
 		canChange: active && (visit.data?.can_change ?? false),
-		cancelRequest,
 		expiresAt: visit.data?.expires_at ?? null,
-		join,
-		leave,
 		loading: visit.isLoading || request.isLoading,
 		pendingRequest,
-		sendRequest,
 		/** True until the server says otherwise, as "Usage and billing" always read it. */
 		supportEnabled: request.data?.support_access_enabled ?? true,
 		visitLoading: visit.isLoading,

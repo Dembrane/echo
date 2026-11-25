@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
-import { MantineProvider } from "@mantine/core";
+import { MantineProvider, Modal } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
 	act,
@@ -28,17 +28,21 @@ import type { NotificationRow } from "@/hooks/useNotifications";
 // the test sets like react-query would answer.
 const notices = vi.hoisted(() => {
 	let rows: import("@/hooks/useNotifications").NotificationRow[] = [];
+	// Each set is a refetch: react-query moves dataUpdatedAt.
+	let updatedAt = 1;
 	const listeners = new Set<() => void>();
 	return {
 		get: () => rows,
 		set: (next: typeof rows) => {
 			rows = next;
+			updatedAt += 1;
 			for (const l of listeners) l();
 		},
 		subscribe: (l: () => void) => {
 			listeners.add(l);
 			return () => listeners.delete(l);
 		},
+		updatedAt: () => updatedAt,
 	};
 });
 const mocks = vi.hoisted(() => ({
@@ -63,6 +67,7 @@ vi.mock("@/hooks/useNotifications", async (importOriginal) => {
 			const data = useSyncExternalStore(notices.subscribe, notices.get);
 			return {
 				data,
+				dataUpdatedAt: notices.updatedAt(),
 				isError: false,
 				isLoading: false,
 				isPending: false,
@@ -112,6 +117,8 @@ let server: {
 	pending: Record<string, Pending[]>;
 	forbidden: Set<string>;
 	calls: { url: string; method: string }[];
+	/** Answers fail before they reach dembrane, as when the connection drops. */
+	offline?: boolean;
 };
 
 const json = (body: unknown, status = 200) =>
@@ -144,6 +151,7 @@ const fakeFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
 		/\/v2\/workspaces\/([^/]+)\/support-access\/requests\/([^/]+)\/(approve|deny)$/,
 	);
 	if (answer && method === "POST") {
+		if (server.offline) throw new TypeError("Failed to fetch");
 		const [, ws, id] = answer;
 		const before = server.pending[ws] ?? [];
 		if (!before.some((r) => r.id === id)) {
@@ -212,33 +220,38 @@ const notice = (
 	...over,
 });
 
-const renderPrompt = (url = "/en-US/w/ws-1/home") =>
-	render(
+const renderPrompt = (url = "/en-US/w/ws-1/home", other = false) => {
+	const client = new QueryClient({
+		defaultOptions: {
+			mutations: { retry: false },
+			queries: { retry: false },
+		},
+	});
+	const tree = (otherOpen: boolean) => (
 		<I18nProvider i18n={i18n}>
 			<MantineProvider env="test">
-				<QueryClientProvider
-					client={
-						new QueryClient({
-							defaultOptions: {
-								mutations: { retry: false },
-								queries: { retry: false },
-							},
-						})
-					}
-				>
+				<QueryClientProvider client={client}>
 					<MemoryRouter initialEntries={[url]}>
 						<SupportAccessRequestPrompt />
+						{/* Another dialog of the app, open when the test says so. */}
+						<Modal opened={otherOpen} onClose={() => {}} title="Rename project">
+							Another dialog
+						</Modal>
 					</MemoryRouter>
 				</QueryClientProvider>
 			</MantineProvider>
-		</I18nProvider>,
+		</I18nProvider>
 	);
+	const view = render(tree(other));
+	return { ...view, setOther: (open: boolean) => view.rerender(tree(open)) };
+};
 
 // By role: a closed Mantine modal can leave its empty root (and its test id) behind.
-const dialog = () => screen.queryByRole("dialog");
+const dialog = () =>
+	screen.queryByRole("dialog", { name: "Support access request" });
 const findDialog = async () => {
 	await waitFor(() => expect(dialog()).toBeTruthy());
-	return screen.getByRole("dialog");
+	return screen.getByRole("dialog", { name: "Support access request" });
 };
 /** Lets the fetches the prompt starts on its own come back before asserting it stayed away. */
 const settle = () => act(() => new Promise((r) => setTimeout(r, 100)));
@@ -471,5 +484,84 @@ describe("a workspace admin with a waiting support access request", () => {
 		expect(second.textContent).toContain("Team");
 		expect(second.textContent).not.toContain("Olga Older");
 		expect(screen.getAllByRole("dialog")).toHaveLength(1);
+	});
+	it("opens for a request that arrives after its workspace's list was loaded", async () => {
+		// An earlier request, already answered: the workspace's list is loaded and empty.
+		server.pending["ws-1"] = [];
+		notices.set([notice("ws-1", "r-earlier", { read: true })]);
+		renderPrompt();
+		await waitFor(() => expect(fetchedRequestsOf("ws-1")).toBe(true));
+		await settle();
+		expect(dialog()).toBeNull();
+		// A new request and its notice; nothing else refetches the list.
+		server.pending["ws-1"] = [request({ id: "r-later" })];
+		notices.set([
+			notice("ws-1", "r-later", { created_at: hoursAgo(0) }),
+			notice("ws-1", "r-earlier", { read: true }),
+		]);
+		const d = await findDialog();
+		expect(d.textContent).toContain("Sam Staff");
+	});
+
+	it("an answer to a request that is gone shows the error, reloads the list and closes", async () => {
+		server.pending["ws-1"] = [request({ id: "r-gone" })];
+		notices.set([notice("ws-1", "r-gone")]);
+		renderPrompt();
+		const d = await findDialog();
+		// Another admin answered it, or it expired, while the dialog was open.
+		server.pending["ws-1"] = [];
+		const listsBefore = server.calls.filter(
+			(c) => c.method === "GET" && c.url.includes("/support-access/requests"),
+		).length;
+		fireEvent.click(
+			within(d).getByRole("button", { name: "Approve for 24 hours" }),
+		);
+		await waitFor(() => expect(toast.error).toHaveBeenCalled());
+		await waitFor(() =>
+			expect(
+				server.calls.filter(
+					(c) =>
+						c.method === "GET" && c.url.includes("/support-access/requests"),
+				).length,
+			).toBeGreaterThan(listsBefore),
+		);
+		await waitFor(() => expect(dialog()).toBeNull());
+		expect(toast.success).not.toHaveBeenCalled();
+		expect(posted("/v2/me/notifications/n-r-gone/read")).toBe(false);
+	});
+
+	it("after a network error the request still waits, so the dialog stays to try again", async () => {
+		server.pending["ws-1"] = [request({ id: "r-offline" })];
+		notices.set([notice("ws-1", "r-offline")]);
+		server.offline = true;
+		renderPrompt();
+		const d = await findDialog();
+		fireEvent.click(within(d).getByRole("button", { name: "Decline" }));
+		await waitFor(() => expect(toast.error).toHaveBeenCalled());
+		await settle();
+		expect(dialog()).toBeTruthy();
+		expect(requestSeen("r-offline")).toBe(false);
+	});
+
+	it("holds back while another dialog is open, and opens once it has closed", async () => {
+		server.pending["ws-1"] = [request({ id: "r-wait" })];
+		notices.set([notice("ws-1", "r-wait")]);
+		const view = renderPrompt("/en-US/w/ws-1/home", true);
+		await waitFor(() => expect(fetchedRequestsOf("ws-1")).toBe(true));
+		await settle();
+		expect(screen.getByRole("dialog", { name: "Rename project" })).toBeTruthy();
+		expect(dialog()).toBeNull();
+		// The other dialog closes; the next inbox refetch looks again.
+		view.setOther(false);
+		await waitFor(() =>
+			expect(
+				screen.queryByRole("dialog", { name: "Rename project" }),
+			).toBeNull(),
+		);
+		await settle();
+		expect(dialog()).toBeNull();
+		act(() => notices.set([notice("ws-1", "r-wait")]));
+		const d = await findDialog();
+		expect(d.textContent).toContain("Sam Staff");
 	});
 });

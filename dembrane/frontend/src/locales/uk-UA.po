@@ -102,7 +102,7 @@ msgstr "(Ви)"
 #~ msgstr "{0, plural, one {(# робочий простір)} few {(# робочі простори)} many {(# робочих просторів)} other {(# робочих просторів)}}"
 
 #. placeholder {0}: rows.length
-#: src/routes/admin/AdminSettingsRoute.tsx:2165
+#: src/routes/admin/AdminSettingsRoute.tsx:2037
 msgid "{0, plural, one {# agreement} other {# agreements}}"
 msgstr "{0, plural, one {# угода} few {# угоди} many {# угод} other {# угод}}"
 
@@ -185,8 +185,8 @@ msgstr "{0, plural, one {# частина для транскрибування}
 
 #. placeholder {0}: filteredRows.length
 #. placeholder {0}: group.rows.length
-#: src/routes/admin/AdminSettingsRoute.tsx:2634
-#: src/routes/admin/AdminSettingsRoute.tsx:2667
+#: src/routes/admin/AdminSettingsRoute.tsx:2506
+#: src/routes/admin/AdminSettingsRoute.tsx:2539
 msgid "{0, plural, one {# payment} other {# payments}}"
 msgstr "{0, plural, one {# платіж} few {# платежі} many {# платежів} other {# платежів}}"
 
@@ -263,7 +263,7 @@ msgstr "{0, plural, one {# слово вилучено} few {# слова вил
 #. placeholder {0}: organisation.workspace_count
 #. placeholder {0}: rows.length
 #: src/routes/organisation/OrganisationRoute.tsx:737
-#: src/routes/admin/AdminSettingsRoute.tsx:1145
+#: src/routes/admin/AdminSettingsRoute.tsx:1017
 msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr "{0, plural, one {# робочий простір} few {# робочі простори} many {# робочих просторів} other {# робочих просторів}}"
 
@@ -369,7 +369,7 @@ msgstr "{0} / місце × {1}. Плата після цього періоду
 #. placeholder {0}: data.account_count
 #. placeholder {1}: data.workspace_count
 #. placeholder {2}: data.active_workspace_count
-#: src/routes/admin/AdminSettingsRoute.tsx:1821
+#: src/routes/admin/AdminSettingsRoute.tsx:1693
 msgid "{0} accounts, {1} workspaces, {2} active"
 msgstr "{0} акаунтів, {1} робочих просторів, {2} активних"
 
@@ -379,7 +379,7 @@ msgid "{0} across all"
 msgstr "{0} для всіх"
 
 #. placeholder {0}: b.active
-#: src/routes/admin/AdminSettingsRoute.tsx:1169
+#: src/routes/admin/AdminSettingsRoute.tsx:1041
 msgid "{0} active"
 msgstr "{0} активних"
 
@@ -587,13 +587,13 @@ msgstr "{0} робочих просторів · {1} місць · {2} безк�
 #. placeholder {0}: account.workspace_count
 #. placeholder {1}: account.seat_count + account.external_count
 #. placeholder {2}: account.observer_count > 0 ? ` · ${account.observer_count} free observers` : ""
-#: src/routes/admin/AdminSettingsRoute.tsx:1294
+#: src/routes/admin/AdminSettingsRoute.tsx:1166
 msgid "{0} workspaces, {1} seats pooled{2}"
 msgstr "{0} робочих просторів, {1} спільних місць{2}"
 
 #. placeholder {0}: row.org_name
 #. placeholder {1}: row.workspace_id.slice(0, 8)
-#: src/routes/admin/AdminSettingsRoute.tsx:1064
+#: src/routes/admin/AdminSettingsRoute.tsx:933
 msgid "{0}, workspace id {1}"
 msgstr "{0}, id робочого простору {1}"
 
@@ -665,7 +665,7 @@ msgstr "{changes, plural, one {# зміну ще не показано} few {# �
 msgid "{clientName} and the company running it will receive the conversation content you allow."
 msgstr "{clientName} та компанія, що розробляє застосунок, отримають дозволений вами вміст розмови."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1841
+#: src/routes/admin/AdminSettingsRoute.tsx:1713
 msgid "{compedCount, plural, one {# comped} other {# comped}}"
 msgstr "{compedCount, plural, one {# надано безкоштовно} few {# надано безкоштовно} many {# надано безкоштовно} other {# надано безкоштовно}}"
 
@@ -825,7 +825,7 @@ msgstr "{m} хв"
 #~ msgid "{n} min"
 #~ msgstr "{n} хв"
 
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:98
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:101
 msgid "{name} from dembrane asks for admin access to {workspaceName} for 24 hours, to help you with support. Access ends automatically."
 msgstr "{name} з dembrane просить доступ адміністратора до {workspaceName} на 24 години, щоб допомогти вам із підтримкою. Доступ припиниться автоматично."
 
@@ -1089,7 +1089,7 @@ msgstr "1. You provide a URL where you want to receive notifications"
 msgid "16 to 40."
 msgstr "Від 16 до 40."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:260
+#: src/routes/admin/AdminSettingsRoute.tsx:258
 msgid "2 months ago"
 msgstr "2 місяці тому"
 
@@ -1114,7 +1114,7 @@ msgstr "Від 250 до 1000."
 msgid "3 days"
 msgstr "3 дні"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:261
+#: src/routes/admin/AdminSettingsRoute.tsx:259
 msgid "3 months ago"
 msgstr "3 місяці тому"
 
@@ -1151,15 +1151,15 @@ msgstr "Чистіша й доступніша панель керування �
 msgid "A couple of quick questions and you're in."
 msgstr "Кілька швидких запитань, і ви всередині."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2876
+#: src/routes/admin/AdminSettingsRoute.tsx:2748
 msgid "A dembrane staff app_user id. The server checks the @dembrane.com address."
 msgstr "ID користувача app_user працівника dembrane. Сервер перевіряє адресу @dembrane.com."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:622
+#: src/routes/admin/AdminSettingsRoute.tsx:620
 msgid "A downgrade applies the matrix downgrade effects and notifies workspace admins. A paid tier puts the account on dembrane-managed billing."
 msgstr "Зниження тарифу застосовує обмеження та сповіщає адміністраторів робочого простору. Платний рівень переводить акаунт на білінг під керуванням dembrane."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:670
+#: src/routes/admin/AdminSettingsRoute.tsx:668
 msgid "A downgrade limits features immediately."
 msgstr "Зниження тарифу обмежує можливості негайно."
 
@@ -1354,7 +1354,7 @@ msgstr "Доступ"
 msgid "Access controls explain when you need to join a workspace first."
 msgstr "Керування доступом пояснює, коли потрібно спершу приєднатися до робочого простору."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:850
+#: src/routes/admin/AdminSettingsRoute.tsx:848
 msgid "Access ends on"
 msgstr "Доступ діє до"
 
@@ -1362,7 +1362,7 @@ msgstr "Доступ діє до"
 msgid "Access expires after"
 msgstr "Термін дії доступу закінчується через"
 
-#: src/components/workspace/supportRequests.ts:172
+#: src/components/workspace/supportRequests.ts:222
 msgid "Access granted for 24 hours."
 msgstr "Доступ надано на 24 години."
 
@@ -1391,11 +1391,11 @@ msgid "Access requests"
 msgstr "Запити на доступ"
 
 #: src/routes/admin/AiCostsPanel.tsx:742
-#: src/routes/admin/AdminSettingsRoute.tsx:483
-#: src/routes/admin/AdminSettingsRoute.tsx:1194
-#: src/routes/admin/AdminSettingsRoute.tsx:1406
-#: src/routes/admin/AdminSettingsRoute.tsx:2420
-#: src/routes/admin/AdminSettingsRoute.tsx:2839
+#: src/routes/admin/AdminSettingsRoute.tsx:481
+#: src/routes/admin/AdminSettingsRoute.tsx:1066
+#: src/routes/admin/AdminSettingsRoute.tsx:1278
+#: src/routes/admin/AdminSettingsRoute.tsx:2292
+#: src/routes/admin/AdminSettingsRoute.tsx:2711
 #: src/features/sidebar/shell/UserMenu.tsx:87
 #: src/features/sidebar/hooks/useSearchHits.ts:148
 #: src/components/settings/AccountSettingsCard.tsx:130
@@ -1413,16 +1413,16 @@ msgstr "Акаунт і безпека"
 msgid "Account default"
 msgstr "Типове значення облікового запису"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2875
+#: src/routes/admin/AdminSettingsRoute.tsx:2747
 #: src/components/billing/BillingManager.tsx:350
 msgid "Account manager"
 msgstr "Менеджер акаунта"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2782
+#: src/routes/admin/AdminSettingsRoute.tsx:2654
 msgid "Account manager assigned."
 msgstr "Менеджера акаунта призначено."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:755
+#: src/routes/admin/AdminSettingsRoute.tsx:753
 msgid "Account moved to self-serve billing."
 msgstr "Акаунт переведено на самообслуговування."
 
@@ -1430,11 +1430,11 @@ msgstr "Акаунт переведено на самообслуговуван�
 msgid "Account password"
 msgstr "Account password"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:756
+#: src/routes/admin/AdminSettingsRoute.tsx:754
 msgid "Account set to managed billing."
 msgstr "Для акаунта встановлено керовану оплату."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2774
+#: src/routes/admin/AdminSettingsRoute.tsx:2646
 msgid "Account set to managed."
 msgstr "Акаунт переведено в керовані."
 
@@ -1442,7 +1442,7 @@ msgstr "Акаунт переведено в керовані."
 msgid "Accounts and providers"
 msgstr "Акаунти та провайдери"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2624
+#: src/routes/admin/AdminSettingsRoute.tsx:2496
 msgid "Accounts billed"
 msgstr "Акаунти з виставленням рахунків"
 
@@ -1481,9 +1481,9 @@ msgstr "Actions"
 msgid "Actions and proposals said out loud, and who was named."
 msgstr "Дії та пропозиції, сказані вголос, і хто був названий."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1351
-#: src/routes/admin/AdminSettingsRoute.tsx:1555
-#: src/routes/admin/AdminSettingsRoute.tsx:1873
+#: src/routes/admin/AdminSettingsRoute.tsx:1223
+#: src/routes/admin/AdminSettingsRoute.tsx:1427
+#: src/routes/admin/AdminSettingsRoute.tsx:1745
 #: src/components/workspace/OrganisationUsageRollup.tsx:423
 #: src/components/workspace/OrganisationUsageRollup.tsx:574
 #: src/components/billing/BillingManager.tsx:1242
@@ -1798,7 +1798,7 @@ msgstr "Adjust the base font size for the interface"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:991
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1007
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1056
-#: src/routes/admin/AdminSettingsRoute.tsx:3053
+#: src/routes/admin/AdminSettingsRoute.tsx:2925
 #: src/lib/roles.ts:9
 #: src/components/invite/RoleSelect.tsx:53
 msgid "Admin"
@@ -1812,7 +1812,7 @@ msgstr "Панель адміністратора"
 msgid "Admin here via organisation role"
 msgstr "Адміністратор завдяки ролі в організації"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3021
+#: src/routes/admin/AdminSettingsRoute.tsx:2893
 msgid "Admin, dembrane"
 msgstr "Адміністратор, dembrane"
 
@@ -1934,8 +1934,8 @@ msgstr "ШІ цього місяця"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:808
 #: src/routes/organisation/OrganisationRoute.tsx:911
-#: src/routes/admin/AdminSettingsRoute.tsx:1872
-#: src/routes/admin/AdminSettingsRoute.tsx:2542
+#: src/routes/admin/AdminSettingsRoute.tsx:1744
+#: src/routes/admin/AdminSettingsRoute.tsx:2414
 #: src/components/workspace/OrganisationUsageRollup.tsx:573
 #: src/components/training/StaffTrainingPanel.tsx:124
 #: src/components/results/curate/ArgumentsTab.tsx:226
@@ -2015,7 +2015,7 @@ msgstr "Усі шаблони"
 #~ msgid "All Templates"
 #~ msgstr "All Templates"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1860
+#: src/routes/admin/AdminSettingsRoute.tsx:1732
 #: src/components/workspace/OrganisationUsageRollup.tsx:561
 msgid "All tiers"
 msgstr "Усі тарифи"
@@ -2101,7 +2101,7 @@ msgstr "Працює постійно, розміщено на нашому са
 msgid "Always on. The screen opens here, so the room has something to read while the rest gets ready."
 msgstr "Працює постійно. Екран відкривається тут, щоб учасники могли почитати, доки решта готується."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2446
+#: src/routes/admin/AdminSettingsRoute.tsx:2318
 #: src/components/billing/BillingManager.tsx:778
 msgid "Amount"
 msgstr "Сума"
@@ -2110,7 +2110,7 @@ msgstr "Сума"
 msgid "Amount per month"
 msgstr "Сума на місяць"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2901
+#: src/routes/admin/AdminSettingsRoute.tsx:2773
 msgid "Amounts default to the account's seats times the per-seat price. Override only when you need to."
 msgstr "Суми за замовчуванням розраховуються як кількість місць в обліковому записі, помножена на ціну за місце. Змінюйте лише за потреби."
 
@@ -2359,7 +2359,7 @@ msgstr "Застосовує ці формулювання та поведінк
 msgid "Applies while the account is on the free plan."
 msgstr "Діє, доки акаунт на тарифі Free."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:651
+#: src/routes/admin/AdminSettingsRoute.tsx:649
 #: src/components/goal/GoalSuggestionCard.tsx:128
 #: src/components/common/ImageCropModal.tsx:143
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:210
@@ -2394,7 +2394,7 @@ msgid "Approve"
 msgstr "Схвалити"
 
 #: src/components/workspace/SupportAccessSection.tsx:231
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:95
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:98
 msgid "Approve for 24 hours"
 msgstr "Схвалити на 24 години"
 
@@ -2603,7 +2603,7 @@ msgstr "Запитайте свого адміністратора"
 #~ msgid "Aspects"
 #~ msgstr "Aspects"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2886
+#: src/routes/admin/AdminSettingsRoute.tsx:2758
 msgid "Assign"
 msgstr "Призначити"
 
@@ -2876,7 +2876,7 @@ msgstr "Назад до робочих просторів"
 msgid "Back to your workspaces"
 msgstr "Назад до ваших робочих просторів"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1173
+#: src/routes/admin/AdminSettingsRoute.tsx:1045
 msgid "Base"
 msgstr "Базовий"
 
@@ -2992,7 +2992,7 @@ msgstr "Платіжні реквізити збережено."
 msgid "Billing is managed by your organisation"
 msgstr "Оплатою керує ваша організація"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:778
+#: src/routes/admin/AdminSettingsRoute.tsx:776
 msgid "Billing mode"
 msgstr "Режим оплати"
 
@@ -3027,7 +3027,7 @@ msgstr "Обидва"
 msgid "Breakdown · {0} active"
 msgstr "Деталізація · активних: {0}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1141
+#: src/routes/admin/AdminSettingsRoute.tsx:1013
 msgid "Breakdown by tier"
 msgstr "Розподіл за рівнями"
 
@@ -3113,9 +3113,9 @@ msgstr "Запити, яким не вдалося підібрати акаун
 #: src/routes/organisation/OrganisationRoute.tsx:2102
 #: src/routes/organisation/OrganisationRoute.tsx:2144
 #: src/routes/invite/MyInvitesRoute.tsx:80
-#: src/routes/admin/AdminSettingsRoute.tsx:868
+#: src/routes/admin/AdminSettingsRoute.tsx:866
 #: src/lib/openConfirm.tsx:54
-#: src/components/workspace/SupportRequestNoteModal.tsx:61
+#: src/components/workspace/SupportRequestNoteModal.tsx:64
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
 #: src/components/training/TrainingRowActions.tsx:199
 #: src/components/training/TrainingRowActions.tsx:312
@@ -3199,7 +3199,7 @@ msgstr "Скасувати перевизначення"
 msgid "Cancel plan"
 msgstr "Скасувати тариф"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1003
+#: src/routes/admin/JoinSupportControl.tsx:124
 msgid "Cancel request"
 msgstr "Скасувати запит"
 
@@ -3334,10 +3334,10 @@ msgstr "Змінити роль"
 msgid "Change the wording, read the evidence, or keep a finding out of this presentation. Shared results stay available in Analysis."
 msgstr "Зміни слова, прочитай докази або залиш висновок поза цією презентацією. Спільні результати лишаються в Аналізі."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:619
+#: src/routes/admin/AdminSettingsRoute.tsx:617
+#: src/routes/admin/AdminSettingsRoute.tsx:658
 #: src/routes/admin/AdminSettingsRoute.tsx:660
-#: src/routes/admin/AdminSettingsRoute.tsx:662
-#: src/routes/admin/AdminSettingsRoute.tsx:1084
+#: src/routes/admin/AdminSettingsRoute.tsx:953
 msgid "Change tier"
 msgstr "Змінити рівень"
 
@@ -3722,20 +3722,20 @@ msgstr "Click to edit"
 msgid "Click to see all {totalCount} conversations"
 msgstr "Click to see all {totalCount} conversations"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1966
+#: src/routes/admin/AdminSettingsRoute.tsx:1838
 #: src/components/workspace/OrganisationUsageRollup.tsx:634
 msgid "Click to sort"
 msgstr "Натисніть, щоб відсортувати"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2120
+#: src/routes/admin/AdminSettingsRoute.tsx:1992
 msgid "Client discount %"
 msgstr "% знижки клієнта"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2101
+#: src/routes/admin/AdminSettingsRoute.tsx:1973
 msgid "Client organisation"
 msgstr "Організація-клієнт"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2252
+#: src/routes/admin/AdminSettingsRoute.tsx:2124
 msgid "Client orgs from partners"
 msgstr "Організації клієнтів від партнерів"
 
@@ -3925,12 +3925,12 @@ msgstr "Compare & Contrast"
 msgid "Compare & Contrast Insights"
 msgstr "Compare & Contrast Insights"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1228
+#: src/routes/admin/AdminSettingsRoute.tsx:1100
 msgid "Comped trial. €0 revenue."
 msgstr "Безкоштовний пробний період. Дохід: 0 €."
 
 #. placeholder {0}: formatDate(account.tier_expires_at)
-#: src/routes/admin/AdminSettingsRoute.tsx:1227
+#: src/routes/admin/AdminSettingsRoute.tsx:1099
 msgid "Comped trial. Expires {0}. €0 revenue."
 msgstr "Безкоштовний пробний період. Діє до {0}. Дохід: 0 €."
 
@@ -4429,7 +4429,7 @@ msgstr "Не вдалося розпочати прямий ефір"
 msgid "Could not load methodologies."
 msgstr "Не вдалося завантажити методології."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2531
+#: src/routes/admin/AdminSettingsRoute.tsx:2403
 msgid "Could not load payments. Check auth and backend logs."
 msgstr "Не вдалося завантажити платежі. Перевірте авторизацію та логи сервера."
 
@@ -4456,7 +4456,7 @@ msgstr "Не вдалося завантажити останні результ
 msgid "Could not load the library."
 msgstr "Не вдалося завантажити бібліотеку."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1731
+#: src/routes/admin/AdminSettingsRoute.tsx:1603
 msgid "Could not load the rollup. Check auth and backend logs."
 msgstr "Не вдалося завантажити зведені дані. Перевірте авторизацію та логи сервера."
 
@@ -4757,12 +4757,12 @@ msgstr "Створити робочий простір | dembrane"
 msgid "Create your own project to keep going."
 msgstr "Створіть власний проєкт, щоб продовжити."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2239
+#: src/routes/admin/AdminSettingsRoute.tsx:2111
 #: src/components/workspace/OrganisationProjectsTable.tsx:230
 msgid "Created"
 msgstr "Створено"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2233
+#: src/routes/admin/AdminSettingsRoute.tsx:2105
 msgid "Created by"
 msgstr "Автор"
 
@@ -4911,7 +4911,7 @@ msgstr "Політика щодо даних"
 msgid "Data policy and disclosure"
 msgstr "Політика щодо даних та розкриття інформації"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2396
+#: src/routes/admin/AdminSettingsRoute.tsx:2268
 #: src/components/report/ScheduleDateTimePicker.tsx:85
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:165
 #: src/components/billing/BillingManager.tsx:772
@@ -4934,7 +4934,7 @@ msgstr "Зручні дати, контекст, будь-що інше"
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/invite/MyInvitesRoute.tsx:236
 #: src/components/workspace/SupportAccessSection.tsx:175
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:96
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:99
 #: src/components/workspace/AccessRequestsList.tsx:195
 msgid "Decline"
 msgstr "Відхилити"
@@ -4977,8 +4977,8 @@ msgstr "Deep Dive"
 
 #: src/routes/admin/FreeLimitsPanel.tsx:274
 #: src/routes/admin/AiBudgetEditor.tsx:144
-#: src/routes/admin/AdminSettingsRoute.tsx:2910
-#: src/routes/admin/AdminSettingsRoute.tsx:2926
+#: src/routes/admin/AdminSettingsRoute.tsx:2782
+#: src/routes/admin/AdminSettingsRoute.tsx:2798
 #: src/components/chat/CanvasSuggestionCard.tsx:106
 msgid "Default"
 msgstr "Default"
@@ -5221,7 +5221,7 @@ msgstr "Опишіть свою сесію в контексті проєкту 
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1578
 #: src/routes/organisation/OrganisationRoute.tsx:1163
-#: src/routes/admin/AdminSettingsRoute.tsx:2493
+#: src/routes/admin/AdminSettingsRoute.tsx:2365
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:262
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:328
 #: src/components/billing/BillingManager.tsx:775
@@ -5312,7 +5312,7 @@ msgstr "Скасувати створення цього робочого про
 msgid "Disclosure"
 msgstr "Вступна заява"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:430
+#: src/routes/admin/AdminSettingsRoute.tsx:428
 msgid "Discount"
 msgstr "Знижка"
 
@@ -5413,7 +5413,7 @@ msgstr "Готово"
 #~ msgid "Done reviewing"
 #~ msgstr "Завершити перегляд"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:838
+#: src/routes/admin/AdminSettingsRoute.tsx:836
 msgid "Downgrade to Free now"
 msgstr "Змінити тариф на Free зараз"
 
@@ -5506,7 +5506,7 @@ msgstr "Drag to reorder"
 msgid "Drop in an agenda or invitation and dembrane configures the project for you."
 msgstr "Перетягни порядок денний або запрошення, і dembrane налаштує проєкт за тебе."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:839
+#: src/routes/admin/AdminSettingsRoute.tsx:837
 msgid "Drops to the free tier. They can subscribe to a paid plan anytime."
 msgstr "Переходить на тариф Free. Вони можуть будь-коли оформити платну підписку."
 
@@ -5527,7 +5527,7 @@ msgstr "Оновлено документацію нідерландською �
 msgid "Dutch-speaking hosts see the Dutch What's new walkthrough."
 msgstr "Нідерландськомовні ведучі бачать огляд «Що нового» нідерландською."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2933
+#: src/routes/admin/AdminSettingsRoute.tsx:2805
 msgid "E-invoice"
 msgstr "Електронний рахунок"
 
@@ -5551,7 +5551,7 @@ msgstr "наприклад, Інтерв'ю онбордингу клієнті�
 msgid "e.g. Climate Listening, Q1 Research"
 msgstr "наприклад, Кліматичні обговорення, Дослідження за Q1"
 
-#: src/components/workspace/SupportRequestNoteModal.tsx:39
+#: src/components/workspace/SupportRequestNoteModal.tsx:42
 msgid "e.g. investigating the report issue you emailed about"
 msgstr "наприклад, дослідження проблеми зі звітом, про яку ви писали"
 
@@ -6098,7 +6098,7 @@ msgstr "Перевищує ліміт місць. Застосовується �
 msgid "Exit fullscreen"
 msgstr "Exit fullscreen"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1441
+#: src/routes/admin/AdminSettingsRoute.tsx:1313
 msgid "Expand workspaces"
 msgstr "Розгорнути робочі простори"
 
@@ -6111,7 +6111,7 @@ msgstr "Experimental"
 msgid "Expired"
 msgstr "Термін минув"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2140
+#: src/routes/admin/AdminSettingsRoute.tsx:2012
 #: src/components/agent-access/AgentGrantsCard.tsx:99
 msgid "Expires"
 msgstr "Спливає"
@@ -6164,11 +6164,11 @@ msgstr "Дослідження"
 msgid "Export"
 msgstr "Export"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1882
+#: src/routes/admin/AdminSettingsRoute.tsx:1754
 msgid "Export CSV"
 msgstr "Експортувати в CSV"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:962
+#: src/routes/admin/JoinSupportControl.tsx:83
 msgid "Extend 24h"
 msgstr "Продовжити на 24 год"
 
@@ -6191,7 +6191,7 @@ msgstr "Зовнішній"
 msgid "External of {0}"
 msgstr "Зовнішній для {0}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2223
+#: src/routes/admin/AdminSettingsRoute.tsx:2095
 msgid "External of partner"
 msgstr "Зовнішній учасник партнера"
 
@@ -6252,8 +6252,8 @@ msgid "Factual status does not apply to this object."
 msgstr "Фактичний статус не застосовується до цього об'єкта."
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:99
-#: src/routes/admin/AdminSettingsRoute.tsx:2544
-#: src/routes/admin/AdminSettingsRoute.tsx:2606
+#: src/routes/admin/AdminSettingsRoute.tsx:2416
+#: src/routes/admin/AdminSettingsRoute.tsx:2478
 #: src/features/sidebar/primitives/NavItem.tsx:285
 #: src/components/invite/InviteResultsList.tsx:61
 #: src/components/dropzone/UploadConversationDropzone.tsx:913
@@ -6740,7 +6740,7 @@ msgstr "Параметри сили"
 msgid "Force settings"
 msgstr "Налаштування сил"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1418
+#: src/routes/admin/AdminSettingsRoute.tsx:1290
 msgid "Forecast"
 msgstr "Прогноз"
 
@@ -7322,8 +7322,8 @@ msgstr "Відгук організатора"
 msgid "Hosts can enable replies and customise their prompt in portal settings."
 msgstr "Ведучі можуть увімкнути відповіді та налаштувати власні підказки в налаштуваннях порталу."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1412
-#: src/routes/admin/AdminSettingsRoute.tsx:1525
+#: src/routes/admin/AdminSettingsRoute.tsx:1284
+#: src/routes/admin/AdminSettingsRoute.tsx:1397
 #: src/components/workspace/OrganisationUsageRollup.tsx:403
 #: src/components/workspace/OrganisationProjectsTable.tsx:220
 msgid "Hours"
@@ -7528,9 +7528,9 @@ msgstr "В яких організаціях"
 msgid "In your own words"
 msgstr "Своїми словами"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1351
-#: src/routes/admin/AdminSettingsRoute.tsx:1563
-#: src/routes/admin/AdminSettingsRoute.tsx:1874
+#: src/routes/admin/AdminSettingsRoute.tsx:1223
+#: src/routes/admin/AdminSettingsRoute.tsx:1435
+#: src/routes/admin/AdminSettingsRoute.tsx:1746
 #: src/components/workspace/OrganisationUsageRollup.tsx:427
 #: src/components/workspace/OrganisationUsageRollup.tsx:575
 msgid "Inactive"
@@ -7582,7 +7582,7 @@ msgstr "Виведено"
 msgid "inherited from organisation"
 msgstr "успадковано від організації"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2471
+#: src/routes/admin/AdminSettingsRoute.tsx:2343
 msgid "Initial"
 msgstr "Початковий"
 
@@ -7761,15 +7761,15 @@ msgstr "запросив(-ла) {0}"
 msgid "Invites expire after 7 days. Ask {inviterName} to send a new one."
 msgstr "Запрошення дійсні 7 днів. Попросіть {inviterName} надіслати нове."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2925
+#: src/routes/admin/AdminSettingsRoute.tsx:2797
 msgid "Invoice amount, EUR"
 msgstr "Сума рахунку, EUR"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2816
+#: src/routes/admin/AdminSettingsRoute.tsx:2688
 msgid "Invoice recorded as paid."
 msgstr "Рахунок позначено як оплачений."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1238
+#: src/routes/admin/AdminSettingsRoute.tsx:1110
 msgid "Invoiced offline, no Mollie mandate."
 msgstr "Рахунок виставлено офлайн, без мандата Mollie."
 
@@ -7777,7 +7777,7 @@ msgstr "Рахунок виставлено офлайн, без мандата 
 msgid "Invoices"
 msgstr "Рахунки"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2898
+#: src/routes/admin/AdminSettingsRoute.tsx:2770
 msgid "Invoicing"
 msgstr "Виставлення рахунків"
 
@@ -7799,11 +7799,11 @@ msgstr "Це для внутрішнього використання вашої
 msgid "Is this workspace for your organisation's internal use, or for an external organisation that owns its data?"
 msgstr "Цей робочий простір для внутрішнього використання вашої організації чи для зовнішньої організації, яка володіє своїми даними?"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2950
+#: src/routes/admin/AdminSettingsRoute.tsx:2822
 msgid "Issue invoice"
 msgstr "Виставити рахунок"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2917
+#: src/routes/admin/AdminSettingsRoute.tsx:2789
 msgid "Issue payment link"
 msgstr "Створити посилання на оплату"
 
@@ -7920,11 +7920,11 @@ msgstr "Приєднатися як адміністратор?"
 msgid "Join first"
 msgstr "Спочатку приєднайтеся"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:935
+#: src/routes/admin/JoinSupportControl.tsx:56
 msgid "Join for support"
 msgstr "Приєднатися для підтримки"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:964
+#: src/routes/admin/JoinSupportControl.tsx:85
 msgid "Join for support (24h)"
 msgstr "Приєднатися для підтримки (24 год)"
 
@@ -7943,7 +7943,7 @@ msgstr "Приєднайтеся до цієї організації, щоб з
 msgid "Join this portal session"
 msgstr "Приєднатися до цієї сесії порталу"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:946
+#: src/routes/admin/JoinSupportControl.tsx:67
 msgid "Join this workspace as an admin to help with support. The customer must have turned on staff support access. Your access ends automatically after 24 hours."
 msgstr "Приєднайтеся до цього робочого простору як адміністратор для допомоги. Клієнт має ввімкнути доступ для підтримки. Ваш доступ завершиться автоматично через 24 години."
 
@@ -8032,7 +8032,7 @@ msgstr "Лише ви та адміністратори робочого про�
 msgid "Just you. Share with specific people."
 msgstr "Тільки ви. Діліться з певними людьми."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:843
+#: src/routes/admin/AdminSettingsRoute.tsx:841
 msgid "Keep {tier} until a date"
 msgstr "Зберегти {tier} до певної дати"
 
@@ -8087,7 +8087,7 @@ msgstr "Оновлювати це полотно"
 msgid "Keep working while audio uploads in the background."
 msgstr "Продовжуйте працювати, поки аудіо завантажується у фоновому режимі."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:844
+#: src/routes/admin/AdminSettingsRoute.tsx:842
 msgid "Keeps the tier until the date below, then reverts to Free unless they subscribe."
 msgstr "Зберігає тариф до вказаної нижче дати, після чого повертає на Free, якщо не оформлено підписку."
 
@@ -8107,7 +8107,7 @@ msgstr "Ключові терміни підказують системі тра
 msgid "Key terms to add"
 msgstr "Ключові терміни для додавання"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2110
+#: src/routes/admin/AdminSettingsRoute.tsx:1982
 msgid "Kickback %"
 msgstr "Відсоток винагороди"
 
@@ -8153,7 +8153,7 @@ msgid "Last day on this budget"
 msgstr "Останній день з цим бюджетом"
 
 #: src/routes/admin/AiCostsPanel.tsx:622
-#: src/routes/admin/AdminSettingsRoute.tsx:259
+#: src/routes/admin/AdminSettingsRoute.tsx:257
 #: src/components/workspace/PeriodSelect.tsx:17
 msgid "Last month"
 msgstr "Минулого місяця"
@@ -8219,7 +8219,7 @@ msgstr "Leave empty to keep existing"
 msgid "Leave feedback"
 msgstr "Залишити відгук"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:976
+#: src/routes/admin/JoinSupportControl.tsx:97
 msgid "Leave now"
 msgstr "Вийти зараз"
 
@@ -8352,7 +8352,7 @@ msgstr "Ліцензії"
 msgid "Licenses granted"
 msgstr "Ліцензії надано"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2127
+#: src/routes/admin/AdminSettingsRoute.tsx:1999
 msgid "Lifetime cap"
 msgstr "Загальний ліміт"
 
@@ -8802,16 +8802,16 @@ msgstr "Керувати тренінгом"
 msgid "Manage workspace ownership, including internal and external data owners."
 msgstr "Керуйте правами на робочий простір, включно з внутрішніми та зовнішніми власниками даних."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:771
-#: src/routes/admin/AdminSettingsRoute.tsx:1240
+#: src/routes/admin/AdminSettingsRoute.tsx:769
+#: src/routes/admin/AdminSettingsRoute.tsx:1112
 msgid "Managed"
 msgstr "Керований"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2831
+#: src/routes/admin/AdminSettingsRoute.tsx:2703
 msgid "Managed accounts pay by invoice, not by card. Setting an account managed keeps every feature on and turns off auto-charging, dunning, and expiry. Assign a dembrane account manager so the client knows who to contact."
 msgstr "Керовані акаунти оплачують за рахунком, а не карткою. Такий статус залишає доступними всі функції та вимикає автосписання, нагадування про оплату й закінчення терміну дії. Призначте менеджера акаунта dembrane, щоб клієнт знав, до кого звертатися."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2828
+#: src/routes/admin/AdminSettingsRoute.tsx:2700
 msgid "Managed billing"
 msgstr "Керована оплата"
 
@@ -8911,7 +8911,7 @@ msgstr "Позначити як непрочитане"
 msgid "Mark completed"
 msgstr "Позначити як завершене"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2953
+#: src/routes/admin/AdminSettingsRoute.tsx:2825
 msgid "Mark invoice paid"
 msgstr "Позначити рахунок як оплачений"
 
@@ -8919,7 +8919,7 @@ msgstr "Позначити рахунок як оплачений"
 msgid "Mark training completed"
 msgstr "Позначити тренінг як завершений"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:533
+#: src/routes/admin/AdminSettingsRoute.tsx:531
 msgid "Marks {orgName} as a partner. Its workspaces self-identify internal vs external client use on creation."
 msgstr "Позначає {orgName} як партнера. Робочі простори цієї організації під час створення визначають тип використання: внутрішнє чи для зовнішніх клієнтів."
 
@@ -9095,7 +9095,7 @@ msgstr "міс."
 msgid "Mode"
 msgstr "Mode"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2585
+#: src/routes/admin/AdminSettingsRoute.tsx:2457
 msgid "Mollie is not configured in this environment, so no live transactions are shown. The dashboard link still points to the right Mollie environment."
 msgstr "Mollie не налаштовано в цьому середовищі, тому транзакції в реальному часі не відображаються. Посилання на панель керування все одно веде на потрібне середовище Mollie."
 
@@ -9174,11 +9174,11 @@ msgstr "Перемістити «{0}» до {targetWorkspaceName}? Учасни�
 
 #. placeholder {0}: row.workspace_name
 #. placeholder {1}: row.tier
-#: src/routes/admin/AdminSettingsRoute.tsx:665
+#: src/routes/admin/AdminSettingsRoute.tsx:663
 msgid "Move {0} from {1} to {tier}?"
 msgstr "Перевести {0} з {1} на {tier}?"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:826
+#: src/routes/admin/AdminSettingsRoute.tsx:824
 msgid "Move {name} off dembrane-managed billing. Choose what happens to their plan."
 msgstr "Вимкнути оплату через dembrane для {name}. Оберіть, що буде з їхнім тарифом."
 
@@ -9433,7 +9433,7 @@ msgstr "Новий вигляд, нові функції"
 #~ msgid "New methodology"
 #~ msgstr "Нова методологія"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2215
+#: src/routes/admin/AdminSettingsRoute.tsx:2087
 msgid "New organisation"
 msgstr "Нова організація"
 
@@ -9462,7 +9462,7 @@ msgstr "У нових проєктах dembrane більше не додаєть
 #~ msgid "New runs"
 #~ msgstr "Нові запуски"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:643
+#: src/routes/admin/AdminSettingsRoute.tsx:641
 msgid "New tier"
 msgstr "Новий рівень"
 
@@ -9526,7 +9526,7 @@ msgstr "Жодного акаунта не було списано в {month}."
 msgid "No account was charged this month."
 msgstr "Цього місяця з жодного акаунта не стягувалася плата."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2845
+#: src/routes/admin/AdminSettingsRoute.tsx:2717
 msgid "No accounts"
 msgstr "Немає облікових записів"
 
@@ -9575,7 +9575,7 @@ msgstr "No audit logs match the current filters."
 msgid "No billing account yet. Email <0>support@dembrane.com</0> and we'll set one up."
 msgstr "Платіжного акаунту ще немає. Напишіть на <0>support@dembrane.com</0>, і ми його створимо."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1394
+#: src/routes/admin/AdminSettingsRoute.tsx:1266
 msgid "No billing accounts match the current filters."
 msgstr "Жоден платіжний акаунт не відповідає поточним фільтрам."
 
@@ -9670,7 +9670,7 @@ msgstr "Без дати завершення"
 msgid "No evidenced connections."
 msgstr "Немає підтверджених зв'язків."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2139
+#: src/routes/admin/AdminSettingsRoute.tsx:2011
 msgid "no expiry"
 msgstr "без терміну дії"
 
@@ -9678,7 +9678,7 @@ msgstr "без терміну дії"
 msgid "No explicit shares. Workspace admins still have access."
 msgstr "Немає наданого доступу. Адміністратори робочого простору все одно мають доступ."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2265
+#: src/routes/admin/AdminSettingsRoute.tsx:2137
 msgid "No external-led organisations yet."
 msgstr "Організацій із зовнішнім керуванням ще немає."
 
@@ -9787,7 +9787,7 @@ msgstr "У цій організації більше нікого немає"
 msgid "No one here yet."
 msgstr "Тут ще нікого немає."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2564
+#: src/routes/admin/AdminSettingsRoute.tsx:2436
 msgid "No one is auto-blocked for non-payment. Watch failed charges here and follow up."
 msgstr "Автоблокування за несплату не застосовується. Відстежуйте невдалі платежі тут і вживайте заходів."
 
@@ -9825,8 +9825,8 @@ msgstr "У робочому просторі ще нікого немає."
 msgid "No organisation role. Access via workspace invites."
 msgstr "Немає ролі в організації. Доступ через запрошення до робочого простору."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2659
-#: src/routes/admin/AdminSettingsRoute.tsx:2680
+#: src/routes/admin/AdminSettingsRoute.tsx:2531
+#: src/routes/admin/AdminSettingsRoute.tsx:2552
 msgid "No payments match the filter."
 msgstr "Жоден платіж не відповідає фільтру."
 
@@ -9897,7 +9897,7 @@ msgstr "Нещодавньої активності немає. Учасники
 msgid "No recipe checks declared."
 msgstr "Перевірки рецептів не оголошено."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2185
+#: src/routes/admin/AdminSettingsRoute.tsx:2057
 msgid "No referral agreements yet."
 msgstr "Реферальних угод ще немає."
 
@@ -10127,7 +10127,7 @@ msgstr "Не щомісяця"
 msgid "Not now"
 msgstr "Не зараз"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:796
+#: src/routes/admin/AdminSettingsRoute.tsx:794
 msgid "Not on managed billing. Set to managed to invoice this account at the {tier} tier, with no automatic Mollie charges."
 msgstr "Не на керованому виставленні рахунків. Увімкніть його, щоб виставляти рахунки для цього акаунта за тарифом {tier} без автоматичних списань Mollie."
 
@@ -10189,7 +10189,7 @@ msgstr "Мало користуюся"
 msgid "note"
 msgstr "примітка"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2150
+#: src/routes/admin/AdminSettingsRoute.tsx:2022
 #: src/components/training/StaffTrainingPanel.tsx:164
 msgid "Notes"
 msgstr "Примітки"
@@ -10330,7 +10330,7 @@ msgstr "увімкнено"
 msgid "On"
 msgstr "Увімкнено"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:791
+#: src/routes/admin/AdminSettingsRoute.tsx:789
 msgid "On dembrane-managed billing. Switching to self-serve keeps the tier and shows the customer the checkout to set up card payment."
 msgstr "На білінгу, керованому dembrane. Перехід на самообслуговування зберігає тариф і показує клієнту екран оплати для налаштування картки."
 
@@ -10412,7 +10412,7 @@ msgstr "Один символ"
 msgid "One uppercase letter"
 msgstr "Одна велика літера"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2475
+#: src/routes/admin/AdminSettingsRoute.tsx:2347
 msgid "One-off"
 msgstr "Одноразово"
 
@@ -10448,7 +10448,7 @@ msgstr "Бачити його можуть лише додані вами люд
 msgid "Only the people you add or invite can see it."
 msgstr "Бачити це можуть лише додані або запрошені вами люди."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2940
+#: src/routes/admin/AdminSettingsRoute.tsx:2812
 msgid "Only when recording an invoice already paid out-of-band."
 msgstr "Лише під час реєстрації рахунку, вже сплаченого в інший спосіб."
 
@@ -10475,8 +10475,8 @@ msgid "participant.alert.microphone.access.failure"
 msgstr "Oops! It looks like microphone access was denied. No worries, though! We've got a handy troubleshooting guide for you. Feel free to check it out. Once you've resolved the issue, come back and visit this page again to check if your microphone is ready."
 
 #: src/routes/organisation/OrganisationExternalView.tsx:116
-#: src/routes/admin/AdminSettingsRoute.tsx:2506
-#: src/routes/admin/AdminSettingsRoute.tsx:2546
+#: src/routes/admin/AdminSettingsRoute.tsx:2378
+#: src/routes/admin/AdminSettingsRoute.tsx:2418
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
 #: src/components/popcorn/PopcornHistory.tsx:68
@@ -10488,7 +10488,7 @@ msgid "Open {label}"
 msgstr "Відкрити {label}"
 
 #: src/routes/admin/AiCostsPanel.tsx:377
-#: src/routes/admin/AdminSettingsRoute.tsx:1497
+#: src/routes/admin/AdminSettingsRoute.tsx:1369
 msgid "Open account actions"
 msgstr "Відкрити дії з акаунтом"
 
@@ -10557,7 +10557,7 @@ msgstr "Відкрити мапу"
 msgid "Open menu"
 msgstr "Відкрити меню"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2578
+#: src/routes/admin/AdminSettingsRoute.tsx:2450
 msgid "Open Mollie dashboard"
 msgstr "Відкрити панель Mollie"
 
@@ -10638,11 +10638,11 @@ msgstr "Відкрийте «Що нового» на бічній панелі 
 #~ msgid "Open with"
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:984
+#: src/routes/admin/JoinSupportControl.tsx:105
 msgid "Open workspace"
 msgstr "Відкрити робочий простір"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1585
+#: src/routes/admin/AdminSettingsRoute.tsx:1457
 msgid "Open workspace actions"
 msgstr "Відкрити дії робочого простору"
 
@@ -10741,8 +10741,8 @@ msgstr "Організація"
 msgid "Organisation | dembrane"
 msgstr "Організація | dembrane"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:481
-#: src/routes/admin/AdminSettingsRoute.tsx:1192
+#: src/routes/admin/AdminSettingsRoute.tsx:479
+#: src/routes/admin/AdminSettingsRoute.tsx:1064
 msgid "Organisation account"
 msgstr "Обліковий запис організації"
 
@@ -10792,7 +10792,7 @@ msgstr "Організації"
 msgid "Organisations | dembrane"
 msgstr "Організації | dembrane"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2255
+#: src/routes/admin/AdminSettingsRoute.tsx:2127
 msgid "Organisations created by people who are external collaborators of a partner. A signal they may want their own plan."
 msgstr "Організації, створені зовнішніми партнерами. Сигнал про те, що їм може знадобитися власний тариф."
 
@@ -10911,8 +10911,8 @@ msgstr "Page not found"
 #~ msgid "Page Title"
 #~ msgstr "Page Title"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2543
-#: src/routes/admin/AdminSettingsRoute.tsx:2598
+#: src/routes/admin/AdminSettingsRoute.tsx:2415
+#: src/routes/admin/AdminSettingsRoute.tsx:2470
 #: src/components/billing/BillingManager.tsx:223
 msgid "Paid"
 msgstr "Оплачено"
@@ -11055,13 +11055,13 @@ msgstr "Participants will be able to select tags when creating conversations"
 msgid "partner"
 msgstr "партнер"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:544
+#: src/routes/admin/AdminSettingsRoute.tsx:542
 #: src/components/invite/InviteModal.tsx:726
 msgid "Partner"
 msgstr "Партнер"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:530
-#: src/routes/admin/AdminSettingsRoute.tsx:2082
+#: src/routes/admin/AdminSettingsRoute.tsx:528
+#: src/routes/admin/AdminSettingsRoute.tsx:1954
 msgid "Partner organisation"
 msgstr "Організація-партнер"
 
@@ -11128,11 +11128,11 @@ msgstr "Призупинено. Оновлено {updatedAgo}."
 msgid "Pay now"
 msgstr "Оплатити зараз"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1607
+#: src/routes/admin/AdminSettingsRoute.tsx:1479
 msgid "Paying revenue"
 msgstr "Оплачуваний дохід"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1832
+#: src/routes/admin/AdminSettingsRoute.tsx:1704
 msgid "Paying revenue this month"
 msgstr "Оплачуваний дохід за цей місяць"
 
@@ -11140,11 +11140,11 @@ msgstr "Оплачуваний дохід за цей місяць"
 msgid "Payment failed"
 msgstr "Платіж не вдався"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2909
+#: src/routes/admin/AdminSettingsRoute.tsx:2781
 msgid "Payment link amount, EUR"
 msgstr "Сума посилання на оплату, EUR"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2790
+#: src/routes/admin/AdminSettingsRoute.tsx:2662
 msgid "Payment link issued."
 msgstr "Посилання на оплату створено."
 
@@ -11152,7 +11152,7 @@ msgstr "Посилання на оплату створено."
 msgid "Payment method"
 msgstr "Спосіб оплати"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2939
+#: src/routes/admin/AdminSettingsRoute.tsx:2811
 msgid "Payment reference"
 msgstr "Призначення платежу"
 
@@ -11164,8 +11164,8 @@ msgstr "Оплату успішно здійснено. Ваш тариф оно
 msgid "pending"
 msgstr "очікує"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2545
-#: src/routes/admin/AdminSettingsRoute.tsx:2616
+#: src/routes/admin/AdminSettingsRoute.tsx:2417
+#: src/routes/admin/AdminSettingsRoute.tsx:2488
 #: src/components/workspace/AccessRequestsList.tsx:170
 #: src/components/report/ConversationStatusTable.tsx:86
 #: src/components/project/ProjectUsageAndSharing.tsx:354
@@ -11217,7 +11217,7 @@ msgstr "Результати для кожного одержувача:"
 msgid "Per-workspace access"
 msgstr "Доступ до окремих робочих просторів"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:448
+#: src/routes/admin/AdminSettingsRoute.tsx:446
 msgid "Percent"
 msgstr "Відсоток"
 
@@ -11242,7 +11242,7 @@ msgstr "Phone"
 #~ msgid "phrases"
 #~ msgstr "фрази"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:851
+#: src/routes/admin/AdminSettingsRoute.tsx:849
 #: src/components/training/TrainingRowActions.tsx:184
 #: src/components/report/ScheduleDateTimePicker.tsx:86
 msgid "Pick a date"
@@ -11258,7 +11258,7 @@ msgstr "Оберіть час"
 #~ msgid "Pick a time with {host}."
 #~ msgstr "Оберіть час із {host}."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2840
+#: src/routes/admin/AdminSettingsRoute.tsx:2712
 msgid "Pick an account"
 msgstr "Оберіть обліковий запис"
 
@@ -12018,7 +12018,7 @@ msgstr "Published"
 msgid "Pull out the most impactful quotes from this session"
 msgstr "Pull out the most impactful quotes from this session"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:883
+#: src/routes/admin/AdminSettingsRoute.tsx:881
 msgid "Put {name} on dembrane-managed billing at the {tier} tier? No automatic Mollie charges or auto-expiry."
 msgstr "Перевести {name} на білінг під керуванням dembrane за тарифом {tier}? Жодних автоматичних списань Mollie чи закінчення терміну дії."
 
@@ -12247,7 +12247,7 @@ msgstr "Причина"
 msgid "reason: {0}"
 msgstr "причина: {0}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2555
+#: src/routes/admin/AdminSettingsRoute.tsx:2427
 msgid "Recent payments across all accounts"
 msgstr "Останні платежі в усіх акаунтах"
 
@@ -12666,7 +12666,7 @@ msgstr "Rename chat"
 msgid "Rename project"
 msgstr "Перейменувати проєкт"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2473
+#: src/routes/admin/AdminSettingsRoute.tsx:2345
 msgid "Renewal"
 msgstr "Продовження"
 
@@ -12839,7 +12839,7 @@ msgstr "Надішліть запит на тариф через форму по
 msgid "Request a training"
 msgstr "Замовити тренінг"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1009
+#: src/routes/admin/JoinSupportControl.tsx:130
 #: src/components/workspace/DiscoverableWorkspaces.tsx:340
 msgid "Request access"
 msgstr "Запросити доступ"
@@ -12852,7 +12852,7 @@ msgstr "Запит схвалено"
 msgid "Request declined"
 msgstr "Запит відхилено"
 
-#: src/components/workspace/supportRequests.ts:173
+#: src/components/workspace/supportRequests.ts:223
 msgid "Request declined."
 msgstr "Запит відхилено."
 
@@ -12881,19 +12881,19 @@ msgstr "Запит на скидання пароля | dembrane"
 msgid "Request sent"
 msgstr "Запит надіслано"
 
-#: src/components/workspace/supportVisit.ts:77
+#: src/components/workspace/supportVisit.ts:78
 msgid "Request sent. The workspace admins were notified."
 msgstr "Запит надіслано. Адміністратори робочого простору отримали сповіщення."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:993
+#: src/routes/admin/JoinSupportControl.tsx:114
 msgid "Request sent. Waiting for the workspace admins."
 msgstr "Запит надіслано. Очікуємо на адміністраторів робочого простору."
 
-#: src/components/workspace/SupportRequestNoteModal.tsx:25
+#: src/components/workspace/SupportRequestNoteModal.tsx:28
 msgid "Request support access"
 msgstr "Запросити доступ для підтримки"
 
-#: src/components/workspace/supportVisit.ts:87
+#: src/components/workspace/supportVisit.ts:88
 msgid "Request withdrawn."
 msgstr "Запит відкликано."
 
@@ -13301,7 +13301,7 @@ msgstr "Виконується"
 msgid "Runs"
 msgstr "Запуски"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2803
+#: src/routes/admin/AdminSettingsRoute.tsx:2675
 msgid "Sales invoice issued."
 msgstr "Рахунок-фактуру виставлено."
 
@@ -13374,7 +13374,7 @@ msgstr "Зберегти зміни"
 #~ msgid "Save Changes"
 #~ msgstr "Save Changes"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:468
+#: src/routes/admin/AdminSettingsRoute.tsx:466
 msgid "Save discount"
 msgstr "Зберегти знижку"
 
@@ -13390,7 +13390,7 @@ msgstr "Save template"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1473
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1493
 #: src/routes/organisation/OrganisationRoute.tsx:1130
-#: src/routes/admin/AdminSettingsRoute.tsx:459
+#: src/routes/admin/AdminSettingsRoute.tsx:457
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:108
 #: src/components/conversation/ConversationDrilldownModal.tsx:144
 msgid "Saved"
@@ -13496,7 +13496,7 @@ msgstr "Заплановано"
 msgid "Scheduled reports and custom templates"
 msgstr "Заплановані звіти та власні шаблони"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:436
+#: src/routes/admin/AdminSettingsRoute.tsx:434
 msgid "Scholarship"
 msgstr "Стипендія"
 
@@ -13539,11 +13539,11 @@ msgstr "Search"
 msgid "select.all.modal.loading.search"
 msgstr "Search"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2649
+#: src/routes/admin/AdminSettingsRoute.tsx:2521
 msgid "Search account, status, description"
 msgstr "Пошук за акаунтом, статусом, описом"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1850
+#: src/routes/admin/AdminSettingsRoute.tsx:1722
 msgid "Search account, workspace, organisation, email, tier"
 msgstr "Пошук за акаунтом, робочим простором, організацією, email, рівнем"
 
@@ -13576,7 +13576,7 @@ msgstr "Пошук знаходить слова у будь-якому поря
 msgid "Search name or email"
 msgstr "Пошук за ім'ям або поштою"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2173
+#: src/routes/admin/AdminSettingsRoute.tsx:2045
 msgid "Search partner, client, workspace"
 msgstr "Пошук партнера, клієнта, робочого простору"
 
@@ -13679,8 +13679,8 @@ msgstr "Пошук…"
 msgid "seats"
 msgstr "місць"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1415
-#: src/routes/admin/AdminSettingsRoute.tsx:1530
+#: src/routes/admin/AdminSettingsRoute.tsx:1287
+#: src/routes/admin/AdminSettingsRoute.tsx:1402
 #: src/components/workspace/UsageCard.tsx:196
 #: src/components/workspace/OrganisationUsageRollup.tsx:415
 #: src/components/billing/BillingManager.tsx:341
@@ -13909,7 +13909,7 @@ msgstr "Selection too large"
 msgid "select.all.modal.context.limit.reached"
 msgstr "Selection too large. Some conversations weren't added."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:771
+#: src/routes/admin/AdminSettingsRoute.tsx:769
 msgid "Self-serve"
 msgstr "Самообслуговування"
 
@@ -13958,7 +13958,7 @@ msgstr "Надіслати примітку"
 #~ msgid "Send report"
 #~ msgstr "Надіслати повідомлення"
 
-#: src/components/workspace/SupportRequestNoteModal.tsx:58
+#: src/components/workspace/SupportRequestNoteModal.tsx:61
 #: src/components/training/RequestTrainingModal.tsx:101
 msgid "Send request"
 msgstr "Надіслати запит"
@@ -14031,7 +14031,7 @@ msgstr "Встановити ціль"
 msgid "Set key terms"
 msgstr "Вказати ключові терміни"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2869
+#: src/routes/admin/AdminSettingsRoute.tsx:2741
 msgid "Set managed"
 msgstr "Зробити керованим"
 
@@ -14039,12 +14039,12 @@ msgstr "Зробити керованим"
 msgid "Set project context"
 msgstr "Налаштувати контекст проєкту"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:881
+#: src/routes/admin/AdminSettingsRoute.tsx:879
 msgid "Set to managed"
 msgstr "Перевести в керований"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:812
-#: src/routes/admin/AdminSettingsRoute.tsx:879
+#: src/routes/admin/AdminSettingsRoute.tsx:810
+#: src/routes/admin/AdminSettingsRoute.tsx:877
 msgid "Set to managed billing"
 msgstr "Перевести на керований білінг"
 
@@ -14740,7 +14740,7 @@ msgstr "Фокус"
 #~ msgid "Spread out"
 #~ msgstr "Розкидано"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3056
+#: src/routes/admin/AdminSettingsRoute.tsx:2928
 #: src/features/sidebar/shell/UserMenu.tsx:172
 msgid "Staff"
 msgstr "Персонал"
@@ -14752,11 +14752,11 @@ msgstr "Демо персоналу та голос поза проєктами"
 #~ msgid "Staff demos, voice outside projects, dev tools"
 #~ msgstr "Демо для команди, голос поза проєктами, інструменти розробника"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:438
+#: src/routes/admin/AdminSettingsRoute.tsx:436
 msgid "Staff discount"
 msgstr "Знижка для працівників"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3031
+#: src/routes/admin/AdminSettingsRoute.tsx:2903
 msgid "Staff only"
 msgstr "Лише для персоналу"
 
@@ -14854,7 +14854,7 @@ msgstr "Запис розпочато"
 msgid "Starting from: {templateLabel}"
 msgstr "Основа: {templateLabel}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2134
+#: src/routes/admin/AdminSettingsRoute.tsx:2006
 msgid "Starts"
 msgstr "Початок"
 
@@ -14877,8 +14877,8 @@ msgstr "Почнеться одразу"
 msgid "Statement"
 msgstr "Твердження"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1520
-#: src/routes/admin/AdminSettingsRoute.tsx:2462
+#: src/routes/admin/AdminSettingsRoute.tsx:1392
+#: src/routes/admin/AdminSettingsRoute.tsx:2334
 #: src/components/workspace/OrganisationUsageRollup.tsx:430
 #: src/components/training/StaffTrainingPanel.tsx:167
 #: src/components/results/ResultsList.tsx:283
@@ -15140,19 +15140,19 @@ msgstr "Summary will be available once the conversation is transcribed"
 msgid "Superseded"
 msgstr "Замінено"
 
-#: src/components/workspace/supportVisit.ts:125
+#: src/components/workspace/supportVisit.ts:126
 msgid "Support access ended."
 msgstr "Доступ для підтримки завершено."
 
-#: src/components/workspace/supportVisit.ts:106
+#: src/components/workspace/supportVisit.ts:107
 msgid "Support access extended for another 24 hours."
 msgstr "Доступ для підтримки подовжено ще на 24 години."
 
-#: src/components/workspace/supportVisit.ts:109
+#: src/components/workspace/supportVisit.ts:110
 msgid "Support access granted. It ends automatically in 24 hours."
 msgstr "Доступ для підтримки надано. Він автоматично завершиться через 24 години."
 
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:93
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:96
 msgid "Support access request"
 msgstr "Запит на доступ для підтримки"
 
@@ -15199,12 +15199,12 @@ msgstr "Підтримує полюс B"
 msgid "Switch to audio"
 msgstr "Перейти на аудіо"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:865
+#: src/routes/admin/AdminSettingsRoute.tsx:863
 msgid "Switch to self-serve"
 msgstr "Перейти на самообслуговування"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:810
-#: src/routes/admin/AdminSettingsRoute.tsx:821
+#: src/routes/admin/AdminSettingsRoute.tsx:808
+#: src/routes/admin/AdminSettingsRoute.tsx:819
 msgid "Switch to self-serve billing"
 msgstr "Перейти на оплату в режимі самообслуговування"
 
@@ -15314,9 +15314,13 @@ msgstr "Завдання"
 #~ msgid "Technical lineage"
 #~ msgstr ""
 
+#: src/components/workspace/SupportRequestNoteModal.tsx:34
+msgid "Tell the admins of {workspaceName} what you need access for. This note is optional."
+msgstr "Повідомте адміністраторам {workspaceName}, для чого вам потрібен доступ. Ця примітка необов'язкова."
+
 #: src/components/workspace/SupportRequestNoteModal.tsx:31
-msgid "Tell the workspace admins what you need access for. This note is optional."
-msgstr "Повідомте адміністраторам робочого простору, для чого вам потрібен доступ. Ця примітка необов'язкова."
+#~ msgid "Tell the workspace admins what you need access for. This note is optional."
+#~ msgstr "Повідомте адміністраторам робочого простору, для чого вам потрібен доступ. Ця примітка необов'язкова."
 
 #: src/components/workspace/FreeAllowanceCard.tsx:174
 #: src/components/workspace/FeatureGatePopover.tsx:115
@@ -15390,7 +15394,7 @@ msgstr "Перевірте та виберіть мікрофон перед п�
 msgid "Test Explore and Verify on a sample conversation before participants use them."
 msgstr "Перевір Explore і Verify на прикладі розмови, перш ніж ними скористаються учасники."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2559
+#: src/routes/admin/AdminSettingsRoute.tsx:2431
 msgid "test mode"
 msgstr "тестовий режим"
 
@@ -15944,7 +15948,7 @@ msgstr "Слова цього висновку"
 msgid "The workspace this invite was for has been deleted. There's nothing to join."
 msgstr "Робочий простір із цього запрошення видалено. Приєднуватися нікуди."
 
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:103
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:106
 msgid "Their note: {note}"
 msgstr "Їхнє повідомлення: {note}"
 
@@ -16034,11 +16038,11 @@ msgstr "Наприклад: дзвінок із вашим DPO або CISO, ау
 msgid "Thinking..."
 msgstr "Thinking..."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:767
+#: src/routes/admin/AdminSettingsRoute.tsx:765
 msgid "This account has a live Mollie subscription. Cancel it first."
 msgstr "Цей обліковий запис має дійсний план Mollie. Спочатку скасуйте його."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:630
+#: src/routes/admin/AdminSettingsRoute.tsx:628
 msgid "This account has an active subscription. Ask the customer to cancel it from their billing page before you change the tier."
 msgstr "Цей обліковий запис має активний план. Попросіть клієнта скасувати його на сторінці оплати, перш ніж змінювати рівень."
 
@@ -16048,7 +16052,7 @@ msgstr "Цей обліковий запис має активний план. �
 #~ msgid "This account is logged in somewhere else"
 #~ msgstr "У цей обліковий запис уже ввійшли в іншому місці"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3034
+#: src/routes/admin/AdminSettingsRoute.tsx:2906
 msgid "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 msgstr "Цей розділ призначено для команди dembrane. Якщо вважаєте, що повинні мати доступ, напишіть на support@dembrane.com."
 
@@ -16256,7 +16260,7 @@ msgid "This marks the training cancelled. You can reopen it later from the same 
 msgstr "Це позначає тренінг як скасований. Ви зможете відновити його пізніше з цього ж меню."
 
 #: src/routes/admin/AiCostsPanel.tsx:621
-#: src/routes/admin/AdminSettingsRoute.tsx:258
+#: src/routes/admin/AdminSettingsRoute.tsx:256
 #: src/components/workspace/PeriodSelect.tsx:16
 msgid "This month"
 msgstr "Цього місяця"
@@ -16398,11 +16402,11 @@ msgstr "Цей проєкт зараз не приймає відповіді."
 msgid "This project will follow the inherited setting instead: {0} ({1})."
 msgstr "Цей проєкт наслідуватиме успадковане налаштування: {0} ({1})."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:674
+#: src/routes/admin/AdminSettingsRoute.tsx:672
 msgid "This puts the account on dembrane-managed billing: no automatic Mollie charges or auto-expiry."
 msgstr "Це переводить обліковий запис на білінг під керуванням dembrane: жодних автоматичних списань Mollie чи автоматичного завершення строку дії."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:765
+#: src/routes/admin/AdminSettingsRoute.tsx:763
 msgid "This record has no billing account."
 msgstr "Цей запис не має платіжного облікового запису."
 
@@ -16446,7 +16450,7 @@ msgstr "Цей запит зупинили ще до того, як він ді�
 #~ msgid "This result changed while you were reviewing it."
 #~ msgstr ""
 
-#: src/routes/admin/AdminSettingsRoute.tsx:679
+#: src/routes/admin/AdminSettingsRoute.tsx:677
 msgid "This returns the account to standard free billing."
 msgstr "Це повертає обліковий запис до стандартного безкоштовного тарифу."
 
@@ -16542,7 +16546,7 @@ msgstr "У цьому робочому просторі діє тариф, як�
 msgid "This workspace no longer exists"
 msgstr "Цей робочий простір більше не існує"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1087
+#: src/routes/admin/AdminSettingsRoute.tsx:956
 msgid "This workspace shares its organisation's billing. Change the tier from the organisation account, where it applies to every internal workspace in the org."
 msgstr "Цей робочий простір використовує спільну оплату організації. Змініть тариф в обліковому записі організації, де він застосовується до кожного внутрішнього робочого простору."
 
@@ -16579,14 +16583,14 @@ msgid "Tick the ones you want. The rest stay as the template sets them."
 msgstr "Позначте ті, які хочете. Решта залишиться такою, як задає шаблон."
 
 #: src/routes/project/CreateProjectRoute.tsx:720
-#: src/routes/admin/AdminSettingsRoute.tsx:1409
-#: src/routes/admin/AdminSettingsRoute.tsx:2436
-#: src/routes/admin/AdminSettingsRoute.tsx:2858
+#: src/routes/admin/AdminSettingsRoute.tsx:1281
+#: src/routes/admin/AdminSettingsRoute.tsx:2308
+#: src/routes/admin/AdminSettingsRoute.tsx:2730
 #: src/components/workspace/OrganisationUsageRollup.tsx:388
 msgid "Tier"
 msgstr "Тариф"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:591
+#: src/routes/admin/AdminSettingsRoute.tsx:589
 msgid "Tier changed"
 msgstr "Тариф змінено"
 
@@ -16979,11 +16983,11 @@ msgstr "Дерево"
 msgid "Tree repulsion factor: {0}"
 msgstr "Коефіцієнт відштовхування дерева: {0}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1233
+#: src/routes/admin/AdminSettingsRoute.tsx:1105
 msgid "Trial"
 msgstr "Пробний період"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1837
+#: src/routes/admin/AdminSettingsRoute.tsx:1709
 msgid "Trial and comped accounts, excluded from the paying total."
 msgstr "Пробні та безкоштовні облікові записи, виключені із загальної кількості платних."
 
@@ -17102,8 +17106,8 @@ msgstr "Two-factor authentication disabled"
 msgid "Two-factor authentication enabled"
 msgstr "Two-factor authentication enabled"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:434
-#: src/routes/admin/AdminSettingsRoute.tsx:2483
+#: src/routes/admin/AdminSettingsRoute.tsx:432
+#: src/routes/admin/AdminSettingsRoute.tsx:2355
 #: src/components/training/StaffTrainingPanel.tsx:155
 #: src/components/settings/AuditLogsCard.tsx:190
 #: src/components/map/attributes.ts:332
@@ -17179,7 +17183,7 @@ msgstr "Скасувати відкликання"
 msgid "Unknown"
 msgstr "Unknown"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2359
+#: src/routes/admin/AdminSettingsRoute.tsx:2231
 #: src/components/conversation/useConversationList.ts:45
 msgid "Unknown date"
 msgstr "Невідома дата"
@@ -17561,11 +17565,11 @@ msgstr "Використання · {0}"
 msgid "Usage and billing"
 msgstr "Використання та оплата"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1818
+#: src/routes/admin/AdminSettingsRoute.tsx:1690
 msgid "Usage and billing, {cycleLabel}"
 msgstr "Використання та оплата, {cycleLabel}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3060
+#: src/routes/admin/AdminSettingsRoute.tsx:2932
 msgid "Usage and billing, payments, partner ledger. Any Directus admin has access."
 msgstr "Використання та оплата, платежі, партнерська книга. Будь-який адміністратор Directus має доступ."
 
@@ -18520,8 +18524,8 @@ msgstr "Працюємо над відповіддю..."
 #~ msgstr "робочий простір"
 
 #: src/routes/project/CreateProjectRoute.tsx:699
-#: src/routes/admin/AdminSettingsRoute.tsx:1515
-#: src/routes/admin/AdminSettingsRoute.tsx:2063
+#: src/routes/admin/AdminSettingsRoute.tsx:1387
+#: src/routes/admin/AdminSettingsRoute.tsx:1935
 #: src/features/sidebar/hooks/useSearchHits.ts:166
 #: src/components/workspace/OrganisationUsageRollup.tsx:382
 #: src/components/workspace/OrganisationProjectsTable.tsx:215
@@ -18542,12 +18546,12 @@ msgstr "Робочий простір / проєкт"
 msgid "Workspace access options explain which settings need a paid plan."
 msgstr "Параметри доступу до робочого простору пояснюють, які налаштування потребують платного тарифу."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:482
-#: src/routes/admin/AdminSettingsRoute.tsx:1193
+#: src/routes/admin/AdminSettingsRoute.tsx:480
+#: src/routes/admin/AdminSettingsRoute.tsx:1065
 msgid "Workspace account"
 msgstr "Акаунт робочого простору"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1362
+#: src/routes/admin/AdminSettingsRoute.tsx:1234
 msgid "Workspace actions"
 msgstr "Дії з робочим простором"
 
@@ -18605,7 +18609,7 @@ msgstr "Гість лише робочого простору. Не додаєт
 #~ msgstr "робочі простори"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1476
-#: src/routes/admin/AdminSettingsRoute.tsx:1508
+#: src/routes/admin/AdminSettingsRoute.tsx:1380
 #: src/features/sidebar/views/org/OrgHomeView.tsx:175
 msgid "Workspaces"
 msgstr "Робочі простори"
@@ -18614,7 +18618,7 @@ msgstr "Робочі простори"
 msgid "Workspaces billed separately"
 msgstr "Робочі простори з окремою оплатою"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1341
+#: src/routes/admin/AdminSettingsRoute.tsx:1213
 msgid "Workspaces in this account"
 msgstr "Робочі простори в цьому акаунті"
 
@@ -18676,7 +18680,7 @@ msgstr "Так"
 msgid "You"
 msgstr "You"
 
-#: src/components/workspace/supportVisit.ts:104
+#: src/components/workspace/supportVisit.ts:105
 msgid "You already have access to this workspace."
 msgstr "Ви вже маєте доступ до цього робочого простору."
 
@@ -18861,7 +18865,7 @@ msgstr "Цього місяця у вас більше не залишилося
 msgid "You have successfully unsubscribed."
 msgstr "You have successfully unsubscribed."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:939
+#: src/routes/admin/JoinSupportControl.tsx:60
 msgid "You have support access to this workspace. It ends automatically on {endsAt}."
 msgstr "У вас є доступ служби підтримки до цього робочого простору. Він завершиться автоматично {endsAt}."
 

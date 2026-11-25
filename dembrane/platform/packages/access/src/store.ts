@@ -23,6 +23,8 @@ export interface MembershipRow {
    * hours (a support access request resolved as approved for this membership).
    */
   readonly supportApproved?: boolean;
+  /** Staff support rows only: when that approval's 24 hours end, or null without one. */
+  readonly supportChangeUntil?: string | null;
 }
 
 export interface ProjectRow {

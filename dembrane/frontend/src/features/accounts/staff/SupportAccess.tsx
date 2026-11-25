@@ -15,7 +15,10 @@ import { type ReactNode, useState } from "react";
 import { InfoTip } from "@/components/common/InfoTip";
 import { I18nLink } from "@/components/common/i18nLink";
 import { SupportRequestNoteModal } from "@/components/workspace/SupportRequestNoteModal";
-import { useSupportVisit } from "@/components/workspace/supportVisit";
+import {
+	orgWorkspacesKey,
+	useSupportVisit,
+} from "@/components/workspace/supportVisit";
 import { API_BASE_URL } from "@/config";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { formatDate, formatDateTime } from "../format";
@@ -27,9 +30,6 @@ export type OrgWorkspace = {
 	support_access_enabled: boolean;
 	held_for_demo: boolean;
 };
-
-export const orgWorkspacesKey = (orgId: string) =>
-	["v2", "admin", "org-workspaces", orgId] as const;
 
 /**
  * Staff: getting into one of the organisation's workspaces to help, one row per workspace.
@@ -325,6 +325,7 @@ function VisitRow({ ws }: { ws: OrgWorkspace }) {
 				opened={noteOpen}
 				onClose={() => setNoteOpen(false)}
 				visit={visit}
+				workspaceName={ws.name}
 			/>
 		</>
 	);

@@ -5,6 +5,7 @@ import {
 	useQueries,
 	useQueryClient,
 } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
@@ -114,6 +115,23 @@ export function waitingRequests(
 	return out.sort((a, b) => at(a) - at(b));
 }
 
+/** Request notices whose request a workspace's loaded list does not hold, as [workspace, request]. */
+export function unlistedRequestNotices(
+	rows: NotificationRow[],
+	loaded: Record<string, PendingSupportRequest[]>,
+): [string, string][] {
+	const out: [string, string][] = [];
+	for (const row of rows) {
+		const workspaceId = row.refs.workspace_id;
+		const requestId = requestIdOf(row);
+		if (!isRequestNotice(row) || !workspaceId || !requestId) continue;
+		const list = loaded[workspaceId];
+		if (list && !list.some((r) => r.id === requestId))
+			out.push([workspaceId, requestId]);
+	}
+	return out;
+}
+
 /**
  * The waiting requests of every workspace that recently sent a request notification. A
  * workspace that refuses the list (the caller is no longer its admin) has none.
@@ -121,6 +139,7 @@ export function waitingRequests(
 export function useWaitingSupportRequests(): WaitingSupportRequest[] {
 	const { data: rows = [] } = useNotifications();
 	const { workspaces } = useWorkspace();
+	const queryClient = useQueryClient();
 	const workspaceIds = workspacesWithRequestNotice(rows, new Date());
 	const results = useQueries({
 		queries: workspaceIds.map((id) => ({
@@ -131,6 +150,37 @@ export function useWaitingSupportRequests(): WaitingSupportRequest[] {
 	const pendingByWorkspace = Object.fromEntries(
 		results.map((r, i) => [workspaceIds[i], r.data?.requests ?? []]),
 	);
+
+	// A new notice can name a request that a workspace's cached list predates: that list is
+	// fetched again, once per request. Notices already there when a list first loads are
+	// answered or expired requests, so they fetch nothing.
+	const loaded = Object.fromEntries(
+		results.flatMap((r, i) =>
+			r.isSuccess ? [[workspaceIds[i], r.data.requests]] : [],
+		),
+	);
+	const unlisted = unlistedRequestNotices(rows, loaded);
+	const unlistedKey = unlisted.map((u) => u.join(":")).join(",");
+	const loadedKey = Object.keys(loaded).join(",");
+	const known = useRef({
+		requests: new Set<string>(),
+		workspaces: new Set<string>(),
+	});
+	// biome-ignore lint/correctness/useExhaustiveDependencies: the two keys stand for unlisted and loaded.
+	useEffect(() => {
+		const firstLoad = new Set(
+			Object.keys(loaded).filter((w) => !known.current.workspaces.has(w)),
+		);
+		for (const w of firstLoad) known.current.workspaces.add(w);
+		for (const [workspaceId, requestId] of unlisted) {
+			if (known.current.requests.has(requestId)) continue;
+			known.current.requests.add(requestId);
+			if (!firstLoad.has(workspaceId))
+				void queryClient.invalidateQueries({
+					queryKey: supportRequestsKey(workspaceId),
+				});
+		}
+	}, [unlistedKey, loadedKey]);
 	const names = Object.fromEntries(workspaces.map((w) => [w.id, w.name]));
 	return waitingRequests(rows, pendingByWorkspace, names);
 }

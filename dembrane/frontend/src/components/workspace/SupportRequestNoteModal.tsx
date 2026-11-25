@@ -2,20 +2,23 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, Group, Modal, Stack, Text, Textarea } from "@mantine/core";
 import { useState } from "react";
-import type { SupportVisit } from "./supportVisit";
+import type { SupportVisitActions } from "./supportVisit";
 
 /**
  * Staff ask a workspace's admins for access, with an optional note the admins read in their
- * inbox, their email and the consent dialog.
+ * inbox, their email and the consent dialog. It names the workspace, since the account page
+ * opens it from a list.
  */
 export function SupportRequestNoteModal({
 	opened,
 	onClose,
 	visit,
+	workspaceName,
 }: {
 	opened: boolean;
 	onClose: () => void;
-	visit: SupportVisit;
+	visit: Pick<SupportVisitActions, "sendRequest">;
+	workspaceName: string;
 }) {
 	const [note, setNote] = useState("");
 	return (
@@ -29,8 +32,8 @@ export function SupportRequestNoteModal({
 				<Stack gap="sm">
 					<Text size="sm">
 						<Trans>
-							Tell the workspace admins what you need access for. This note is
-							optional.
+							Tell the admins of {workspaceName} what you need access for. This
+							note is optional.
 						</Trans>
 					</Text>
 					<Textarea
