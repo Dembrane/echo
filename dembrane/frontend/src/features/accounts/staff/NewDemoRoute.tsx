@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+	Alert,
 	Anchor,
 	Box,
 	Button,
@@ -8,6 +9,8 @@ import {
 	Container,
 	Divider,
 	Group,
+	Input,
+	Radio,
 	SegmentedControl,
 	SimpleGrid,
 	Stack,
@@ -17,14 +20,18 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useDocumentTitle } from "@mantine/hooks";
+import { useDebouncedValue, useDocumentTitle } from "@mantine/hooks";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { I18nLink } from "@/components/common/i18nLink";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { displayRole } from "@/lib/roles";
 import { AccountsApiError, call } from "../api/client";
+import { DemoCheckRequest, type DemoCheckT } from "../contract/contract.gen";
 import { AccountsI18n } from "../i18n";
+import { Whole } from "../ui";
 import { StaffOnly } from "./AccountCardRoute";
 import { emptyLine, type Line, LinesEditor, toItems } from "./LinesEditor";
 
@@ -40,6 +47,78 @@ export const NewDemoRoute = () => (
 		</StaffOnly>
 	</AccountsI18n>
 );
+
+/** The radio value for "A new organisation"; every other value is an organisation's id. */
+const NEW_ORGANISATION = "new";
+
+/** An address the check route takes, by the contract's own rule; half typed is not one. */
+const checkableEmail = (value: string): string | null => {
+	const email = value.trim().toLowerCase();
+	return email && DemoCheckRequest.safeParse({ contact_email: email }).success
+		? email
+		: null;
+};
+
+/**
+ * What the form knows before staff build, asked as soon as there is something to ask
+ * with: an organisation name of two characters or more, a complete address, or both.
+ * The name brings earlier demos and organisations under that name; the address brings
+ * whether they have an account, the organisations the demo could go to, and their earlier
+ * demos. Nothing is drawn while the check runs, and the previous answer stays on screen
+ * until the next one lands. What it says about the contact stands only for the address it
+ * was asked about, so changing the address hides that at once and resets the choice.
+ */
+function useDemoCheck(email: string, organisationName: string) {
+	const [debouncedEmail] = useDebouncedValue(email, 400);
+	const [debouncedName] = useDebouncedValue(organisationName.trim(), 400);
+	const askedEmail = checkableEmail(debouncedEmail);
+	const askedName = debouncedName.length >= 2 ? debouncedName : null;
+	const check = useQuery({
+		enabled: askedEmail !== null || askedName !== null,
+		placeholderData: keepPreviousData,
+		queryFn: async () => ({
+			answer: await call("checkDemo", {
+				body: {
+					contact_email: askedEmail,
+					organisation_name: askedName ?? undefined,
+				},
+			}),
+			email: askedEmail,
+			name: askedName,
+		}),
+		queryKey: ["accounts", "staff", "demo-check", askedEmail, askedName],
+		retry: false,
+		staleTime: 60_000,
+	});
+	const typedEmail = checkableEmail(email);
+	const typedName = organisationName.trim();
+	const aboutContact =
+		typedEmail !== null && typedEmail === askedEmail && !check.isError;
+	const answer = check.data;
+	const forContact =
+		aboutContact && answer?.email === typedEmail ? answer.answer : undefined;
+	const forName =
+		typedName.length >= 2 && answer?.name && !check.isError
+			? answer.answer
+			: undefined;
+	return {
+		contact: forContact?.contact ?? null,
+		contactDemos: forContact?.demos.filter((d) => d.same_contact) ?? [],
+		email: askedEmail,
+		failed: check.isError && typedEmail !== null && typedEmail === askedEmail,
+		nameDemos:
+			forName?.demos.filter((d) => d.same_organisation && !d.same_contact) ??
+			[],
+		organisationsNamed: forName?.organisations_named ?? [],
+		// Something checkable is typed and its answer is not in: building now could put
+		// the demo in a new organisation for someone who already has one. A failed check
+		// stops the wait.
+		waiting:
+			!check.isError &&
+			((typedEmail !== null && answer?.email !== typedEmail) ||
+				(typedName.length >= 2 && answer?.name !== typedName)),
+	};
+}
 
 function NewDemo() {
 	useDocumentTitle(t`New demo | dembrane`);
@@ -64,6 +143,32 @@ function NewDemo() {
 	const [error, setError] = useState<AccountsApiError | Error | null>(null);
 	const fields = error instanceof AccountsApiError ? error.fields : {};
 
+	const check = useDemoCheck(form.contact_email, form.organisation_name);
+	const contact = check.contact;
+	const organisations = contact?.organisations ?? [];
+	// The choice belongs to the address it was made for; a new address starts from the
+	// first of its organisations again.
+	const [picked, setPicked] = useState<{ email: string; value: string } | null>(
+		null,
+	);
+	const destination =
+		picked &&
+		picked.email === check.email &&
+		(picked.value === NEW_ORGANISATION ||
+			organisations.some((o) => o.id === picked.value))
+			? picked.value
+			: (organisations[0]?.id ?? NEW_ORGANISATION);
+	const existing = organisations.find((o) => o.id === destination) ?? null;
+	const subject = form.organisation_name.trim();
+
+	const contactLine = check.failed
+		? t`Could not check this address. If they already use dembrane, they get a second organisation.`
+		: contact && !contact.has_account
+			? t`New to dembrane. The demo gets a new organisation.`
+			: contact && organisations.length === 0
+				? t`They have an account but no organisation yet. The demo gets a new organisation.`
+				: undefined;
+
 	const input = (
 		key: keyof typeof form,
 		label: string,
@@ -82,7 +187,26 @@ function NewDemo() {
 		/>
 	);
 
+	const signInSwitch = existing ? (
+		<Switch
+			checked={signIn}
+			onChange={(e) => setSignIn(e.currentTarget.checked)}
+			label={t`Email them when you publish`}
+			description={t`Publishing adds them to the demo's workspace and emails them the link. Off: no email goes out and they are not added.`}
+			data-testid="demo-sign-in"
+		/>
+	) : (
+		<Switch
+			checked={signIn}
+			onChange={(e) => setSignIn(e.currentTarget.checked)}
+			label={t`Let them sign in with an email code`}
+			description={t`Publishing sends them the sign-in invitation. Off: no email goes out.`}
+			data-testid="demo-sign-in"
+		/>
+	);
+
 	const submit = async () => {
+		if (check.waiting) return;
 		setPending(true);
 		setError(null);
 		try {
@@ -90,14 +214,16 @@ function NewDemo() {
 				body: {
 					...form,
 					language,
-					offer: withOffer
-						? {
-								items: toItems(lines),
-								language: offerLanguage,
-								person_name: form.contact_name,
-								template,
-							}
-						: null,
+					...(existing ? { org_id: existing.id } : {}),
+					offer:
+						withOffer && !existing
+							? {
+									items: toItems(lines),
+									language: offerLanguage,
+									person_name: form.contact_name,
+									template,
+								}
+							: null,
 					sign_in: signIn,
 				},
 			});
@@ -146,6 +272,11 @@ function NewDemo() {
 							type: "url",
 						})}
 					</SimpleGrid>
+					<Repeats
+						demos={check.nameDemos}
+						organisations={check.organisationsNamed}
+						testId="demo-name-repeats"
+					/>
 					<Textarea
 						label={t`Brief`}
 						description={t`What they want to hear from whom, and why now.`}
@@ -192,77 +323,122 @@ function NewDemo() {
 					<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
 						{input("contact_name", t`Contact name`, { required: true })}
 						{input("contact_email", t`Contact email`, {
+							description: contactLine,
+							inputWrapperOrder: ["label", "input", "description", "error"],
 							required: true,
 							type: "email",
 						})}
 					</SimpleGrid>
-					<Switch
-						checked={signIn}
-						onChange={(e) => setSignIn(e.currentTarget.checked)}
-						label={t`Let them sign in with an email code`}
-						description={t`Publishing sends them the sign-in invitation. Off: no email goes out.`}
-						data-testid="demo-sign-in"
-					/>
+					<Repeats demos={check.contactDemos} testId="demo-contact-repeats" />
+					{organisations.length === 0 && signInSwitch}
 				</Stack>
 
-				<Stack gap="md">
-					<Divider label={t`Offer`} labelPosition="left" />
-					<Checkbox
-						checked={withOffer}
-						onChange={(e) => setWithOffer(e.currentTarget.checked)}
-						label={t`Prepare an offer`}
-						description={t`A draft on their account, for you to send after the demo.`}
-						data-testid="demo-with-offer"
-					/>
-					{withOffer && (
-						<Box>
+				{organisations.length > 0 && (
+					<Stack gap="md">
+						<Divider label={t`Where the demo goes`} labelPosition="left" />
+						{/* The sentence that introduces the choice, in the form's own description
+						    style; the options sit closer to each other than to it or the switch. */}
+						<Input.Description data-testid="demo-destination-intro">
+							{subject ? (
+								<Trans>
+									In an organisation they already work in, the demo gets its own
+									workspace: {subject}.
+								</Trans>
+							) : (
+								<Trans>
+									In an organisation they already work in, the demo gets its own
+									workspace.
+								</Trans>
+							)}
+						</Input.Description>
+						<Radio.Group
+							value={destination}
+							onChange={(value) =>
+								check.email && setPicked({ email: check.email, value })
+							}
+							error={fields.org_id}
+							data-testid="demo-destination"
+						>
 							<Stack gap="sm">
-								<Group gap="lg">
-									<Stack gap={4}>
-										<Text size="sm">
-											<Trans>Template</Trans>
-										</Text>
-										<SegmentedControl
-											value={template}
-											onChange={(v) => setTemplate(v as typeof template)}
-											data={[
-												{ label: t`Subscription`, value: "subscription" },
-												{ label: t`Event`, value: "event" },
-											]}
-										/>
-									</Stack>
-									<Stack gap={4}>
-										<Text size="sm">
-											<Trans>Offer language</Trans>
-										</Text>
-										<SegmentedControl
-											value={offerLanguage}
-											onChange={(v) =>
-												setOfferLanguage(v as typeof offerLanguage)
-											}
-											data={[
-												{ label: "Nederlands", value: "nl" },
-												{ label: "English", value: "en" },
-											]}
-										/>
-									</Stack>
-								</Group>
-								<LinesEditor
-									lines={lines}
-									onChange={setLines}
-									errors={fields}
+								{organisations.map((o) => (
+									<Radio
+										key={o.id}
+										value={o.id}
+										label={o.name}
+										description={<Whole>{displayRole(o.role)}</Whole>}
+									/>
+								))}
+								<Radio
+									value={NEW_ORGANISATION}
+									label={t`A new organisation`}
+									description={<NewOrganisationLine address={check.email} />}
 								/>
 							</Stack>
-						</Box>
-					)}
-				</Stack>
+						</Radio.Group>
+						{signInSwitch}
+					</Stack>
+				)}
+
+				{!existing && (
+					<Stack gap="md">
+						<Divider label={t`Offer`} labelPosition="left" />
+						<Checkbox
+							checked={withOffer}
+							onChange={(e) => setWithOffer(e.currentTarget.checked)}
+							label={t`Prepare an offer`}
+							description={t`A draft on their account, for you to send after the demo.`}
+							data-testid="demo-with-offer"
+						/>
+						{withOffer && (
+							<Box>
+								<Stack gap="sm">
+									<Group gap="lg">
+										<Stack gap={4}>
+											<Text size="sm">
+												<Trans>Template</Trans>
+											</Text>
+											<SegmentedControl
+												value={template}
+												onChange={(v) => setTemplate(v as typeof template)}
+												data={[
+													{ label: t`Subscription`, value: "subscription" },
+													{ label: t`Event`, value: "event" },
+												]}
+											/>
+										</Stack>
+										<Stack gap={4}>
+											<Text size="sm">
+												<Trans>Offer language</Trans>
+											</Text>
+											<SegmentedControl
+												value={offerLanguage}
+												onChange={(v) =>
+													setOfferLanguage(v as typeof offerLanguage)
+												}
+												data={[
+													{ label: "Nederlands", value: "nl" },
+													{ label: "English", value: "en" },
+												]}
+											/>
+										</Stack>
+									</Group>
+									<LinesEditor
+										lines={lines}
+										onChange={setLines}
+										errors={fields}
+									/>
+								</Stack>
+							</Box>
+						)}
+					</Stack>
+				)}
 
 				{error && !Object.keys(fields).length && <ErrorNotice error={error} />}
 				<Group>
 					<Button
 						size="md"
 						onClick={submit}
-						loading={pending}
+						loading={pending || check.waiting}
 						disabled={
 							!form.organisation_name.trim() ||
 							!form.website_url.trim() ||
@@ -277,5 +453,73 @@ function NewDemo() {
 				</Group>
 			</Stack>
 		</Container>
+	);
+}
+
+/** What "A new organisation" makes; the name is in the sentence above the choice. */
+function NewOrganisationLine({ address }: { address: string | null }) {
+	const email = <Whole>{address ?? ""}</Whole>;
+	return (
+		<Trans>It becomes a prospect in Accounts, with {email} as its admin.</Trans>
+	);
+}
+
+/**
+ * Earlier demos and organisations already called this: a notice to look before building,
+ * never a stop. Each is a sentence with a link to it, set next to the field it is about.
+ */
+function Repeats({
+	demos,
+	organisations = [],
+	testId,
+}: {
+	demos: DemoCheckT["demos"];
+	organisations?: DemoCheckT["organisations_named"];
+	testId: string;
+}) {
+	if (!demos.length && !organisations.length) return null;
+	return (
+		<Alert color="gray" data-testid={testId}>
+			<Stack gap="xs">
+				{demos.map((d) => {
+					const email = <Whole>{d.contact_email}</Whole>;
+					const name = d.organisation_name;
+					return (
+						<Text key={d.id} size="sm">
+							{d.same_contact ? (
+								<Trans>
+									There is already a demo for {email}: {name}.
+								</Trans>
+							) : (
+								<Trans>
+									There is already a demo about {name}, for {email}.
+								</Trans>
+							)}{" "}
+							<Anchor
+								component={I18nLink}
+								to={`/admin/accounts/demos/${d.id}`}
+								className="whitespace-nowrap"
+								inherit
+							>
+								<Trans>Open the demo</Trans>
+							</Anchor>
+						</Text>
+					);
+				})}
+				{organisations.map(({ id, name }) => (
+					<Text key={id} size="sm">
+						<Trans>An organisation named {name} already exists.</Trans>{" "}
+						<Anchor
+							component={I18nLink}
+							to={`/admin/accounts/${id}`}
+							className="whitespace-nowrap"
+							inherit
+						>
+							<Trans>Open the account</Trans>
+						</Anchor>
+					</Text>
+				))}
+			</Stack>
+		</Alert>
 	);
 }

@@ -45,6 +45,14 @@ const previews: Record<string, Preview> = {
     template: "account_invite",
     data: { org_name: offer.org_name, sign_in_url: `${D}/o/1/account` },
   }),
+  account_demo_ready: catalog({
+    template: "account_demo_ready",
+    data: {
+      demo_name: "Wijkraad Lombok",
+      org_name: offer.org_name,
+      demo_url: `${D}/login?next=${encodeURIComponent("/nl-NL/w/1/projects/2/overview")}`,
+    },
+  }),
   account_offer_sent: catalog({
     template: "account_offer_sent",
     data: {

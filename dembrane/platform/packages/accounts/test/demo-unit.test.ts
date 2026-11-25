@@ -5,6 +5,7 @@ import { author, research, researchMarkdown, withDisclosure } from "../src/demo/
 import { demoSlug } from "../src/demo/build";
 import { fetchSite, type HttpGet, httpGet, pageText, siteLinks } from "../src/demo/fetch";
 import { demoBuild } from "../src/demo/job";
+import { PUBLISH_PROBLEM, publishRefusal } from "../src/demo/placement";
 
 // Each step is scoped in buildDemo too; the job's payer covers anything outside a step.
 test("a demo build is dembrane's own spend", () => {
@@ -218,4 +219,27 @@ live("live smoke test on Vertex", () => {
     expect(a.conversations.length).toBeGreaterThanOrEqual(4);
     expect(a.disclosure.length).toBeGreaterThan(20);
   }, 300_000);
+});
+
+describe("publishing with the email on, refused", () => {
+  // Two codes, so the staff screen can say why in its own language: the organisation is
+  // gone, or the contact is not in it any more (no account counts as not in it).
+  test("each placement problem answers its code, with its own sentence as the detail", () => {
+    expect(
+      (["organisation_missing", "organisation_deleted", "no_account", "not_member"] as const).map(
+        (p) => publishRefusal(p),
+      ),
+    ).toEqual([
+      "demo.organisation_deleted",
+      "demo.organisation_deleted",
+      "demo.contact_not_in_organisation",
+      "demo.contact_not_in_organisation",
+    ]);
+    expect(Object.keys(PUBLISH_PROBLEM).sort()).toEqual([
+      "no_account",
+      "not_member",
+      "organisation_deleted",
+      "organisation_missing",
+    ]);
+  });
 });

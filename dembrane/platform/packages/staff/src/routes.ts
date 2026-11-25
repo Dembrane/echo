@@ -1,4 +1,10 @@
-import { requireStaff, type StaffAudit, type StaffPolicy, TIERS } from "@dembrane/access";
+import {
+  heldForDemo,
+  requireStaff,
+  type StaffAudit,
+  type StaffPolicy,
+  TIERS,
+} from "@dembrane/access";
 import { readOrgForStaff, setOrg } from "@dembrane/ai-providers";
 import {
   accountWorkspaceIds,
@@ -776,6 +782,13 @@ export function staffRoutes(deps: StaffRouteDeps) {
       id,
     ]);
     const ws = await liveWorkspace(id);
+    // Held back for a demo: its organisation does not know it yet, so nobody there could
+    // answer, and the request would tell them about it. Staff open the draft instead.
+    if (heldForDemo(ws.settings))
+      throw new ConflictError("staff.support_access_disabled", {
+        message:
+          "This workspace holds a demo that is not published yet, so nobody in the organisation can see it or answer a request. Open the demo's draft from the demos page instead.",
+      });
     if (ws.allow_support_access) throw new ConflictError("staff.support_access_already_on");
     const me = await appUser(who.directusUserId);
     const [existing] = await s.ownRequests(id, me.id, "pending");

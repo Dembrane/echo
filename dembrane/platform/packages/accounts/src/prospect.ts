@@ -1,3 +1,4 @@
+import { HELD_FOR_DEMO, heldForDemo } from "@dembrane/access";
 import { NotFoundError, newId, ValidationError, withoutTrailingSlashes } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
@@ -27,10 +28,14 @@ export interface CreateAccountResult {
   readonly continue_url: string;
 }
 
+/** A dashboard path behind the sign-in: someone signed out signs in first, then lands there. */
+export function signInUrl(dashboardUrl: string, path: string): string {
+  return `${withoutTrailingSlashes(dashboardUrl)}/login?next=${encodeURIComponent(path)}`;
+}
+
 /** Where "Continue in dembrane" leads: the sign-in, then the organisation's account page. */
 export function continueUrl(dashboardUrl: string, orgId: string): string {
-  const base = withoutTrailingSlashes(dashboardUrl);
-  return `${base}/login?next=${encodeURIComponent(`/o/${orgId}/account`)}`;
+  return signInUrl(dashboardUrl, `/o/${orgId}/account`);
 }
 
 /**
@@ -330,13 +335,46 @@ export function codeSignInGate(d: Pick<AccountsDeps, "db" | "now">) {
 }
 
 /**
+ * Hands a demo placed in an organisation its contact already works in over to them: its
+ * workspace is no longer held back and opens to the organisation like any new workspace,
+ * and the contact joins it as admin under joinDemoWorkspace's rule. Their organisation role
+ * is left as it is. Only publishing with the email on calls this, never releaseHeldContacts
+ * (these demos hold no contact). Sends nothing; a second call changes nothing.
+ */
+export async function handOverDemo(
+  c: Conn,
+  orgId: string,
+  seed: { readonly workspace_id: string; readonly contact_user_id: string },
+  now: Date,
+): Promise<void> {
+  const nowIso = now.toISOString();
+  const [ws] = await c
+    .select({ settings: schema.workspace.settings })
+    .from(schema.workspace)
+    .where(and(eq(schema.workspace.id, seed.workspace_id), eq(schema.workspace.org_id, orgId)))
+    .limit(1)
+    .for("update");
+  if (ws && heldForDemo(ws.settings)) {
+    const { [HELD_FOR_DEMO]: _held, ...settings } = (ws.settings ?? {}) as Record<string, unknown>;
+    await c
+      .update(schema.workspace)
+      .set({ settings, visibility: "open_to_organisation", updated_at: nowIso })
+      .where(eq(schema.workspace.id, seed.workspace_id));
+  }
+  const contact = await store.appUserByDirectusId(c, seed.contact_user_id);
+  if (contact) await joinDemoWorkspace(c, orgId, seed.workspace_id, contact.id, nowIso);
+}
+
+/**
  * Gives the contacts held by this organisation's demos what they wait for: the admin
  * membership, a place in the demo's workspace and, for someone new, the sign-in. Called
  * when staff publish a demo with sign-in, send something the customer must act on, or
  * enable the account, so each of those leaves the contact able to open the organisation
  * and find the demo in it. Sends nothing: the invitation,
  * the document or the staff who enabled the account is what tells them. A contact is let
- * in once; a second call changes nothing.
+ * in once; a second call changes nothing. A demo placed in an organisation its contact
+ * already works in holds no contact, so none of these calls hands it over or touches its
+ * contact's role there: only publishing it with the email on does (handOverDemo).
  */
 export async function releaseHeldContacts(c: Conn, orgId: string, now: Date): Promise<void> {
   // Locked, so two releases at the same moment add one membership.

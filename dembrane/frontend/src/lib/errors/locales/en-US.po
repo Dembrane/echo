@@ -729,6 +729,11 @@ msgid "error.map.selection_other_snapshot"
 msgstr "The map was updated since you made this selection. Reload the map and select again."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/demo.ts:12
+msgid "error.demo.organisation_deleted"
+msgstr "The organisation for this demo was deleted, so nothing was done. Restore it and try again, or publish with the email off."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:54
 msgid "error.offer.invoice_shares_total"
 msgstr "The parts add up to {total}. Make them add up to 100%."
@@ -787,6 +792,11 @@ msgstr "There is no payment method to update yet. Choose a plan first."
 #: src/lib/errors/messages/room.ts:30
 msgid "error.room.no_labels_question"
 msgstr "There is nothing to answer here."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/demo.ts:7
+msgid "error.demo.contact_not_in_organisation"
+msgstr "They are no longer in this organisation, so the demo was not published. Add them back, or publish with the email off."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9

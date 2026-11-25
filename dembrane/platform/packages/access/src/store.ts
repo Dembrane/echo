@@ -6,6 +6,11 @@ export interface WorkspaceRow {
   readonly deleted: boolean;
   readonly stickyRemoved: readonly string[];
   readonly inheritOrgMembers: boolean;
+  /**
+   * Held back from its organisation for a demo staff have not handed over yet (HELD_FOR_DEMO):
+   * nobody derives a role in it. Absent reads as not held.
+   */
+  readonly held?: boolean;
   readonly tier: string | null;
 }
 

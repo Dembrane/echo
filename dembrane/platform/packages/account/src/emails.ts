@@ -47,6 +47,10 @@ export type EmailTemplate =
       readonly data: { org_name: string; sign_in_url: string };
     }
   | {
+      readonly template: "account_demo_ready";
+      readonly data: { demo_name: string; org_name: string; demo_url: string };
+    }
+  | {
       readonly template: "account_offer_sent";
       readonly data: OfferSentData;
     }
@@ -152,6 +156,8 @@ export function subjectOf(t: EmailTemplate, locale?: string | null): string | nu
       return tr("email.account_room_invite.subject", t.data);
     case "account_invite":
       return tr("email.account_invite.subject", t.data);
+    case "account_demo_ready":
+      return tr("email.account_demo_ready.subject", { demo_name: t.data.demo_name });
     case "account_offer_sent":
       return tr("email.account_offer_sent.subject", { document_title: t.data.document_title });
     case "account_signed_copy":
@@ -400,6 +406,30 @@ export function render(t: EmailTemplate, locale?: string | null): { html: string
           tr(`${k}.how`),
           `${tr(`${k}.text_cta`)}\n${d.sign_in_url}`,
           ignoreText,
+          signoff,
+        ]),
+      };
+    }
+    case "account_demo_ready": {
+      // The contact of a demo staff placed in an organisation they already work in, when
+      // staff publish it: the button opens the demo project, through the sign-in.
+      const d = t.data;
+      const k = "email.account_demo_ready";
+      return {
+        html: emailFrame({
+          ...c,
+          title: tr(`${k}.subject`, d),
+          preview: tr(`${k}.preview`, d),
+          heading: tr(`${k}.heading`),
+          body: `${e.lead(tr(`${k}.body`, { demo_name: e.em(d.demo_name), org_name: e.em(d.org_name) }))}${e.p(tr(`${k}.invented`))}`,
+          action: act(tr(`${k}.cta`), d.demo_url),
+          footer: tr(`${k}.footer`, escAll(d)),
+        }),
+        text: emailText([
+          tr(`${k}.heading`),
+          tr(`${k}.body`, d),
+          tr(`${k}.invented`),
+          `${tr(`${k}.text_cta`)}\n${d.demo_url}`,
           signoff,
         ]),
       };

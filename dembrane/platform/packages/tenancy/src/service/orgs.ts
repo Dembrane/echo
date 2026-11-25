@@ -4,6 +4,7 @@ import {
   ROLE_RANK,
   resolveWorkspace,
   type WorkspaceRole,
+  workspaceReach,
 } from "@dembrane/access";
 import {
   allowanceForWorkspace,
@@ -31,7 +32,7 @@ import { orgInviteEmail } from "../emails";
 import { emailJob } from "../jobs";
 import { inviteAcceptUrl, inviteHash } from "../links";
 import { checkLogoFile, deleteLogo, isOwnedFile, saveLogo } from "../logos";
-import { derivationView, effectiveMembers, followsOrgAdmins, seatState } from "../members";
+import { effectiveMembers, followsOrgAdmins, seatState } from "../members";
 import { emit, emitToAll, staffAppUsers } from "../notify";
 import { pyInt, pyRound } from "../numbers";
 import {
@@ -156,7 +157,7 @@ export function orgService(deps: TenancyDeps) {
       ).map((m) => `${m.workspace_id}:${m.user_id}`),
     );
     for (const w of workspaces) {
-      const view = derivationView(w);
+      const view = workspaceReach(w);
       for (const uid of userIds)
         if (pairs.has(`${w.id}:${uid}`) || deriveWorkspaceRole(view, roles.get(uid) ?? null, uid))
           counts.set(uid, (counts.get(uid) ?? 0) + 1);

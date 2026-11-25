@@ -79,6 +79,10 @@ export async function workspaceContext(
   const ws = isUuid(workspaceId) ? await store.workspace(workspaceId) : null;
   if (!ws || ws.deleted) throw new NotFoundError("workspace.not_found");
   const access = await resolveWorkspace(store, workspaceId, member, now);
-  if (!access) throw new ForbiddenError("workspace.no_access");
+  // A workspace held back for a demo is not there yet for the organisation's people.
+  if (!access)
+    throw ws.held
+      ? new NotFoundError("workspace.not_found")
+      : new ForbiddenError("workspace.no_access");
   return new WorkspaceContext(member, access);
 }

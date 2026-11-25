@@ -5,6 +5,8 @@ import type {
   AccountPage,
   AddRoomPersonResponse,
   CreateAccountResponse,
+  DemoCheck,
+  DemoCheckRequest,
   DemoCreateRequest,
   DemoStatus,
   DocumentDetail,
@@ -976,6 +978,7 @@ export const demoCreateRequest: Out<typeof DemoCreateRequest> = {
   example: "Een avond in de bibliotheek met zestig bewoners, in maart.",
   contact_name: "Alex Example",
   contact_email: "robin@example-town.example",
+  org_id: null,
   sign_in: true,
   offer: {
     template: "subscription",
@@ -1013,6 +1016,7 @@ export const demoRunning: Out<typeof DemoStatus> = {
   contact_email: "robin@example-town.example",
   sign_in: true,
   org_id: null,
+  existing_organisation: null,
   slug: null,
   steps: steps(2),
   links: { public: [], projects: [], account: null, continue_url: null },
@@ -1070,6 +1074,118 @@ export const demoPublished: Out<typeof DemoStatus> = {
   links: {
     ...demoDraft.links,
     public: demoDraft.links.public.map((p) => ({ ...p, live: true })),
+  },
+  invited_at: "2026-09-28T10:00:00.000Z",
+  published_at: "2026-09-28T10:00:00.000Z",
+};
+
+// ── a demo in an organisation the contact already works in ──────────────
+
+// The ids of the frontend fixture backend's other organisations, so a link opens a card there.
+const WATER_BOARD = "0199a2c0-0000-7000-8000-000000000001";
+const PROVINCE = "0199a2c0-0000-7000-8000-000000000002";
+const VRIJE_PROEF = "0199a2c0-0000-7000-8000-000000000004";
+const EARLIER_DEMO = "0199a1bd-0000-7000-8000-000000000002";
+const DEMO_IN_ORG = "0199a1bd-0000-7000-8000-000000000003";
+const DEMO_IN_ORG_WORKSPACE = "0199a1bd-0000-7000-8000-0000000000a3";
+const DEMO_IN_ORG_PROJECT = "0199a1be-0000-7000-8000-000000000002";
+
+/** POST .../demos/check for the two-organisation contact below. */
+export const demoCheckRequest: Out<typeof DemoCheckRequest> = {
+  contact_email: "jules@example-water.example",
+  organisation_name: "Stichting Vrije Proef",
+};
+
+/** An address without an account: new to dembrane, the demo gets a new organisation. */
+export const demoCheckNewContact: Out<typeof DemoCheck> = {
+  contact: { has_account: false, name: null, organisations: [] },
+  organisations_named: [],
+  demos: [],
+};
+
+/** Robin, admin of the customer Example Town Council (sample), and no repeat. */
+export const demoCheckCustomer: Out<typeof DemoCheck> = {
+  contact: {
+    has_account: true,
+    name: "Robin Example",
+    organisations: [{ ...organisation, role: "admin" }],
+  },
+  organisations_named: [],
+  demos: [],
+};
+
+/**
+ * Jules, a member of a customer and admin of a prospect an earlier demo made for them, with
+ * the demo's subject already an organisation they are not in: every notice the form shows.
+ */
+export const demoCheckTwoOrganisations: Out<typeof DemoCheck> = {
+  contact: {
+    has_account: true,
+    name: "Jules Example",
+    organisations: [
+      { id: PROVINCE, name: "Provincie Proefland", account_stage: "customer", role: "member" },
+      {
+        id: WATER_BOARD,
+        name: "Example Water Board (sample)",
+        account_stage: "prospect",
+        role: "admin",
+      },
+    ],
+  },
+  organisations_named: [{ id: VRIJE_PROEF, name: "Stichting Vrije Proef", account_stage: null }],
+  demos: [
+    {
+      id: EARLIER_DEMO,
+      organisation_name: "Example Water Board (sample)",
+      contact_email: "jules@example-water.example",
+      status: "published",
+      created_at: "2026-09-24T10:00:00.000Z",
+      same_contact: true,
+      same_organisation: false,
+    },
+  ],
+};
+
+/** POST /api/v2/admin/accounts/demos into Robin's own organisation; no offer there. */
+export const demoCreateInOrganisationRequest: Out<typeof DemoCreateRequest> = {
+  ...demoCreateRequest,
+  organisation_name: "Example Youth Council (sample)",
+  website_url: "https://www.example-youth.example/",
+  org_id: ORG,
+  offer: null,
+};
+
+/** The draft of a demo placed in Example Town Council (sample): in a workspace of its own. */
+export const demoDraftInOrganisation: Out<typeof DemoStatus> = {
+  ...demoDraft,
+  id: DEMO_IN_ORG,
+  organisation_name: "Example Youth Council (sample)",
+  website_url: "https://www.example-youth.example/",
+  existing_organisation: { id: ORG, name: organisation.name },
+  slug: "example-youth-council-sample",
+  links: {
+    ...demoDraft.links,
+    projects: [
+      {
+        language: "nl",
+        project_id: DEMO_IN_ORG_PROJECT,
+        url: `https://dashboard.example.test/nl-NL/w/${DEMO_IN_ORG_WORKSPACE}/projects/${DEMO_IN_ORG_PROJECT}/overview`,
+      },
+    ],
+    continue_url: `https://dashboard.example.test/login?next=${encodeURIComponent(`/nl-NL/w/${DEMO_IN_ORG_WORKSPACE}/projects/${DEMO_IN_ORG_PROJECT}/overview`)}`,
+  },
+  research:
+    "# Example Youth Council (sample): research\n\nRetrieved 28-09-2026 from https://www.example-youth.example/ ...\n\n## Verified facts\n- ...\n\n## Unknowns\n- ...\n\n## Invented themes (fiction)\n- ...",
+  offer_document_id: null,
+};
+
+/** Published with the email on: the contact has the "demo is ready" email. */
+export const demoPublishedInOrganisation: Out<typeof DemoStatus> = {
+  ...demoDraftInOrganisation,
+  status: "published",
+  links: {
+    ...demoDraftInOrganisation.links,
+    public: demoDraftInOrganisation.links.public.map((p) => ({ ...p, live: true })),
   },
   invited_at: "2026-09-28T10:00:00.000Z",
   published_at: "2026-09-28T10:00:00.000Z",

@@ -729,6 +729,11 @@ msgid "error.map.selection_other_snapshot"
 msgstr "La mappa è stata aggiornata dopo la tua selezione. Ricarica la mappa e seleziona di nuovo."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/demo.ts:12
+msgid "error.demo.organisation_deleted"
+msgstr "L'organizzazione di questa demo è stata eliminata, quindi non è stato fatto nulla. Ripristinala e riprova, oppure pubblica con l'email disattivata."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:54
 msgid "error.offer.invoice_shares_total"
 msgstr "Le rate sommano a {total}. Devono sommare a 100%."
@@ -787,6 +792,11 @@ msgstr "Non c'è ancora nessun metodo di pagamento da aggiornare. Scegli prima u
 #: src/lib/errors/messages/room.ts:30
 msgid "error.room.no_labels_question"
 msgstr "Qui non c’è niente da rispondere."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/demo.ts:7
+msgid "error.demo.contact_not_in_organisation"
+msgstr "Questa persona non fa più parte di questa organizzazione, quindi la demo non è stata pubblicata. Aggiungila di nuovo o pubblica con l'email disattivata."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9
