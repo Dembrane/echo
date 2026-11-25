@@ -60,8 +60,8 @@ export const OrgSettingsView = () => {
 			)}
 			{isAdmin && (
 				<NavItem
-					to={`/o/${orgId}/settings/ai-models`}
-					label={<Trans>AI models</Trans>}
+					to={`/o/${orgId}/settings/ai-provider`}
+					label={<Trans>AI provider</Trans>}
 					icon={SparkleIcon}
 				/>
 			)}

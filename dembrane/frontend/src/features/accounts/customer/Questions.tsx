@@ -216,16 +216,13 @@ export function AskForm({
 	orgId,
 	side,
 	onDone,
-	initial,
 }: {
 	orgId: string;
 	side: "customer" | "staff";
 	onDone: () => void;
-	/** A request already written, for the person to check and send. */
-	initial?: { subject: string; body: string };
 }) {
-	const [subject, setSubject] = useState(initial?.subject ?? "");
-	const [body, setBody] = useState(initial?.body ?? "");
+	const [subject, setSubject] = useState("");
+	const [body, setBody] = useState("");
 	const mutation = useAccountsMutation(
 		side === "customer" ? "openTicket" : "staffOpenTicket",
 		{ orgId },
@@ -248,9 +245,11 @@ export function AskForm({
 					data-testid="question-body"
 				/>
 				{mutation.error && <ErrorNotice error={mutation.error} />}
-				<Group gap="sm">
+				<Group justify="flex-end" gap="xs">
+					<Button variant="default" onClick={onDone}>
+						<Trans>Cancel</Trans>
+					</Button>
 					<Button
-						variant="filled"
 						disabled={!subject.trim() || !body.trim()}
 						loading={mutation.isPending}
 						onClick={() =>
@@ -262,9 +261,6 @@ export function AskForm({
 						data-testid="question-send"
 					>
 						<Trans>Send</Trans>
-					</Button>
-					<Button variant="subtle" color="gray" onClick={onDone}>
-						<Trans>Cancel</Trans>
 					</Button>
 				</Group>
 			</Stack>

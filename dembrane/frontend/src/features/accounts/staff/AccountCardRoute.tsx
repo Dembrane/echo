@@ -60,7 +60,7 @@ import {
 	outsideViaLabel,
 	VoidAcceptanceModal,
 } from "./AcceptedOutsideModals";
-import { AiModelsSection } from "./AiModelsSection";
+import { AiProviderSection } from "./AiProviderSection";
 import { EmailCustomerModal, type EmailSubject } from "./EmailCustomerModal";
 import { PushOfferModal } from "./PushOfferModal";
 import { NewTaskModal, SendBackModal } from "./TaskModals";
@@ -168,7 +168,7 @@ function Card() {
 							)}
 							<NeedsForm card={data} />
 							<Billing card={data} />
-							<AiModelsSection orgId={orgId} />
+							<AiProviderSection orgId={orgId} />
 							<Timeline card={data} />
 						</Stack>
 					</Box>
@@ -916,7 +916,7 @@ const eventLabel = (type: string): string =>
 		"account.enabled": t`Account enabled`,
 		"account.stage_set": t`Stage set`,
 		"account.updated": t`Account updated`,
-		"ai_providers.changed": t`AI models changed`,
+		"ai_providers.changed": t`AI provider changed`,
 		"billing_details.updated": t`Billing details updated`,
 		"booking.recorded": t`Call booked`,
 		"demo.opened": t`Demo opened by staff`,
@@ -942,7 +942,7 @@ const eventLabel = (type: string): string =>
 		"message.sent": t`Customer emailed`,
 		"onboarding.added": t`Onboarding tasks added`,
 		"onboarding.withdrawn": t`Onboarding tasks withdrawn`,
-		"project.ai_provider.changed": t`Project AI model changed`,
+		"project.ai_provider.changed": t`Project AI provider changed`,
 		"task.approve": t`Task approved`,
 		"task.approved": t`Task approved`,
 		"task.check_in_asked": t`Account manager asked to check in`,

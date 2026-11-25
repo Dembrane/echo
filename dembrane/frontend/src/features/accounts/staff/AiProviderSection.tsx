@@ -93,7 +93,7 @@ export function AiProviderSection({ orgId }: { orgId: string }) {
 			}
 		>
 			<Stack gap="sm">
-				<Stack gap={6} data-testid="ai-provider-summary">
+				<Stack gap="xs" data-testid="ai-provider-summary">
 					{data.allowed.map((p) => (
 						<Group key={p} gap="xs" wrap="nowrap">
 							<ProviderLogo provider={p} size={24} />
@@ -107,7 +107,7 @@ export function AiProviderSection({ orgId }: { orgId: string }) {
 					))}
 				</Stack>
 				{data.history.length > 0 && (
-					<Stack gap={2} data-testid="ai-provider-history">
+					<Stack gap={4} data-testid="ai-provider-history">
 						{history.map((h) => (
 							<Text
 								size="xs"
@@ -258,10 +258,7 @@ function EditForm({
 				onChange={setTicket}
 				data-testid="ai-provider-ticket"
 			/>
-			<Group justify="flex-end">
-				<Button variant="default" onClick={onClose}>
-					<Trans>Cancel</Trans>
-				</Button>
+			<Group gap="sm">
 				<Button
 					disabled={!isChanged(draft, saved) || !ticket}
 					loading={save.isPending}
@@ -269,6 +266,9 @@ function EditForm({
 					data-testid="ai-provider-save"
 				>
 					<Trans>Save</Trans>
+				</Button>
+				<Button variant="subtle" color="gray" onClick={onClose}>
+					<Trans>Cancel</Trans>
 				</Button>
 			</Group>
 		</Stack>
