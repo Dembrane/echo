@@ -825,6 +825,14 @@ msgstr "{m} min"
 #~ msgid "{n} min"
 #~ msgstr "{n} min"
 
+#: src/components/ai-provider/hooks.ts:190
+msgid "{n} per 100 questions"
+msgstr "{n} pour 100 questions"
+
+#: src/components/ai-provider/hooks.ts:186
+msgid "{n} per hour of audio"
+msgstr "{n} par heure d'audio"
+
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:46
 msgid "{name} for {what}"
 msgstr "{name} pour {what}"
@@ -1338,9 +1346,13 @@ msgstr "un espace de travail"
 msgid "About"
 msgstr "À propos"
 
+#: src/components/ai-provider/hooks.ts:182
+msgid "About {n} a month at your last 30 days of use, billed on top"
+msgstr "Environ {n} par mois selon vos 30 derniers jours d'utilisation, facturés en sus"
+
 #: src/components/ai-provider/hooks.ts:177
-msgid "About EUR {n} a month at your last 30 days of use, billed on top"
-msgstr "Environ {n} EUR par mois selon vos 30 derniers jours d'utilisation, facturés en supplément"
+#~ msgid "About EUR {n} a month at your last 30 days of use, billed on top"
+#~ msgstr "Environ {n} EUR par mois selon vos 30 derniers jours d'utilisation, facturés en supplément"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:432
 msgid "About the suggested project update: {hostNote}"
@@ -2221,7 +2233,7 @@ msgid "Analyse now"
 msgstr "Analyser maintenant"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:899
-#: src/components/ai-provider/hooks.ts:146
+#: src/components/ai-provider/hooks.ts:149
 msgid "Analysis"
 msgstr "Analyse"
 
@@ -6043,12 +6055,12 @@ msgid "EU hosted LLMs included"
 msgstr "LLM hébergés dans l'UE inclus"
 
 #: src/components/ai-provider/hooks.ts:185
-msgid "EUR {n} per 100 questions"
-msgstr "{n} EUR pour 100 questions"
+#~ msgid "EUR {n} per 100 questions"
+#~ msgstr "{n} EUR pour 100 questions"
 
 #: src/components/ai-provider/hooks.ts:181
-msgid "EUR {n} per hour of audio"
-msgstr "{n} EUR par heure d'audio"
+#~ msgid "EUR {n} per hour of audio"
+#~ msgstr "{n} EUR par heure d'audio"
 
 #: src/components/pricing/questions.ts:217
 msgid "Event help from the dembrane team"
@@ -7184,7 +7196,7 @@ msgstr "Idéal pour l'anglais et le néerlandais"
 msgid "Good response"
 msgstr "Bonne réponse"
 
-#: src/components/ai-provider/hooks.ts:143
+#: src/components/ai-provider/hooks.ts:146
 msgid "Google Vertex AI"
 msgstr "Google Vertex AI"
 
@@ -7637,7 +7649,7 @@ msgstr "Heures incluses épuisées"
 msgid "Included hours used up this month"
 msgstr "Heures incluses épuisées ce mois-ci"
 
-#: src/components/ai-provider/hooks.ts:174
+#: src/components/ai-provider/hooks.ts:179
 msgid "Included in your plan"
 msgstr "Inclus dans votre forfait"
 
@@ -13536,7 +13548,7 @@ msgstr "Dites-le avec vos propres mots. Écrivez, ou appuyez sur enregistrer et 
 msgid "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 msgstr "Dites de quoi parle la session, qui y participe et où ; vous pouvez coller un ordre du jour ou une invitation. dembrane s'en sert pour garder les réponses du chat, les réponses aux participants et Popcorn sur votre question, et pour suggérer des termes clés."
 
-#: src/components/ai-provider/hooks.ts:143
+#: src/components/ai-provider/hooks.ts:146
 msgid "Scaleway"
 msgstr "Scaleway"
 
@@ -16366,8 +16378,12 @@ msgid "This month"
 msgstr "Ce mois-ci"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:148
-msgid "This month: Scaleway included, Google EUR {google}"
-msgstr "Ce mois-ci : Scaleway inclus, Google {google} EUR"
+msgid "This month: Scaleway included, Google {google}"
+msgstr "Ce mois-ci : Scaleway inclus, Google {google}"
+
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:148
+#~ msgid "This month: Scaleway included, Google EUR {google}"
+#~ msgstr "Ce mois-ci : Scaleway inclus, Google {google} EUR"
 
 #: src/components/report/reportError.ts:9
 msgid "This month's AI budget is used up."
@@ -16982,7 +16998,7 @@ msgstr "extrait de transcription"
 msgid "Transcript retrieval and conversation summaries finish before dependent work continues."
 msgstr "La récupération des transcriptions et les résumés des conversations se terminent avant la suite des opérations dépendantes."
 
-#: src/components/ai-provider/hooks.ts:146
+#: src/components/ai-provider/hooks.ts:149
 msgid "Transcription"
 msgstr "Transcription"
 

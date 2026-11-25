@@ -825,6 +825,14 @@ msgstr "{m}m"
 #~ msgid "{n} min"
 #~ msgstr "{n} min"
 
+#: src/components/ai-provider/hooks.ts:190
+msgid "{n} per 100 questions"
+msgstr "{n} per 100 questions"
+
+#: src/components/ai-provider/hooks.ts:186
+msgid "{n} per hour of audio"
+msgstr "{n} per hour of audio"
+
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:46
 msgid "{name} for {what}"
 msgstr "{name} for {what}"
@@ -1338,9 +1346,13 @@ msgstr "a workspace"
 msgid "About"
 msgstr "About"
 
+#: src/components/ai-provider/hooks.ts:182
+msgid "About {n} a month at your last 30 days of use, billed on top"
+msgstr "About {n} a month at your last 30 days of use, billed on top"
+
 #: src/components/ai-provider/hooks.ts:177
-msgid "About EUR {n} a month at your last 30 days of use, billed on top"
-msgstr "About EUR {n} a month at your last 30 days of use, billed on top"
+#~ msgid "About EUR {n} a month at your last 30 days of use, billed on top"
+#~ msgstr "About EUR {n} a month at your last 30 days of use, billed on top"
 
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:432
 msgid "About the suggested project update: {hostNote}"
@@ -2221,7 +2233,7 @@ msgid "Analyse now"
 msgstr "Analyse now"
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:899
-#: src/components/ai-provider/hooks.ts:146
+#: src/components/ai-provider/hooks.ts:149
 msgid "Analysis"
 msgstr "Analysis"
 
@@ -6043,12 +6055,12 @@ msgid "EU hosted LLMs included"
 msgstr "EU hosted LLMs included"
 
 #: src/components/ai-provider/hooks.ts:185
-msgid "EUR {n} per 100 questions"
-msgstr "EUR {n} per 100 questions"
+#~ msgid "EUR {n} per 100 questions"
+#~ msgstr "EUR {n} per 100 questions"
 
 #: src/components/ai-provider/hooks.ts:181
-msgid "EUR {n} per hour of audio"
-msgstr "EUR {n} per hour of audio"
+#~ msgid "EUR {n} per hour of audio"
+#~ msgstr "EUR {n} per hour of audio"
 
 #: src/components/pricing/questions.ts:217
 msgid "Event help from the dembrane team"
@@ -7184,7 +7196,7 @@ msgstr "Good for English and Dutch"
 msgid "Good response"
 msgstr "Good response"
 
-#: src/components/ai-provider/hooks.ts:143
+#: src/components/ai-provider/hooks.ts:146
 msgid "Google Vertex AI"
 msgstr "Google Vertex AI"
 
@@ -7637,7 +7649,7 @@ msgstr "Included hours used up"
 msgid "Included hours used up this month"
 msgstr "Included hours used up this month"
 
-#: src/components/ai-provider/hooks.ts:174
+#: src/components/ai-provider/hooks.ts:179
 msgid "Included in your plan"
 msgstr "Included in your plan"
 
@@ -13536,7 +13548,7 @@ msgstr "Say it in your own words. Type, or press record and talk."
 msgid "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 msgstr "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 
-#: src/components/ai-provider/hooks.ts:143
+#: src/components/ai-provider/hooks.ts:146
 msgid "Scaleway"
 msgstr "Scaleway"
 
@@ -16365,8 +16377,12 @@ msgid "This month"
 msgstr "This month"
 
 #: src/components/ai-provider/OrgAiProviderPanel.tsx:148
-msgid "This month: Scaleway included, Google EUR {google}"
-msgstr "This month: Scaleway included, Google EUR {google}"
+msgid "This month: Scaleway included, Google {google}"
+msgstr "This month: Scaleway included, Google {google}"
+
+#: src/components/ai-provider/OrgAiProviderPanel.tsx:148
+#~ msgid "This month: Scaleway included, Google EUR {google}"
+#~ msgstr "This month: Scaleway included, Google EUR {google}"
 
 #: src/components/report/reportError.ts:9
 msgid "This month's AI budget is used up."
@@ -16981,7 +16997,7 @@ msgstr "transcript excerpt"
 msgid "Transcript retrieval and conversation summaries finish before dependent work continues."
 msgstr "Transcript retrieval and conversation summaries finish before dependent work continues."
 
-#: src/components/ai-provider/hooks.ts:146
+#: src/components/ai-provider/hooks.ts:149
 msgid "Transcription"
 msgstr "Transcription"
 

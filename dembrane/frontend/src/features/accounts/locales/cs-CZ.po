@@ -216,15 +216,15 @@ msgstr "{oldName} už nepodepisuje a odkaz, který jsme poslali {oldFirst}, pře
 msgid "{org} invited you to sign"
 msgstr "{org} vás zve k podpisu"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:80
+#: src/features/accounts/staff/AiProviderSection.tsx:81
 msgid "{provider} enabled for {job}"
 msgstr "{provider} je povolen pro {job}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:83
+#: src/features/accounts/staff/AiProviderSection.tsx:84
 msgid "{provider} is now the default for {job}"
 msgstr "{provider} je nyní výchozí pro {job}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:82
+#: src/features/accounts/staff/AiProviderSection.tsx:83
 msgid "{provider} removed from {job}"
 msgstr "{provider} byl odebrán z {job}"
 
@@ -296,19 +296,19 @@ msgstr "Mohla ji nahradit novější pozvánka. Požádejte toho, kdo vás pozva
 msgid "A photo or scan of your signature, PNG or JPEG."
 msgstr "Fotka nebo sken vašeho podpisu, PNG nebo JPEG."
 
-#: src/features/accounts/staff/AiProviderSection.tsx:154
+#: src/features/accounts/staff/AiProviderSection.tsx:155
 msgid "A project back on the account default"
 msgstr "Projekt byl vrácen na výchozí nastavení účtu"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:149
+#: src/features/accounts/staff/AiProviderSection.tsx:150
 msgid "A project back on the account default for {job}"
 msgstr "Projekt byl vrácen na výchozí nastavení účtu pro {job}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:142
+#: src/features/accounts/staff/AiProviderSection.tsx:143
 msgid "A project moved to {provider}"
 msgstr "Projekt byl přesunut na {provider}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:137
+#: src/features/accounts/staff/AiProviderSection.tsx:138
 msgid "A project moved to {provider} for {job}"
 msgstr "Projekt byl přesunut na {provider} pro {job}"
 
@@ -471,8 +471,8 @@ msgstr "2. řádek adresy"
 #~ msgid "Admin"
 #~ msgstr "Admin"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:193
-#: src/features/accounts/staff/AiProviderSection.tsx:289
+#: src/features/accounts/staff/AiProviderSection.tsx:194
+#: src/features/accounts/staff/AiProviderSection.tsx:290
 msgid "AI provider"
 msgstr "Poskytovatel AI"
 
@@ -480,7 +480,7 @@ msgstr "Poskytovatel AI"
 msgid "AI provider changed"
 msgstr "Poskytovatel AI byl změněn"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:332
+#: src/features/accounts/staff/AiProviderSection.tsx:333
 msgid "AI provider saved"
 msgstr "Poskytovatel AI byl uložen"
 
@@ -693,7 +693,7 @@ msgstr "Hovor domluven"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:71
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
-#: src/features/accounts/staff/AiProviderSection.tsx:437
+#: src/features/accounts/staff/AiProviderSection.tsx:438
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:266
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:329
 #: src/features/accounts/customer/WhoSigns.tsx:460
@@ -844,7 +844,7 @@ msgstr "Vyberte jednu možnost."
 msgid "Choose someone"
 msgstr "Vybrat někoho"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:417
+#: src/features/accounts/staff/AiProviderSection.tsx:418
 msgid "Choose the ticket"
 msgstr "Vyberte požadavek"
 
@@ -1043,9 +1043,9 @@ msgstr "Datum podpisu"
 msgid "Declined"
 msgstr "Odmítnuto"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:226
-#: src/features/accounts/staff/AiProviderSection.tsx:356
-#: src/features/accounts/staff/AiProviderSection.tsx:397
+#: src/features/accounts/staff/AiProviderSection.tsx:227
+#: src/features/accounts/staff/AiProviderSection.tsx:357
+#: src/features/accounts/staff/AiProviderSection.tsx:398
 msgid "Default"
 msgstr "Výchozí"
 
@@ -1252,7 +1252,7 @@ msgstr "Splatné {due}"
 msgid "Dutch VAT"
 msgstr "Nizozemské DPH"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:202
+#: src/features/accounts/staff/AiProviderSection.tsx:203
 #: src/features/accounts/customer/BillingForm.tsx:308
 msgid "Edit"
 msgstr "Upravit"
@@ -1313,7 +1313,7 @@ msgstr "Prázdné: použije se text šablony. Prázdný řádek začíná nový 
 #~ msgid "Enable it to push offers and tasks. They get an Account page with a billing details step."
 #~ msgstr "Aktivujte pro odesílání nabídek a úkolů. Získají stránku Účet s krokem pro fakturační údaje."
 
-#: src/features/accounts/staff/AiProviderSection.tsx:363
+#: src/features/accounts/staff/AiProviderSection.tsx:364
 msgid "Enabled"
 msgstr "Povoleno"
 
@@ -1507,9 +1507,13 @@ msgstr "Přejít na úkoly"
 msgid "Goes on the invoice"
 msgstr "Bude na faktuře"
 
+#: src/features/accounts/staff/AiProviderSection.tsx:236
+msgid "Google this month: {google}"
+msgstr "Google tento měsíc: {google}"
+
 #: src/features/accounts/staff/AiProviderSection.tsx:235
-msgid "Google this month: EUR {google}"
-msgstr "Google tento měsíc: {google} EUR"
+#~ msgid "Google this month: EUR {google}"
+#~ msgstr "Google tento měsíc: {google} EUR"
 
 #~ msgid "Greeting names"
 #~ msgstr ""
@@ -2562,19 +2566,19 @@ msgstr "Cena"
 msgid "Progress"
 msgstr "Průběh"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:153
+#: src/features/accounts/staff/AiProviderSection.tsx:154
 msgid "Project {name} back on the account default"
 msgstr "Projekt {name} byl vrácen na výchozí nastavení účtu"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:148
+#: src/features/accounts/staff/AiProviderSection.tsx:149
 msgid "Project {name} back on the account default for {job}"
 msgstr "Projekt {name} byl vrácen na výchozí nastavení účtu pro {job}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:141
+#: src/features/accounts/staff/AiProviderSection.tsx:142
 msgid "Project {name} moved to {provider}"
 msgstr "Projekt {name} byl přesunut na {provider}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:136
+#: src/features/accounts/staff/AiProviderSection.tsx:137
 msgid "Project {name} moved to {provider} for {job}"
 msgstr "Projekt {name} byl přesunut na {provider} pro {job}"
 
@@ -2809,11 +2813,11 @@ msgstr "zastupoval zaměstnance nebo zúčastněné"
 msgid "Represents staff or stakeholders"
 msgstr "Zastupuje zaměstnance nebo zúčastněné"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:416
+#: src/features/accounts/staff/AiProviderSection.tsx:417
 msgid "Request"
 msgstr "Požadavek"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:99
+#: src/features/accounts/staff/AiProviderSection.tsx:100
 msgid "Request of {asked}"
 msgstr "Požadavek od {asked}"
 
@@ -2881,7 +2885,7 @@ msgid "run the rollout"
 msgstr "vedl zavedení"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:281
-#: src/features/accounts/staff/AiProviderSection.tsx:434
+#: src/features/accounts/staff/AiProviderSection.tsx:435
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:91
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:278
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:287
@@ -3085,7 +3089,7 @@ msgid "Shares add up to {0}%"
 msgstr "Podíly dávají dohromady {0}%"
 
 #: src/features/accounts/staff/DemoRoute.tsx:348
-#: src/features/accounts/staff/AiProviderSection.tsx:257
+#: src/features/accounts/staff/AiProviderSection.tsx:258
 #: src/features/accounts/staff/AccountCardRoute.tsx:1024
 msgid "Show all"
 msgstr "Zobrazit vše"
@@ -3293,7 +3297,7 @@ msgstr "Podepisuje osoba oprávněná odsouhlasit zpracování údajů za vaši 
 msgid "Something went wrong"
 msgstr "Něco se pokazilo"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:99
+#: src/features/accounts/staff/AiProviderSection.tsx:100
 #: src/features/accounts/staff/AccountCardRoute.tsx:1012
 msgid "Staff"
 msgstr "Personál"

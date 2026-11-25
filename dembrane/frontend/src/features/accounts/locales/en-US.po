@@ -216,15 +216,15 @@ msgstr "{oldName} no longer signs it, and the link we sent {oldFirst} stops work
 msgid "{org} invited you to sign"
 msgstr "{org} invited you to sign"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:80
+#: src/features/accounts/staff/AiProviderSection.tsx:81
 msgid "{provider} enabled for {job}"
 msgstr "{provider} enabled for {job}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:83
+#: src/features/accounts/staff/AiProviderSection.tsx:84
 msgid "{provider} is now the default for {job}"
 msgstr "{provider} is now the default for {job}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:82
+#: src/features/accounts/staff/AiProviderSection.tsx:83
 msgid "{provider} removed from {job}"
 msgstr "{provider} removed from {job}"
 
@@ -296,19 +296,19 @@ msgstr "A newer invitation may have replaced it. Ask the person who invited you 
 msgid "A photo or scan of your signature, PNG or JPEG."
 msgstr "A photo or scan of your signature, PNG or JPEG."
 
-#: src/features/accounts/staff/AiProviderSection.tsx:154
+#: src/features/accounts/staff/AiProviderSection.tsx:155
 msgid "A project back on the account default"
 msgstr "A project back on the account default"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:149
+#: src/features/accounts/staff/AiProviderSection.tsx:150
 msgid "A project back on the account default for {job}"
 msgstr "A project back on the account default for {job}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:142
+#: src/features/accounts/staff/AiProviderSection.tsx:143
 msgid "A project moved to {provider}"
 msgstr "A project moved to {provider}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:137
+#: src/features/accounts/staff/AiProviderSection.tsx:138
 msgid "A project moved to {provider} for {job}"
 msgstr "A project moved to {provider} for {job}"
 
@@ -471,8 +471,8 @@ msgstr "Address line 2"
 #~ msgid "Admin"
 #~ msgstr "Admin"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:193
-#: src/features/accounts/staff/AiProviderSection.tsx:289
+#: src/features/accounts/staff/AiProviderSection.tsx:194
+#: src/features/accounts/staff/AiProviderSection.tsx:290
 msgid "AI provider"
 msgstr "AI provider"
 
@@ -480,7 +480,7 @@ msgstr "AI provider"
 msgid "AI provider changed"
 msgstr "AI provider changed"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:332
+#: src/features/accounts/staff/AiProviderSection.tsx:333
 msgid "AI provider saved"
 msgstr "AI provider saved"
 
@@ -693,7 +693,7 @@ msgstr "Call booked"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:71
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
-#: src/features/accounts/staff/AiProviderSection.tsx:437
+#: src/features/accounts/staff/AiProviderSection.tsx:438
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:266
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:329
 #: src/features/accounts/customer/WhoSigns.tsx:460
@@ -844,7 +844,7 @@ msgstr "Choose one."
 msgid "Choose someone"
 msgstr "Choose someone"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:417
+#: src/features/accounts/staff/AiProviderSection.tsx:418
 msgid "Choose the ticket"
 msgstr "Choose the ticket"
 
@@ -1043,9 +1043,9 @@ msgstr "Date signed"
 msgid "Declined"
 msgstr "Declined"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:226
-#: src/features/accounts/staff/AiProviderSection.tsx:356
-#: src/features/accounts/staff/AiProviderSection.tsx:397
+#: src/features/accounts/staff/AiProviderSection.tsx:227
+#: src/features/accounts/staff/AiProviderSection.tsx:357
+#: src/features/accounts/staff/AiProviderSection.tsx:398
 msgid "Default"
 msgstr "Default"
 
@@ -1252,7 +1252,7 @@ msgstr "Due {due}"
 msgid "Dutch VAT"
 msgstr "Dutch VAT"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:202
+#: src/features/accounts/staff/AiProviderSection.tsx:203
 #: src/features/accounts/customer/BillingForm.tsx:308
 msgid "Edit"
 msgstr "Edit"
@@ -1313,7 +1313,7 @@ msgstr "Empty: the template's. A blank line starts a paragraph."
 #~ msgid "Enable it to push offers and tasks. They get an Account page with a billing details step."
 #~ msgstr "Enable it to push offers and tasks. They get an Account page with a billing details step."
 
-#: src/features/accounts/staff/AiProviderSection.tsx:363
+#: src/features/accounts/staff/AiProviderSection.tsx:364
 msgid "Enabled"
 msgstr "Enabled"
 
@@ -1507,9 +1507,13 @@ msgstr "Go to your tasks"
 msgid "Goes on the invoice"
 msgstr "Goes on the invoice"
 
+#: src/features/accounts/staff/AiProviderSection.tsx:236
+msgid "Google this month: {google}"
+msgstr "Google this month: {google}"
+
 #: src/features/accounts/staff/AiProviderSection.tsx:235
-msgid "Google this month: EUR {google}"
-msgstr "Google this month: EUR {google}"
+#~ msgid "Google this month: EUR {google}"
+#~ msgstr "Google this month: EUR {google}"
 
 #~ msgid "Greeting names"
 #~ msgstr "Greeting names"
@@ -2562,19 +2566,19 @@ msgstr "Price"
 msgid "Progress"
 msgstr "Progress"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:153
+#: src/features/accounts/staff/AiProviderSection.tsx:154
 msgid "Project {name} back on the account default"
 msgstr "Project {name} back on the account default"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:148
+#: src/features/accounts/staff/AiProviderSection.tsx:149
 msgid "Project {name} back on the account default for {job}"
 msgstr "Project {name} back on the account default for {job}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:141
+#: src/features/accounts/staff/AiProviderSection.tsx:142
 msgid "Project {name} moved to {provider}"
 msgstr "Project {name} moved to {provider}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:136
+#: src/features/accounts/staff/AiProviderSection.tsx:137
 msgid "Project {name} moved to {provider} for {job}"
 msgstr "Project {name} moved to {provider} for {job}"
 
@@ -2809,11 +2813,11 @@ msgstr "represent staff or stakeholders"
 msgid "Represents staff or stakeholders"
 msgstr "Represents staff or stakeholders"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:416
+#: src/features/accounts/staff/AiProviderSection.tsx:417
 msgid "Request"
 msgstr "Request"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:99
+#: src/features/accounts/staff/AiProviderSection.tsx:100
 msgid "Request of {asked}"
 msgstr "Request of {asked}"
 
@@ -2881,7 +2885,7 @@ msgid "run the rollout"
 msgstr "run the rollout"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:281
-#: src/features/accounts/staff/AiProviderSection.tsx:434
+#: src/features/accounts/staff/AiProviderSection.tsx:435
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:91
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:278
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:287
@@ -3085,7 +3089,7 @@ msgid "Shares add up to {0}%"
 msgstr "Shares add up to {0}%"
 
 #: src/features/accounts/staff/DemoRoute.tsx:348
-#: src/features/accounts/staff/AiProviderSection.tsx:257
+#: src/features/accounts/staff/AiProviderSection.tsx:258
 #: src/features/accounts/staff/AccountCardRoute.tsx:1024
 msgid "Show all"
 msgstr "Show all"
@@ -3293,7 +3297,7 @@ msgstr "Someone who may agree to data processing for your organisation signs it.
 msgid "Something went wrong"
 msgstr "Something went wrong"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:99
+#: src/features/accounts/staff/AiProviderSection.tsx:100
 #: src/features/accounts/staff/AccountCardRoute.tsx:1012
 msgid "Staff"
 msgstr "Staff"

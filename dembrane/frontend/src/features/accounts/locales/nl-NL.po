@@ -216,15 +216,15 @@ msgstr "{oldName} ondertekent het dan niet meer en de link die we {oldFirst} stu
 msgid "{org} invited you to sign"
 msgstr "{org} vraagt je om te ondertekenen"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:80
+#: src/features/accounts/staff/AiProviderSection.tsx:81
 msgid "{provider} enabled for {job}"
 msgstr "{provider} ingeschakeld voor {job}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:83
+#: src/features/accounts/staff/AiProviderSection.tsx:84
 msgid "{provider} is now the default for {job}"
 msgstr "{provider} is nu de standaard voor {job}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:82
+#: src/features/accounts/staff/AiProviderSection.tsx:83
 msgid "{provider} removed from {job}"
 msgstr "{provider} verwijderd van {job}"
 
@@ -296,19 +296,19 @@ msgstr "Misschien is er een nieuwere uitnodiging verstuurd. Vraag degene die je 
 msgid "A photo or scan of your signature, PNG or JPEG."
 msgstr "Een foto of scan van je handtekening, PNG of JPEG."
 
-#: src/features/accounts/staff/AiProviderSection.tsx:154
+#: src/features/accounts/staff/AiProviderSection.tsx:155
 msgid "A project back on the account default"
 msgstr "Een project teruggezet naar de accountstandaard"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:149
+#: src/features/accounts/staff/AiProviderSection.tsx:150
 msgid "A project back on the account default for {job}"
 msgstr "Een project teruggezet naar de accountstandaard voor {job}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:142
+#: src/features/accounts/staff/AiProviderSection.tsx:143
 msgid "A project moved to {provider}"
 msgstr "Een project verplaatst naar {provider}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:137
+#: src/features/accounts/staff/AiProviderSection.tsx:138
 msgid "A project moved to {provider} for {job}"
 msgstr "Een project verplaatst naar {provider} voor {job}"
 
@@ -471,8 +471,8 @@ msgstr "Adresregel 2"
 #~ msgid "Admin"
 #~ msgstr "Beheerder"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:193
-#: src/features/accounts/staff/AiProviderSection.tsx:289
+#: src/features/accounts/staff/AiProviderSection.tsx:194
+#: src/features/accounts/staff/AiProviderSection.tsx:290
 msgid "AI provider"
 msgstr "AI-provider"
 
@@ -480,7 +480,7 @@ msgstr "AI-provider"
 msgid "AI provider changed"
 msgstr "AI-provider gewijzigd"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:332
+#: src/features/accounts/staff/AiProviderSection.tsx:333
 msgid "AI provider saved"
 msgstr "AI-provider opgeslagen"
 
@@ -693,7 +693,7 @@ msgstr "Gesprek gepland"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:71
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
-#: src/features/accounts/staff/AiProviderSection.tsx:437
+#: src/features/accounts/staff/AiProviderSection.tsx:438
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:266
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:329
 #: src/features/accounts/customer/WhoSigns.tsx:460
@@ -844,7 +844,7 @@ msgstr "Kies er een."
 msgid "Choose someone"
 msgstr "Kies iemand"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:417
+#: src/features/accounts/staff/AiProviderSection.tsx:418
 msgid "Choose the ticket"
 msgstr "Kies het ticket"
 
@@ -1043,9 +1043,9 @@ msgstr "Datum van ondertekening"
 msgid "Declined"
 msgstr "Geweigerd"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:226
-#: src/features/accounts/staff/AiProviderSection.tsx:356
-#: src/features/accounts/staff/AiProviderSection.tsx:397
+#: src/features/accounts/staff/AiProviderSection.tsx:227
+#: src/features/accounts/staff/AiProviderSection.tsx:357
+#: src/features/accounts/staff/AiProviderSection.tsx:398
 msgid "Default"
 msgstr "Standaard"
 
@@ -1252,7 +1252,7 @@ msgstr "Te betalen vóór {due}"
 msgid "Dutch VAT"
 msgstr "Nederlandse btw"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:202
+#: src/features/accounts/staff/AiProviderSection.tsx:203
 #: src/features/accounts/customer/BillingForm.tsx:308
 msgid "Edit"
 msgstr "Bewerken"
@@ -1313,7 +1313,7 @@ msgstr "Leeg: die van de sjabloon. Een lege regel begint een nieuwe alinea."
 #~ msgid "Enable it to push offers and tasks. They get an Account page with a billing details step."
 #~ msgstr "Schakel het in om offertes en taken te sturen. Ze krijgen een accountpagina met een stap voor factuurgegevens."
 
-#: src/features/accounts/staff/AiProviderSection.tsx:363
+#: src/features/accounts/staff/AiProviderSection.tsx:364
 msgid "Enabled"
 msgstr "Ingeschakeld"
 
@@ -1507,9 +1507,13 @@ msgstr "Naar je taken"
 msgid "Goes on the invoice"
 msgstr "Komt op de factuur"
 
+#: src/features/accounts/staff/AiProviderSection.tsx:236
+msgid "Google this month: {google}"
+msgstr "Google deze maand: {google}"
+
 #: src/features/accounts/staff/AiProviderSection.tsx:235
-msgid "Google this month: EUR {google}"
-msgstr "Google deze maand: EUR {google}"
+#~ msgid "Google this month: EUR {google}"
+#~ msgstr "Google deze maand: EUR {google}"
 
 #~ msgid "Greeting names"
 #~ msgstr "Aanhef richt zich tot"
@@ -2562,19 +2566,19 @@ msgstr "Prijs"
 msgid "Progress"
 msgstr "Voortgang"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:153
+#: src/features/accounts/staff/AiProviderSection.tsx:154
 msgid "Project {name} back on the account default"
 msgstr "Project {name} teruggezet naar de accountstandaard"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:148
+#: src/features/accounts/staff/AiProviderSection.tsx:149
 msgid "Project {name} back on the account default for {job}"
 msgstr "Project {name} teruggezet naar de accountstandaard voor {job}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:141
+#: src/features/accounts/staff/AiProviderSection.tsx:142
 msgid "Project {name} moved to {provider}"
 msgstr "Project {name} verplaatst naar {provider}"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:136
+#: src/features/accounts/staff/AiProviderSection.tsx:137
 msgid "Project {name} moved to {provider} for {job}"
 msgstr "Project {name} verplaatst naar {provider} voor {job}"
 
@@ -2809,11 +2813,11 @@ msgstr "de achterban te vertegenwoordigen"
 msgid "Represents staff or stakeholders"
 msgstr "Vertegenwoordigt de achterban"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:416
+#: src/features/accounts/staff/AiProviderSection.tsx:417
 msgid "Request"
 msgstr "Verzoek"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:99
+#: src/features/accounts/staff/AiProviderSection.tsx:100
 msgid "Request of {asked}"
 msgstr "Verzoek van {asked}"
 
@@ -2881,7 +2885,7 @@ msgid "run the rollout"
 msgstr "de invoering te leiden"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:281
-#: src/features/accounts/staff/AiProviderSection.tsx:434
+#: src/features/accounts/staff/AiProviderSection.tsx:435
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:91
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:278
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:287
@@ -3085,7 +3089,7 @@ msgid "Shares add up to {0}%"
 msgstr "De delen tellen op tot {0}%"
 
 #: src/features/accounts/staff/DemoRoute.tsx:348
-#: src/features/accounts/staff/AiProviderSection.tsx:257
+#: src/features/accounts/staff/AiProviderSection.tsx:258
 #: src/features/accounts/staff/AccountCardRoute.tsx:1024
 msgid "Show all"
 msgstr "Alles tonen"
@@ -3285,7 +3289,7 @@ msgstr "Iemand die voor je organisatie verwerkingsafspraken mag maken, onderteke
 msgid "Something went wrong"
 msgstr "Er ging iets mis"
 
-#: src/features/accounts/staff/AiProviderSection.tsx:99
+#: src/features/accounts/staff/AiProviderSection.tsx:100
 #: src/features/accounts/staff/AccountCardRoute.tsx:1012
 msgid "Staff"
 msgstr "Medewerker"

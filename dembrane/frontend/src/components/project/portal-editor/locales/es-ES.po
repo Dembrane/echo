@@ -25,8 +25,12 @@ msgstr ""
 #~ msgstr "Beta"
 
 #: src/components/project/advanced/ProjectAiProvider.tsx:127
-msgid "{asking} in this project goes to Google in the EU, billed on top of your plan, about EUR {amount} a month at your last 30 days of use."
-msgstr "{asking} en este proyecto se envía a Google en la UE y se factura aparte de tu plan, unos {amount} EUR al mes según tu uso en los últimos 30 días."
+msgid "{asking} in this project goes to Google in the EU, billed on top of your plan, about {amount} a month at your last 30 days of use."
+msgstr "{asking} en este proyecto va a Google en la UE, facturado aparte de tu plan, unos {amount} al mes según tu uso en los últimos 30 días."
+
+#: src/components/project/advanced/ProjectAiProvider.tsx:127
+#~ msgid "{asking} in this project goes to Google in the EU, billed on top of your plan, about EUR {amount} a month at your last 30 days of use."
+#~ msgstr "{asking} en este proyecto se envía a Google en la UE y se factura aparte de tu plan, unos {amount} EUR al mes según tu uso en los últimos 30 días."
 
 #: src/components/project/advanced/ProjectAiProvider.tsx:133
 msgid "{asking} in this project goes to Google in the EU, billed on top of your plan."
