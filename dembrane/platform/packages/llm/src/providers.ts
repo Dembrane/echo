@@ -16,6 +16,10 @@ export type ProviderId = "scaleway" | "google";
  */
 export type Job = "transcription" | "analysis";
 
+/** The account_event types of the AI provider settings: an account's, and a project's choice for one job. */
+export const ORG_PROVIDER_EVENT = "ai_providers.changed";
+export const PROJECT_PROVIDER_EVENT = "project.ai_provider.changed";
+
 export const JOBS = ["transcription", "analysis"] as const satisfies readonly Job[];
 
 export const isJob = (v: unknown): v is Job =>
@@ -52,6 +56,14 @@ export const PROVIDERS = {
 } as const satisfies Record<ProviderId, ProviderInfo>;
 
 export const serves = (id: ProviderId, job: Job): boolean => PROVIDERS[id].jobs.includes(job);
+
+/**
+ * The providers whose models a provider's own list falls back to when every model of it fails:
+ * Google's Gemini list ends on Scaleway's models. Scaleway's never reach Google. A fallback is
+ * used for a call only while the account has that provider enabled for the call's job.
+ */
+export const fallsBackTo = (id: ProviderId): readonly ProviderId[] =>
+  PROVIDERS[id].kind === "vertex" ? ["scaleway"] : [];
 
 export const PROVIDER_IDS = Object.keys(PROVIDERS) as ProviderId[];
 

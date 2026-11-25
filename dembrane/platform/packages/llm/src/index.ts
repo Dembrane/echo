@@ -85,11 +85,14 @@ export {
 export {
   accountProviders,
   allowedAmong,
+  fallsBackTo,
   isJob,
   isProviderId,
   JOBS,
   type Job,
+  ORG_PROVIDER_EVENT,
   type PerJob,
+  PROJECT_PROVIDER_EVENT,
   PROVIDER_IDS,
   PROVIDERS,
   type ProviderId,
@@ -113,6 +116,7 @@ export {
 export {
   decide,
   failClosed,
+  jobOfPrompt,
   onlyProvider,
   type ProviderResolver,
   type RouteDecision,

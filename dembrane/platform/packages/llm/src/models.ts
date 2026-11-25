@@ -16,6 +16,7 @@ import {
   transcribeAudio,
   transcribeSegments,
 } from "./compat";
+import { GroundingUnavailableError } from "./complete";
 import { type Deployment, FallbackModel, type FallbackOptions } from "./fallback";
 import { observedEmbedding, observeSafely, speechCall } from "./observe";
 import { type SpeechGate, type SpeechPriority, speechGateFor } from "./speech-gate";
@@ -63,7 +64,9 @@ export interface ModelsConfig {
   /**
    * Vertex only: models a call falls back to after its Gemini list, on the OpenAI-compatible
    * provider. The other direction does not exist: a call on the compatible provider never
-   * falls back to Vertex, because its list holds none.
+   * falls back to Vertex, because its list holds none. The tail has no Google Search: a
+   * grounded request that reaches it fails with GroundingUnavailableError instead of being
+   * answered without its sources.
    */
   readonly fallbackTo?: {
     readonly openaiCompatible: OpenAICompatibleConfig;
@@ -73,6 +76,11 @@ export interface ModelsConfig {
 
 export interface Models {
   model(group: ModelGroup): LanguageModelV4;
+  /**
+   * The same models without the fallback to the other provider's, for a call whose account
+   * has not enabled that provider for the call's job. Absent when the models have no such tail.
+   */
+  readonly standalone?: Models;
   embedding(): { model: EmbeddingModelV4; dimensions: number };
   /** Per-call provider options naming the spoken language; only an OpenAI-compatible provider has any. */
   speechHint?(language: string | null | undefined): Record<string, Record<string, unknown>>;
@@ -156,7 +164,9 @@ export function createModels(
       ? cfg.fallbackTo.groups[group].map((id, i) => ({
           label: `${group}[scaleway ${i}]:${id}`,
           provider: "openai-compatible",
-          model: new CompatLanguageModel(tailChat.languageModel(id) as LanguageModelV4, tailCompat),
+          model: new UngroundedModel(
+            new CompatLanguageModel(tailChat.languageModel(id) as LanguageModelV4, tailCompat),
+          ),
         }))
       : []),
   ];
@@ -188,8 +198,11 @@ export function createModels(
         provider,
       )
     : raw;
+  // Without the tail, built from the same configuration: a call whose account lacks the tail's provider uses these.
+  const { fallbackTo: _tail, ...withoutTail } = cfg;
   return {
     model: (g) => built[g],
+    ...(tailChat && { standalone: createModels(withoutTail, opts) }),
     embedding: () => ({ model: embedding, dimensions: cfg.embeddingDimensions }),
     ...(compat && {
       speechHint: echoOptions,
@@ -249,6 +262,35 @@ const chatClient = (c: OpenAICompatibleConfig) =>
     includeUsage: true,
     ...(c.fetch && { fetch: c.fetch }),
   });
+
+const asksForSearch = (options: LanguageModelV4CallOptions) =>
+  options.tools?.some((t) => t.type === "provider" && t.id === "google.google_search") ?? false;
+
+/** A model that has no Google Search: a request for it fails here, before anything is sent. */
+class UngroundedModel implements LanguageModelV4 {
+  readonly specificationVersion = "v4";
+
+  constructor(private readonly inner: LanguageModelV4) {}
+
+  get provider() {
+    return this.inner.provider;
+  }
+  get modelId() {
+    return this.inner.modelId;
+  }
+  get supportedUrls() {
+    return this.inner.supportedUrls;
+  }
+
+  doGenerate(options: LanguageModelV4CallOptions) {
+    if (asksForSearch(options)) return Promise.reject(new GroundingUnavailableError());
+    return this.inner.doGenerate(options);
+  }
+  doStream(options: LanguageModelV4CallOptions) {
+    if (asksForSearch(options)) return Promise.reject(new GroundingUnavailableError());
+    return this.inner.doStream(options);
+  }
+}
 
 /** Vertex label values are lowercase letters, digits, hyphens and underscores, up to 63. */
 const LABEL_VALUE = /^[a-z0-9_-]{1,63}$/;

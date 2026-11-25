@@ -409,6 +409,171 @@ describe("providers on the wire", () => {
     expect(wire.seen.compat).toEqual([]);
   });
 
+  /** Transcription on one provider and analysis on the other, each with only itself enabled. */
+  const split =
+    (transcription: "scaleway" | "google", analysis: "scaleway" | "google"): ProviderResolver =>
+    async (_who, job) => ({
+      provider: job === "transcription" ? transcription : analysis,
+      job,
+      organisationId: "33333333-3333-4333-8333-333333333333",
+      reason: "project",
+      allowed: [job === "transcription" ? transcription : analysis],
+    });
+  const RECORDING = new Uint8Array([1, 2, 3, 4]);
+  const exploreAsk = (
+    kit: ReturnType<typeof routedKit>,
+    opts: { audio?: boolean; mediaType?: string } = {},
+  ) =>
+    inProject(GOOGLE_PROJECT, () =>
+      generateText({
+        model: kit.models.model("multi_modal_pro"),
+        maxRetries: 0,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "what was said?" },
+              ...(opts.audio === false
+                ? []
+                : [
+                    {
+                      type: "file" as const,
+                      data: RECORDING,
+                      mediaType: opts.mediaType ?? "audio/mp3",
+                    },
+                  ]),
+            ],
+          },
+        ],
+      }),
+    );
+
+  function mixed(resolver: ProviderResolver) {
+    const calls: ModelCall[] = [];
+    const wire = wireStubs();
+    const registry = createRegistry(SETTINGS, policy, profileOf, {
+      ...quick,
+      observe: (c) => calls.push(c),
+      transport: { vertex: { fetch: wire.vertex, ...STUB_VERTEX_AUTH }, compatFetch: wire.compat },
+    });
+    return { calls, wire, kit: routedKit(registry, policy, resolver) };
+  }
+
+  test("a request that carries audio is a transcription: with transcription on Scaleway and analysis on Google no recording reaches Vertex", async () => {
+    const { calls, wire, kit } = mixed(split("scaleway", "google"));
+    expect((await exploreAsk(kit)).text).toBe("stub answer");
+    expect(wire.seen.vertex).toEqual([]);
+    // Scaleway's own way with a recording: Whisper hears it, then the text model answers on the words.
+    expect(wire.seen.compat.map((r) => r.url.split("/").slice(-2).join("/"))).toEqual([
+      "audio/transcriptions",
+      "chat/completions",
+    ]);
+    // The call log says what it was: a transcription, on Scaleway.
+    expect(calls.map((c) => [c.provider, c.routing?.provider, c.routing?.job])).toEqual([
+      ["openai-compatible", "scaleway", "transcription"],
+      ["openai-compatible", "scaleway", "transcription"],
+    ]);
+    // The same model group with text only is analysis, which this account sends to Google.
+    await exploreAsk(kit, { audio: false });
+    expect(wire.seen.vertex).toHaveLength(1);
+    expect(calls.at(-1)?.routing).toMatchObject({ provider: "google", job: "analysis" });
+  });
+
+  test("audio goes where transcription goes: to Google when transcription is on Google and analysis on Scaleway", async () => {
+    const { calls, wire, kit } = mixed(split("google", "scaleway"));
+    await exploreAsk(kit);
+    expect(wire.seen.compat).toEqual([]);
+    expect(wire.seen.vertex).toHaveLength(1);
+    expect(calls.at(-1)?.routing).toMatchObject({ provider: "google", job: "transcription" });
+  });
+
+  test("a picture or a document is not a recording and stays analysis", async () => {
+    for (const mediaType of ["image/png", "application/pdf", "text/plain"]) {
+      const { calls, wire, kit } = mixed(split("scaleway", "google"));
+      await exploreAsk(kit, { mediaType });
+      expect(wire.seen.compat).toEqual([]);
+      expect(wire.seen.vertex).toHaveLength(1);
+      expect(calls.at(-1)?.routing?.job).toBe("analysis");
+    }
+  });
+
+  test("a stream with audio is decided as transcription too", async () => {
+    const { wire, kit } = mixed(split("scaleway", "google"));
+    const s = inProject(GOOGLE_PROJECT, () =>
+      streamText({
+        model: kit.models.model("multi_modal_pro"),
+        messages: [
+          {
+            role: "user",
+            content: [{ type: "file", data: RECORDING, mediaType: "audio/mp3" }],
+          },
+        ],
+      }),
+    );
+    for await (const _ of s.textStream) void _;
+    expect(wire.seen.vertex).toEqual([]);
+    expect(wire.seen.compat.length).toBeGreaterThan(0);
+  });
+
+  /** A Google decision for the account that enabled the listed providers for the job. */
+  const googleWith =
+    (allowed: ("scaleway" | "google")[]): ProviderResolver =>
+    async (_who, job) => ({ ...decision("google", "project", job), allowed });
+
+  test("Google's fallback to Scaleway holds only while the account has Scaleway enabled for the job", async () => {
+    const down = (allowed: ("scaleway" | "google")[]) => {
+      const wire = wireStubs({ vertexStatus: 503 });
+      const registry = createRegistry(SETTINGS, policy, profileOf, {
+        ...quick,
+        transport: {
+          vertex: { fetch: wire.vertex, ...STUB_VERTEX_AUTH },
+          compatFetch: wire.compat,
+        },
+      });
+      return { wire, kit: routedKit(registry, policy, googleWith(allowed)) };
+    };
+    // Google only: Gemini fails, and nothing is sent to Scaleway.
+    const only = down(["google"]);
+    await expect(
+      inProject(GOOGLE_PROJECT, () =>
+        generateText({ model: only.kit.models.model("text_fast"), prompt: "hi", maxRetries: 0 }),
+      ),
+    ).rejects.toBeDefined();
+    expect(only.wire.seen.vertex.length).toBeGreaterThan(0);
+    expect(only.wire.seen.compat).toEqual([]);
+    // The completer follows the same rule.
+    await expect(
+      inProject(GOOGLE_PROJECT, () =>
+        only.kit.completer.complete({ group: "text_fast", user: "hi" }),
+      ),
+    ).rejects.toBeDefined();
+    expect(only.wire.seen.compat).toEqual([]);
+    // Both enabled: the fallback is there, as before.
+    const both = down(["scaleway", "google"]);
+    const out = await inProject(GOOGLE_PROJECT, () =>
+      generateText({ model: both.kit.models.model("text_fast"), prompt: "hi", maxRetries: 0 }),
+    );
+    expect(out.text).toBe("stub answer");
+    expect(both.wire.seen.compat).toHaveLength(1);
+  });
+
+  test("a grounded request is never answered by Scaleway without its sources: it fails as grounding unavailable", async () => {
+    const wire = wireStubs({ vertexStatus: 503 });
+    const registry = createRegistry(SETTINGS, policy, profileOf, {
+      ...quick,
+      transport: { vertex: { fetch: wire.vertex, ...STUB_VERTEX_AUTH }, compatFetch: wire.compat },
+    });
+    // Scaleway is enabled, so the fallback exists for ordinary calls.
+    const kit = routedKit(registry, policy, googleWith(["scaleway", "google"]));
+    await expect(
+      inProject(GOOGLE_PROJECT, () =>
+        kit.completer.complete({ group: "multi_modal_fast", user: "claim", googleSearch: true }),
+      ),
+    ).rejects.toThrow(/search grounding/);
+    expect(wire.seen.vertex.length).toBeGreaterThan(0);
+    expect(wire.seen.compat).toEqual([]);
+  });
+
   test("a deployment with only Scaleway builds no Vertex client and routes everything there", async () => {
     const only = { ...SETTINGS, providers: undefined, vertexProject: "" };
     const onlyPolicy = routingPolicyOf(only);
@@ -440,6 +605,33 @@ test("settings for a provider carry its own kind", () => {
   expect(() => routingPolicyOf({ provider: "vertex", providers: ["orai"] })).toThrow(
     /not a provider/,
   );
+});
+
+describe("every environment's provider and profile pair boots", () => {
+  const gapsOf = (s: LlmSettings) =>
+    bootGaps(s, routingPolicyOf(s), (id) => profileForProvider(s, id));
+
+  test("production on GCP and the staging, preview and echo-next environments: Vertex and no profile named", () => {
+    const s: LlmSettings = {
+      ...SETTINGS,
+      provider: "vertex",
+      providers: undefined,
+      baseUrl: undefined,
+      apiKey: undefined,
+    };
+    expect(gapsOf(s)).toEqual([]);
+  });
+
+  test("the EU production environment: the compatible provider with the Whisper profile", () => {
+    const s: LlmSettings = {
+      ...SETTINGS,
+      provider: "openai-compatible",
+      providers: undefined,
+      transcriptionProfile: "dembrane-26-10-whisper-eu",
+      vertexProject: "",
+    };
+    expect(gapsOf(s)).toEqual([]);
+  });
 });
 
 describe("boot refuses a speech provider that is not the provider's own", () => {

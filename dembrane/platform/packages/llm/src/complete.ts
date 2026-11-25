@@ -45,6 +45,8 @@ export interface Completer {
   identityOf?(group: ModelGroup): Promise<string>;
   /** Whether a request for Google Search grounding can be answered for the payer in scope. */
   grounds?(): Promise<boolean>;
+  /** The same completer without the fallback to the other provider's models; see `Models.standalone`. */
+  readonly standalone?: Completer;
 }
 
 /** Whether the payer in scope can have an answer grounded with Google Search. */
@@ -210,6 +212,7 @@ export function vertexCompleter(models: Models, cfg: VertexCompleterConfig): Com
     },
     modelIdentity: (group) => name(cfg.groups[group][0] ?? group),
     grounds: async () => cfg.searchGrounding !== false,
+    ...(models.standalone && { standalone: vertexCompleter(models.standalone, cfg) }),
   };
 }
 

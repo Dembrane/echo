@@ -3,6 +3,7 @@ import type {
   LanguageModelV4,
   LanguageModelV4CallOptions,
   LanguageModelV4GenerateResult,
+  LanguageModelV4Prompt,
   LanguageModelV4StreamResult,
 } from "@ai-sdk/provider";
 import { type Payer, payer, type RoutingNote, withRouting } from "@dembrane/observability";
@@ -17,7 +18,14 @@ import {
 } from "./complete";
 import { watched } from "./fallback";
 import type { ModelGroup, Models } from "./models";
-import { type Job, PROVIDERS, type ProviderId, type RoutingPolicy, serves } from "./providers";
+import {
+  fallsBackTo,
+  type Job,
+  PROVIDERS,
+  type ProviderId,
+  type RoutingPolicy,
+  serves,
+} from "./providers";
 
 /** Where one call goes, and why; what the call log keeps. */
 export interface RouteDecision extends RoutingNote {
@@ -135,6 +143,37 @@ export async function rerouted<T>(
   }
 }
 
+/** Media types of a file part that carry no recording: pictures, text and documents. */
+const NOT_A_RECORDING = /^(image\/|text\/|application\/(pdf|json)$)/;
+
+/**
+ * Which job a language-model call is. A request that carries audio (or any file that is not a
+ * picture, text or a document) is a transcription of its conversation, whatever model group
+ * asked for it: it is decided, and logged, as transcription, so recordings only ever reach a
+ * provider the account enabled for transcription. Every other call is analysis.
+ */
+export function jobOfPrompt(prompt: LanguageModelV4Prompt): Job {
+  const carriesRecording = prompt.some(
+    (m) =>
+      m.role !== "system" &&
+      Array.isArray(m.content) &&
+      m.content.some((p) => p.type === "file" && !NOT_A_RECORDING.test(p.mediaType)),
+  );
+  return carriesRecording ? "transcription" : "analysis";
+}
+
+/**
+ * Whether a decision lets a call fall back to the models of another provider: only when the
+ * account has every such provider enabled for the call's job. Anything not positively
+ * resolved (`allowed` null) has no fallback.
+ */
+const mayFallBack = (d: RouteDecision) =>
+  fallsBackTo(d.provider).every((id) => d.allowed?.includes(id) ?? false);
+
+/** The models or completer of a provider, without its fallback tail when the decision does not allow it. */
+const within = <T extends { readonly standalone?: T | undefined }>(x: T, d: RouteDecision): T =>
+  mayFallBack(d) ? x : (x.standalone ?? x);
+
 type Registry = Readonly<Partial<Record<ProviderId, Models>>>;
 
 /**
@@ -157,32 +196,36 @@ class RoutingLanguageModel implements LanguageModelV4 {
   }
 
   get supportedUrls() {
-    return this.of(this.policy.default).supportedUrls;
+    const models = this.registry[this.policy.default];
+    if (!models) throw new Error(`no models for provider ${this.policy.default}`);
+    return models.model(this.group).supportedUrls;
   }
 
-  private of(id: ProviderId): LanguageModelV4 {
-    const models = this.registry[id] ?? this.registry[this.policy.default];
-    if (!models) throw new Error(`no models for provider ${id}`);
-    return models.model(this.group);
+  private of(d: RouteDecision): LanguageModelV4 {
+    const models = this.registry[d.provider] ?? this.registry[this.policy.default];
+    if (!models) throw new Error(`no models for provider ${d.provider}`);
+    return within(models, d).model(this.group);
   }
 
   async doGenerate(options: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
     const who = payer();
-    const d = await decide(this.resolver, this.policy, "analysis", who);
+    const job = jobOfPrompt(options.prompt);
+    const d = await decide(this.resolver, this.policy, job, who);
     return rerouted(
       d,
-      () => decide(this.resolver, this.policy, "analysis", who),
-      (at) => this.of(at.provider).doGenerate(options),
+      () => decide(this.resolver, this.policy, job, who),
+      (at) => this.of(at).doGenerate(options),
     );
   }
 
   async doStream(options: LanguageModelV4CallOptions): Promise<LanguageModelV4StreamResult> {
     const who = payer();
-    const d = await decide(this.resolver, this.policy, "analysis", who);
+    const job = jobOfPrompt(options.prompt);
+    const d = await decide(this.resolver, this.policy, job, who);
     return rerouted(
       d,
-      () => decide(this.resolver, this.policy, "analysis", who),
-      (at) => this.of(at.provider).doStream(options),
+      () => decide(this.resolver, this.policy, job, who),
+      (at) => this.of(at).doStream(options),
     );
   }
 }
@@ -256,7 +299,12 @@ export function routingCompleter(
   policy: RoutingPolicy,
   resolver: ProviderResolver,
 ): Completer {
-  const of = (id: ProviderId) => {
+  const of = (d: RouteDecision) => {
+    const c = completers[d.provider] ?? completers[policy.default];
+    if (!c) throw new Error(`no completer for provider ${d.provider}`);
+    return within(c, d);
+  };
+  const def = (id: ProviderId) => {
     const c = completers[id] ?? completers[policy.default];
     if (!c) throw new Error(`no completer for provider ${id}`);
     return c;
@@ -268,17 +316,17 @@ export function routingCompleter(
       return rerouted(
         d,
         () => decide(resolver, policy, "analysis", who),
-        (at) => of(at.provider).complete(request),
+        (at) => of(at).complete(request),
       );
     },
-    modelIdentity: (group) => of(policy.default).modelIdentity(group),
+    modelIdentity: (group) => def(policy.default).modelIdentity(group),
     async identityOf(group) {
       const d = await decide(resolver, policy, "analysis");
-      return of(d.provider).modelIdentity(group);
+      return of(d).modelIdentity(group);
     },
     async grounds() {
       const d = await decide(resolver, policy, "analysis");
-      return (await of(d.provider).grounds?.()) ?? true;
+      return (await of(d).grounds?.()) ?? true;
     },
   };
 }
