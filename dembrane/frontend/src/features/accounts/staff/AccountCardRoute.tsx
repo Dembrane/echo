@@ -673,7 +673,13 @@ function UpgradeAccount({ card }: { card: AccountCardT }) {
 	const [opened, setOpened] = useState(false);
 	const [plan, setPlan] = useState<string>("changemaker");
 	const name = PLANS.find(([value]) => value === plan)?.[1] ?? plan;
-	const message = `@sam upgrade ${card.organisation.name} to ${name}: ${window.location.origin}/admin/accounts/${card.organisation.id}`;
+	// The plan, seats and end date come from the deal, so the message names the signed offer;
+	// without one sam asks why before it changes anything.
+	const offer = card.documents
+		.filter((d) => d.kind === "offer" && d.status === "signed")
+		.sort((a, b) => (b.signed_at ?? "").localeCompare(a.signed_at ?? ""))[0];
+	const deal = offer?.reference ? `for ${offer.reference}` : "(no signed offer)";
+	const message = `@sam upgrade ${card.organisation.name} to ${name} ${deal}: ${window.location.origin}/admin/accounts/${card.organisation.id}`;
 	return (
 		<>
 			<Button
