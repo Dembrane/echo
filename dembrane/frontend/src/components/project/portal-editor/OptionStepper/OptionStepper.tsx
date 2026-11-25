@@ -139,7 +139,9 @@ export const OptionStepper = ({
 							onKeyDown={(e) => onRowKey(e, i)}
 							// Closed, the row is the box; open, the item around it is.
 							className={
-								isOpen ? "block min-w-0 flex-1" : "app-do block min-w-0 flex-1"
+								isOpen
+									? "block w-full min-w-0 flex-1"
+									: "app-do block w-full min-w-0 flex-1"
 							}
 							px="sm"
 							py="sm"
