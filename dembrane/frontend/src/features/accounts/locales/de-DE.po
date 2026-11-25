@@ -212,11 +212,11 @@ msgstr "{oldName} unterschreibt dann nicht mehr, und der Link, den wir {oldFirst
 msgid "{org} invited you to sign"
 msgstr "{org} hat dich zum Unterschreiben eingeladen"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:44
+#: src/features/accounts/staff/AiProviderSection.tsx:59
 msgid "{provider} added"
 msgstr "{provider} hinzugefügt"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:46
+#: src/features/accounts/staff/AiProviderSection.tsx:61
 msgid "{provider} removed"
 msgstr "{provider} entfernt"
 
@@ -232,11 +232,11 @@ msgstr "{reach, plural, one {{first} wird auch Mitglied in # Arbeitsbereich, der
 #~ msgid "{tasksWaiting, plural, one {You have # thing to do in {orgName}.} other {You have # things to do in {orgName}.}}"
 #~ msgstr ""
 
-#: src/features/accounts/staff/AiModelsSection.tsx:50
+#: src/features/accounts/staff/AiProviderSection.tsx:65
 msgid "{what} by {by}, {on}"
 msgstr "{what} von {by}, {on}"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:49
+#: src/features/accounts/staff/AiProviderSection.tsx:64
 msgid "{what} by {by}, {on}, request of {asked}"
 msgstr "{what} von {by}, {on}, auf Anfrage von {asked}"
 
@@ -447,17 +447,18 @@ msgstr "Adresszeile 2"
 #~ msgid "Admin"
 #~ msgstr "Administrator"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:99
-msgid "AI models"
-msgstr "KI-Modelle"
+#: src/features/accounts/staff/AiProviderSection.tsx:82
+#: src/features/accounts/staff/AiProviderSection.tsx:159
+msgid "AI provider"
+msgstr "KI-Anbieter"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:919
-msgid "AI models changed"
-msgstr "KI-Modelle geändert"
+msgid "AI provider changed"
+msgstr "KI-Anbieter geändert"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:85
-msgid "AI models saved"
-msgstr "KI-Modelle gespeichert"
+#: src/features/accounts/staff/AiProviderSection.tsx:197
+msgid "AI provider saved"
+msgstr "KI-Anbieter gespeichert"
 
 #: src/features/accounts/staff/AccountsPanel.tsx:78
 #~ msgid "All"
@@ -664,10 +665,11 @@ msgstr "Anruf gebucht"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:71
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
+#: src/features/accounts/staff/AiProviderSection.tsx:263
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:266
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:329
 #: src/features/accounts/customer/WhoSigns.tsx:460
-#: src/features/accounts/customer/Questions.tsx:267
+#: src/features/accounts/customer/Questions.tsx:250
 #: src/features/accounts/customer/BillingForm.tsx:551
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:100
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:428
@@ -814,7 +816,7 @@ msgstr "Wähle eine Option."
 msgid "Choose someone"
 msgstr "Jemanden wählen"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:122
+#: src/features/accounts/staff/AiProviderSection.tsx:251
 msgid "Choose the ticket"
 msgstr "Ticket auswählen"
 
@@ -849,7 +851,7 @@ msgid "Close"
 msgstr "Schließen"
 
 #: src/features/accounts/format.ts:98
-#: src/features/accounts/customer/Questions.tsx:278
+#: src/features/accounts/customer/Questions.tsx:274
 msgid "Closed"
 msgstr "Geschlossen"
 
@@ -1009,11 +1011,12 @@ msgstr "Datum der Unterzeichnung"
 msgid "Declined"
 msgstr "Abgelehnt"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:114
+#: src/features/accounts/staff/AiProviderSection.tsx:103
+#: src/features/accounts/staff/AiProviderSection.tsx:213
 msgid "Default"
 msgstr "Standard"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:47
+#: src/features/accounts/staff/AiProviderSection.tsx:62
 msgid "Default changed to {provider}"
 msgstr "Standard geändert zu {provider}"
 
@@ -1220,6 +1223,7 @@ msgstr "Fällig am {due}"
 msgid "Dutch VAT"
 msgstr "Niederländische MwSt."
 
+#: src/features/accounts/staff/AiProviderSection.tsx:91
 #: src/features/accounts/customer/BillingForm.tsx:308
 msgid "Edit"
 msgstr "Bearbeiten"
@@ -1271,6 +1275,10 @@ msgstr "Leer: die der Vorlage. Eine Leerzeile beginnt einen neuen Absatz."
 #: src/features/accounts/staff/AccountCardRoute.tsx:583
 #~ msgid "Enable it to push offers and tasks. They get an Account page with a billing details step."
 #~ msgstr "Aktivieren, um Angebote und Aufgaben zu senden. Es wird eine Kontoseite mit einem Schritt für Rechnungsdaten bereitgestellt."
+
+#: src/features/accounts/staff/AiProviderSection.tsx:217
+msgid "Enabled"
+msgstr "Aktiviert"
 
 #: src/features/accounts/signing/SignGate.tsx:483
 msgid "Enter the six-digit code we sent to {email}."
@@ -1461,10 +1469,6 @@ msgstr "Zu deinen Aufgaben"
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:198
 msgid "Goes on the invoice"
 msgstr "Steht auf der Rechnung"
-
-#: src/features/accounts/customer/AskForGoogle.tsx:26
-msgid "Google Vertex AI"
-msgstr "Google Vertex AI"
 
 #~ msgid "Greeting names"
 #~ msgstr ""
@@ -1825,6 +1829,10 @@ msgstr "Melden Sie sich mit der E-Mail-Adresse an, an die das Angebot gesendet w
 msgid "Lost"
 msgstr "Verloren"
 
+#: src/features/accounts/staff/AiProviderSection.tsx:240
+msgid "Make default"
+msgstr "Als Standard festlegen"
+
 #: src/features/accounts/signing/SignRoute.tsx:1434
 msgid "May you also agree to data processing for your organisation?"
 msgstr "Darfst du der Datenverarbeitung für deine Organisation auch zustimmen?"
@@ -1837,7 +1845,7 @@ msgstr "Darfst du der Datenverarbeitung für deine Organisation auch zustimmen?"
 msgid "Members"
 msgstr "Mitglieder"
 
-#: src/features/accounts/customer/Questions.tsx:243
+#: src/features/accounts/customer/Questions.tsx:240
 msgid "Message"
 msgstr "Nachricht"
 
@@ -2468,10 +2476,6 @@ msgstr "Felder platzieren"
 msgid "Plan"
 msgstr "Tarif"
 
-#: src/features/accounts/customer/AskForGoogle.tsx:25
-msgid "Please allow Google Vertex AI in the EU, billed per use, for {orgName}."
-msgstr "Bitte erlauben Sie Google Vertex AI in der EU (nutzungsbasierte Abrechnung) für {orgName}."
-
 #: src/features/accounts/staff/FieldEditorRoute.tsx:409
 #: src/features/accounts/staff/AccountCardRoute.tsx:875
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:199
@@ -2504,8 +2508,8 @@ msgid "Progress"
 msgstr "Fortschritt"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:945
-msgid "Project AI model changed"
-msgstr "Projekt-KI-Modell geändert"
+msgid "Project AI provider changed"
+msgstr "Projekt-KI-Anbieter geändert"
 
 #. placeholder {0}: p.language.toUpperCase()
 #: src/features/accounts/staff/DemoRoute.tsx:300
@@ -2718,7 +2722,7 @@ msgstr "die Mitarbeitenden oder Beteiligten zu vertreten"
 msgid "Represents staff or stakeholders"
 msgstr "Vertritt Mitarbeitende oder Beteiligte"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:121
+#: src/features/accounts/staff/AiProviderSection.tsx:250
 msgid "Request"
 msgstr "Anfrage"
 
@@ -2786,7 +2790,7 @@ msgid "run the rollout"
 msgstr "die Einführung zu leiten"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:281
-#: src/features/accounts/staff/AiModelsSection.tsx:138
+#: src/features/accounts/staff/AiProviderSection.tsx:271
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:91
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:278
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:287
@@ -2848,7 +2852,7 @@ msgstr "Wähle ein Feld aus, um Art, Beschriftung und Pflichtangabe festzulegen.
 
 #: src/features/accounts/staff/EmailCustomerModal.tsx:131
 #: src/features/accounts/staff/AccountCardRoute.tsx:245
-#: src/features/accounts/customer/Questions.tsx:264
+#: src/features/accounts/customer/Questions.tsx:263
 #: src/features/accounts/customer/NextSteps.tsx:672
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:289
 msgid "Send"
@@ -2990,6 +2994,7 @@ msgid "Shares add up to {0}%"
 msgstr "Die Anteile ergeben {0}%"
 
 #: src/features/accounts/staff/DemoRoute.tsx:329
+#: src/features/accounts/staff/AiProviderSection.tsx:127
 #: src/features/accounts/staff/AccountCardRoute.tsx:1018
 msgid "Show all"
 msgstr "Alle anzeigen"
@@ -3197,7 +3202,7 @@ msgstr "Wird von einer Person unterschrieben, die für deine Organisation Datenv
 msgid "Something went wrong"
 msgstr "Etwas ist schiefgelaufen"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:39
+#: src/features/accounts/staff/AiProviderSection.tsx:54
 #: src/features/accounts/staff/AccountCardRoute.tsx:1006
 msgid "Staff"
 msgstr "Mitarbeiter"
@@ -3246,7 +3251,7 @@ msgstr "Schritt {count} von 2"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:144
 #: src/features/accounts/staff/SendOfferModals.tsx:156
-#: src/features/accounts/customer/Questions.tsx:237
+#: src/features/accounts/customer/Questions.tsx:234
 msgid "Subject"
 msgstr "Betreff"
 
@@ -3893,8 +3898,8 @@ msgstr "fällig am {due}"
 msgid "Watch the tutorial"
 msgstr "Das Tutorial ansehen"
 
-#: src/features/accounts/customer/Questions.tsx:279
-#: src/features/accounts/customer/Questions.tsx:281
+#: src/features/accounts/customer/Questions.tsx:275
+#: src/features/accounts/customer/Questions.tsx:277
 msgid "We are on it"
 msgstr "Wir kümmern uns darum"
 
@@ -4011,7 +4016,7 @@ msgstr "Wir haben keine USt-IdNr."
 #~ msgid "We put these on your invoice."
 #~ msgstr "Diese Angaben stehen auf Ihrer Rechnung."
 
-#: src/features/accounts/customer/Questions.tsx:280
+#: src/features/accounts/customer/Questions.tsx:276
 msgid "We replied"
 msgstr "Wir haben geantwortet"
 
@@ -4297,7 +4302,7 @@ msgstr "Deine eigene Zeile (optional)"
 msgid "Your PO number is empty."
 msgstr "Deine Bestellnummer ist leer."
 
-#: src/features/accounts/customer/Questions.tsx:243
+#: src/features/accounts/customer/Questions.tsx:240
 msgid "Your question"
 msgstr "Deine Frage"
 

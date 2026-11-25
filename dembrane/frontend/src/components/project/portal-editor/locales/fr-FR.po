@@ -24,11 +24,6 @@ msgstr ""
 #~ msgid "dashboard.dembrane.concrete.beta"
 #~ msgstr "Bêta"
 
-#. placeholder {0}: providerLabel(p)
-#: src/components/project/advanced/ProjectAiModels.tsx:27
-msgid "{0} (account default)"
-msgstr "{0} (par défaut pour le compte)"
-
 #: src/components/project/portal-editor/sectionLabels.ts:31
 msgid "A question from dembrane, when a group asks for one, to go deeper."
 msgstr "Une question de dembrane pour aller plus loin, quand un groupe en demande une."
@@ -49,6 +44,10 @@ msgstr "À propos de l'aperçu"
 msgid "About Try it"
 msgstr "À propos d'Essayer"
 
+#: src/components/project/advanced/ProjectAiProvider.tsx:60
+msgid "Account default"
+msgstr "Par défaut du compte"
+
 #: src/components/project/portal-editor/sections/verify.tsx:330
 msgid "Add topic"
 msgstr "Ajouter un sujet"
@@ -65,10 +64,10 @@ msgstr "Avancé (astuces et bonnes pratiques)"
 msgid "After"
 msgstr "Après"
 
-#: src/components/project/advanced/ProjectAiModels.tsx:41
-#: src/components/project/advanced/ProjectAiModels.tsx:46
-msgid "AI models"
-msgstr "Modèles d'IA"
+#: src/components/project/advanced/ProjectAiProvider.tsx:37
+#: src/components/project/advanced/ProjectAiProvider.tsx:43
+msgid "AI provider"
+msgstr "Fournisseur d'IA"
 
 #: src/components/project/portal-editor/sections/privacy.tsx:97
 msgid "Anonymize transcripts"
@@ -341,7 +340,7 @@ msgstr "Mode"
 msgid "Name and tags"
 msgstr "Nom et étiquettes"
 
-#: src/components/project/advanced/ProjectAiModels.tsx:61
+#: src/components/project/advanced/ProjectAiProvider.tsx:75
 msgid "New conversations and all analysis in this project go to Google in the EU, billed per use."
 msgstr "Les nouvelles conversations et toutes les analyses de ce projet sont envoyées à Google dans l'UE, avec facturation à l'usage."
 
@@ -640,11 +639,11 @@ msgstr "Cartes du tutoriel"
 msgid "Ukrainian (only ECHO features, transcription and summaries)"
 msgstr "Ukrainien (fonctionnalités ECHO uniquement, transcription et résumés)"
 
-#: src/components/project/advanced/ProjectAiModels.tsx:66
+#: src/components/project/advanced/ProjectAiProvider.tsx:80
 msgid "Use Google"
 msgstr "Utiliser Google"
 
-#: src/components/project/advanced/ProjectAiModels.tsx:59
+#: src/components/project/advanced/ProjectAiProvider.tsx:73
 msgid "Use Google Vertex AI for this project?"
 msgstr "Utiliser Google Vertex AI pour ce projet ?"
 

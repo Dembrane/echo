@@ -212,11 +212,11 @@ msgstr "{oldName} už nepodepisuje a odkaz, který jsme poslali {oldFirst}, pře
 msgid "{org} invited you to sign"
 msgstr "{org} vás zve k podpisu"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:44
+#: src/features/accounts/staff/AiProviderSection.tsx:59
 msgid "{provider} added"
 msgstr "Poskytovatel {provider} byl přidán"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:46
+#: src/features/accounts/staff/AiProviderSection.tsx:61
 msgid "{provider} removed"
 msgstr "Poskytovatel {provider} byl odebrán"
 
@@ -232,11 +232,11 @@ msgstr "{reach, plural, one {{first} bude také členem # pracovního prostoru, 
 #~ msgid "{tasksWaiting, plural, one {You have # thing to do in {orgName}.} other {You have # things to do in {orgName}.}}"
 #~ msgstr ""
 
-#: src/features/accounts/staff/AiModelsSection.tsx:50
+#: src/features/accounts/staff/AiProviderSection.tsx:65
 msgid "{what} by {by}, {on}"
 msgstr "{what} – {by}, {on}"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:49
+#: src/features/accounts/staff/AiProviderSection.tsx:64
 msgid "{what} by {by}, {on}, request of {asked}"
 msgstr "{what} – {by}, {on}, na žádost: {asked}"
 
@@ -447,17 +447,18 @@ msgstr "2. řádek adresy"
 #~ msgid "Admin"
 #~ msgstr "Admin"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:99
-msgid "AI models"
-msgstr "Modely AI"
+#: src/features/accounts/staff/AiProviderSection.tsx:82
+#: src/features/accounts/staff/AiProviderSection.tsx:159
+msgid "AI provider"
+msgstr "Poskytovatel AI"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:919
-msgid "AI models changed"
-msgstr "Modely AI byly změněny"
+msgid "AI provider changed"
+msgstr "Poskytovatel AI byl změněn"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:85
-msgid "AI models saved"
-msgstr "Modely AI byly uloženy"
+#: src/features/accounts/staff/AiProviderSection.tsx:197
+msgid "AI provider saved"
+msgstr "Poskytovatel AI byl uložen"
 
 #: src/features/accounts/staff/AccountsPanel.tsx:78
 #~ msgid "All"
@@ -664,10 +665,11 @@ msgstr "Hovor domluven"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:71
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
+#: src/features/accounts/staff/AiProviderSection.tsx:263
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:266
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:329
 #: src/features/accounts/customer/WhoSigns.tsx:460
-#: src/features/accounts/customer/Questions.tsx:267
+#: src/features/accounts/customer/Questions.tsx:250
 #: src/features/accounts/customer/BillingForm.tsx:551
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:100
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:428
@@ -814,7 +816,7 @@ msgstr "Vyberte jednu možnost."
 msgid "Choose someone"
 msgstr "Vybrat někoho"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:122
+#: src/features/accounts/staff/AiProviderSection.tsx:251
 msgid "Choose the ticket"
 msgstr "Vyberte požadavek"
 
@@ -849,7 +851,7 @@ msgid "Close"
 msgstr "Zavřít"
 
 #: src/features/accounts/format.ts:98
-#: src/features/accounts/customer/Questions.tsx:278
+#: src/features/accounts/customer/Questions.tsx:274
 msgid "Closed"
 msgstr "Uzavřeno"
 
@@ -1009,11 +1011,12 @@ msgstr "Datum podpisu"
 msgid "Declined"
 msgstr "Odmítnuto"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:114
+#: src/features/accounts/staff/AiProviderSection.tsx:103
+#: src/features/accounts/staff/AiProviderSection.tsx:213
 msgid "Default"
 msgstr "Výchozí"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:47
+#: src/features/accounts/staff/AiProviderSection.tsx:62
 msgid "Default changed to {provider}"
 msgstr "Výchozí změněno na {provider}"
 
@@ -1220,6 +1223,7 @@ msgstr "Splatné {due}"
 msgid "Dutch VAT"
 msgstr "Nizozemské DPH"
 
+#: src/features/accounts/staff/AiProviderSection.tsx:91
 #: src/features/accounts/customer/BillingForm.tsx:308
 msgid "Edit"
 msgstr "Upravit"
@@ -1271,6 +1275,10 @@ msgstr "Prázdné: použije se text šablony. Prázdný řádek začíná nový 
 #: src/features/accounts/staff/AccountCardRoute.tsx:583
 #~ msgid "Enable it to push offers and tasks. They get an Account page with a billing details step."
 #~ msgstr "Aktivujte pro odesílání nabídek a úkolů. Získají stránku Účet s krokem pro fakturační údaje."
+
+#: src/features/accounts/staff/AiProviderSection.tsx:217
+msgid "Enabled"
+msgstr "Povoleno"
 
 #: src/features/accounts/signing/SignGate.tsx:483
 msgid "Enter the six-digit code we sent to {email}."
@@ -1461,10 +1469,6 @@ msgstr "Přejít na úkoly"
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:198
 msgid "Goes on the invoice"
 msgstr "Bude na faktuře"
-
-#: src/features/accounts/customer/AskForGoogle.tsx:26
-msgid "Google Vertex AI"
-msgstr "Google Vertex AI"
 
 #~ msgid "Greeting names"
 #~ msgstr ""
@@ -1825,6 +1829,10 @@ msgstr "Přihlaste se e-mailovou adresou, na kterou byla nabídka odeslána."
 msgid "Lost"
 msgstr "Ztraceno"
 
+#: src/features/accounts/staff/AiProviderSection.tsx:240
+msgid "Make default"
+msgstr "Nastavit jako výchozí"
+
 #: src/features/accounts/signing/SignRoute.tsx:1434
 msgid "May you also agree to data processing for your organisation?"
 msgstr "Můžete také odsouhlasit zpracování údajů za vaši organizaci?"
@@ -1837,7 +1845,7 @@ msgstr "Můžete také odsouhlasit zpracování údajů za vaši organizaci?"
 msgid "Members"
 msgstr "Members"
 
-#: src/features/accounts/customer/Questions.tsx:243
+#: src/features/accounts/customer/Questions.tsx:240
 msgid "Message"
 msgstr "Zpráva"
 
@@ -2468,10 +2476,6 @@ msgstr "Umístit pole"
 msgid "Plan"
 msgstr "Tarif"
 
-#: src/features/accounts/customer/AskForGoogle.tsx:25
-msgid "Please allow Google Vertex AI in the EU, billed per use, for {orgName}."
-msgstr "Povolte prosím Google Vertex AI v EU, s platbou podle využití, pro organizaci {orgName}."
-
 #: src/features/accounts/staff/FieldEditorRoute.tsx:409
 #: src/features/accounts/staff/AccountCardRoute.tsx:875
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:199
@@ -2504,8 +2508,8 @@ msgid "Progress"
 msgstr "Průběh"
 
 #: src/features/accounts/staff/AccountCardRoute.tsx:945
-msgid "Project AI model changed"
-msgstr "Model AI projektu byl změněn"
+msgid "Project AI provider changed"
+msgstr "Poskytovatel AI projektu byl změněn"
 
 #. placeholder {0}: p.language.toUpperCase()
 #: src/features/accounts/staff/DemoRoute.tsx:300
@@ -2718,7 +2722,7 @@ msgstr "zastupoval zaměstnance nebo zúčastněné"
 msgid "Represents staff or stakeholders"
 msgstr "Zastupuje zaměstnance nebo zúčastněné"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:121
+#: src/features/accounts/staff/AiProviderSection.tsx:250
 msgid "Request"
 msgstr "Žádost"
 
@@ -2786,7 +2790,7 @@ msgid "run the rollout"
 msgstr "vedl zavedení"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:281
-#: src/features/accounts/staff/AiModelsSection.tsx:138
+#: src/features/accounts/staff/AiProviderSection.tsx:271
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:91
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:278
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:287
@@ -2848,7 +2852,7 @@ msgstr "Vyberte pole a nastavte jeho typ, popisek a zda je povinné. Přetažen�
 
 #: src/features/accounts/staff/EmailCustomerModal.tsx:131
 #: src/features/accounts/staff/AccountCardRoute.tsx:245
-#: src/features/accounts/customer/Questions.tsx:264
+#: src/features/accounts/customer/Questions.tsx:263
 #: src/features/accounts/customer/NextSteps.tsx:672
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:289
 msgid "Send"
@@ -2990,6 +2994,7 @@ msgid "Shares add up to {0}%"
 msgstr "Podíly dávají dohromady {0}%"
 
 #: src/features/accounts/staff/DemoRoute.tsx:329
+#: src/features/accounts/staff/AiProviderSection.tsx:127
 #: src/features/accounts/staff/AccountCardRoute.tsx:1018
 msgid "Show all"
 msgstr "Zobrazit vše"
@@ -3197,7 +3202,7 @@ msgstr "Podepisuje osoba oprávněná odsouhlasit zpracování údajů za vaši 
 msgid "Something went wrong"
 msgstr "Něco se pokazilo"
 
-#: src/features/accounts/staff/AiModelsSection.tsx:39
+#: src/features/accounts/staff/AiProviderSection.tsx:54
 #: src/features/accounts/staff/AccountCardRoute.tsx:1006
 msgid "Staff"
 msgstr "Personál"
@@ -3246,7 +3251,7 @@ msgstr "Krok {count} ze 2"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:144
 #: src/features/accounts/staff/SendOfferModals.tsx:156
-#: src/features/accounts/customer/Questions.tsx:237
+#: src/features/accounts/customer/Questions.tsx:234
 msgid "Subject"
 msgstr "Předmět"
 
@@ -3893,8 +3898,8 @@ msgstr "splatnost {due}"
 msgid "Watch the tutorial"
 msgstr "Podívejte se na návod"
 
-#: src/features/accounts/customer/Questions.tsx:279
-#: src/features/accounts/customer/Questions.tsx:281
+#: src/features/accounts/customer/Questions.tsx:275
+#: src/features/accounts/customer/Questions.tsx:277
 msgid "We are on it"
 msgstr "Pracujeme na tom"
 
@@ -4011,7 +4016,7 @@ msgstr "Nemáme DIČ"
 #~ msgid "We put these on your invoice."
 #~ msgstr "Tyto údaje uvedeme na vaší faktuře."
 
-#: src/features/accounts/customer/Questions.tsx:280
+#: src/features/accounts/customer/Questions.tsx:276
 msgid "We replied"
 msgstr "Odpověděli jsme"
 
@@ -4297,7 +4302,7 @@ msgstr "Vlastní řádek (nepovinné)"
 msgid "Your PO number is empty."
 msgstr "Číslo objednávky je prázdné."
 
-#: src/features/accounts/customer/Questions.tsx:243
+#: src/features/accounts/customer/Questions.tsx:240
 msgid "Your question"
 msgstr "Váš dotaz"
 
