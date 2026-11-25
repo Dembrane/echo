@@ -1,9 +1,11 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { randomUUID } from "node:crypto";
 import { Access, DrizzleAccessStore } from "@dembrane/access";
+import { setOrg } from "@dembrane/ai-providers";
 import { PlatformError } from "@dembrane/core";
 import { connect, createDb, type Db, migrate } from "@dembrane/db";
 import type { Env, Signed } from "@dembrane/http";
+import { routingPolicyOf } from "@dembrane/llm";
 import { runProviderCheck } from "@dembrane/metering";
 import { projectRoutes } from "@dembrane/projects";
 import { Hono } from "hono";
@@ -128,6 +130,7 @@ run("the daily provider check after a project moves between accounts", () => {
   async function chose() {
     await sql`delete from model_call`;
     await sql`delete from ai_provider_check`;
+    await sql`delete from account_event`;
     const project = randomUUID();
     await sql`insert into project (id, is_conversation_allowed, workspace_id, ai_analysis_provider)
       values (${project}, true, ${wsA}, 'google')`;
@@ -185,5 +188,84 @@ run("the daily provider check after a project moves between accounts", () => {
     await sql`delete from ai_provider_check`;
     await vertexCall(orgA, project, "2026-11-01T12:30:00Z");
     expect((await check("2026-11-01T13:00:00Z")).leaks).toBe(1);
+  });
+
+  test("Google leaves the account, then the project moves to one that allows it: a Google call there is flagged", async () => {
+    // The project chose Google in A. Staff take Google away from A, which clears the choice
+    // without any project event of its own; the move then finds it already null and writes none.
+    const project = await chose();
+    const ticket = randomUUID();
+    await sql`insert into account_ticket (id, org_id, subject, created_at) values (${ticket}, ${orgA}, 'Google', '2026-10-30T09:00:00Z')`;
+    await sql`insert into account_ticket_message (id, ticket_id, from_staff, body, created_at) values (${randomUUID()}, ${ticket}, false, 'Please change.', '2026-10-30T09:00:00Z')`;
+    clock = new Date("2026-11-01T11:00:00Z");
+    await setOrg(
+      {
+        db,
+        policy: routingPolicyOf({
+          provider: "openai-compatible",
+          providers: ["scaleway", "google"],
+        }),
+        models: {},
+        now: () => clock,
+      },
+      randomUUID(),
+      orgA,
+      {
+        enabled: { transcription: ["scaleway", "google"], analysis: ["scaleway"] },
+        defaults: { transcription: "scaleway", analysis: "scaleway" },
+        requestTicketId: ticket,
+      },
+    );
+    const [row] = await sql`select ai_analysis_provider as a from project where id = ${project}`;
+    expect(row?.a).toBeNull();
+    // The clearing is in A's history, by staff, with its cause.
+    const cleared = await sql<{ actor_kind: string; detail: Record<string, unknown> }[]>`
+      select actor_kind, detail from account_event
+      where subject_id = ${project} and detail::jsonb ->> 'cause' = 'provider_removed'`;
+    expect(cleared).toHaveLength(1);
+    expect(cleared[0]?.actor_kind).toBe("staff");
+    expect(cleared[0]?.detail).toEqual({
+      job: "analysis",
+      before: "google",
+      after: null,
+      cause: "provider_removed",
+    });
+    await move(project, wsB, "2026-11-01T12:00:00Z");
+    // The call A allowed while it chose Google is not flagged; the one in B, where nobody chose it, is.
+    await vertexCall(orgB, project, "2026-11-01T12:30:00Z");
+    expect(await check("2026-11-01T13:00:00Z")).toMatchObject({
+      leaks: 1,
+      byJob: { analysis: 1, transcription: 0 },
+    });
+  });
+
+  test("a Google call made while a move waits for its lock, still on the choice, is not flagged", async () => {
+    const project = await chose();
+    clock = new Date("2026-11-01T11:00:00Z");
+    // Another transaction holds the project's row, so the move cannot commit yet.
+    let release: () => void = () => {};
+    const held = new Promise<void>((r) => {
+      release = r;
+    });
+    const holding = sql.begin(async (tx) => {
+      await tx`select id from project where id = ${project} for update`;
+      await held;
+    });
+    await Bun.sleep(300);
+    const moving = app.request(`/api/v2/projects/${project}/move`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ target_workspace_id: wsB }),
+    });
+    await Bun.sleep(500);
+    // Ten minutes pass while it waits; the project still has Google, so this call was allowed.
+    clock = new Date("2026-11-01T11:10:00Z");
+    await vertexCall(orgA, project, "2026-11-01T11:05:00Z");
+    release();
+    await holding;
+    expect((await moving).status).toBe(200);
+    const [row] = await sql`select ai_analysis_provider as a from project where id = ${project}`;
+    expect(row?.a).toBeNull();
+    expect((await check("2026-11-01T12:00:00Z")).leaks).toBe(0);
   });
 });
