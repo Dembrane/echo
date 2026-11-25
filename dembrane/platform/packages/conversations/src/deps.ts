@@ -49,12 +49,13 @@ export interface ConversationsDeps {
   readonly media: Media;
   readonly transcriber: Transcriber;
   /**
-   * Which AI provider a project's work goes to, and the speech kit of each. Without it every
-   * conversation uses `transcriber` and records no provider (tests, a deployment with one).
+   * Which provider hears a project's audio (the transcription job), and the speech kit of each.
+   * Without it every conversation uses `transcriber` and records no provider (tests, a
+   * deployment with one).
    */
   readonly speech?: SpeechRouter;
-  /** The provider a new conversation of this project begins on; null when nothing is routed. */
-  readonly providerFor?: (projectId: string) => Promise<string | null>;
+  /** The transcription provider a new conversation of this project begins on; null when nothing is routed. */
+  readonly transcriptionProviderFor?: (projectId: string) => Promise<string | null>;
   /** Live events; null where no LISTEN connection runs (tests). */
   readonly hub: Hub | null;
   readonly limiter: RateLimiter;

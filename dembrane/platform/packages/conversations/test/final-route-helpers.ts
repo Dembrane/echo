@@ -121,7 +121,8 @@ export async function routedWorker(
     ...opts,
   });
   const resolver = providerResolver(dbRoutingStore(h.deps.db), policy, { ttlMs: 0 });
-  (router as { decide: SpeechRouter["decide"] }).decide = (who) => decide(resolver, policy, who);
+  (router as { decide: SpeechRouter["decide"] }).decide = (who) =>
+    decide(resolver, policy, "transcription", who);
   return h;
 }
 

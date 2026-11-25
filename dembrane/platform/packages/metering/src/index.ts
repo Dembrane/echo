@@ -54,6 +54,22 @@ export {
   type SyncResult,
   syncPrices,
 } from "./prices/sync";
+export {
+  accountVolume,
+  type CostLine,
+  costLine,
+  googleSpendByAccount,
+  listedUnitCosts,
+  loggedUnitCosts,
+  mergeUnitCosts,
+  monthSpend,
+  monthStart,
+  NO_VOLUME,
+  type UnitCost,
+  type UnitCosts,
+  type Volume,
+  WINDOW_DAYS,
+} from "./provider-cost";
 export { projectOfPayer, type Resolution, type ResolvedPayer, resolvePayers } from "./resolve";
 export {
   dbRoutingStore,
@@ -362,6 +378,7 @@ export function toRow(
     usage_estimated: call.usageEstimated,
     organisation_id: call.routing?.organisationId ?? null,
     routed_provider: call.routing?.provider ?? null,
+    routing_job: call.routing?.job ?? null,
     routing_reason: call.routing?.reason ?? null,
     routing_allowed: call.routing?.allowed ? [...call.routing.allowed] : null,
     routing_conversation_id: call.routing?.conversationId ?? null,

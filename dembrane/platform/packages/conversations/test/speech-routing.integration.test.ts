@@ -92,7 +92,7 @@ run("transcription follows the conversation's provider", () => {
           }),
         ]),
       ),
-      decide: (who) => decide(resolver, policy, who),
+      decide: (who) => decide(resolver, policy, "transcription", who),
     };
     const base = router.kits.scaleway;
     deps = {
@@ -121,22 +121,22 @@ run("transcription follows the conversation's provider", () => {
 
   async function world() {
     const orgId = randomUUID();
-    await sql`insert into org (id, name, ai_providers, ai_default_provider)
-      values (${orgId}, 'o', array['scaleway','google'], 'scaleway')`;
+    await sql`insert into org (id, name, ai_transcription_providers, ai_analysis_providers, ai_transcription_default, ai_analysis_default)
+      values (${orgId}, 'o', array['scaleway','google'], array['scaleway','google'], 'scaleway', 'scaleway')`;
     const accountId = randomUUID();
     await sql`insert into billing_account (id, tier, org_id) values (${accountId}, 'paid', ${orgId})`;
     const workspaceId = randomUUID();
     await sql`insert into workspace (id, name, org_id, billing_account_id) values (${workspaceId}, 'w', ${orgId}, ${accountId})`;
     const project = async (choice: string | null) => {
       const id = randomUUID();
-      await sql`insert into project (id, is_conversation_allowed, workspace_id, ai_provider) values (${id}, true, ${workspaceId}, ${choice})`;
+      await sql`insert into project (id, is_conversation_allowed, workspace_id, ai_transcription_provider) values (${id}, true, ${workspaceId}, ${choice})`;
       return id;
     };
     return { orgId, project };
   }
   const conversation = async (projectId: string, began: string | null, source = "PORTAL_AUDIO") => {
     const id = randomUUID();
-    await sql`insert into conversation (id, project_id, ai_provider, source, is_finished, is_all_chunks_transcribed)
+    await sql`insert into conversation (id, project_id, ai_transcription_provider, source, is_finished, is_all_chunks_transcribed)
       values (${id}, ${projectId}, ${began}, ${source}, true, false)`;
     await sql`insert into conversation_chunk (id, conversation_id, timestamp, transcript)
       values (${randomUUID()}, ${id}, now(), 'x')`;
@@ -204,7 +204,7 @@ run("transcription follows the conversation's provider", () => {
     const onGoogle = await conversation(p, "google");
     expect(await withSpeech(deps, onGoogle, async (d) => d.liveProvider)).toBe("gemini");
 
-    await sql`update project set ai_provider = 'scaleway' where id = ${p}`;
+    await sql`update project set ai_transcription_provider = 'scaleway' where id = ${p}`;
     expect(await withSpeech(deps, onGoogle, async (d) => d.liveProvider)).toBe("whisper");
     enqueued.length = 0;
     await handOver(deps, onGoogle);
@@ -216,7 +216,7 @@ run("transcription follows the conversation's provider", () => {
 
     // A conversation that began on Scaleway stays there when the project moves to Google; a new one begins on Google.
     const earlier = await conversation(p, "scaleway");
-    await sql`update project set ai_provider = 'google' where id = ${p}`;
+    await sql`update project set ai_transcription_provider = 'google' where id = ${p}`;
     expect(await withSpeech(deps, earlier, async (d) => d.liveProvider)).toBe("whisper");
     const later = await conversation(p, "google");
     expect(await withSpeech(deps, later, async (d) => d.liveProvider)).toBe("gemini");
@@ -258,7 +258,7 @@ run("transcription follows the conversation's provider", () => {
           vertex: {
             fetch: (async (...a: Parameters<typeof fetch>) => {
               const res = await w.vertex(...a);
-              await sql`update project set ai_provider = 'scaleway' where id = ${projectId}`;
+              await sql`update project set ai_transcription_provider = 'scaleway' where id = ${projectId}`;
               return res;
             }) as typeof fetch,
             ...STUB_VERTEX_AUTH,
@@ -283,7 +283,7 @@ run("transcription follows the conversation's provider", () => {
             }),
           ]),
         ),
-        decide: (who) => decide(resolver, policy, who),
+        decide: (who) => decide(resolver, policy, "transcription", who),
       };
       const base = own.kits.scaleway;
       const pipeline = {

@@ -608,6 +608,7 @@ describe("model call recorder", () => {
         "reasoning_tokens",
         "request_id",
         "routed_provider",
+        "routing_job",
         "routing_allowed",
         "routing_conversation_id",
         "routing_reason",

@@ -1,8 +1,13 @@
 export { aiProviderRoutes } from "./routes";
 export {
   type AiProvidersDeps,
+  type CostLines,
+  costLines,
   describe,
   type HistoryLine,
+  type JobChoice,
+  type MonthSpend,
+  monthOf,
   ORG_EVENT,
   type OrgProviders,
   orgHistory,
@@ -12,6 +17,8 @@ export {
   readOrgForStaff,
   readProject,
   type SetOrgInput,
+  type Setting,
   setOrg,
   setProject,
+  settingOf,
 } from "./service";

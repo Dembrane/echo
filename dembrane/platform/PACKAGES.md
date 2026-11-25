@@ -29,7 +29,7 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 - **map** (in 3, out 12): Argument maps: saved maps, the graph, generation, titles and fact-checks. Used by present, api, worker. Uses analysis, realtime.
 - **chats** (in 2, out 10): Chat with a project's conversations (the v1 chats and the chat BFF). Used by agentic, api. Uses analytics.
 - **agentic** (in 2, out 16): The assistant: agent runs, their event streams, memory, and its own canvas tools. Used by api, worker. Uses chats, conversations, notifications, projects, analytics and 2 more.
-- **ai-providers** (in 2, out 6): Which AI providers an account allows and which one each project uses: the settings, their history and the screens' routes. Used by staff, api. Uses only the common ones.
+- **ai-providers** (in 2, out 7): Which AI providers an account has enabled for each job (transcription, analysis), its defaults, what each project chose, and what each would cost: the settings, their history and the screens' routes. Used by staff, api. Uses metering.
 - **canvas** (in 2, out 11): Dynamic canvases: a live wall built from recent transcript, redrawn on a tick. Used by api, worker. Uses realtime.
 - **feedback** (in 2, out 9): Bug reports, feedback responses and the forward to support. Used by api, worker. Uses storage.
 - **present** (in 2, out 12): Present: the published, audience-facing view of a popcorn deck and a map. Used by api, worker. Uses map, popcorn, analysis, realtime.
@@ -60,9 +60,9 @@ Most namespaces use core, observability, db, http, access, queue, legacy-shape, 
 - **analytics** (in 8, out 1): Product analytics capture (PostHog). Used by conversations, popcorn, accounts, chats and 4 more. Uses observability.
 - **mail** (in 8, out 0): Sending email (SendGrid, or memory in tests). Used by billing, account, tenancy, accounts and 4 more. Uses nothing.
 - **audio** (in 4, out 0): ffmpeg and ffprobe wrappers, audio formats, and the client for the media app. Used by conversations, api, media, worker. Uses nothing.
+- **metering** (in 4, out 6): What each model call cost: one log line and one model_call row per call, which the obs views aggregate. Used by ai-providers, staff, api, worker. Uses allowance, llm, queue, db, observability and 1 more.
 - **prompts** (in 3, out 0): The Jinja prompt templates carried over from Python, rendered the same way. Used by transcription, conversations, verify. Uses nothing.
 - **auth** (in 3, out 2): Sign-in and sessions (Better Auth) and the identity sync from Directus. Used by account, api, migrate. Uses db, core.
-- **metering** (in 3, out 6): What each model call cost: one log line and one model_call row per call, which the obs views aggregate. Used by staff, api, worker. Uses allowance, llm, queue, db, observability and 1 more.
 - **transcription** (in 2, out 3): Speech to text with Gemini, plus PII redaction and a fake for tests. Used by conversations, api. Uses prompts, llm, observability.
 
 **Allowed imports between namespaces**

@@ -7,7 +7,7 @@ const { model, required, nullable, str } = p;
 
 /**
  * The AI provider screens' routes: an organisation's owners and admins read what the account
- * allows, and a project's admins pick among it. Staff set the account's side in @dembrane/staff.
+ * allows, and a project's admins pick among it, for each job. Staff set the account's side in @dembrane/staff.
  */
 export function aiProviderRoutes(d: AiProvidersDeps) {
   const app = new Hono<Env>();
@@ -20,9 +20,11 @@ export function aiProviderRoutes(d: AiProvidersDeps) {
   app.put("/api/v2/projects/:project_id/ai-provider", async (c) => {
     const who = requireUser(c);
     const { body } = await p.validate(c.req, {
-      body: model({ provider: required(nullable(str())) }),
+      body: model({ job: required(str()), provider: required(nullable(str())) }),
     });
-    return c.json(await setProject(d, who, c.req.param("project_id"), body.data.provider));
+    return c.json(
+      await setProject(d, who, c.req.param("project_id"), body.data.job, body.data.provider),
+    );
   });
   return app;
 }

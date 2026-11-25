@@ -414,8 +414,9 @@ export async function moveProject(
   await moveUnderCap(d, who, targetId, [project], (store) =>
     store.updateProject(projectId, {
       workspace_id: targetId,
-      // The choice was made under the old account's allowance; the new account's default applies until a project admin chooses.
-      ai_provider: null,
+      // The choices were made under the old account's setting; the new account's defaults apply until a project admin chooses.
+      ai_transcription_provider: null,
+      ai_analysis_provider: null,
       move_history: moveEntry(
         project.move_history,
         {
@@ -472,8 +473,9 @@ export async function bulkMoveProjects(
       if (src && !names.has(src)) names.set(src, (await store.workspace(src))?.name ?? null);
       await store.updateProject(project.id, {
         workspace_id: targetId,
-        // The choice was made under the old account's allowance; the new account's default applies until a project admin chooses.
-        ai_provider: null,
+        // The choices were made under the old account's setting; the new account's defaults apply until a project admin chooses.
+        ai_transcription_provider: null,
+        ai_analysis_provider: null,
         move_history: moveEntry(
           project.move_history,
           {

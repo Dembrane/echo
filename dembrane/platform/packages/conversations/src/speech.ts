@@ -29,9 +29,11 @@ export interface SpeechKit {
 }
 
 /**
- * Picks the kit of the provider a payer resolves to, at the moment of the call: a project
- * that goes back to Scaleway is on Whisper for the very next piece of audio, and a
- * conversation that began on Scaleway stays there when its project moves to Google.
+ * Picks the kit of the provider a payer's transcription resolves to, at the moment of the call:
+ * a project that goes back to Scaleway is on Whisper for the very next piece of audio, and a
+ * conversation that began on Scaleway stays there when its project moves to Google. The kit
+ * covers everything that follows the audio: the live pieces, the improved transcript, its
+ * clean-up and the redaction of personal data. `decide` is the transcription decision.
  */
 export interface SpeechRouter {
   readonly kits: Readonly<Partial<Record<ProviderId, SpeechKit>>>;

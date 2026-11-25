@@ -37,18 +37,18 @@ run("a final pass whose project leaves Google", () => {
   /** A finished conversation of a project on Google, its live text in place and its recording in the bucket. */
   async function conversation(anonymised: boolean) {
     const orgId = newId();
-    await h.sql`insert into org (id, name, ai_providers, ai_default_provider)
-      values (${orgId}, 'o', array['scaleway','google'], 'scaleway')`;
+    await h.sql`insert into org (id, name, ai_transcription_providers, ai_analysis_providers, ai_transcription_default, ai_analysis_default)
+      values (${orgId}, 'o', array['scaleway','google'], array['scaleway','google'], 'scaleway', 'scaleway')`;
     const accountId = newId();
     await h.sql`insert into billing_account (id, tier, org_id) values (${accountId}, 'paid', ${orgId})`;
     const workspaceId = newId();
     await h.sql`insert into workspace (id, name, org_id, billing_account_id)
       values (${workspaceId}, 'w', ${orgId}, ${accountId})`;
     const projectId = newId();
-    await h.sql`insert into project (id, name, language, is_conversation_allowed, workspace_id, ai_provider)
+    await h.sql`insert into project (id, name, language, is_conversation_allowed, workspace_id, ai_transcription_provider)
       values (${projectId}, 'P', 'en', true, ${workspaceId}, 'google')`;
     const id = newId();
-    await h.sql`insert into conversation (id, project_id, participant_name, source, ai_provider, is_anonymized,
+    await h.sql`insert into conversation (id, project_id, participant_name, source, ai_transcription_provider, is_anonymized,
         is_finished, is_all_chunks_transcribed, created_at, updated_at)
       values (${id}, ${projectId}, 'T', 'PORTAL_AUDIO', 'google', ${anonymised}, true, true,
         now() - interval '1 hour', now())`;
@@ -63,7 +63,7 @@ run("a final pass whose project leaves Google", () => {
     return { id, projectId };
   }
   const toScaleway = (projectId: string) => () =>
-    h.sql`update project set ai_provider = 'scaleway' where id = ${projectId}`;
+    h.sql`update project set ai_transcription_provider = 'scaleway' where id = ${projectId}`;
   const startFinal = async (id: string) =>
     h.queue.enqueue(finalTranscript, {
       conversationId: id,

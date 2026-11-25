@@ -3,17 +3,31 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	within,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, expect, it, vi } from "vitest";
 import {
 	isChanged,
+	isLocked,
 	makeDefault,
+	type ProviderDraft,
+	type Serves,
 	setEnabled,
 } from "@/features/accounts/staff/aiProviderRules";
 import { ProjectAiProvider } from "../project/advanced/ProjectAiProvider";
-import type { OrgAiProviders, ProjectAiProviders } from "./hooks";
-import { OrgAiProviderPanel } from "./OrgAiProviderPanel";
+import type {
+	AiProvider,
+	CostLine,
+	OrgAiProviders,
+	ProjectAiProviders,
+} from "./hooks";
+import { OrgAiProviderPanel, requestTicket } from "./OrgAiProviderPanel";
 import { modelNames, ProviderCard } from "./ProviderCard";
 
 vi.mock("posthog-js", () => ({ default: { capture: () => {} } }));
@@ -21,6 +35,11 @@ vi.mock("posthog-js", () => ({ default: { capture: () => {} } }));
 let org: OrgAiProviders;
 let project: ProjectAiProviders;
 const mutate = vi.fn();
+const openTicket = vi.fn();
+
+vi.mock("@/features/accounts/api/hooks", () => ({
+	useAccountsMutation: () => ({ mutate: openTicket }),
+}));
 
 vi.mock("./hooks", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("./hooks")>();
@@ -60,6 +79,7 @@ beforeAll(() => {
 afterEach(() => {
 	cleanup();
 	mutate.mockReset();
+	openTicket.mockReset();
 });
 
 const tree = (ui: React.ReactNode) => (
@@ -89,7 +109,6 @@ it("a Scaleway card names its models from the config and a Google card lists its
 		"EU",
 		"Slightly better quality",
 		"Closed models: Gemini",
-		"Billed per use",
 	])
 		expect(screen.getByText(line)).toBeTruthy();
 	expect(screen.getAllByText("Runs in the EU")).toHaveLength(2);
@@ -115,151 +134,390 @@ it("a model the map does not know shows as its id, and one name is shown once", 
 	).toBeTruthy();
 });
 
-it("an account with only Scaleway shows its default and Google muted as not enabled, with no way to ask", () => {
-	org = {
-		allowed: ["scaleway"],
-		available: ["scaleway", "google"],
-		default: "scaleway",
-		environment_default: "scaleway",
-		history: [],
-		models: MODELS,
-	};
+const BOTH_JOBS = ["transcription", "analysis"] as const;
+const SERVES = {
+	google: [...BOTH_JOBS],
+	scaleway: [...BOTH_JOBS],
+};
+
+const line = (
+	provider: AiProvider,
+	job: "transcription" | "analysis",
+	over: Partial<CostLine> = {},
+): CostLine => ({
+	billing: provider === "scaleway" ? "included" : "on_top",
+	job,
+	monthly_eur: null,
+	per_100_calls_eur: null,
+	per_hour_eur: null,
+	provider,
+	...over,
+});
+
+const orgBase = (over: Partial<OrgAiProviders> = {}): OrgAiProviders => ({
+	available: ["scaleway", "google"],
+	cost: {
+		analysis: {
+			google: line("google", "analysis", { per_100_calls_eur: 2.5 }),
+			scaleway: line("scaleway", "analysis"),
+		},
+		transcription: {
+			google: line("google", "transcription", { per_hour_eur: 1.8 }),
+			scaleway: line("scaleway", "transcription"),
+		},
+	},
+	defaults: { analysis: "scaleway", transcription: "scaleway" },
+	enabled: { analysis: ["scaleway"], transcription: ["scaleway"] },
+	environment_default: "scaleway",
+	history: [],
+	jobs: [...BOTH_JOBS],
+	models: MODELS,
+	month: {
+		from: "2026-12-01T00:00:00Z",
+		spent: { google: 0, scaleway: 0 },
+	},
+	serves: SERVES,
+	...over,
+});
+
+it("an account with only Scaleway shows two jobs, Scaleway as default and Google muted with its price and a Request button", () => {
+	org = orgBase();
 	wrap(<OrgAiProviderPanel orgId="o" />);
-	expect(screen.getByText("Default")).toBeTruthy();
-	expect(screen.getByText("Not enabled")).toBeTruthy();
+	expect(screen.getByText("Transcription")).toBeTruthy();
+	expect(screen.getByText("Analysis")).toBeTruthy();
+	expect(screen.getAllByText("Default")).toHaveLength(2);
+	expect(screen.getAllByText("Not enabled")).toHaveLength(2);
+	for (const job of BOTH_JOBS) {
+		expect(
+			screen
+				.getByTestId(`org-provider-${job}-google`)
+				.querySelector("[data-muted]"),
+		).toBeTruthy();
+		expect(
+			screen
+				.getByTestId(`org-provider-${job}-scaleway`)
+				.querySelector("[data-muted]"),
+		).toBeNull();
+	}
+	// One cost line per card: included, or what an hour or a hundred questions would cost.
+	expect(screen.getAllByText("Included in your plan")).toHaveLength(2);
+	expect(screen.getByText("EUR 1.80 per hour of audio")).toBeTruthy();
+	expect(screen.getByText("EUR 2.50 per 100 questions")).toBeTruthy();
+	expect(screen.getAllByText("Request")).toHaveLength(2);
 	expect(
-		screen.getByTestId("org-provider-google").querySelector("[data-muted]"),
+		screen.getByText("This month: Scaleway included, Google EUR 0"),
 	).toBeTruthy();
+});
+
+it("the explainer has a place beside each job's title", () => {
+	org = orgBase();
+	wrap(
+		<OrgAiProviderPanel
+			orgId="o"
+			explainers={{
+				analysis: <span data-testid="x-analysis" />,
+				transcription: <span data-testid="x-transcription" />,
+			}}
+		/>,
+	);
+	expect(screen.getByTestId("x-transcription")).toBeTruthy();
+	expect(screen.getByTestId("x-analysis")).toBeTruthy();
+});
+
+it("Request opens a ticket in the account's ticket list that names the provider and the job, once", () => {
+	org = orgBase();
+	wrap(<OrgAiProviderPanel orgId="o" />);
+	const card = screen.getByTestId("org-provider-analysis-google");
+	fireEvent.click(card.querySelector("button") as HTMLElement);
+	expect(openTicket).toHaveBeenCalledOnce();
+	expect(openTicket.mock.calls[0]?.[0]).toEqual({
+		body: {
+			body: "Please enable Google Vertex AI for Analysis on our account.",
+			subject: "Google Vertex AI for Analysis",
+		},
+	});
+	expect(requestTicket("google", "transcription").subject).toBe(
+		"Google Vertex AI for Transcription",
+	);
+	// The other job's card is untouched.
 	expect(
-		screen.getByTestId("org-provider-scaleway").querySelector("[data-muted]"),
-	).toBeNull();
-	expect(screen.queryByText(/Ask for Google/)).toBeNull();
-	expect(screen.queryByText("Request")).toBeNull();
+		screen
+			.getByTestId("org-provider-transcription-google")
+			.querySelector("button")?.disabled,
+	).toBe(false);
 });
 
-it("a muted card offers its request button only when it is given one", () => {
-	const onRequest = vi.fn();
-	wrap(<ProviderCard provider="google" muted onRequest={onRequest} />);
-	fireEvent.click(screen.getByText("Request"));
-	expect(onRequest).toHaveBeenCalledOnce();
+it("a request that went through rests the button as Requested", () => {
+	org = orgBase();
+	openTicket.mockImplementation((_input, o) => o.onSuccess());
+	wrap(<OrgAiProviderPanel orgId="o" />);
+	const card = screen.getByTestId("org-provider-analysis-google");
+	fireEvent.click(card.querySelector("button") as HTMLElement);
+	expect(screen.getByText("Requested")).toBeTruthy();
+	expect(
+		(screen.getByText("Requested").closest("button") as HTMLButtonElement)
+			.disabled,
+	).toBe(true);
 });
 
-it("an account with Google shows Default and Enabled, and each change with who asked when", () => {
-	org = {
-		allowed: ["scaleway", "google"],
-		available: ["scaleway", "google"],
-		default: "scaleway",
-		environment_default: "scaleway",
+it("Google enabled for analysis only: Default and Enabled badges, the price at last 30 days, the log and the month", () => {
+	org = orgBase({
+		cost: {
+			analysis: {
+				google: line("google", "analysis", { monthly_eur: 9.4 }),
+				scaleway: line("scaleway", "analysis"),
+			},
+			transcription: {
+				google: line("google", "transcription", { per_hour_eur: 1.8 }),
+				scaleway: line("scaleway", "transcription"),
+			},
+		},
+		enabled: {
+			analysis: ["scaleway", "google"],
+			transcription: ["scaleway"],
+		},
 		history: [
 			{
 				at: "2026-12-03T10:00:00Z",
-				kind: "added",
+				job: "analysis",
+				kind: "enabled",
 				provider: "google",
 				request_at: "2026-12-02T09:00:00Z",
 			},
 		],
-		models: MODELS,
-	};
+		month: {
+			from: "2026-12-01T00:00:00Z",
+			spent: { google: 12.4, scaleway: 3 },
+		},
+	});
 	wrap(<OrgAiProviderPanel orgId="o" />);
-	expect(screen.getByText("Default")).toBeTruthy();
-	expect(screen.getByText("Enabled")).toBeTruthy();
-	expect(screen.queryByText("Not enabled")).toBeNull();
+	const analysis = screen.getByTestId("org-job-analysis");
+	expect(within(analysis).getByText("Default")).toBeTruthy();
+	expect(within(analysis).getByText("Enabled")).toBeTruthy();
+	expect(within(analysis).queryByText("Not enabled")).toBeNull();
 	expect(
-		screen.getByText(
-			"Google Vertex AI added by Dembrane, 3 Dec 2026, at your request of 2 Dec 2026",
+		within(analysis).getByText(
+			"About EUR 9.40 a month at your last 30 days of use, billed on top",
 		),
+	).toBeTruthy();
+	expect(
+		within(screen.getByTestId("org-job-transcription")).getByText(
+			"Not enabled",
+		),
+	).toBeTruthy();
+	expect(
+		screen.getByText("3 Dec 2026 · Google Vertex AI enabled for Analysis"),
+	).toBeTruthy();
+	expect(
+		screen.getByText("This month: Scaleway included, Google EUR 12"),
 	).toBeTruthy();
 });
 
+const choice = (over: object = {}) => ({
+	account_default: "scaleway" as const,
+	current: null,
+	effective: "scaleway" as const,
+	options: ["scaleway", "google"] as ("scaleway" | "google")[],
+	...over,
+});
+
+const projectBase = (
+	over: Partial<ProjectAiProviders> = {},
+): ProjectAiProviders => ({
+	can_change: true,
+	cost: {
+		analysis: {
+			google: line("google", "analysis", { monthly_eur: 9 }),
+			scaleway: line("scaleway", "analysis"),
+		},
+		transcription: {
+			google: line("google", "transcription", { per_hour_eur: 1.8 }),
+			scaleway: line("scaleway", "transcription"),
+		},
+	},
+	jobs: { analysis: choice(), transcription: choice() },
+	models: MODELS,
+	...over,
+});
+
 it("the project choice is not there for an account with one provider or for a member", () => {
-	project = {
-		account_default: "scaleway",
-		can_change: true,
-		current: null,
-		effective: "scaleway",
-		options: ["scaleway"],
-	};
+	const one = choice({ options: ["scaleway"] });
+	project = projectBase({ jobs: { analysis: one, transcription: one } });
 	const { rerender } = wrap(<ProjectAiProvider projectId="p" />);
 	expect(screen.queryByRole("radiogroup")).toBeNull();
-	project = { ...project, can_change: false, options: ["scaleway", "google"] };
+	project = projectBase({ can_change: false });
 	rerender(tree(<ProjectAiProvider projectId="p" />));
 	expect(screen.queryByRole("radiogroup")).toBeNull();
 });
 
-it("the project shows cards, marks the account default, and choosing Google asks once", async () => {
-	project = {
-		account_default: "scaleway",
-		can_change: true,
-		current: null,
-		effective: "scaleway",
-		models: MODELS,
-		options: ["scaleway", "google"],
-	};
+it("only a job with more than one provider shows a choice", () => {
+	project = projectBase({
+		jobs: {
+			analysis: choice(),
+			transcription: choice({ options: ["scaleway"] }),
+		},
+	});
 	wrap(<ProjectAiProvider projectId="p" />);
-	expect(screen.getAllByRole("radio")).toHaveLength(2);
-	expect(screen.getByText("Account default")).toBeTruthy();
-	expect(screen.getByText("Open models: Whisper and GLM 5.3")).toBeTruthy();
-	fireEvent.click(screen.getByTestId("project-provider-google"));
+	expect(screen.getByTestId("project-job-analysis")).toBeTruthy();
+	expect(screen.queryByTestId("project-job-transcription")).toBeNull();
+});
+
+it("the project shows a choice per job with the account default marked and a cost line each", () => {
+	project = projectBase();
+	wrap(<ProjectAiProvider projectId="p" />);
+	expect(screen.getAllByRole("radio")).toHaveLength(4);
+	expect(screen.getAllByText("Account default")).toHaveLength(2);
 	expect(
-		await screen.findByText("Use Google Vertex AI for this project?"),
+		within(screen.getByTestId("project-job-analysis")).getByText(
+			"About EUR 9 a month at your last 30 days of use, billed on top",
+		),
+	).toBeTruthy();
+	expect(
+		within(screen.getByTestId("project-job-transcription")).getByText(
+			"EUR 1.80 per hour of audio",
+		),
+	).toBeTruthy();
+});
+
+it("choosing Google for a job asks once, with the price, and saves only that job", async () => {
+	project = projectBase();
+	wrap(<ProjectAiProvider projectId="p" />);
+	fireEvent.click(screen.getByTestId("project-provider-analysis-google"));
+	expect(
+		await screen.findByText("Use Google Vertex AI for Analysis?"),
 	).toBeTruthy();
 	expect(
 		screen.getByText(
-			"New conversations and all analysis in this project go to Google in the EU, billed per use.",
+			"Analysis in this project goes to Google in the EU, billed on top of your plan, about EUR 9 a month at your last 30 days of use.",
 		),
 	).toBeTruthy();
 	expect(mutate).not.toHaveBeenCalled();
 	fireEvent.click(screen.getByText("Use Google"));
-	expect(mutate).toHaveBeenCalledWith("google", expect.anything());
+	expect(mutate).toHaveBeenCalledWith(
+		{ job: "analysis", provider: "google" },
+		expect.anything(),
+	);
+});
+
+it("the confirm leaves the estimate out when there is no history", async () => {
+	project = projectBase({
+		cost: {
+			analysis: {},
+			transcription: {
+				google: line("google", "transcription", { per_hour_eur: 1.8 }),
+				scaleway: line("scaleway", "transcription"),
+			},
+		},
+	});
+	wrap(<ProjectAiProvider projectId="p" />);
+	fireEvent.click(screen.getByTestId("project-provider-transcription-google"));
+	expect(
+		await screen.findByText("Use Google Vertex AI for Transcription?"),
+	).toBeTruthy();
+	expect(
+		screen.getByText(
+			"Transcription in this project goes to Google in the EU, billed on top of your plan.",
+		),
+	).toBeTruthy();
+});
+
+it("cancelling the confirm saves nothing", async () => {
+	project = projectBase();
+	wrap(<ProjectAiProvider projectId="p" />);
+	fireEvent.click(screen.getByTestId("project-provider-analysis-google"));
+	fireEvent.click(await screen.findByText("Cancel"));
+	expect(mutate).not.toHaveBeenCalled();
 });
 
 it("going back to the account default saves at once and asks nothing", () => {
-	project = {
-		account_default: "scaleway",
-		can_change: true,
-		current: "google",
-		effective: "google",
-		options: ["scaleway", "google"],
-	};
+	project = projectBase({
+		jobs: {
+			analysis: choice({ current: "google", effective: "google" }),
+			transcription: choice(),
+		},
+	});
 	wrap(<ProjectAiProvider projectId="p" />);
-	fireEvent.click(screen.getByTestId("project-provider-scaleway"));
-	expect(mutate).toHaveBeenCalledWith(null);
-	expect(
-		screen.queryByText("Use Google Vertex AI for this project?"),
-	).toBeNull();
+	fireEvent.click(screen.getByTestId("project-provider-analysis-scaleway"));
+	expect(mutate).toHaveBeenCalledWith({ job: "analysis", provider: null });
+	expect(screen.queryByText(/^Use Google Vertex AI for/)).toBeNull();
 });
 
 const ORDER = ["scaleway", "google"] as const;
+const draftOf = (over: Partial<ProviderDraft> = {}): ProviderDraft => ({
+	defaults: { analysis: "scaleway", transcription: "scaleway" },
+	enabled: {
+		analysis: ["scaleway", "google"],
+		transcription: ["scaleway", "google"],
+	},
+	...over,
+});
+const serves: Serves = SERVES;
 
-it("staff: the default cannot be switched off and one provider always stays", () => {
-	const both = {
-		allowed: ["scaleway", "google"] as const,
-		default: "scaleway" as const,
-	};
-	const draft = { allowed: [...both.allowed], default: both.default };
-	expect(setEnabled(draft, "scaleway", false, ORDER)).toBe(draft);
-	const afterOff = setEnabled(draft, "google", false, ORDER);
-	expect(afterOff.allowed).toEqual(["scaleway"]);
-	expect(setEnabled(afterOff, "scaleway", false, ORDER)).toBe(afterOff);
-	const googleDefault = {
-		allowed: ["scaleway", "google"] as ("scaleway" | "google")[],
-		default: "google" as const,
-	};
-	expect(setEnabled(googleDefault, "google", false, ORDER)).toBe(googleDefault);
-	expect(setEnabled(googleDefault, "scaleway", false, ORDER).allowed).toEqual([
+it("staff: the default cannot be switched off for its job and one provider always stays", () => {
+	const draft = draftOf();
+	expect(setEnabled(draft, "analysis", "scaleway", false, ORDER, serves)).toBe(
+		draft,
+	);
+	const afterOff = setEnabled(
+		draft,
+		"analysis",
 		"google",
-	]);
+		false,
+		ORDER,
+		serves,
+	);
+	expect(afterOff.enabled.analysis).toEqual(["scaleway"]);
+	// The other job is untouched.
+	expect(afterOff.enabled.transcription).toEqual(["scaleway", "google"]);
+	expect(
+		setEnabled(afterOff, "analysis", "scaleway", false, ORDER, serves),
+	).toBe(afterOff);
+	const googleDefault = draftOf({
+		defaults: { analysis: "google", transcription: "scaleway" },
+	});
+	expect(
+		setEnabled(googleDefault, "analysis", "google", false, ORDER, serves),
+	).toBe(googleDefault);
+	// Google is not the default of transcription, so it can go there.
+	expect(
+		setEnabled(googleDefault, "transcription", "google", false, ORDER, serves)
+			.enabled.transcription,
+	).toEqual(["scaleway"]);
 });
 
-it("staff: only an enabled provider can be made the default, and switching on keeps the card order", () => {
-	const draft = {
-		allowed: ["scaleway" as const],
-		default: "scaleway" as const,
-	};
-	expect(makeDefault(draft, "google")).toBe(draft);
-	const on = setEnabled(draft, "google", true, ORDER);
-	expect(on.allowed).toEqual(["scaleway", "google"]);
-	expect(makeDefault(on, "google").default).toBe("google");
+it("staff: the default's switch reads as on and locked, and only it", () => {
+	const draft = draftOf({
+		defaults: { analysis: "google", transcription: "scaleway" },
+	});
+	expect(isLocked(draft, "analysis", "google")).toBe(true);
+	expect(isLocked(draft, "analysis", "scaleway")).toBe(false);
+	expect(isLocked(draft, "transcription", "scaleway")).toBe(true);
+	expect(isLocked(draft, "transcription", "google")).toBe(false);
+});
+
+it("staff: only an enabled provider that serves the job can be its default or be switched on for it", () => {
+	const draft = draftOf({
+		enabled: { analysis: ["scaleway"], transcription: ["scaleway"] },
+	});
+	expect(makeDefault(draft, "analysis", "google")).toBe(draft);
+	const on = setEnabled(draft, "analysis", "google", true, ORDER, serves);
+	expect(on.enabled.analysis).toEqual(["scaleway", "google"]);
+	expect(on.enabled.transcription).toEqual(["scaleway"]);
+	expect(makeDefault(on, "analysis", "google").defaults.analysis).toBe(
+		"google",
+	);
 	expect(isChanged(on, draft)).toBe(true);
 	expect(isChanged(draft, { ...draft })).toBe(false);
+	// A provider that serves transcription only (the shape Orai will have) never goes on for analysis.
+	const speechOnly: Serves = {
+		google: ["transcription"],
+		scaleway: [...BOTH_JOBS],
+	};
+	expect(setEnabled(draft, "analysis", "google", true, ORDER, speechOnly)).toBe(
+		draft,
+	);
+	expect(
+		setEnabled(draft, "transcription", "google", true, ORDER, speechOnly)
+			.enabled.transcription,
+	).toEqual(["scaleway", "google"]);
 });

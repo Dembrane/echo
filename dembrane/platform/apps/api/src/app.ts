@@ -278,7 +278,14 @@ export function buildApp(deps: Deps) {
   app.route("/", billingRoutes(deps));
   app.route("/", mollieWebhookRoutes(deps));
   const aiModels = { scaleway: providerModelsOf(deps.config.llm, "scaleway") };
-  app.route("/", staffRoutes({ ...deps, aiModels, ...(deps.ai && { aiPolicy: deps.ai.policy }) }));
+  app.route(
+    "/",
+    staffRoutes({
+      ...deps,
+      aiModels,
+      ...(deps.ai && { aiPolicy: deps.ai.policy, aiPriceList: deps.ai.priceList }),
+    }),
+  );
   app.route(
     "/",
     aiProviderRoutes({
@@ -286,6 +293,7 @@ export function buildApp(deps: Deps) {
       access: deps.access,
       policy: deps.ai?.policy ?? routingPolicyOf(deps.config.llm),
       models: aiModels,
+      ...(deps.ai && { priceList: deps.ai.priceList }),
       now: () => new Date(),
     }),
   );
@@ -309,7 +317,10 @@ export function buildApp(deps: Deps) {
     models: deps.models,
     media: deps.media,
     transcriber: deps.transcriber,
-    ...(deps.ai && { speech: deps.ai.speech, providerFor: deps.ai.providerFor }),
+    ...(deps.ai && {
+      speech: deps.ai.speech,
+      transcriptionProviderFor: deps.ai.transcriptionProviderFor,
+    }),
     hub: deps.hub,
     limiter: deps.limiter,
     logger: deps.logger,

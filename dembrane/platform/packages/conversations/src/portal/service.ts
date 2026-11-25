@@ -23,7 +23,15 @@ const { conversation, conversation_project_tag, project_tag } = schema;
 
 export type PortalDeps = Pick<
   ConversationsDeps,
-  "db" | "jobs" | "now" | "tokens" | "settings" | "audio" | "audioUrls" | "logger" | "providerFor"
+  | "db"
+  | "jobs"
+  | "now"
+  | "tokens"
+  | "settings"
+  | "audio"
+  | "audioUrls"
+  | "logger"
+  | "transcriptionProviderFor"
 >;
 
 /** PublicConversationSchema: what a participant may see of their conversation. */
@@ -75,16 +83,16 @@ export async function initiate(d: PortalDeps, projectId: string, input: Initiate
   else await requireTextStart(d, project.id);
   const id = newId();
   const now = d.now().toISOString();
-  // Where the project's work goes as this conversation begins: its calls reach Google only
-  // while this and the project's current setting both say Google.
-  const aiProvider = (await d.providerFor?.(project.id)) ?? null;
+  // Where the project's audio goes as this conversation begins: it reaches Google only
+  // while this and the project's current transcription setting both say Google.
+  const aiProvider = (await d.transcriptionProviderFor?.(project.id)) ?? null;
   const row = await transaction(d.db, async (tx) => {
     const [created] = await tx.db
       .insert(conversation)
       .values({
         id,
         project_id: project.id,
-        ai_provider: aiProvider,
+        ai_transcription_provider: aiProvider,
         // Both come from the browser unchecked; an upload's name is its file's name.
         participant_name: clip(input.name, 255),
         participant_email: input.email,

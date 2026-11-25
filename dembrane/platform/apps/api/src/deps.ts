@@ -9,6 +9,7 @@ import type { Db } from "@dembrane/db";
 import type { Env, Signed } from "@dembrane/http";
 import type { Completer, Embedder, Models, RoutingPolicy } from "@dembrane/llm";
 import type { Mailer } from "@dembrane/mail";
+import type { UnitCosts } from "@dembrane/metering";
 import type { Notifier } from "@dembrane/notifications";
 import type { Logger, Tracer } from "@dembrane/observability";
 import type { Queue, WorkerFreshness } from "@dembrane/queue";
@@ -45,9 +46,11 @@ export interface Deps {
     readonly completer: Completer;
     readonly embedder: Embedder;
     readonly speech: SpeechRouter;
-    readonly providerFor: (projectId: string) => Promise<string | null>;
+    readonly transcriptionProviderFor: (projectId: string) => Promise<string | null>;
     /** Whether any provider the deployment has can ground with Google Search. */
     readonly groundingPossible: boolean;
+    /** What the price list says each provider costs per unit, for the cost lines of a provider with no history yet. */
+    readonly priceList: () => UnitCosts | null;
   };
   /** Enqueues jobs; pass a transaction in the options so a job commits with its cause. */
   readonly queue: Pick<Queue, "enqueue">;

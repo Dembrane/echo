@@ -11,15 +11,23 @@ import {
 	Stack,
 	Switch,
 	Text,
+	Title,
 	UnstyledButton,
 } from "@mantine/core";
+import { LockSimpleIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
+	AI_JOBS,
 	type AiHistoryLine,
+	type AiJob,
 	type AiProvider,
 	aiRequest,
+	type CostLines,
+	costText,
+	euros,
 	formatDay,
+	jobName,
 	providerName,
 } from "@/components/ai-provider/hooks";
 import {
@@ -31,16 +39,21 @@ import { notifyError } from "@/components/error/notifyError";
 import { Section } from "../ui";
 import {
 	isChanged,
+	isLocked,
 	makeDefault,
 	type ProviderDraft,
 	setEnabled,
 } from "./aiProviderRules";
 
 export interface StaffAiProviders {
+	jobs: AiJob[];
 	available: AiProvider[];
-	allowed: AiProvider[];
-	default: AiProvider;
+	serves: Record<AiProvider, AiJob[]>;
+	enabled: Record<AiJob, AiProvider[]>;
+	defaults: Record<AiJob, AiProvider>;
 	models?: Partial<Record<AiProvider, string[]>>;
+	cost: CostLines;
+	month: { from: string; spent: Record<AiProvider, number> };
 	history: AiHistoryLine[];
 	tickets: { id: string; subject: string; created_at: string }[];
 }
@@ -52,23 +65,31 @@ const SHOWN = 3;
 const isProvider = (p: unknown): p is AiProvider =>
 	p === "scaleway" || p === "google";
 
+const isJob = (j: unknown): j is AiJob =>
+	j === "transcription" || j === "analysis";
+
 /** What one change was, in the short form the history and the timeline share. */
-export const changeText = (kind: AiHistoryLine["kind"], p: AiProvider) => {
+export const changeText = (
+	kind: AiHistoryLine["kind"],
+	p: AiProvider,
+	j: AiJob,
+) => {
 	const provider = providerName(p);
-	return kind === "added"
-		? t`${provider} added`
-		: kind === "removed"
-			? t`${provider} removed`
-			: t`Default changed to ${provider}`;
+	const job = jobName(j);
+	return kind === "enabled"
+		? t`${provider} enabled for ${job}`
+		: kind === "disabled"
+			? t`${provider} removed from ${job}`
+			: t`${provider} is now the default for ${job}`;
 };
 
-/** "Google Vertex AI added · 25 Nov 2026"; Show all adds who made the change. */
+/** "25 Nov 2026 · Google Vertex AI enabled for Analysis"; Show all adds who made the change. */
 export const historyLine = (
 	h: AiHistoryLine,
 	locale: string,
 	withWho = false,
 ) => {
-	const line = `${changeText(h.kind, h.provider)} · ${formatDay(h.at, locale)}`;
+	const line = `${formatDay(h.at, locale)} · ${changeText(h.kind, h.provider, h.job)}`;
 	return withWho && h.by ? `${line} · ${h.by}` : line;
 };
 
@@ -81,35 +102,52 @@ export const historyTitle = (h: AiHistoryLine, locale: string) => {
 };
 
 interface AiSetting {
-	allowed?: unknown;
-	default?: unknown;
+	enabled?: Partial<Record<AiJob, unknown>>;
+	defaults?: Partial<Record<AiJob, unknown>>;
 }
+
+const providersOf = (v: unknown): AiProvider[] =>
+	Array.isArray(v) ? v.filter(isProvider) : [];
 
 /**
  * What a timeline event of an AI provider change says, one line per change: an account's
- * change from the setting before and after, a project's move with the project's name.
+ * change from the setting before and after, a project's move with the project's name and job.
  */
 export const aiEventLines = (e: {
 	type: string;
 	detail: unknown;
 }): string[] => {
 	const d = (e.detail ?? {}) as {
-		before?: AiSetting | null;
+		before?: AiSetting | string | null;
 		after?: AiSetting | string | null;
+		job?: unknown;
 		project_name?: string;
 	};
 	if (e.type === "project.ai_provider.changed") {
 		const name = d.project_name;
+		const job = isJob(d.job) ? jobName(d.job) : null;
 		const to =
 			typeof d.after === "string" && isProvider(d.after) ? d.after : null;
 		if (to) {
 			const provider = providerName(to);
+			if (job)
+				return [
+					name
+						? t`Project ${name} moved to ${provider} for ${job}`
+						: t`A project moved to ${provider} for ${job}`,
+				];
 			return [
 				name
 					? t`Project ${name} moved to ${provider}`
 					: t`A project moved to ${provider}`,
 			];
 		}
+		if (job)
+			return [
+				name
+					? t`Project ${name} back on the account default for ${job}`
+					: t`A project back on the account default for ${job}`,
+			];
 		return [
 			name
 				? t`Project ${name} back on the account default`
@@ -118,26 +156,26 @@ export const aiEventLines = (e: {
 	}
 	const after = d.after && typeof d.after === "object" ? d.after : null;
 	if (!after) return [];
-	const had = new Set(
-		(Array.isArray(d.before?.allowed) ? d.before.allowed : []).filter(
-			isProvider,
-		),
-	);
-	const has = new Set(
-		(Array.isArray(after.allowed) ? after.allowed : []).filter(isProvider),
-	);
-	return [
-		...[...has].filter((p) => !had.has(p)).map((p) => changeText("added", p)),
-		...[...had].filter((p) => !has.has(p)).map((p) => changeText("removed", p)),
-		...(d.before &&
-		isProvider(after.default) &&
-		d.before.default !== after.default
-			? [changeText("default", after.default)]
-			: []),
-	];
+	const before = d.before && typeof d.before === "object" ? d.before : null;
+	return AI_JOBS.flatMap((job) => {
+		const had = new Set(providersOf(before?.enabled?.[job]));
+		const has = new Set(providersOf(after.enabled?.[job]));
+		const next = after.defaults?.[job];
+		return [
+			...[...has]
+				.filter((p) => !had.has(p))
+				.map((p) => changeText("enabled", p, job)),
+			...[...had]
+				.filter((p) => !has.has(p))
+				.map((p) => changeText("disabled", p, job)),
+			...(before && isProvider(next) && before.defaults?.[job] !== next
+				? [changeText("default", next, job)]
+				: []),
+		];
+	});
 };
 
-/** Staff: the AI providers an account has and its default, changed after a written request. */
+/** Staff: the AI providers an account has enabled for each job and its defaults, changed after a written request. */
 export function AiProviderSection({ orgId }: { orgId: string }) {
 	const { i18n } = useLingui();
 	const { data } = useQuery({
@@ -149,6 +187,7 @@ export function AiProviderSection({ orgId }: { orgId: string }) {
 	const [all, setAll] = useState(false);
 	if (!data) return null;
 	const history = all ? data.history : data.history.slice(0, SHOWN);
+	const google = euros(data.month.spent.google, i18n.locale);
 	return (
 		<Section
 			title={<Trans>AI provider</Trans>}
@@ -166,17 +205,35 @@ export function AiProviderSection({ orgId }: { orgId: string }) {
 		>
 			<Stack gap="sm">
 				<Stack gap="xs" data-testid="ai-provider-summary">
-					{data.allowed.map((p) => (
-						<Group key={p} gap="xs" wrap="nowrap">
-							<ProviderLogo provider={p} size={24} />
-							<Text size="sm">{providerName(p)}</Text>
-							{p === data.default && (
-								<Text size="sm" c="dimmed">
-									<Trans>Default</Trans>
-								</Text>
-							)}
+					{data.jobs.map((job) => (
+						<Group
+							key={job}
+							gap="md"
+							wrap="wrap"
+							align="center"
+							data-testid={`summary-${job}`}
+						>
+							<Text size="sm" fw={500} w={110}>
+								{jobName(job)}
+							</Text>
+							<Group gap="md" wrap="wrap">
+								{data.enabled[job].map((p) => (
+									<Group key={p} gap="xs" wrap="nowrap">
+										<ProviderLogo provider={p} size={24} />
+										<Text size="sm">{providerName(p)}</Text>
+										{p === data.defaults[job] && (
+											<Text size="sm" c="dimmed">
+												<Trans>Default</Trans>
+											</Text>
+										)}
+									</Group>
+								))}
+							</Group>
 						</Group>
 					))}
+					<Text size="sm" c="dimmed" data-testid="ai-provider-google-month">
+						<Trans>Google this month: EUR {google}</Trans>
+					</Text>
 				</Stack>
 				{data.history.length > 0 && (
 					<Stack gap={4} data-testid="ai-provider-history">
@@ -184,7 +241,7 @@ export function AiProviderSection({ orgId }: { orgId: string }) {
 							<Text
 								size="xs"
 								c="dimmed"
-								key={`${h.at}-${h.kind}-${h.provider}`}
+								key={`${h.at}-${h.kind}-${h.provider}-${h.job}`}
 								title={historyTitle(h, i18n.locale)}
 							>
 								{historyLine(h, i18n.locale, all)}
@@ -250,16 +307,21 @@ function EditForm({
 }) {
 	const { i18n } = useLingui();
 	const queryClient = useQueryClient();
-	const saved: ProviderDraft = { allowed: data.allowed, default: data.default };
+	const saved: ProviderDraft = {
+		defaults: data.defaults,
+		enabled: data.enabled,
+	};
 	const [draft, setDraft] = useState<ProviderDraft>(saved);
 	const [ticket, setTicket] = useState<string | null>(null);
 	const save = useMutation({
 		mutationFn: () =>
 			aiRequest<unknown>(`/v2/admin/orgs/${orgId}/ai-providers`, {
 				body: JSON.stringify({
-					allowed: draft.allowed,
-					default: draft.default,
+					analysis_default: draft.defaults.analysis,
+					analysis_enabled: draft.enabled.analysis,
 					request_ticket_id: ticket,
+					transcription_default: draft.defaults.transcription,
+					transcription_enabled: draft.enabled.transcription,
 				}),
 				method: "PUT",
 			}),
@@ -273,52 +335,83 @@ function EditForm({
 	});
 	return (
 		<Stack gap="lg">
-			<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-				{data.available.map((p) => {
-					const on = draft.allowed.includes(p);
-					const isDefault = draft.default === p;
-					return (
-						<Box key={p} data-testid={`edit-provider-${p}`}>
-							<ProviderCard
-								provider={p}
-								models={data.models?.[p]}
-								muted={!on}
-								badge={isDefault ? <Trans>Default</Trans> : undefined}
-							>
-								<Group justify="space-between" mt="auto" wrap="nowrap" mih={32}>
-									<Switch
-										label={t`Enabled`}
-										checked={on}
-										disabled={isDefault}
-										onChange={(e) =>
-											setDraft((d) =>
-												setEnabled(
-													d,
-													p,
-													e.currentTarget.checked,
-													data.available,
-												),
-											)
-										}
-										data-testid={`enabled-${p}`}
-									/>
-									{!isDefault && (
-										<Button
-											variant="default"
-											size="xs"
-											disabled={!on}
-											onClick={() => setDraft((d) => makeDefault(d, p))}
-											data-testid={`make-default-${p}`}
+			{data.jobs.map((job) => (
+				<Stack key={job} gap="sm" data-testid={`edit-job-${job}`}>
+					<Title order={5}>{jobName(job)}</Title>
+					<SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+						{data.available
+							.filter((p) => data.serves[p].includes(job))
+							.map((p) => {
+								const on = draft.enabled[job].includes(p);
+								const locked = isLocked(draft, job, p);
+								return (
+									<Box key={p} data-testid={`edit-provider-${job}-${p}`}>
+										<ProviderCard
+											provider={p}
+											models={data.models?.[p]}
+											muted={!on}
+											cost={costText(data.cost[job][p], i18n.locale)}
+											badge={
+												draft.defaults[job] === p ? (
+													<Trans>Default</Trans>
+												) : undefined
+											}
 										>
-											<Trans>Make default</Trans>
-										</Button>
-									)}
-								</Group>
-							</ProviderCard>
-						</Box>
-					);
-				})}
-			</SimpleGrid>
+											<Group mt="auto" wrap="nowrap" mih={32}>
+												{/* The default stays on: it reads as on and does not move, never greyed like off. */}
+												<Switch
+													label={t`Enabled`}
+													checked={on}
+													readOnly={locked}
+													aria-readonly={locked || undefined}
+													thumbIcon={
+														locked ? (
+															<LockSimpleIcon size={10} weight="bold" />
+														) : undefined
+													}
+													styles={
+														locked ? { track: { cursor: "default" } } : {}
+													}
+													onChange={(e) =>
+														setDraft((d) =>
+															setEnabled(
+																d,
+																job,
+																p,
+																e.currentTarget.checked,
+																data.available,
+																data.serves,
+															),
+														)
+													}
+													data-testid={`enabled-${job}-${p}`}
+													data-locked={locked ? "" : undefined}
+												/>
+											</Group>
+										</ProviderCard>
+									</Box>
+								);
+							})}
+					</SimpleGrid>
+					<Select
+						label={t`Default`}
+						allowDeselect={false}
+						data={draft.enabled[job].map((p) => ({
+							label: providerName(p),
+							value: p,
+						}))}
+						value={draft.defaults[job]}
+						onChange={(v) =>
+							v &&
+							setDraft((d) =>
+								makeDefault(d, job, v === "google" ? "google" : "scaleway"),
+							)
+						}
+						maw={320}
+						data-testid={`default-${job}`}
+					/>
+				</Stack>
+			))}
 			<Select
 				label={t`Request`}
 				placeholder={t`Choose the ticket`}

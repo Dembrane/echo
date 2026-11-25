@@ -31,6 +31,7 @@ import {
   aiRouting,
   configuredModels,
   httpText,
+  listedUnitCosts,
   modelCallRecorder,
   modelCallTable,
   priceBook,
@@ -310,7 +311,7 @@ const speech: SpeechRouter = {
       }),
     ]),
   ),
-  decide: (who) => decide(ai.resolver, ai.policy, who),
+  decide: (who) => decide(ai.resolver, ai.policy, "transcription", who),
 };
 const defaultKit = speech.kits[ai.policy.default];
 if (!defaultKit) throw new Error("the default provider has no speech kit");
@@ -349,9 +350,11 @@ const app = buildApp({
     completer: ai.kit.completer,
     embedder: ai.kit.embedder,
     speech,
-    providerFor: async (projectId) =>
-      (await decide(ai.resolver, ai.policy, { ref: "project", id: projectId })).provider,
+    transcriptionProviderFor: async (projectId) =>
+      (await decide(ai.resolver, ai.policy, "transcription", { ref: "project", id: projectId }))
+        .provider,
     groundingPossible: groundingPossible(config.llm, ai.policy),
+    priceList: () => listedUnitCosts(prices.current(), config.llm, ai.profileOf),
   },
   queue: enqueuer,
   deliverWebhook: httpDeliver({ allowPrivate: config.webhooks.allowPrivateTargets }),

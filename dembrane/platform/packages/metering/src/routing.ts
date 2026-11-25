@@ -3,6 +3,8 @@ import {
   accountProviders,
   allowedAmong,
   failClosed,
+  type Job,
+  type PerJob,
   PROVIDERS,
   type ProviderId,
   type ProviderResolver,
@@ -21,13 +23,13 @@ import { projectOfPayer, validId } from "./resolve";
  */
 export interface RoutingFacts {
   readonly organisationId: string;
-  /** org.ai_providers; null when staff never set it. */
-  readonly allowed: readonly string[] | null;
-  /** org.ai_default_provider. */
-  readonly accountDefault: string | null;
-  /** project.ai_provider; null follows the account default (always null for a workspace payer). */
-  readonly projectProvider: string | null;
-  /** conversation.ai_provider when the call belongs to a conversation; undefined when it does not. */
+  /** org.ai_transcription_providers and org.ai_analysis_providers: what the account has enabled per job; null when staff never set it. */
+  readonly enabled: PerJob<readonly string[] | null>;
+  /** org.ai_transcription_default and org.ai_analysis_default. */
+  readonly defaults: PerJob<string | null>;
+  /** project.ai_transcription_provider and ai_analysis_provider; null follows the account default (always null for a workspace payer). */
+  readonly projectChoices: PerJob<string | null>;
+  /** conversation.ai_transcription_provider when the call belongs to a conversation; undefined when it does not. */
   readonly conversationProvider?: string | null | undefined;
   /** The conversation the payer is or belongs to; undefined when the payer is not one. */
   readonly conversationId?: string | undefined;
@@ -40,17 +42,22 @@ export interface RoutingStore {
 
 type FactsRow = {
   org_id: string;
-  ai_providers: string[] | null;
-  ai_default_provider: string | null;
-  project_provider: string | null;
+  transcription_providers: string[] | null;
+  analysis_providers: string[] | null;
+  transcription_default: string | null;
+  analysis_default: string | null;
+  transcription_choice: string | null;
+  analysis_choice: string | null;
 };
 
 /** The production store: the project, its workspace's organisation and, for a conversation, its own record. */
 export function dbRoutingStore(db: Db): RoutingStore {
   const ofProject = async (projectId: string) => {
     const rows = await db.execute<FactsRow>(sql`
-      select o.id::text as org_id, o.ai_providers, o.ai_default_provider,
-        p.ai_provider as project_provider
+      select o.id::text as org_id,
+        o.ai_transcription_providers as transcription_providers, o.ai_analysis_providers as analysis_providers,
+        o.ai_transcription_default as transcription_default, o.ai_analysis_default as analysis_default,
+        p.ai_transcription_provider as transcription_choice, p.ai_analysis_provider as analysis_choice
       from project p
       join workspace w on w.id = p.workspace_id
       join org o on o.id = w.org_id
@@ -60,8 +67,10 @@ export function dbRoutingStore(db: Db): RoutingStore {
   };
   const ofWorkspace = async (workspaceId: string) => {
     const rows = await db.execute<FactsRow>(sql`
-      select o.id::text as org_id, o.ai_providers, o.ai_default_provider,
-        null::varchar as project_provider
+      select o.id::text as org_id,
+        o.ai_transcription_providers as transcription_providers, o.ai_analysis_providers as analysis_providers,
+        o.ai_transcription_default as transcription_default, o.ai_analysis_default as analysis_default,
+        null::varchar as transcription_choice, null::varchar as analysis_choice
       from workspace w join org o on o.id = w.org_id
       where w.id = ${workspaceId}::uuid and w.deleted_at is null and o.deleted_at is null`);
     return rows[0] ?? null;
@@ -71,12 +80,12 @@ export function dbRoutingStore(db: Db): RoutingStore {
     type Row = { id: string; project_id: string; ai_provider: string | null };
     if (who.ref === "conversation") {
       const rows = await db.execute<Row>(
-        sql`select id::text as id, project_id::text as project_id, ai_provider from conversation where id = ${id}::uuid`,
+        sql`select id::text as id, project_id::text as project_id, ai_transcription_provider as ai_provider from conversation where id = ${id}::uuid`,
       );
       return rows[0] ?? null;
     }
     const rows = await db.execute<Row>(sql`
-      select c.id::text as id, c.project_id::text as project_id, c.ai_provider
+      select c.id::text as id, c.project_id::text as project_id, c.ai_transcription_provider as ai_provider
       from conversation_artifact a join conversation c on c.id = a.conversation_id
       where a.id = ${id}::uuid`);
     return rows[0] ?? null;
@@ -87,9 +96,9 @@ export function dbRoutingStore(db: Db): RoutingStore {
     conversationId?: string,
   ): RoutingFacts => ({
     organisationId: r.org_id,
-    allowed: r.ai_providers,
-    accountDefault: r.ai_default_provider,
-    projectProvider: r.project_provider,
+    enabled: { transcription: r.transcription_providers, analysis: r.analysis_providers },
+    defaults: { transcription: r.transcription_default, analysis: r.analysis_default },
+    projectChoices: { transcription: r.transcription_choice, analysis: r.analysis_choice },
     ...(conversationProvider !== undefined && { conversationProvider }),
     ...(conversationId !== undefined && { conversationId }),
   });
@@ -147,22 +156,23 @@ export function providerResolver(
   const max = opts.maxCached ?? DEFAULT_MAX_CACHED;
   const cache = new Map<string, { until: number; decision: RouteDecision }>();
 
-  return async (who) => {
-    if (!who) return failClosed(policy, "no-payer");
-    if (!("ref" in who)) return failClosed(policy, "internal");
+  return async (who, job) => {
+    if (!who) return failClosed(policy, "no-payer", job);
+    if (!("ref" in who)) return failClosed(policy, "internal", job);
     if (policy.providers.length === 1)
       return {
         provider: policy.default,
+        job,
         organisationId: null,
         reason: "only-provider",
         allowed: null,
       };
-    const key = payerKey(who);
+    const key = `${job}:${payerKey(who)}`;
     const hit = cache.get(key);
     if (hit && hit.until > now()) return hit.decision;
     const facts = await store.facts(who);
-    if (!facts) return failClosed(policy, "unknown-project");
-    const d = resolve(policy, facts);
+    if (!facts) return failClosed(policy, "unknown-project", job);
+    const d = resolve(policy, facts, job);
     if (!PROVIDERS[d.provider].optIn && CACHEABLE.has(d.reason)) {
       if (cache.size >= max) cache.clear();
       cache.set(key, { until: now() + ttl, decision: d });
@@ -171,40 +181,44 @@ export function providerResolver(
   };
 }
 
-/** The pure decision over what the database said. */
-export function resolve(policy: RoutingPolicy, f: RoutingFacts): RouteDecision {
-  const account = accountProviders(policy, {
-    allowed: f.allowed,
-    accountDefault: f.accountDefault,
-  });
-  const { allowed } = account;
+/**
+ * The pure decision over what the database said, for one job. The account's enabled providers
+ * that serve the job are the only candidates: the project's choice, else the account's default
+ * for the job, else the environment's default. A conversation's own start binds transcription
+ * only; analysis decides at every call.
+ */
+export function resolve(policy: RoutingPolicy, f: RoutingFacts, job: Job): RouteDecision {
+  const account = accountProviders(policy, { enabled: f.enabled, defaults: f.defaults }, job);
+  const eligible = account.enabled;
   const base = {
     organisationId: f.organisationId,
-    allowed,
+    job,
+    allowed: eligible,
     ...(f.conversationId !== undefined && { conversationId: f.conversationId }),
   } as const;
   if (!account.default)
     return { ...base, provider: policy.default, reason: "fail-closed:nothing-allowed" };
 
-  const chosen = allowedAmong(policy, [f.projectProvider])[0];
-  const picked = chosen && allowed.includes(chosen) ? chosen : null;
+  const chosen = allowedAmong(policy, [f.projectChoices[job]])[0];
+  const picked = chosen && eligible.includes(chosen) ? chosen : null;
   let provider: ProviderId = picked ?? account.default;
   let reason = picked ? "project" : account.named ? "account-default" : "environment-default";
 
-  // A conversation's calls reach a provider that needs an opt-in only if the conversation
+  // A conversation's audio reaches a provider that needs an opt-in only if the conversation
   // began there. A conversation that began elsewhere stays out until it ends.
   if (
+    job === "transcription" &&
     f.conversationProvider !== undefined &&
     PROVIDERS[provider].optIn &&
     f.conversationProvider !== provider
   ) {
     const began = allowedAmong(policy, [f.conversationProvider])[0];
     const safe =
-      (began && allowed.includes(began) && !PROVIDERS[began].optIn ? began : null) ??
-      (allowed.includes(policy.default) && !PROVIDERS[policy.default].optIn
+      (began && eligible.includes(began) && !PROVIDERS[began].optIn ? began : null) ??
+      (eligible.includes(policy.default) && !PROVIDERS[policy.default].optIn
         ? policy.default
         : null) ??
-      allowed.find((id) => !PROVIDERS[id].optIn) ??
+      eligible.find((id) => !PROVIDERS[id].optIn) ??
       null;
     provider = safe ?? policy.default;
     reason = safe ? "conversation" : "fail-closed:conversation";

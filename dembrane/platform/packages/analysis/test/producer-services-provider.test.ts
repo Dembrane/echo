@@ -18,8 +18,9 @@ const policy = routingPolicyOf({
 });
 const GOOGLE_PROJECT = "22222222-2222-4222-8222-222222222222";
 
-const resolver: ProviderResolver = async (who) => ({
+const resolver: ProviderResolver = async (who, job) => ({
   provider: who && "ref" in who && who.id === GOOGLE_PROJECT ? "google" : "scaleway",
+  job,
   organisationId: "o",
   reason: "project",
   allowed: ["scaleway", "google"],

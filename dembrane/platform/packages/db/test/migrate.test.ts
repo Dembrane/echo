@@ -91,25 +91,30 @@ run("migrate", () => {
         "the constraint listing",
         db<{ conname: string; convalidated: boolean }[]>`
           select conname, convalidated from pg_constraint
-          where conname in ('org_ai_providers_check', 'org_ai_default_provider_check',
-            'project_ai_provider_check', 'conversation_ai_provider_check')`,
+          where conname in ('org_ai_transcription_providers_check', 'org_ai_analysis_providers_check',
+            'org_ai_transcription_default_check',
+            'org_ai_analysis_default_check', 'project_ai_transcription_provider_check',
+            'project_ai_analysis_provider_check', 'conversation_ai_transcription_provider_check')`,
       );
       expect(rows.map((r) => r.conname).sort()).toEqual([
-        "conversation_ai_provider_check",
-        "org_ai_default_provider_check",
-        "org_ai_providers_check",
-        "project_ai_provider_check",
+        "conversation_ai_transcription_provider_check",
+        "org_ai_analysis_default_check",
+        "org_ai_analysis_providers_check",
+        "org_ai_transcription_default_check",
+        "org_ai_transcription_providers_check",
+        "project_ai_analysis_provider_check",
+        "project_ai_transcription_provider_check",
       ]);
       // Validating scans the table while the release's locks are held: a later migration does it.
       expect(rows.every((r) => !r.convalidated)).toBe(true);
       const bad = await within(
         "the insert of a bad value",
-        db`insert into org (id, name, ai_default_provider) values (gen_random_uuid(), 'x', 'nowhere')`.then(
+        db`insert into org (id, name, ai_analysis_default) values (gen_random_uuid(), 'x', 'nowhere')`.then(
           () => null,
           (e: unknown) => e as Error,
         ),
       );
-      expect(bad?.message).toMatch(/org_ai_default_provider_check/);
+      expect(bad?.message).toMatch(/org_ai_analysis_default_check/);
     } finally {
       await db.end({ timeout: 5 });
     }

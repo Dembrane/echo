@@ -10,6 +10,8 @@ export interface RoutingNote {
   readonly organisationId: string | null;
   /** The provider the policy resolved to ("scaleway", "google"). */
   readonly provider: string;
+  /** The job the call served: "transcription" or "analysis". */
+  readonly job: string;
   /** Why: "project", "account-default", "environment-default", "conversation", "fail-closed:<cause>". */
   readonly reason: string;
   /** What the organisation allowed at that moment; null when it was not read. */

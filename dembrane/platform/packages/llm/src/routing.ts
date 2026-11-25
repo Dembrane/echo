@@ -17,11 +17,12 @@ import {
 } from "./complete";
 import { watched } from "./fallback";
 import type { ModelGroup, Models } from "./models";
-import { PROVIDERS, type ProviderId, type RoutingPolicy } from "./providers";
+import { type Job, PROVIDERS, type ProviderId, type RoutingPolicy, serves } from "./providers";
 
 /** Where one call goes, and why; what the call log keeps. */
 export interface RouteDecision extends RoutingNote {
   readonly provider: ProviderId;
+  readonly job: Job;
 }
 
 /**
@@ -29,12 +30,13 @@ export interface RouteDecision extends RoutingNote {
  * every decision that reaches a provider needing an opt-in; only a decision for the default
  * may come from a cache.
  */
-export type ProviderResolver = (who: Payer | undefined) => Promise<RouteDecision>;
+export type ProviderResolver = (who: Payer | undefined, job: Job) => Promise<RouteDecision>;
 
 /** The decision for anything that cannot be resolved: the environment's default, never a guess. */
-export function failClosed(policy: RoutingPolicy, cause: string): RouteDecision {
+export function failClosed(policy: RoutingPolicy, cause: string, job: Job): RouteDecision {
   return {
     provider: policy.default,
+    job,
     organisationId: null,
     reason: `fail-closed:${cause}`,
     allowed: null,
@@ -44,8 +46,9 @@ export function failClosed(policy: RoutingPolicy, cause: string): RouteDecision 
 /** The resolver that always answers the default, for a deployment with one provider. */
 export const onlyProvider =
   (policy: RoutingPolicy): ProviderResolver =>
-  async () => ({
+  async (_who, job) => ({
     provider: policy.default,
+    job,
     organisationId: null,
     reason: "only-provider",
     allowed: null,
@@ -58,20 +61,25 @@ export const onlyProvider =
 export async function decide(
   resolver: ProviderResolver,
   policy: RoutingPolicy,
+  job: Job,
   who: Payer | undefined = payer(),
 ): Promise<RouteDecision> {
   let d: RouteDecision;
   try {
-    d = await resolver(who);
+    d = await resolver(who, job);
   } catch {
-    return failClosed(policy, "lookup-error");
+    return failClosed(policy, "lookup-error", job);
   }
-  return policy.providers.includes(d.provider) ? d : failClosed(policy, "provider-missing");
+  // A provider the deployment lacks, or one that does not serve the job, is never used.
+  return policy.providers.includes(d.provider) && serves(d.provider, job) && d.job === job
+    ? d
+    : failClosed(policy, "provider-missing", job);
 }
 
 const noteOf = (d: RouteDecision): RoutingNote => ({
   organisationId: d.organisationId,
   provider: d.provider,
+  job: d.job,
   reason: d.reason,
   allowed: d.allowed,
   conversationId: d.conversationId ?? null,
@@ -160,20 +168,20 @@ class RoutingLanguageModel implements LanguageModelV4 {
 
   async doGenerate(options: LanguageModelV4CallOptions): Promise<LanguageModelV4GenerateResult> {
     const who = payer();
-    const d = await decide(this.resolver, this.policy, who);
+    const d = await decide(this.resolver, this.policy, "analysis", who);
     return rerouted(
       d,
-      () => decide(this.resolver, this.policy, who),
+      () => decide(this.resolver, this.policy, "analysis", who),
       (at) => this.of(at.provider).doGenerate(options),
     );
   }
 
   async doStream(options: LanguageModelV4CallOptions): Promise<LanguageModelV4StreamResult> {
     const who = payer();
-    const d = await decide(this.resolver, this.policy, who);
+    const d = await decide(this.resolver, this.policy, "analysis", who);
     return rerouted(
       d,
-      () => decide(this.resolver, this.policy, who),
+      () => decide(this.resolver, this.policy, "analysis", who),
       (at) => this.of(at.provider).doStream(options),
     );
   }
@@ -205,7 +213,7 @@ class RoutingEmbeddingModel implements EmbeddingModelV4 {
   }
 
   async doEmbed(options: Parameters<EmbeddingModelV4["doEmbed"]>[0]) {
-    const d = await decide(this.resolver, this.policy);
+    const d = await decide(this.resolver, this.policy, "analysis");
     return routed(d, () => this.of(d.provider).doEmbed(options));
   }
 }
@@ -256,20 +264,20 @@ export function routingCompleter(
   return {
     async complete(request: CompletionRequest): Promise<Completion> {
       const who = payer();
-      const d = await decide(resolver, policy, who);
+      const d = await decide(resolver, policy, "analysis", who);
       return rerouted(
         d,
-        () => decide(resolver, policy, who),
+        () => decide(resolver, policy, "analysis", who),
         (at) => of(at.provider).complete(request),
       );
     },
     modelIdentity: (group) => of(policy.default).modelIdentity(group),
     async identityOf(group) {
-      const d = await decide(resolver, policy);
+      const d = await decide(resolver, policy, "analysis");
       return of(d.provider).modelIdentity(group);
     },
     async grounds() {
-      const d = await decide(resolver, policy);
+      const d = await decide(resolver, policy, "analysis");
       return (await of(d.provider).grounds?.()) ?? true;
     },
   };
@@ -291,12 +299,12 @@ export function routingEmbedder(
   const base = of(policy.default);
   const pinned = async (): Promise<PinnedEmbedder> => {
     const who = payer();
-    const d = await decide(resolver, policy, who);
+    const d = await decide(resolver, policy, "analysis", who);
     const e = of(d.provider);
     // Checked on both sides of the call: nothing is sent to the old provider after the
     // project moved, and nothing the old provider made is kept after it.
     const same = async () => {
-      const now = await decide(resolver, policy, who);
+      const now = await decide(resolver, policy, "analysis", who);
       if (now.provider !== d.provider) throw new EmbeddingRouteChanged(d.provider, now.provider);
     };
     return {
@@ -322,7 +330,7 @@ export function routingEmbedder(
     },
     pinned,
     async embed(text) {
-      const d = await decide(resolver, policy);
+      const d = await decide(resolver, policy, "analysis");
       return routed(d, () => of(d.provider).embed(text));
     },
   };

@@ -88,7 +88,6 @@ const bullets = (p: AiProvider, models: string[], locale: string): string[] => {
 			t`Runs in the EU`,
 			t`Slightly better quality`,
 			t`Closed models: Gemini`,
-			t`Billed per use`,
 		];
 	const names = joinNames(models, locale);
 	return [
@@ -106,11 +105,14 @@ interface ProviderCardProps {
 	badge?: ReactNode;
 	/** A provider the account does not have: shown quieter. */
 	muted?: boolean;
-	/**
-	 * How a customer asks for a provider they do not have. Nothing passes it yet; the support
-	 * ticket flow will, and a muted card then offers the button.
-	 */
+	/** How a customer asks for a provider they do not have: a muted card then offers the button. */
 	onRequest?: () => void;
+	/** The request was sent: the button says so and rests. */
+	requested?: boolean;
+	/** The request is on its way. */
+	requesting?: boolean;
+	/** What the provider would cost, as one line under the bullets. */
+	cost?: ReactNode;
 	/** The chosen card of a choice: a check beside its name. */
 	selected?: boolean;
 	/** The card sits inside a box that already draws and pads it (a radio card). */
@@ -131,6 +133,9 @@ export const ProviderCard = ({
 	badge,
 	muted,
 	onRequest,
+	requested,
+	requesting,
+	cost,
 	selected,
 	flush,
 	children,
@@ -201,10 +206,21 @@ export const ProviderCard = ({
 					</Text>
 				))}
 			</Box>
+			{cost && (
+				<Text size="sm" data-testid={`cost-${provider}`}>
+					{cost}
+				</Text>
+			)}
 			{muted && onRequest && (
 				<Group>
-					<Button variant="default" size="xs" onClick={onRequest}>
-						<Trans>Request</Trans>
+					<Button
+						variant="default"
+						size="xs"
+						onClick={onRequest}
+						loading={requesting}
+						disabled={requested}
+					>
+						{requested ? <Trans>Requested</Trans> : <Trans>Request</Trans>}
 					</Button>
 				</Group>
 			)}

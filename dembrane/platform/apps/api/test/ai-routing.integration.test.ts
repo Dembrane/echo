@@ -7,6 +7,7 @@ import { connect, createDb, type Db, migrate } from "@dembrane/db";
 import {
   completerIdentity,
   decide,
+  type Job,
   type LlmSettings,
   type ProviderKit,
   profileForProvider,
@@ -85,7 +86,7 @@ const prices = {
   }),
 };
 
-run("two projects in one process, one on each provider", () => {
+run("four projects in one process: each provider for both jobs, and each job on its own", () => {
   setDefaultTimeout(120_000);
   let sql: postgres.Sql;
   let db: Db;
@@ -95,22 +96,33 @@ run("two projects in one process, one on each provider", () => {
   let recorder: ReturnType<typeof modelCallRecorder>;
 
   // Each project's work carries its own marker, so the stubs can tell whose request they see.
-  const S = { marker: "marker-scaleway-project" } as {
-    marker: string;
-    project: string;
-    org: string;
-  };
-  const G = { marker: "marker-google-project" } as { marker: string; project: string; org: string };
+  type World = { marker: string; project: string; org: string };
+  // S: Scaleway for both jobs. G: Google for both. T: Google hears the audio, Scaleway reads the text.
+  // A: Scaleway hears the audio, Google reads the text.
+  const S = { marker: "marker-scaleway-project" } as World;
+  const G = { marker: "marker-google-project" } as World;
+  const T = { marker: "marker-hear-on-google" } as World;
+  const A = { marker: "marker-read-on-google" } as World;
+  const KEYS = { s: S, g: G, t: T, a: A } as const;
+  /** What each world chose for each job. */
+  const CHOICE = {
+    s: { transcription: null, analysis: null },
+    g: { transcription: "google", analysis: "google" },
+    t: { transcription: "google", analysis: null },
+    a: { transcription: null, analysis: "google" },
+  } as const;
+  /** The marker one feature carries, so the stubs can tell whose request of which job they see. */
+  const markOf = (w: World, job: Job) => `${w.marker}-${job}`;
   const wire = wireStubs({
     text: '{"corrected_transcript":"heard","note":"","verdict":"x"}',
     speech: "heard",
     vertexGuard: (r) => {
-      // The Vertex stub throws if it ever sees a request for the Scaleway project.
-      if (r.body.includes(S.marker))
-        throw new Error("a request for the Scaleway project reached Vertex");
+      // The Vertex stub throws if it ever sees a request that was not meant for Google.
+      for (const bad of [S.marker, markOf(T, "analysis"), markOf(A, "transcription")])
+        if (r.body.includes(bad)) throw new Error(`a request for ${bad} reached Vertex`);
     },
   });
-  const ids: Record<string, Record<"s" | "g", string>> = {};
+  const ids: Record<string, Record<"s" | "g" | "t" | "a", string>> = {};
 
   beforeAll(async () => {
     const a = connect(admin as string, { max: 1, onnotice: () => {} });
@@ -126,22 +138,32 @@ run("two projects in one process, one on each provider", () => {
 
     // One organisation that allows both; project S stays on Scaleway, project G chose Google.
     const orgId = randomUUID();
-    await sql`insert into org (id, name, ai_providers, ai_default_provider)
-      values (${orgId}, 'both', array['scaleway','google'], 'scaleway')`;
+    await sql`insert into org (id, name, ai_transcription_providers, ai_analysis_providers, ai_transcription_default, ai_analysis_default)
+      values (${orgId}, 'both', array['scaleway','google'], array['scaleway','google'], 'scaleway', 'scaleway')`;
+    // The account's history, which the daily check reads again independently of the call log.
+    const both = {
+      enabled: { transcription: ["scaleway", "google"], analysis: ["scaleway", "google"] },
+      defaults: { transcription: "scaleway", analysis: "scaleway" },
+    };
+    await sql`insert into account_event (id, org_id, actor_kind, type, subject_type, subject_id, detail, created_at)
+      values (${randomUUID()}, ${orgId}, 'staff', 'ai_providers.changed', 'org', ${orgId}, ${sql.json({ before: null, after: both } as never)}, now() - interval '2 hours')`;
     const accountId = randomUUID();
     await sql`insert into billing_account (id, tier, org_id) values (${accountId}, 'paid', ${orgId})`;
     const workspaceId = randomUUID();
     await sql`insert into workspace (id, name, org_id, billing_account_id) values (${workspaceId}, 'w', ${orgId}, ${accountId})`;
-    S.org = G.org = orgId;
-    for (const [who, choice, key] of [
-      [S, null, "s"],
-      [G, "google", "g"],
-    ] as const) {
+    S.org = G.org = T.org = A.org = orgId;
+    for (const key of ["s", "g", "t", "a"] as const) {
+      const who = KEYS[key];
+      const choice = CHOICE[key];
       const project = randomUUID();
       who.project = project;
-      await sql`insert into project (id, is_conversation_allowed, workspace_id, ai_provider) values (${project}, true, ${workspaceId}, ${choice})`;
+      await sql`insert into project (id, is_conversation_allowed, workspace_id, ai_transcription_provider, ai_analysis_provider) values (${project}, true, ${workspaceId}, ${choice.transcription}, ${choice.analysis})`;
+      for (const job of ["transcription", "analysis"] as const)
+        if (choice[job])
+          await sql`insert into account_event (id, org_id, actor_kind, type, subject_type, subject_id, detail, created_at)
+            values (${randomUUID()}, ${orgId}, 'customer', 'project.ai_provider.changed', 'project', ${project}, ${sql.json({ job, before: null, after: choice[job] } as never)}, now() - interval '1 hour')`;
       const conversation = randomUUID();
-      await sql`insert into conversation (id, project_id, ai_provider) values (${conversation}, ${project}, ${choice === "google" ? "google" : "scaleway"})`;
+      await sql`insert into conversation (id, project_id, ai_transcription_provider) values (${conversation}, ${project}, ${choice.transcription === "google" ? "google" : "scaleway"})`;
       const chat = randomUUID();
       await sql`insert into project_chat (id, project_id) values (${chat}, ${project})`;
       const agent = randomUUID();
@@ -159,7 +181,7 @@ run("two projects in one process, one on each provider", () => {
       await sql`insert into analysis_run (id, project_id, scope_id, recipe_id, definition, request_order, idempotency_key, mode, recipe_version, request_fingerprint, status, attempt, epoch, hash_version, writer_fence)
         values (${analysisRun}, ${project}, ${scope}, 'r', '{}'::json, 1, 'k', 'refresh', '1', 'fp', 'queued', 0, 0, 'c14n-v1', 0)`;
       const set = (name: string, id: string) => {
-        ids[name] = { ...(ids[name] ?? {}), [key]: id } as Record<"s" | "g", string>;
+        ids[name] = { ...(ids[name] ?? {}), [key]: id } as Record<"s" | "g" | "t" | "a", string>;
       };
       set("project", project);
       set("conversation", conversation);
@@ -203,7 +225,7 @@ run("two projects in one process, one on each provider", () => {
           }),
         ]),
       ),
-      decide: (who) => decide(ai.resolver, ai.policy, who),
+      decide: (who) => decide(ai.resolver, ai.policy, "transcription", who),
     };
   });
 
@@ -219,11 +241,14 @@ run("two projects in one process, one on each provider", () => {
   const features: {
     name: string;
     payer: string;
+    /** Which of the account's two choices decides where the call goes. */
+    job: Job;
     run: (m: string, kit: ProviderKit, who: Payer) => Promise<unknown>;
   }[] = [
     {
       name: "live transcription of each piece of audio",
       payer: "conversation",
+      job: "transcription",
       run: (m, _k, who) =>
         withTranscriber(speech, who, speech.kits.scaleway?.transcriber as never, (t) =>
           t.transcribe({ audio: mp3, language: "en", customGuidancePrompt: m }),
@@ -232,17 +257,20 @@ run("two projects in one process, one on each provider", () => {
     {
       name: "conversation summary, title and tags",
       payer: "conversation",
+      job: "analysis",
       run: (m, k) =>
         generateText({ model: k.models.model("multi_modal_pro"), prompt: `summary ${m}` }),
     },
     {
       name: "chat title",
       payer: "chat",
+      job: "analysis",
       run: (m, k) => generateTitle(k.models, `question ${m}`, "en"),
     },
     {
       name: "chat reply, streamed",
       payer: "chat",
+      job: "analysis",
       run: async (m, k) => {
         const s = streamText({ model: k.models.model("multi_modal_pro"), prompt: `reply ${m}` });
         for await (const _ of s.textStream) void _;
@@ -251,6 +279,7 @@ run("two projects in one process, one on each provider", () => {
     {
       name: "agentic run turn",
       payer: "agent_run",
+      job: "analysis",
       run: async (m, k) => {
         const s = streamText({ model: k.models.model("text_fast"), prompt: `turn ${m}` });
         for await (const _ of s.textStream) void _;
@@ -259,17 +288,20 @@ run("two projects in one process, one on each provider", () => {
     {
       name: "report summary",
       payer: "report",
+      job: "analysis",
       run: (m, k) => k.completer.complete({ group: "multi_modal_pro", user: `report ${m}` }),
     },
     {
       name: "map title",
       payer: "project",
+      job: "analysis",
       run: (m, k) =>
         k.completer.complete({ group: "multi_modal_fast", user: `title ${m}`, thinkingBudget: 0 }),
     },
     {
       name: "analysis recipe",
       payer: "analysis_run",
+      job: "analysis",
       run: (m, k) =>
         k.completer.complete({
           group: "multi_modal_fast",
@@ -280,6 +312,7 @@ run("two projects in one process, one on each provider", () => {
     {
       name: "embeddings of analysis objects",
       payer: "analysis_run",
+      job: "analysis",
       run: async (m, k) => {
         await k.embedder.embed(`argument ${m}`);
         await k.models.embedding().model.doEmbed({ values: [`argument ${m}`] });
@@ -289,76 +322,114 @@ run("two projects in one process, one on each provider", () => {
     {
       name: "verify",
       payer: "verify_artifact",
+      job: "analysis",
       run: (m, k) =>
         generateText({ model: k.models.model("multi_modal_pro"), prompt: `verify ${m}` }),
     },
     {
       name: "canvas tick",
       payer: "canvas",
+      job: "analysis",
       run: (m, k) => k.completer.complete({ group: "multi_modal_fast", user: `canvas ${m}` }),
     },
     {
       name: "popcorn tick",
       payer: "popcorn_loop",
+      job: "analysis",
       run: (m, k) => k.completer.complete({ group: "multi_modal_fast", user: `popcorn ${m}` }),
     },
     {
       name: "model identity recorded with a run",
       payer: "project",
+      job: "analysis",
       run: (_m, k) => completerIdentity(k.completer, "multi_modal_fast"),
     },
   ];
 
-  test("every feature's model path reaches only the provider of the project it is for", async () => {
+  test("every feature's model path reaches the provider its project chose for that job, and no other", async () => {
     for (const f of features) {
-      for (const who of [S, G] as const) {
-        const key = who === S ? "s" : "g";
+      for (const key of ["s", "g", "t", "a"] as const) {
+        const who = KEYS[key];
         const payer = { ref: f.payer, id: ids[f.payer]?.[key] } as Payer;
-        await withPayer(payer, () => f.run(who.marker, kit, payer));
+        await withPayer(payer, () => f.run(markOf(who, f.job), kit, payer));
       }
     }
     await recorder.flush();
 
-    // The wire: Google's endpoints saw only the Google project; Scaleway's only the other one.
-    const text = (r: { body: string }) => r.body;
+    // The wire: Google's endpoints saw only what was meant for Google; Scaleway's only the rest.
+    const seenBy = (side: "vertex" | "compat", marker: string) =>
+      wire.seen[side].filter((r) => r.body.includes(marker)).length;
     expect(wire.seen.vertex.length).toBeGreaterThan(5);
-    expect(wire.seen.vertex.map(text).some((b) => b.includes(S.marker))).toBe(false);
-    expect(wire.seen.compat.filter((r) => r.body.includes(G.marker)).map((r) => r.url)).toEqual([]);
     expect(wire.seen.compat.length).toBeGreaterThan(5);
+    for (const key of ["s", "g", "t", "a"] as const) {
+      for (const job of ["transcription", "analysis"] as const) {
+        const onGoogle = CHOICE[key][job] === "google";
+        const mark = markOf(KEYS[key], job);
+        expect([key, job, "vertex", seenBy("vertex", mark) > 0]).toEqual([
+          key,
+          job,
+          "vertex",
+          onGoogle,
+        ]);
+        // Whisper's request carries the audio, not the guidance text: for audio the call log below says.
+        if (job === "analysis")
+          expect([key, job, "compat", seenBy("compat", mark) > 0]).toEqual([
+            key,
+            job,
+            "compat",
+            !onGoogle,
+          ]);
+      }
+    }
 
-    // The database: no row for a project on Scaleway names Vertex; every Google row names the project's
-    // organisation and says why; and the daily check finds nothing to alert on.
+    // The database: every row names the job, the provider that answered and the one the policy chose,
+    // and no row for a job on Scaleway names Vertex.
     const rows = await sql<
       {
         project_id: string;
         provider: string;
         routed_provider: string;
+        routing_job: string;
         routing_reason: string;
         organisation_id: string;
       }[]
-    >`select project_id::text, provider, routed_provider, routing_reason, organisation_id::text from model_call`;
-    const ofS = rows.filter((r) => r.project_id === S.project);
-    const ofG = rows.filter((r) => r.project_id === G.project);
-    expect(ofS.length).toBeGreaterThan(5);
-    expect(ofG.length).toBeGreaterThan(5);
-    expect(
-      ofS.every((r) => r.provider === "openai-compatible" && r.routed_provider === "scaleway"),
-    ).toBe(true);
-    expect(ofG.every((r) => r.provider === "vertex" && r.routed_provider === "google")).toBe(true);
+    >`select project_id::text, provider, routed_provider, routing_job, routing_reason, organisation_id::text from model_call`;
+    for (const key of ["s", "g", "t", "a"] as const) {
+      for (const job of ["transcription", "analysis"] as const) {
+        const own = rows.filter((r) => r.project_id === KEYS[key].project && r.routing_job === job);
+        expect([key, job, own.length > 0]).toEqual([key, job, true]);
+        const google = CHOICE[key][job] === "google";
+        expect(
+          own.every((r) =>
+            google
+              ? r.provider === "vertex" && r.routed_provider === "google"
+              : r.provider === "openai-compatible" && r.routed_provider === "scaleway",
+          ),
+        ).toBe(true);
+        // Why: the project's own choice, or the account's default where it chose nothing.
+        expect(new Set(own.map((r) => r.routing_reason))).toEqual(
+          new Set([google ? "project" : "account-default"]),
+        );
+      }
+    }
     expect(rows.every((r) => r.organisation_id === S.org)).toBe(true);
-    expect(new Set(ofG.map((r) => r.routing_reason))).toEqual(new Set(["project"]));
+    expect(
+      rows.every((r) => r.routing_job === "transcription" || r.routing_job === "analysis"),
+    ).toBe(true);
     expect(
       await sql`select 1 from model_call where provider = 'vertex' and project_id = ${S.project}`,
     ).toHaveLength(0);
+    // The daily check reads the account's history again and finds every Google call of every job meant.
     expect(
       await runProviderCheck({
         db,
         logger,
         alerts: null,
-        now: () => new Date(),
+        now: () => new Date(Date.now() + 60_000),
+        lagMs: 0,
         defaultProvider: "scaleway",
       }),
-    ).toEqual({ leaks: 0 });
+    ).toMatchObject({ leaks: 0 });
   });
 
   test("project setup has no project yet: it follows the account's default, and its search lookup is off for a Scaleway default", async () => {
@@ -372,8 +443,8 @@ run("two projects in one process, one on each provider", () => {
     expect(await withPayer(workspace, () => kit.completer.grounds?.())).toBe(false);
   });
 
-  test("search grounding exists for the project on Google and is refused for the other", async () => {
-    const ground = (who: typeof S, key: "s" | "g") =>
+  test("search grounding follows the analysis choice: Google for G and A, refused for S and T", async () => {
+    const ground = (who: World, key: "s" | "g" | "t" | "a") =>
       withPayer({ ref: "project", id: ids.project?.[key] as string }, () =>
         kit.completer.complete({
           group: "multi_modal_fast",
@@ -385,12 +456,17 @@ run("two projects in one process, one on each provider", () => {
     await expect(ground(S, "s")).rejects.toThrow(/search grounding/);
     expect(wire.seen.vertex.length).toBe(seen);
     expect((await ground(G, "g")).text).toContain("heard");
-    const groundsFor = (key: "s" | "g") =>
+    // T hears on Google but reads on Scaleway: its analysis never grounds; A reads on Google.
+    await expect(ground(T, "t")).rejects.toThrow(/search grounding/);
+    expect((await ground(A, "a")).text).toContain("heard");
+    const groundsFor = (key: "s" | "g" | "t" | "a") =>
       withPayer({ ref: "project", id: ids.project?.[key] as string }, () =>
         kit.completer.grounds?.(),
       );
     expect(await groundsFor("s")).toBe(false);
     expect(await groundsFor("g")).toBe(true);
+    expect(await groundsFor("t")).toBe(false);
+    expect(await groundsFor("a")).toBe(true);
   });
 
   test("a call with no payer, or an internal one, goes to the default provider", async () => {
@@ -402,13 +478,21 @@ run("two projects in one process, one on each provider", () => {
     expect(wire.seen.vertex.length).toBe(before);
   });
 
-  test("the Google project moves back to Scaleway and its very next call goes there", async () => {
+  test("the Google project moves its analysis back to Scaleway and the very next call goes there; its audio stays", async () => {
     const before = wire.seen.vertex.length;
-    await sql`update project set ai_provider = 'scaleway' where id = ${G.project}`;
+    await sql`update project set ai_analysis_provider = 'scaleway' where id = ${G.project}`;
     await withPayer({ ref: "project", id: G.project }, () =>
       kit.completer.complete({ group: "text_fast", user: `after the switch ${G.marker}` }),
     );
     expect(wire.seen.vertex.length).toBe(before);
     expect(wire.seen.compat.at(-1)?.body).toContain("after the switch");
+    // Its next piece of audio still goes to Google.
+    const conversation = { ref: "conversation", id: ids.conversation?.g as string } as Payer;
+    await withPayer(conversation, () =>
+      withTranscriber(speech, conversation, speech.kits.scaleway?.transcriber as never, (t) =>
+        t.transcribe({ audio: mp3, language: "en", customGuidancePrompt: "still-on-google" }),
+      ),
+    );
+    expect(wire.seen.vertex.at(-1)?.body).toContain("still-on-google");
   });
 });

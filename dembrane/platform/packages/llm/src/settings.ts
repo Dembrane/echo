@@ -2,10 +2,12 @@ import type { ModelGroup, ModelsConfig } from "./models";
 import { profileForProvider, profileOf, type TranscriptionProfile } from "./profiles";
 import {
   isProviderId,
+  JOBS,
   PROVIDERS,
   type ProviderId,
   providerOfKind,
   type RoutingPolicy,
+  serves,
 } from "./providers";
 
 /** The `llm` section of the platform config, as far as model wiring reads it. */
@@ -139,6 +141,9 @@ export function routingPolicyOf(s: Pick<LlmSettings, "provider" | "providers">):
   const unknown = named.filter((p) => !isProviderId(p));
   if (unknown.length)
     throw new Error(`LLM_PROVIDERS names ${unknown.join(", ")}, which is not a provider`);
+  const lacking = JOBS.filter((j) => !serves(def, j));
+  if (lacking.length)
+    throw new Error(`The default provider ${def} does not serve ${lacking.join(" and ")}`);
   const providers = [...new Set<ProviderId>([def, ...(named as ProviderId[])])];
   return { providers, default: def };
 }

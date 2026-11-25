@@ -122,9 +122,11 @@ export const model_call = pgTable(
     organisation_id: uuid("organisation_id"),
     /** The provider the routing policy resolved to ("scaleway", "google"); `provider` is who answered. */
     routed_provider: text("routed_provider"),
+    /** The job the call served: 'transcription' or 'analysis'. */
+    routing_job: text("routing_job"),
     /** Why: project, account-default, environment-default, conversation, only-provider, fail-closed:<cause>. */
     routing_reason: text("routing_reason"),
-    /** What the organisation allowed when the call was made; null when it was not read. */
+    /** What the organisation had enabled when the call was made; null when it was not read. */
     routing_allowed: text("routing_allowed").array(),
     /** The conversation the call belongs to, when it did; the daily provider check reads its recorded provider. */
     routing_conversation_id: uuid("routing_conversation_id"),

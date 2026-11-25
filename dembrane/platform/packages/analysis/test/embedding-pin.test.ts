@@ -59,6 +59,7 @@ describe("an embedding batch of a recipe step", () => {
   const policy = { providers: ["scaleway", "google"], default: "scaleway" } as const;
   const decision = (provider: "scaleway" | "google") => ({
     provider,
+    job: "analysis" as const,
     organisationId: null,
     reason: "project",
     allowed: ["scaleway", "google"] as string[],

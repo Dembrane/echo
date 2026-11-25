@@ -85,13 +85,20 @@ export {
 export {
   accountProviders,
   allowedAmong,
+  isJob,
   isProviderId,
+  JOBS,
+  type Job,
+  type PerJob,
   PROVIDER_IDS,
   PROVIDERS,
   type ProviderId,
   type ProviderInfo,
   providerOfKind,
+  providersFor,
   type RoutingPolicy,
+  type StoredAccountProviders,
+  serves,
 } from "./providers";
 export {
   bootGaps,

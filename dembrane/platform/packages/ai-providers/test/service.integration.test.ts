@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { randomUUID } from "node:crypto";
 import { Access, DrizzleAccessStore } from "@dembrane/access";
 import { connect, createDb, type Db, migrate } from "@dembrane/db";
-import { routingPolicyOf } from "@dembrane/llm";
+import { type Job, routingPolicyOf } from "@dembrane/llm";
 import type postgres from "postgres";
 import {
   type AiProvidersDeps,
@@ -45,6 +45,7 @@ run("AI providers: the account's setting and the project's choice", () => {
       policy,
       models: { scaleway: ["whisper-large-v3", "glm-5.3"] },
       now: () => new Date("2026-12-03T10:00:00Z"),
+      unitCostTtlMs: 0,
     };
   });
 
@@ -89,40 +90,53 @@ run("AI providers: the account's setting and the project's choice", () => {
     sql<{ actor_kind: string; type: string; detail: Record<string, unknown> }[]>`
       select actor_kind, type, detail from account_event where org_id = ${orgId} order by created_at, id`;
 
+  /** Google enabled for both jobs, Scaleway the default of each; a test changes what it needs. */
+  const BOTH = {
+    enabled: { transcription: ["scaleway", "google"], analysis: ["scaleway", "google"] },
+    defaults: { transcription: "scaleway", analysis: "scaleway" },
+  } as const;
+  const SCALEWAY_ONLY = {
+    enabled: { transcription: ["scaleway"], analysis: ["scaleway"] },
+    defaults: { transcription: "scaleway", analysis: "scaleway" },
+  } as const;
+  const column = (job: Job) =>
+    job === "transcription" ? "ai_transcription_provider" : "ai_analysis_provider";
+  const choice = async (projectId: string, job: Job) =>
+    (
+      await sql`select ai_transcription_provider as t, ai_analysis_provider as a from project where id = ${projectId}`
+    )[0]?.[job === "transcription" ? "t" : "a"];
+
   test("a project's choice waits for staff taking Google away, and is then refused", async () => {
     const w = await world();
-    await setOrg(d, randomUUID(), w.orgId, {
-      allowed: ["scaleway", "google"],
-      default: "scaleway",
-      requestTicketId: w.ticket,
-    });
-    let choice: Promise<unknown> = Promise.resolve();
+    await setOrg(d, randomUUID(), w.orgId, { ...BOTH, requestTicketId: w.ticket });
+    let result: Promise<unknown> = Promise.resolve();
     // Staff's change is written but not yet committed when the project admin chooses Google.
     await sql.begin(async (tx) => {
-      await tx`update org set ai_providers = ${["scaleway"]}, ai_default_provider = 'scaleway' where id = ${w.orgId}`;
-      choice = setProject(d, w.owner, w.projectId, "google").then(
+      await tx`update org set ai_analysis_providers = ${["scaleway"]}, ai_analysis_default = 'scaleway' where id = ${w.orgId}`;
+      result = setProject(d, w.owner, w.projectId, "analysis", "google").then(
         () => "chose",
         (err: unknown) => err,
       );
       await Bun.sleep(500);
     });
-    expect(await choice).toMatchObject({
-      message: expect.stringContaining("does not allow google"),
+    expect(await result).toMatchObject({
+      message: expect.stringContaining("has not enabled google for analysis"),
     });
-    const [p] = await sql`select ai_provider from project where id = ${w.projectId}`;
-    expect(p?.ai_provider).toBeNull();
+    expect(await choice(w.projectId, "analysis")).toBeNull();
   });
 
-  test("an account nobody set offers only the deployment's default, to owners and admins only", async () => {
+  test("an account nobody set offers only the deployment's default for each job, to owners and admins only", async () => {
     const w = await world();
     expect(await readOrg(d, w.owner, w.orgId)).toMatchObject({
+      jobs: ["transcription", "analysis"],
       available: ["scaleway", "google"],
-      allowed: ["scaleway"],
-      default: "scaleway",
+      serves: { scaleway: ["transcription", "analysis"], google: ["transcription", "analysis"] },
+      enabled: { transcription: ["scaleway"], analysis: ["scaleway"] },
+      defaults: { transcription: "scaleway", analysis: "scaleway" },
       models: { scaleway: ["whisper-large-v3", "glm-5.3"] },
       history: [],
     });
-    expect((await readOrg(d, w.orgAdmin, w.orgId)).allowed).toEqual(["scaleway"]);
+    expect((await readOrg(d, w.orgAdmin, w.orgId)).enabled.analysis).toEqual(["scaleway"]);
     await expect(readOrg(d, w.billing, w.orgId)).rejects.toMatchObject({
       code: "organisation.admin_only",
     });
@@ -130,21 +144,22 @@ run("AI providers: the account's setting and the project's choice", () => {
     await expect(readOrg(d, w.outsider, w.orgId)).rejects.toMatchObject({ status: 404 });
   });
 
-  test("staff add Google at a customer's written request: the change, the event and the history line", async () => {
+  test("staff enable Google for analysis only, at a customer's written request: the change, the event and the history line", async () => {
     const w = await world();
     const staff = randomUUID();
     await setOrg(d, staff, w.orgId, {
-      allowed: ["scaleway", "google"],
-      default: "scaleway",
+      enabled: { transcription: ["scaleway"], analysis: ["scaleway", "google"] },
+      defaults: { transcription: "scaleway", analysis: "scaleway" },
       requestTicketId: w.ticket,
     });
     expect(await readOrg(d, w.owner, w.orgId)).toMatchObject({
-      allowed: ["scaleway", "google"],
-      default: "scaleway",
+      enabled: { transcription: ["scaleway"], analysis: ["scaleway", "google"] },
+      defaults: { transcription: "scaleway", analysis: "scaleway" },
       history: [
         {
-          kind: "added",
+          kind: "enabled",
           provider: "google",
+          job: "analysis",
           request_at: "2026-12-02T09:00:00.000Z",
           at: "2026-12-03T10:00:00.000Z",
         },
@@ -155,8 +170,11 @@ run("AI providers: the account's setting and the project's choice", () => {
       actor_kind: "staff",
       type: "ai_providers.changed",
       detail: {
-        before: { allowed: ["scaleway"], default: "scaleway" },
-        after: { allowed: ["scaleway", "google"], default: "scaleway" },
+        before: SCALEWAY_ONLY,
+        after: {
+          enabled: { transcription: ["scaleway"], analysis: ["scaleway", "google"] },
+          defaults: { transcription: "scaleway", analysis: "scaleway" },
+        },
         request_ticket_id: w.ticket,
       },
     });
@@ -165,18 +183,47 @@ run("AI providers: the account's setting and the project's choice", () => {
     expect(forStaff.models).toEqual({ scaleway: ["whisper-large-v3", "glm-5.3"] });
   });
 
+  test("the history has one line per job and change, and a default change reads as one", async () => {
+    const w = await world();
+    const staff = randomUUID();
+    let minute = 0;
+    const ticking = { ...d, now: () => new Date(Date.UTC(2026, 11, 3, 10, minute++)) };
+    await setOrg(ticking, staff, w.orgId, { ...BOTH, requestTicketId: w.ticket });
+    await setOrg(ticking, staff, w.orgId, {
+      ...BOTH,
+      defaults: { transcription: "scaleway", analysis: "google" },
+      requestTicketId: w.ticket,
+    });
+    await setOrg(ticking, staff, w.orgId, {
+      enabled: { transcription: ["scaleway"], analysis: ["scaleway", "google"] },
+      defaults: { transcription: "scaleway", analysis: "google" },
+      requestTicketId: w.ticket,
+    });
+    const lines = (await readOrg(d, w.owner, w.orgId)).history.map((h) => [
+      h.kind,
+      h.provider,
+      h.job,
+    ]);
+    // Newest first, and within one change transcription before analysis.
+    expect(lines).toEqual([
+      ["disabled", "google", "transcription"],
+      ["default", "google", "analysis"],
+      ["enabled", "google", "transcription"],
+      ["enabled", "google", "analysis"],
+    ]);
+  });
+
   test("staff read who made a change by display name, never by email", async () => {
     const w = await world();
     const staff = randomUUID();
     await sql`insert into auth_user (id, name, email) values (${staff}, 'sam.staff', ${`${staff}@example.com`})`;
     await sql`insert into app_user (id, directus_user_id, display_name) values (${randomUUID()}, ${staff}, 'Sam Example')`;
-    await setOrg(d, staff, w.orgId, {
-      allowed: ["scaleway", "google"],
-      default: "scaleway",
-      requestTicketId: w.ticket,
-    });
+    await setOrg(d, staff, w.orgId, { ...BOTH, requestTicketId: w.ticket });
     const { history } = await readOrgForStaff(d, w.orgId);
-    expect(history).toMatchObject([{ kind: "added", provider: "google", by: "Sam Example" }]);
+    expect(history).toMatchObject([
+      { kind: "enabled", provider: "google", job: "transcription", by: "Sam Example" },
+      { kind: "enabled", provider: "google", job: "analysis", by: "Sam Example" },
+    ]);
     expect(JSON.stringify(history)).not.toContain("@example.com");
   });
 
@@ -186,121 +233,205 @@ run("AI providers: the account's setting and the project's choice", () => {
     const staff = randomUUID();
     const only = { ...d, policy: routingPolicyOf({ provider: "openai-compatible" }) };
     await expect(
-      setOrg(only, staff, w.orgId, {
-        allowed: ["scaleway", "google"],
-        default: "scaleway",
-        requestTicketId: w.ticket,
-      }),
+      setOrg(only, staff, w.orgId, { ...BOTH, requestTicketId: w.ticket }),
     ).rejects.toThrow(/no provider google/);
     await expect(
       setOrg(d, staff, w.orgId, {
-        allowed: ["google"],
-        default: "scaleway",
+        enabled: { transcription: ["google"], analysis: ["scaleway"] },
+        defaults: { transcription: "scaleway", analysis: "scaleway" },
         requestTicketId: w.ticket,
       }),
-    ).rejects.toThrow(/default must be one of/);
+    ).rejects.toThrow(/transcription default must be one of/);
     await expect(
-      setOrg(d, staff, w.orgId, {
-        allowed: ["scaleway"],
-        default: "scaleway",
-        requestTicketId: "",
-      }),
+      setOrg(d, staff, w.orgId, { ...SCALEWAY_ONLY, requestTicketId: "" }),
     ).rejects.toThrow(/request ticket/);
     await expect(
-      setOrg(d, staff, w.orgId, {
-        allowed: ["scaleway"],
-        default: "scaleway",
-        requestTicketId: other.ticket,
-      }),
+      setOrg(d, staff, w.orgId, { ...SCALEWAY_ONLY, requestTicketId: other.ticket }),
     ).rejects.toThrow(/not one of this account/);
     await expect(
-      setOrg(d, staff, w.orgId, { allowed: ["orai"], default: "orai", requestTicketId: w.ticket }),
+      setOrg(d, staff, w.orgId, {
+        enabled: { transcription: ["orai"], analysis: ["orai"] },
+        defaults: { transcription: "orai", analysis: "orai" },
+        requestTicketId: w.ticket,
+      }),
     ).rejects.toThrow(/Not an AI provider/);
     expect((await events(w.orgId)).length).toBe(0);
   });
 
-  test("a project admin chooses among what the account allows; a member sees the field but cannot change it", async () => {
+  test("a job can only be set to a provider that serves it", async () => {
+    // A provider that hears audio and reads no text, as Orai will for Basque.
+    const { PROVIDERS } = await import("@dembrane/llm");
+    const google = PROVIDERS.google as { jobs: readonly Job[] };
+    const original = google.jobs;
+    google.jobs = ["transcription"];
+    try {
+      const w = await world();
+      await expect(
+        setOrg(d, randomUUID(), w.orgId, {
+          enabled: { transcription: ["scaleway", "google"], analysis: ["scaleway", "google"] },
+          defaults: { transcription: "google", analysis: "scaleway" },
+          requestTicketId: w.ticket,
+        }),
+      ).rejects.toThrow(/google does not serve analysis/);
+      await setOrg(d, randomUUID(), w.orgId, {
+        enabled: { transcription: ["scaleway", "google"], analysis: ["scaleway"] },
+        defaults: { transcription: "google", analysis: "scaleway" },
+        requestTicketId: w.ticket,
+      });
+      const view = await readProject(d, w.owner, w.projectId);
+      expect(view.jobs.analysis.options).toEqual(["scaleway"]);
+      expect(view.jobs.transcription.options).toEqual(["scaleway", "google"]);
+      await expect(setProject(d, w.owner, w.projectId, "analysis", "google")).rejects.toThrow(
+        /has not enabled google for analysis/,
+      );
+      // A stored setting that names it anyway still never offers it for the job.
+      await sql`update org set ai_analysis_providers = array['scaleway','google'] where id = ${w.orgId}`;
+      expect((await readOrg(d, w.owner, w.orgId)).enabled.analysis).toEqual(["scaleway"]);
+    } finally {
+      google.jobs = original;
+    }
+  });
+
+  test("a project admin chooses per job among what the account enabled; a member sees the field but cannot change it", async () => {
     const w = await world();
     // One provider: the field has one option and the choice is refused.
     expect(await readProject(d, w.owner, w.projectId)).toMatchObject({
-      options: ["scaleway"],
-      effective: "scaleway",
+      jobs: {
+        transcription: { options: ["scaleway"], effective: "scaleway" },
+        analysis: { options: ["scaleway"], effective: "scaleway" },
+      },
       can_change: true,
       models: { scaleway: ["whisper-large-v3", "glm-5.3"] },
     });
-    await expect(setProject(d, w.owner, w.projectId, "google")).rejects.toThrow(
-      /does not allow google/,
+    await expect(setProject(d, w.owner, w.projectId, "analysis", "google")).rejects.toThrow(
+      /has not enabled google for analysis/,
     );
-    await setOrg(d, randomUUID(), w.orgId, {
-      allowed: ["scaleway", "google"],
-      default: "scaleway",
-      requestTicketId: w.ticket,
-    });
+    await setOrg(d, randomUUID(), w.orgId, { ...BOTH, requestTicketId: w.ticket });
     expect(await readProject(d, w.owner, w.projectId)).toMatchObject({
-      options: ["scaleway", "google"],
-      account_default: "scaleway",
-      current: null,
+      jobs: {
+        transcription: {
+          options: ["scaleway", "google"],
+          account_default: "scaleway",
+          current: null,
+        },
+        analysis: { options: ["scaleway", "google"], account_default: "scaleway", current: null },
+      },
     });
     expect(await readProject(d, w.member, w.projectId)).toMatchObject({ can_change: false });
-    await expect(setProject(d, w.member, w.projectId, "google")).rejects.toMatchObject({
+    await expect(setProject(d, w.member, w.projectId, "analysis", "google")).rejects.toMatchObject({
       status: 403,
     });
-    expect(await setProject(d, w.owner, w.projectId, "google")).toMatchObject({
-      current: "google",
-      effective: "google",
-    });
-    expect(
-      (await sql`select ai_provider from project where id = ${w.projectId}`)[0]?.ai_provider,
-    ).toBe("google");
-    await setProject(d, w.owner, w.projectId, "scaleway");
+    await expect(setProject(d, w.owner, w.projectId, "nothing", "google")).rejects.toThrow(
+      /Not a job/,
+    );
+    // Transcription on Google with analysis left alone, then analysis too, then back.
+    const view = await setProject(d, w.owner, w.projectId, "transcription", "google");
+    expect(view.jobs.transcription).toMatchObject({ current: "google", effective: "google" });
+    expect(view.jobs.analysis).toMatchObject({ current: null, effective: "scaleway" });
+    expect(await choice(w.projectId, "transcription")).toBe("google");
+    expect(await choice(w.projectId, "analysis")).toBeNull();
+    await setProject(d, w.owner, w.projectId, "analysis", "google");
+    await setProject(d, w.owner, w.projectId, "transcription", "scaleway");
+    expect([
+      await choice(w.projectId, "transcription"),
+      await choice(w.projectId, "analysis"),
+    ]).toEqual(["scaleway", "google"]);
     const changes = (await events(w.orgId)).filter((e) => e.type === "project.ai_provider.changed");
     expect(changes.map((e) => e.detail)).toEqual([
-      { before: null, after: "google" },
-      { before: "google", after: "scaleway" },
+      { job: "transcription", before: null, after: "google" },
+      { job: "analysis", before: null, after: "google" },
+      { job: "transcription", before: "google", after: "scaleway" },
     ]);
     // The same answer again is no change and writes nothing.
-    await setProject(d, w.owner, w.projectId, "scaleway");
+    await setProject(d, w.owner, w.projectId, "transcription", "scaleway");
     expect(
       (await events(w.orgId)).filter((e) => e.type === "project.ai_provider.changed"),
-    ).toHaveLength(2);
+    ).toHaveLength(3);
+    expect(column("analysis")).toBe("ai_analysis_provider");
   });
 
-  test("taking Google away moves the account's projects back and clears their choice, so giving it back does not send them there again", async () => {
+  test("taking Google away from a job clears that job's choices only, so giving it back does not send projects there again", async () => {
     const w = await world();
     const staff = randomUUID();
     await setOrg(d, staff, w.orgId, {
-      allowed: ["scaleway", "google"],
-      default: "google",
+      ...BOTH,
+      defaults: { transcription: "scaleway", analysis: "google" },
       requestTicketId: w.ticket,
     });
-    await setProject(d, w.owner, w.projectId, "google");
+    await setProject(d, w.owner, w.projectId, "analysis", "google");
+    await setProject(d, w.owner, w.projectId, "transcription", "google");
+    // Google leaves analysis; transcription keeps it.
     await setOrg(d, staff, w.orgId, {
-      allowed: ["scaleway"],
-      default: "scaleway",
+      enabled: { transcription: ["scaleway", "google"], analysis: ["scaleway"] },
+      defaults: { transcription: "scaleway", analysis: "scaleway" },
       requestTicketId: w.ticket,
     });
-    expect(
-      (await sql`select ai_provider from project where id = ${w.projectId}`)[0]?.ai_provider,
-    ).toBeNull();
+    expect(await choice(w.projectId, "analysis")).toBeNull();
+    expect(await choice(w.projectId, "transcription")).toBe("google");
     expect(await readProject(d, w.owner, w.projectId)).toMatchObject({
-      options: ["scaleway"],
-      effective: "scaleway",
+      jobs: {
+        analysis: { options: ["scaleway"], effective: "scaleway" },
+        transcription: { effective: "google" },
+      },
     });
     const last = (await events(w.orgId)).at(-1);
-    expect(last?.detail).toMatchObject({
-      projects_reset: 1,
-      after: { allowed: ["scaleway"], default: "scaleway" },
-    });
-    const history = (await readOrg(d, w.owner, w.orgId)).history.map((h) => [h.kind, h.provider]);
-    expect(history).toContainEqual(["removed", "google"]);
-    await setOrg(d, staff, w.orgId, {
-      allowed: ["scaleway", "google"],
-      default: "scaleway",
-      requestTicketId: w.ticket,
-    });
+    expect(last?.detail).toMatchObject({ projects_reset: 1 });
+    const history = (await readOrg(d, w.owner, w.orgId)).history.map((h) => [
+      h.kind,
+      h.provider,
+      h.job,
+    ]);
+    expect(history).toContainEqual(["disabled", "google", "analysis"]);
+    await setOrg(d, staff, w.orgId, { ...BOTH, requestTicketId: w.ticket });
     expect(await readProject(d, w.owner, w.projectId)).toMatchObject({
-      current: null,
-      effective: "scaleway",
+      jobs: { analysis: { current: null, effective: "scaleway" } },
     });
+  });
+
+  test("the account page carries the cost of each provider for each job, and this month's spend", async () => {
+    const w = await world();
+    const staff = randomUUID();
+    await setOrg(d, staff, w.orgId, { ...BOTH, requestTicketId: w.ticket });
+    // No use yet: the lines are the cost of an hour of audio and of 100 analysis calls.
+    const fresh = await readOrg(d, w.owner, w.orgId);
+    expect(fresh.cost.transcription.scaleway).toMatchObject({
+      billing: "included",
+      monthly_eur: null,
+    });
+    expect(fresh.cost.analysis.google).toMatchObject({ billing: "on_top", monthly_eur: null });
+    expect(fresh.month.spent).toEqual({ scaleway: 0, google: 0 });
+    // A month of use seeded in the call log.
+    const call = (
+      provider: "scaleway" | "google",
+      job: Job,
+      at: string,
+      micro: number,
+      extra: string,
+    ) =>
+      sql`insert into model_call (started_at, service, model_group, model, kind, status, attempt, ms, provider, routed_provider, routing_job, organisation_id, project_id, payer, audio_seconds, input_tokens, output_tokens, cost_micro_eur)
+        values (${at}::timestamptz, 's', 'g', 'm', ${job === "transcription" ? "speech" : "generate"}, 'ok', 1, 1,
+          ${provider === "google" ? "vertex" : "openai-compatible"}, ${provider}, ${job}, ${w.orgId}, ${w.projectId}, 'account',
+          ${extra === "audio" ? 3600 : null}, ${extra === "audio" ? null : 900}, ${extra === "audio" ? null : 100}, ${micro})`;
+    await call("scaleway", "transcription", "2026-12-01T09:00:00Z", 180_000, "audio");
+    await call("google", "transcription", "2026-12-02T09:00:00Z", 900_000, "audio");
+    await call("google", "analysis", "2026-12-02T10:00:00Z", 40_000, "text");
+    const used = await readOrg(d, w.owner, w.orgId);
+    // Two hours of audio in 30 days; Google's average is EUR 0.90 an hour across the log.
+    expect(used.cost.transcription.google).toMatchObject({ monthly_eur: 1.8, per_hour_eur: null });
+    expect(used.cost.analysis.google?.monthly_eur).toBe(0.04);
+    expect(used.month).toMatchObject({
+      from: "2026-12-01T00:00:00.000Z",
+      spent: { scaleway: 0.18, google: 0.94 },
+    });
+    // A project sees its own use only.
+    const other = randomUUID();
+    await sql`insert into project (id, is_conversation_allowed, workspace_id) values (${other}, true, ${w.workspaceId})`;
+    const mine = await readProject(d, w.owner, other);
+    expect(mine.cost.transcription.google).toMatchObject({ monthly_eur: null });
+    expect(
+      (await readProject(d, w.owner, w.projectId)).cost.transcription.google?.monthly_eur,
+    ).toBe(1.8);
+    // Staff read the same lines.
+    expect((await readOrgForStaff(d, w.orgId)).month.spent.google).toBe(0.94);
   });
 });

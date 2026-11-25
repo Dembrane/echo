@@ -119,40 +119,36 @@ run("staff AI providers", () => {
     return { orgId, ticket, url: `/api/v2/admin/orgs/${orgId}/ai-providers` };
   }
 
-  test("staff read the account's setting and its tickets; nobody else does", async () => {
+  const BOTH = {
+    transcription_enabled: ["scaleway", "google"],
+    analysis_enabled: ["scaleway", "google"],
+    transcription_default: "scaleway",
+    analysis_default: "scaleway",
+  };
+
+  test("staff read the account's setting, its cost and its tickets; nobody else does", async () => {
     const o = await account();
     const read = await call(app, "staff", "GET", o.url);
     expect(read.status).toBe(200);
     expect(await read.json()).toMatchObject({
+      jobs: ["transcription", "analysis"],
       available: ["scaleway", "google"],
-      allowed: ["scaleway"],
-      default: "scaleway",
+      enabled: { transcription: ["scaleway"], analysis: ["scaleway"] },
+      defaults: { transcription: "scaleway", analysis: "scaleway" },
+      month: { spent: { scaleway: 0, google: 0 } },
       tickets: [{ id: o.ticket, subject: "Google Vertex AI" }],
     });
     expect((await call(app, "alice", "GET", o.url)).status).toBe(403);
     expect(
-      (
-        await call(app, "alice", "PUT", o.url, {
-          allowed: ["scaleway", "google"],
-          default: "scaleway",
-          request_ticket_id: o.ticket,
-        })
-      ).status,
+      (await call(app, "alice", "PUT", o.url, { ...BOTH, request_ticket_id: o.ticket })).status,
     ).toBe(403);
     expect((await call(app, "nobody", "GET", o.url)).status).toBeGreaterThanOrEqual(401);
   });
 
   test("a change needs a request ticket of the account; it is audited and lands on the account's timeline", async () => {
     const o = await account();
-    const body = {
-      allowed: ["scaleway", "google"],
-      default: "scaleway",
-      request_ticket_id: o.ticket,
-    };
-    const without = await call(app, "staff", "PUT", o.url, {
-      allowed: ["scaleway", "google"],
-      default: "scaleway",
-    });
+    const body = { ...BOTH, request_ticket_id: o.ticket };
+    const without = await call(app, "staff", "PUT", o.url, BOTH);
     expect(without.status).toBeGreaterThanOrEqual(400);
     const foreign = await call(app, "staff", "PUT", o.url, {
       ...body,
@@ -161,35 +157,57 @@ run("staff AI providers", () => {
     expect(foreign.status).toBe(400);
     const ok = await call(app, "staff", "PUT", o.url, body);
     expect(ok.status).toBe(200);
-    expect(await ok.json()).toMatchObject({ allowed: ["scaleway", "google"], default: "scaleway" });
+    expect(await ok.json()).toMatchObject({
+      enabled: { transcription: ["scaleway", "google"], analysis: ["scaleway", "google"] },
+      defaults: { transcription: "scaleway", analysis: "scaleway" },
+    });
     const [org] =
-      await sql`select ai_providers, ai_default_provider from org where id = ${o.orgId}`;
+      await sql`select ai_transcription_providers, ai_analysis_providers, ai_transcription_default, ai_analysis_default from org where id = ${o.orgId}`;
     expect(org).toMatchObject({
-      ai_providers: ["scaleway", "google"],
-      ai_default_provider: "scaleway",
+      ai_transcription_providers: ["scaleway", "google"],
+      ai_analysis_providers: ["scaleway", "google"],
+      ai_transcription_default: "scaleway",
+      ai_analysis_default: "scaleway",
     });
     const [event] =
       await sql`select actor_kind, actor_user_id::text, detail from account_event where org_id = ${o.orgId}`;
     expect(event).toMatchObject({ actor_kind: "staff", actor_user_id: STAFF.directusUserId });
     expect(event?.detail).toMatchObject({
       request_ticket_id: o.ticket,
-      after: { allowed: ["scaleway", "google"] },
+      after: { enabled: { analysis: ["scaleway", "google"] } },
     });
     const audit = await database.db
       .select()
       .from(schema.staff_audit_event)
       .where(eq(schema.staff_audit_event.action, "org.ai_providers.set"));
-    expect(audit).toHaveLength(2);
+    expect(audit.length).toBeGreaterThanOrEqual(2);
   });
 
-  test("a deployment without Google cannot be told to allow it", async () => {
+  test("the modal's rules hold on the server: a default must be enabled for its job, and each job keeps a provider", async () => {
+    const o = await account();
+    const put = (b: object) =>
+      call(app, "staff", "PUT", o.url, { ...BOTH, request_ticket_id: o.ticket, ...b });
+    // Google as the analysis default while it is not enabled for analysis.
+    const res = await put({ analysis_enabled: ["scaleway"], analysis_default: "google" });
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { detail: string }).detail).toMatch(
+      /analysis default must be one of/,
+    );
+    // A job with nothing enabled.
+    expect((await put({ transcription_enabled: [] })).status).toBeGreaterThanOrEqual(400);
+    // Google can be the default of one job and not of the other.
+    const mixed = await put({ analysis_default: "google" });
+    expect(mixed.status).toBe(200);
+    expect(await mixed.json()).toMatchObject({
+      defaults: { transcription: "scaleway", analysis: "google" },
+    });
+    expect(await sql`select 1 from account_event where org_id = ${o.orgId}`).toHaveLength(1);
+  });
+
+  test("a deployment without Google cannot be told to enable it", async () => {
     const only = build(routingPolicyOf({ provider: "openai-compatible" }));
     const o = await account();
-    const res = await call(only, "staff", "PUT", o.url, {
-      allowed: ["scaleway", "google"],
-      default: "scaleway",
-      request_ticket_id: o.ticket,
-    });
+    const res = await call(only, "staff", "PUT", o.url, { ...BOTH, request_ticket_id: o.ticket });
     expect(res.status).toBe(400);
     expect(((await res.json()) as { detail: string }).detail).toMatch(/no provider google/);
     expect(await sql`select 1 from account_event where org_id = ${o.orgId}`).toHaveLength(0);

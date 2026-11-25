@@ -174,7 +174,7 @@ const speech: SpeechRouter = {
       }),
     ]),
   ),
-  decide: (who) => decide(ai.resolver, ai.policy, who),
+  decide: (who) => decide(ai.resolver, ai.policy, "transcription", who),
 };
 const defaultKit = speech.kits[ai.policy.default];
 if (!defaultKit) throw new Error("the default provider has no speech kit");

@@ -82,18 +82,18 @@ run("a final pass recovered after its project left Google", () => {
   /** A finished conversation of a project on Google: its live text in place and its recording in the bucket. */
   async function conversation(anonymised: boolean) {
     const orgId = newId();
-    await sql`insert into org (id, name, ai_providers, ai_default_provider)
-      values (${orgId}, 'o', array['scaleway','google'], 'scaleway')`;
+    await sql`insert into org (id, name, ai_transcription_providers, ai_analysis_providers, ai_transcription_default, ai_analysis_default)
+      values (${orgId}, 'o', array['scaleway','google'], array['scaleway','google'], 'scaleway', 'scaleway')`;
     const accountId = newId();
     await sql`insert into billing_account (id, tier, org_id) values (${accountId}, 'paid', ${orgId})`;
     const workspaceId = newId();
     await sql`insert into workspace (id, name, org_id, billing_account_id)
       values (${workspaceId}, 'w', ${orgId}, ${accountId})`;
     const projectId = newId();
-    await sql`insert into project (id, name, language, is_conversation_allowed, workspace_id, ai_provider)
+    await sql`insert into project (id, name, language, is_conversation_allowed, workspace_id, ai_transcription_provider)
       values (${projectId}, 'P', 'en', true, ${workspaceId}, 'google')`;
     const id = newId();
-    await sql`insert into conversation (id, project_id, participant_name, source, ai_provider, is_anonymized,
+    await sql`insert into conversation (id, project_id, participant_name, source, ai_transcription_provider, is_anonymized,
         is_finished, is_all_chunks_transcribed, created_at, updated_at)
       values (${id}, ${projectId}, 'T', 'PORTAL_AUDIO', 'google', ${anonymised}, true, true,
         now() - interval '1 hour', now())`;
@@ -144,7 +144,7 @@ run("a final pass recovered after its project left Google", () => {
       hash: await currentChunkHash({ db }, c.id),
     });
     await until(async () => lines().includes(`${a} hung`));
-    await sql`update project set ai_provider = 'scaleway' where id = ${c.projectId}`;
+    await sql`update project set ai_transcription_provider = 'scaleway' where id = ${c.projectId}`;
     first.kill(9);
     await first.exited;
     spawn(b, env);

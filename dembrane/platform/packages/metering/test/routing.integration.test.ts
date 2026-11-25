@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { randomUUID } from "node:crypto";
 import { connect, createDb, type Db, migrate } from "@dembrane/db";
-import { decide, type ModelCall, routed, routingPolicyOf } from "@dembrane/llm";
+import { decide, type Job, type ModelCall, routed, routingPolicyOf } from "@dembrane/llm";
 import type { Payer, PayerRefKind } from "@dembrane/observability";
 import type postgres from "postgres";
 import {
@@ -48,21 +48,27 @@ run("the routing policy against the database", () => {
     await a.end();
   });
 
-  /** An organisation with a billing account, a workspace and a project; `payingOrg` pays for the workspace. */
+  type PerJobOpt<T> = { transcription?: T; analysis?: T };
+
+  /** An organisation with a billing account, a workspace and a project; `paidBy` pays for the workspace. */
   async function setup(o: {
-    allowed?: string[] | null;
-    accountDefault?: string | null;
-    project?: string | null;
-    paidBy?: { allowed: string[] | null };
+    /** Enabled for both jobs; `enabledFor` sets one job on its own. */
+    enabled?: string[] | null;
+    enabledFor?: PerJobOpt<string[] | null>;
+    defaults?: PerJobOpt<string | null>;
+    choices?: PerJobOpt<string | null>;
+    paidBy?: { enabled: string[] | null };
   }) {
     const orgId = randomUUID();
-    await sql`insert into org (id, name, ai_providers, ai_default_provider)
-      values (${orgId}, 'client', ${o.allowed ?? null}, ${o.accountDefault ?? null})`;
+    const en = (j: Job) => (o.enabledFor?.[j] !== undefined ? o.enabledFor[j] : o.enabled) ?? null;
+    await sql`insert into org (id, name, ai_transcription_providers, ai_analysis_providers, ai_transcription_default, ai_analysis_default)
+      values (${orgId}, 'client', ${en("transcription")}, ${en("analysis")},
+        ${o.defaults?.transcription ?? null}, ${o.defaults?.analysis ?? null})`;
     let accountOrg = orgId;
     if (o.paidBy) {
       accountOrg = randomUUID();
-      await sql`insert into org (id, name, ai_providers, is_partner)
-        values (${accountOrg}, 'partner', ${o.paidBy.allowed}, true)`;
+      await sql`insert into org (id, name, ai_transcription_providers, ai_analysis_providers, is_partner)
+        values (${accountOrg}, 'partner', ${o.paidBy.enabled}, ${o.paidBy.enabled}, true)`;
     }
     const accountId = randomUUID();
     await sql`insert into billing_account (id, tier, org_id) values (${accountId}, 'paid', ${accountOrg})`;
@@ -70,29 +76,36 @@ run("the routing policy against the database", () => {
     await sql`insert into workspace (id, name, org_id, billing_account_id)
       values (${workspaceId}, 'w', ${orgId}, ${accountId})`;
     const projectId = randomUUID();
-    await sql`insert into project (id, is_conversation_allowed, workspace_id, ai_provider)
-      values (${projectId}, true, ${workspaceId}, ${o.project ?? null})`;
+    await sql`insert into project (id, is_conversation_allowed, workspace_id, ai_transcription_provider, ai_analysis_provider)
+      values (${projectId}, true, ${workspaceId}, ${o.choices?.transcription ?? null}, ${o.choices?.analysis ?? null})`;
     return { orgId, accountOrg, accountId, workspaceId, projectId };
   }
 
   const fresh = () => providerResolver(dbRoutingStore(db), policy, { ttlMs: 0 });
-  const ask = (who: Payer | undefined) => decide(fresh(), policy, who);
+  const ask = (who: Payer | undefined, job: Job = "analysis") => decide(fresh(), policy, job, who);
+  const BOTH_JOBS = { transcription: "google", analysis: "google" } as const;
 
   test("a project on Google, and the account's own default, as the database holds them", async () => {
     const a = await setup({
-      allowed: ["scaleway", "google"],
-      accountDefault: "scaleway",
-      project: "google",
+      enabled: ["scaleway", "google"],
+      defaults: { transcription: "scaleway", analysis: "scaleway" },
+      choices: BOTH_JOBS,
     });
-    expect(await ask({ ref: "project", id: a.projectId })).toMatchObject({
-      provider: "google",
-      reason: "project",
-      organisationId: a.orgId,
-    });
-    const b = await setup({ allowed: ["scaleway", "google"], accountDefault: "google" });
+    for (const job of ["transcription", "analysis"] as const)
+      expect(await ask({ ref: "project", id: a.projectId }, job)).toMatchObject({
+        provider: "google",
+        job,
+        reason: "project",
+        organisationId: a.orgId,
+      });
+    const b = await setup({ enabled: ["scaleway", "google"], defaults: { analysis: "google" } });
     expect(await ask({ ref: "project", id: b.projectId })).toMatchObject({
       provider: "google",
       reason: "account-default",
+    });
+    // The other job of the same account is still on Scaleway.
+    expect(await ask({ ref: "project", id: b.projectId }, "transcription")).toMatchObject({
+      provider: "scaleway",
     });
     const c = await setup({});
     expect(await ask({ ref: "project", id: c.projectId })).toMatchObject({
@@ -101,13 +114,39 @@ run("the routing policy against the database", () => {
     });
   });
 
+  test("mixed choices: transcription on Google with analysis on Scaleway, and the reverse", async () => {
+    const a = await setup({
+      enabled: ["scaleway", "google"],
+      choices: { transcription: "google", analysis: "scaleway" },
+    });
+    const b = await setup({
+      enabled: ["scaleway", "google"],
+      choices: { transcription: "scaleway", analysis: "google" },
+    });
+    const at = (x: { projectId: string }, job: Job) =>
+      ask({ ref: "project", id: x.projectId }, job).then((d) => d.provider);
+    expect([await at(a, "transcription"), await at(a, "analysis")]).toEqual(["google", "scaleway"]);
+    expect([await at(b, "transcription"), await at(b, "analysis")]).toEqual(["scaleway", "google"]);
+  });
+
+  test("Google enabled for analysis only is never chosen for transcription", async () => {
+    const a = await setup({
+      enabledFor: { transcription: ["scaleway"], analysis: ["scaleway", "google"] },
+      choices: BOTH_JOBS,
+    });
+    expect((await ask({ ref: "project", id: a.projectId }, "analysis")).provider).toBe("google");
+    expect(await ask({ ref: "project", id: a.projectId }, "transcription")).toMatchObject({
+      provider: "scaleway",
+      allowed: ["scaleway"],
+    });
+  });
+
   test("the workspace's organisation decides, never the account that pays: a partner paying for a client", async () => {
     // The client allows Google; the partner that pays does not.
     const a = await setup({
-      allowed: ["scaleway", "google"],
-      accountDefault: "scaleway",
-      project: "google",
-      paidBy: { allowed: ["scaleway"] },
+      enabled: ["scaleway", "google"],
+      choices: BOTH_JOBS,
+      paidBy: { enabled: ["scaleway"] },
     });
     expect(a.accountOrg).not.toBe(a.orgId);
     expect(await ask({ ref: "project", id: a.projectId })).toMatchObject({
@@ -116,18 +155,17 @@ run("the routing policy against the database", () => {
     });
     // The partner allows Google; the client does not.
     const b = await setup({
-      allowed: ["scaleway"],
-      accountDefault: "scaleway",
-      project: "google",
-      paidBy: { allowed: ["scaleway", "google"] },
+      enabled: ["scaleway"],
+      choices: BOTH_JOBS,
+      paidBy: { enabled: ["scaleway", "google"] },
     });
     expect(await ask({ ref: "project", id: b.projectId })).toMatchObject({ provider: "scaleway" });
   });
 
   test("every kind of payer leads to its project's provider; unknown and deleted ones are the default", async () => {
-    const a = await setup({ allowed: ["scaleway", "google"], project: "google" });
+    const a = await setup({ enabled: ["scaleway", "google"], choices: BOTH_JOBS });
     const conversation = randomUUID();
-    await sql`insert into conversation (id, project_id, ai_provider) values (${conversation}, ${a.projectId}, 'google')`;
+    await sql`insert into conversation (id, project_id, ai_transcription_provider) values (${conversation}, ${a.projectId}, 'google')`;
     const chat = randomUUID();
     await sql`insert into project_chat (id, project_id) values (${chat}, ${a.projectId})`;
     const agent = randomUUID();
@@ -157,12 +195,17 @@ run("the routing policy against the database", () => {
       ["analysis_run", run],
       ["workspace", a.workspaceId],
     ];
-    for (const [ref, id] of kinds) {
-      const d = await ask({ ref, id });
-      // A workspace has no project of its own: it follows the account default.
-      expect([ref, d.provider]).toEqual([ref, ref === "workspace" ? "scaleway" : "google"]);
-      expect(d.organisationId).toBe(a.orgId);
-    }
+    for (const [ref, id] of kinds)
+      for (const job of ["transcription", "analysis"] as const) {
+        const d = await ask({ ref, id }, job);
+        // A workspace has no project of its own: it follows the account default.
+        expect([ref, job, d.provider]).toEqual([
+          ref,
+          job,
+          ref === "workspace" ? "scaleway" : "google",
+        ]);
+        expect(d.organisationId).toBe(a.orgId);
+      }
     expect(await ask({ ref: "project", id: randomUUID() })).toMatchObject({
       provider: "scaleway",
       reason: "fail-closed:unknown-project",
@@ -187,34 +230,36 @@ run("the routing policy against the database", () => {
     });
   });
 
-  test("a conversation that began on Scaleway stays there after its project moves to Google, and back applies at once", async () => {
-    const a = await setup({
-      allowed: ["scaleway", "google"],
-      accountDefault: "scaleway",
-      project: null,
-    });
+  test("a conversation that began on Scaleway keeps its audio there after its project moves to Google, and back applies at once", async () => {
+    const a = await setup({ enabled: ["scaleway", "google"] });
     const early = randomUUID();
-    await sql`insert into conversation (id, project_id, ai_provider) values (${early}, ${a.projectId}, 'scaleway')`;
-    await sql`update project set ai_provider = 'google' where id = ${a.projectId}`;
+    await sql`insert into conversation (id, project_id, ai_transcription_provider) values (${early}, ${a.projectId}, 'scaleway')`;
+    await sql`update project set ai_transcription_provider = 'google', ai_analysis_provider = 'google' where id = ${a.projectId}`;
     const late = randomUUID();
-    await sql`insert into conversation (id, project_id, ai_provider) values (${late}, ${a.projectId}, 'google')`;
+    await sql`insert into conversation (id, project_id, ai_transcription_provider) values (${late}, ${a.projectId}, 'google')`;
+    const hear = (id: string) => ask({ ref: "conversation", id }, "transcription");
     // The decision names the conversation, so the call log can say whose provider it followed.
-    expect(await ask({ ref: "conversation", id: early })).toMatchObject({ conversationId: early });
+    expect(await hear(early)).toMatchObject({ conversationId: early });
     expect(await ask({ ref: "project", id: a.projectId })).not.toHaveProperty("conversationId");
-    expect((await ask({ ref: "conversation", id: early })).provider).toBe("scaleway");
-    expect((await ask({ ref: "conversation", id: late })).provider).toBe("google");
-    expect((await ask({ ref: "project", id: a.projectId })).provider).toBe("google");
-    await sql`update project set ai_provider = 'scaleway' where id = ${a.projectId}`;
-    expect((await ask({ ref: "conversation", id: late })).provider).toBe("scaleway");
-    // The account losing Google moves the project back as well.
-    await sql`update project set ai_provider = 'google' where id = ${a.projectId}`;
-    await sql`update org set ai_providers = array['scaleway'] where id = ${a.orgId}`;
-    expect((await ask({ ref: "conversation", id: late })).provider).toBe("scaleway");
+    expect((await hear(early)).provider).toBe("scaleway");
+    expect((await hear(late)).provider).toBe("google");
+    // Analysis of that early conversation is the project's: it decides at every call.
+    expect((await ask({ ref: "conversation", id: early }, "analysis")).provider).toBe("google");
+    expect((await ask({ ref: "project", id: a.projectId }, "transcription")).provider).toBe(
+      "google",
+    );
+    await sql`update project set ai_transcription_provider = 'scaleway' where id = ${a.projectId}`;
+    expect((await hear(late)).provider).toBe("scaleway");
+    // The account losing Google for a job moves the project back for that job.
+    await sql`update project set ai_transcription_provider = 'google' where id = ${a.projectId}`;
+    await sql`update org set ai_transcription_providers = array['scaleway'] where id = ${a.orgId}`;
+    expect((await hear(late)).provider).toBe("scaleway");
+    expect((await ask({ ref: "conversation", id: late }, "analysis")).provider).toBe("google");
   });
 
   test("rows carry the organisation, the provider the policy chose and why; the daily check finds a planted bad row", async () => {
-    const a = await setup({ allowed: ["scaleway", "google"], project: "google" });
-    const b = await setup({ allowed: ["scaleway"], project: null });
+    const a = await setup({ enabled: ["scaleway", "google"], choices: BOTH_JOBS });
+    const b = await setup({ enabled: ["scaleway"] });
     const alerts: string[] = [];
     const recorder = modelCallRecorder({
       sink: modelCallTable(db),
@@ -283,38 +328,74 @@ run("the routing policy against the database", () => {
       {
         organisation_id: string | null;
         routed_provider: string | null;
+        routing_job: string | null;
         routing_reason: string | null;
         project_id: string;
       }[]
     >`
-      select organisation_id::text, routed_provider, routing_reason, project_id::text from model_call order by id`;
+      select organisation_id::text, routed_provider, routing_job, routing_reason, project_id::text from model_call order by id`;
     expect(rows[0]).toMatchObject({
       organisation_id: a.orgId,
       routed_provider: "google",
+      routing_job: "analysis",
       routing_reason: "project",
     });
     // No routing note: the organisation is still the one owning the project's workspace.
-    expect(rows[1]).toMatchObject({ organisation_id: b.orgId, routed_provider: null });
+    expect(rows[1]).toMatchObject({
+      organisation_id: b.orgId,
+      routed_provider: null,
+      routing_job: null,
+    });
   });
 
   describe("the daily provider check", () => {
+    type SettingJson = {
+      enabled: Record<Job, string[]>;
+      defaults: Record<Job, string>;
+    };
+    const setting = (
+      enabled: string[] | PerJobOpt<string[]>,
+      defaults: string | PerJobOpt<string> = "scaleway",
+    ): SettingJson => {
+      const e = Array.isArray(enabled)
+        ? { transcription: enabled, analysis: enabled }
+        : {
+            transcription: enabled.transcription ?? ["scaleway"],
+            analysis: enabled.analysis ?? ["scaleway"],
+          };
+      const d =
+        typeof defaults === "string"
+          ? { transcription: defaults, analysis: defaults }
+          : {
+              transcription: defaults.transcription ?? "scaleway",
+              analysis: defaults.analysis ?? "scaleway",
+            };
+      return { enabled: e, defaults: d };
+    };
     const events = (orgId: string) => ({
       org: (before: object | null, after: object, at: string) =>
         sql`insert into account_event (id, org_id, actor_kind, type, subject_type, subject_id, detail, created_at)
           values (${randomUUID()}, ${orgId}, 'staff', 'ai_providers.changed', 'org', ${orgId},
             ${sql.json({ before, after } as never)}, ${at}::timestamptz)`,
-      project: (projectId: string, before: string | null, after: string | null, at: string) =>
+      project: (
+        projectId: string,
+        job: Job,
+        before: string | null,
+        after: string | null,
+        at: string,
+      ) =>
         sql`insert into account_event (id, org_id, actor_kind, type, subject_type, subject_id, detail, created_at)
           values (${randomUUID()}, ${orgId}, 'customer', 'project.ai_provider.changed', 'project', ${projectId},
-            ${sql.json({ before, after } as never)}, ${at}::timestamptz)`,
+            ${sql.json({ job, before, after } as never)}, ${at}::timestamptz)`,
     });
     const vertexCall = (
       o: { orgId: string; projectId: string; conversationId?: string },
       at: string,
       routed = "google",
+      job: Job = "analysis",
     ) =>
-      sql`insert into model_call (started_at, service, model_group, model, kind, status, attempt, ms, provider, routed_provider, routing_reason, routing_allowed, organisation_id, project_id, routing_conversation_id)
-        values (${at}::timestamptz, 'echo-worker', 'text_fast', 'gemini', 'generate', 'ok', 1, 1, 'vertex', ${routed}, 'project', array['scaleway','google'], ${o.orgId}, ${o.projectId}, ${o.conversationId ?? null})`;
+      sql`insert into model_call (started_at, service, model_group, model, kind, status, attempt, ms, provider, routed_provider, routing_job, routing_reason, routing_allowed, organisation_id, project_id, routing_conversation_id)
+        values (${at}::timestamptz, 'echo-worker', 'text_fast', 'gemini', 'generate', 'ok', 1, 1, 'vertex', ${routed}, ${job}, 'project', array['scaleway','google'], ${o.orgId}, ${o.projectId}, ${o.conversationId ?? null})`;
     const checkAt = (
       at: string,
       alerts: string[],
@@ -332,31 +413,79 @@ run("the routing policy against the database", () => {
       await sql`delete from model_call`;
       await sql`delete from ai_provider_check`;
     };
-    const BOTH = { allowed: ["scaleway", "google"], default: "scaleway" };
-    const ONLY_SCALEWAY = { allowed: ["scaleway"], default: "scaleway" };
+    const BOTH = setting(["scaleway", "google"]);
+    const ONLY_SCALEWAY = setting(["scaleway"]);
+    const none = { transcription: 0, analysis: 0 };
 
     test("a call is fine while the history allowed Google and the project chose it, and not when either did not", async () => {
       await reset();
       const a = await setup({});
       const ev = events(a.orgId);
       await ev.org(ONLY_SCALEWAY, BOTH, "2026-11-01T10:00:00Z");
-      await ev.project(a.projectId, null, "google", "2026-11-01T11:00:00Z");
+      await ev.project(a.projectId, "analysis", null, "google", "2026-11-01T11:00:00Z");
       // Google removed from the account at 12:00: the project's choice goes with it.
       await ev.org(BOTH, ONLY_SCALEWAY, "2026-11-01T12:00:00Z");
       // Given back at 13:00, but the project has not chosen it again.
       await ev.org(ONLY_SCALEWAY, BOTH, "2026-11-01T13:00:00Z");
       await vertexCall(a, "2026-11-01T11:30:00Z"); // allowed, chosen: fine
       const alerts: string[] = [];
-      expect(await checkAt("2026-11-02T04:00:00Z", alerts)).toEqual({ leaks: 0 });
+      expect(await checkAt("2026-11-02T04:00:00Z", alerts)).toEqual({ leaks: 0, byJob: none });
       await vertexCall(a, "2026-11-01T09:00:00Z"); // before Google was ever allowed
       await vertexCall(a, "2026-11-01T12:30:00Z"); // after the removal
       await vertexCall(a, "2026-11-01T13:30:00Z"); // allowed again, project not chosen
       // The three are older than the watermark the first run left: a rerun from there ignores them.
-      expect(await checkAt("2026-11-02T05:00:00Z", alerts)).toEqual({ leaks: 0 });
+      expect(await checkAt("2026-11-02T05:00:00Z", alerts)).toEqual({ leaks: 0, byJob: none });
       await sql`delete from ai_provider_check`;
-      expect(await checkAt("2026-11-02T06:00:00Z", alerts)).toEqual({ leaks: 3 });
+      expect(await checkAt("2026-11-02T06:00:00Z", alerts)).toEqual({
+        leaks: 3,
+        byJob: { transcription: 0, analysis: 3 },
+      });
       expect(alerts).toHaveLength(1);
       expect(alerts[0]).toContain(a.orgId);
+    });
+
+    test("each job is judged on its own: Google for analysis does not allow it for audio", async () => {
+      await reset();
+      const a = await setup({});
+      const ev = events(a.orgId);
+      // Google enabled for analysis only, and the project chose it for analysis.
+      await ev.org(
+        ONLY_SCALEWAY,
+        setting({ analysis: ["scaleway", "google"] }),
+        "2026-11-01T10:00:00Z",
+      );
+      await ev.project(a.projectId, "analysis", null, "google", "2026-11-01T10:30:00Z");
+      await vertexCall(a, "2026-11-01T11:00:00Z", "google", "analysis"); // fine
+      await vertexCall(a, "2026-11-01T11:05:00Z", "google", "transcription"); // never enabled for audio
+      expect(await checkAt("2026-11-02T04:00:00Z", [])).toEqual({
+        leaks: 1,
+        byJob: { transcription: 1, analysis: 0 },
+      });
+      // The project's analysis choice does not carry over to transcription once both are enabled.
+      await ev.org(setting({ analysis: ["scaleway", "google"] }), BOTH, "2026-11-02T09:00:00Z");
+      await vertexCall(a, "2026-11-02T10:00:00Z", "google", "transcription");
+      await ev.project(a.projectId, "transcription", null, "google", "2026-11-02T10:30:00Z");
+      await vertexCall(a, "2026-11-02T11:00:00Z", "google", "transcription");
+      expect(await checkAt("2026-11-03T04:00:00Z", [])).toEqual({
+        leaks: 1,
+        byJob: { transcription: 1, analysis: 0 },
+      });
+    });
+
+    test("an account default of Google for one job covers a project that chose nothing for that job", async () => {
+      await reset();
+      const a = await setup({});
+      await events(a.orgId).org(
+        ONLY_SCALEWAY,
+        setting(["scaleway", "google"], { analysis: "google" }),
+        "2026-11-01T10:00:00Z",
+      );
+      await vertexCall(a, "2026-11-01T11:00:00Z", "google", "analysis");
+      await vertexCall(a, "2026-11-01T11:05:00Z", "google", "transcription");
+      expect(await checkAt("2026-11-02T04:00:00Z", [])).toEqual({
+        leaks: 1,
+        byJob: { transcription: 1, analysis: 0 },
+      });
     });
 
     test("it recomputes instead of trusting what the call recorded about itself", async () => {
@@ -364,21 +493,45 @@ run("the routing policy against the database", () => {
       const a = await setup({});
       // The call says Google was allowed; the account's history says it never was.
       await vertexCall(a, "2026-11-01T10:00:00Z");
-      expect(await checkAt("2026-11-02T04:00:00Z", [])).toEqual({ leaks: 1 });
+      expect(await checkAt("2026-11-02T04:00:00Z", [])).toEqual({
+        leaks: 1,
+        byJob: { transcription: 0, analysis: 1 },
+      });
     });
 
-    test("a conversation that began on Scaleway may not reach Google, whatever the project chose", async () => {
+    test("a conversation that began on Scaleway may not send audio to Google, whatever the project chose", async () => {
       await reset();
       const a = await setup({});
       const ev = events(a.orgId);
       await ev.org(ONLY_SCALEWAY, BOTH, "2026-11-01T10:00:00Z");
-      await ev.project(a.projectId, null, "google", "2026-11-01T10:30:00Z");
+      await ev.project(a.projectId, "transcription", null, "google", "2026-11-01T10:30:00Z");
+      await ev.project(a.projectId, "analysis", null, "google", "2026-11-01T10:30:00Z");
       const onGoogle = randomUUID();
       const onScaleway = randomUUID();
-      await sql`insert into conversation (id, project_id, ai_provider) values (${onGoogle}, ${a.projectId}, 'google'), (${onScaleway}, ${a.projectId}, 'scaleway')`;
-      await vertexCall({ ...a, conversationId: onGoogle }, "2026-11-01T11:00:00Z");
-      await vertexCall({ ...a, conversationId: onScaleway }, "2026-11-01T11:05:00Z");
-      expect(await checkAt("2026-11-02T04:00:00Z", [])).toEqual({ leaks: 1 });
+      await sql`insert into conversation (id, project_id, ai_transcription_provider) values (${onGoogle}, ${a.projectId}, 'google'), (${onScaleway}, ${a.projectId}, 'scaleway')`;
+      await vertexCall(
+        { ...a, conversationId: onGoogle },
+        "2026-11-01T11:00:00Z",
+        "google",
+        "transcription",
+      );
+      await vertexCall(
+        { ...a, conversationId: onScaleway },
+        "2026-11-01T11:05:00Z",
+        "google",
+        "transcription",
+      );
+      // Its analysis is the project's own: it decides at every call.
+      await vertexCall(
+        { ...a, conversationId: onScaleway },
+        "2026-11-01T11:10:00Z",
+        "google",
+        "analysis",
+      );
+      expect(await checkAt("2026-11-02T04:00:00Z", [])).toEqual({
+        leaks: 1,
+        byJob: { transcription: 1, analysis: 0 },
+      });
     });
 
     test("the first run, with no place saved, reads the last 24 hours and not the whole log", async () => {
@@ -388,12 +541,15 @@ run("the routing policy against the database", () => {
       await sql`insert into model_call (started_at, service, model_group, model, kind, status, attempt, ms, provider, organisation_id, project_id)
         values ('2026-11-01T10:00:00Z', 'echo-worker', 'text_fast', 'gemini', 'generate', 'ok', 1, 1, 'vertex', ${a.orgId}, ${a.projectId})`;
       const alerts: string[] = [];
-      expect(await checkAt("2026-11-04T04:00:00Z", alerts)).toEqual({ leaks: 0 });
+      expect(await checkAt("2026-11-04T04:00:00Z", alerts)).toEqual({ leaks: 0, byJob: none });
       expect(alerts).toEqual([]);
       // The window is not empty: a real leak of the last day is still found on a first run.
       await sql`delete from ai_provider_check`;
       await vertexCall(a, "2026-11-04T02:00:00Z", "scaleway");
-      expect(await checkAt("2026-11-04T04:00:00Z", alerts)).toEqual({ leaks: 1 });
+      expect(await checkAt("2026-11-04T04:00:00Z", alerts)).toEqual({
+        leaks: 1,
+        byJob: { transcription: 0, analysis: 1 },
+      });
       expect(alerts[0]).toContain("since 2026-11-03T04:00:00.000Z");
       const [mark] = await sql<
         { checked_through: Date }[]
@@ -404,11 +560,11 @@ run("the routing policy against the database", () => {
     test("a missed day is still covered: the next run reads from where the last stopped", async () => {
       await reset();
       const a = await setup({});
-      expect(await checkAt("2026-11-02T04:00:00Z", [])).toEqual({ leaks: 0 });
+      expect(await checkAt("2026-11-02T04:00:00Z", [])).toEqual({ leaks: 0, byJob: none });
       // Three days pass with no run; a leak on the second of them.
       await vertexCall(a, "2026-11-03T10:00:00Z");
-      expect(await checkAt("2026-11-05T04:00:00Z", [])).toEqual({ leaks: 1 });
-      expect(await checkAt("2026-11-06T04:00:00Z", [])).toEqual({ leaks: 0 });
+      expect((await checkAt("2026-11-05T04:00:00Z", [])).leaks).toBe(1);
+      expect((await checkAt("2026-11-06T04:00:00Z", [])).leaks).toBe(0);
     });
 
     test("where Google is the deployment's default, only a call the policy sent elsewhere counts", async () => {
@@ -416,7 +572,7 @@ run("the routing policy against the database", () => {
       const a = await setup({});
       await vertexCall(a, "2026-11-01T10:00:00Z");
       await vertexCall(a, "2026-11-01T10:05:00Z", "scaleway");
-      expect(await checkAt("2026-11-02T04:00:00Z", [], "google")).toEqual({ leaks: 1 });
+      expect((await checkAt("2026-11-02T04:00:00Z", [], "google")).leaks).toBe(1);
     });
   });
 });

@@ -22,7 +22,7 @@ run("a conversation records its AI provider at creation", () => {
   let close: () => Promise<void>;
   let app: Hono<Env>;
   const bucket = localBucket();
-  let providerFor: (projectId: string) => Promise<string | null> = async () => null;
+  let transcriptionProviderFor: (projectId: string) => Promise<string | null> = async () => null;
 
   beforeAll(async () => {
     const url = await freshDatabase("conv_provider_test");
@@ -48,7 +48,7 @@ run("a conversation records its AI provider at creation", () => {
         webhooksEnabled: false,
         dashboardUrl: "http://dashboard.test",
       },
-      providerFor: (id) => providerFor(id),
+      transcriptionProviderFor: (id) => transcriptionProviderFor(id),
       now: () => new Date(),
     };
     app = new Hono<Env>();
@@ -73,7 +73,8 @@ run("a conversation records its AI provider at creation", () => {
     });
     expect(res.status).toBe(200);
     const { id } = (await res.json()) as { id: string };
-    const [row] = await sql`select ai_provider from conversation where id = ${id}`;
+    const [row] =
+      await sql`select ai_transcription_provider as ai_provider from conversation where id = ${id}`;
     return row?.ai_provider as string | null;
   };
 
@@ -81,9 +82,9 @@ run("a conversation records its AI provider at creation", () => {
     const p = newId();
     await sql`insert into project (id, name, language, is_conversation_allowed) values (${p}, 'P', 'en', true)`;
     expect(await start(p)).toBeNull();
-    providerFor = async () => "google";
+    transcriptionProviderFor = async () => "google";
     expect(await start(p)).toBe("google");
-    providerFor = async () => "scaleway";
+    transcriptionProviderFor = async () => "scaleway";
     expect(await start(p)).toBe("scaleway");
   });
 });

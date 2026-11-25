@@ -1,6 +1,6 @@
 {
   "name": "@dembrane/ai-providers",
-  "description": "Which AI providers an account allows and which one each project uses: the settings, their history and the screens' routes.",
+  "description": "Which AI providers an account has enabled for each job (transcription, analysis), its defaults, what each project chose, and what each would cost: the settings, their history and the screens' routes.",
   "private": true,
   "type": "module",
   "dembrane": {
@@ -19,6 +19,7 @@
     "@dembrane/http": "workspace:*",
     "@dembrane/legacy-shape": "workspace:*",
     "@dembrane/llm": "workspace:*",
+    "@dembrane/metering": "workspace:*",
     "drizzle-orm": "^0.45.3",
     "hono": "^4.9.0"
   },

@@ -9,6 +9,7 @@ import {
   FakeEmbedder,
   fakeCalls,
   fakeModels,
+  type Job,
   type LlmSettings,
   type ModelCall,
   onlyProvider,
@@ -49,16 +50,23 @@ const policy = routingPolicyOf(SETTINGS);
 const SCALEWAY_PROJECT = "11111111-1111-4111-8111-111111111111";
 const GOOGLE_PROJECT = "22222222-2222-4222-8222-222222222222";
 
-const decision = (provider: "scaleway" | "google", reason = "project"): RouteDecision => ({
+const decision = (
+  provider: "scaleway" | "google",
+  reason = "project",
+  job: Job = "analysis",
+): RouteDecision => ({
   provider,
+  job,
   organisationId: "33333333-3333-4333-8333-333333333333",
   reason,
   allowed: ["scaleway", "google"],
 });
 
 /** Sends the Google project to Google and anything else to Scaleway, as a database would. */
-const byProject: ProviderResolver = async (who) =>
-  who && "ref" in who && who.id === GOOGLE_PROJECT ? decision("google") : decision("scaleway");
+const byProject: ProviderResolver = async (who, job) =>
+  who && "ref" in who && who.id === GOOGLE_PROJECT
+    ? decision("google", "project", job)
+    : decision("scaleway", "project", job);
 
 const inProject = <T>(id: string, fn: () => T) => withPayer({ ref: "project", id }, fn);
 
