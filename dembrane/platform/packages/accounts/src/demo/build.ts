@@ -10,7 +10,7 @@ import { type AccountsDeps, isStaffEmail } from "../deps";
 import { emit } from "../events";
 import type { Language, OfferItem, OfferTemplate } from "../offer";
 import { ensureOnboardingTasks } from "../onboarding";
-import { createAccount, signInUrl } from "../prospect";
+import { createAccount, joinDemoWorkspace, signInUrl } from "../prospect";
 import { pushOffer } from "../staff";
 import { store } from "../storage";
 import {
@@ -276,7 +276,11 @@ export async function buildDemo(
  * the synthetic projects, the offer draft and the prospect's onboarding tasks. For an
  * organisation the contact already works in: only a workspace of its own there, held back
  * until publishing hands it over, with the project owned by the contact; the organisation,
- * its billing and the contact's role stay as they are.
+ * its billing and the contact's role stay as they are. Either way the @dembrane.com staff
+ * member who made the demo becomes an admin of the demo's own workspace (never of the
+ * organisation), so they can open and tune the draft in the dashboard; a shared staff demo
+ * workspace is staff's already and gets no row, and a maker who is the demo's contact waits
+ * for the hand-over or release like any contact.
  */
 async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
   const staffApp = await store.appUserByDirectusId(d.db, row.createdBy);
@@ -378,8 +382,9 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
       workspaceId,
       // The popcorn read acts as the project's owner and must reach the project. In the
       // demo's own workspace that is the contact (its admin once released or handed over;
-      // the build reads through demoBuildAccess until then), never the staff member who is
-      // not in that organisation; a shared demo workspace stays with staff.
+      // the build reads through demoBuildAccess until then): the project is theirs, though
+      // the staff member who made the demo is an admin of that workspace too. A shared demo
+      // workspace stays with staff.
       ownerId: sharedWorkspace
         ? row.createdBy
         : placed?.ok
@@ -433,6 +438,17 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
   const contact = await store.identityByEmail(d.db, input.contact_email);
   if (!contact) throw new ValidationError("demo.contact_not_created");
   await d.db.transaction(async (tx) => {
+    // The staff member who made the demo, as an admin of its own workspace from the draft
+    // on, under joinDemoWorkspace's rule (any row of theirs there is left as it is). Only a
+    // @dembrane.com user, as for defaultManager. A held workspace stays held: a direct row
+    // opens it to them alone, and it takes no seat (MADE_FOR_DEMO). A maker who is also the
+    // demo's contact is held like any contact and gets their place at hand-over or release.
+    const staffAdded =
+      !sharedWorkspace &&
+      staffApp !== null &&
+      isStaffEmail(staffApp.email) &&
+      row.createdBy !== contact.id &&
+      (await joinDemoWorkspace(tx, orgId, workspaceId, staffApp.id, d.now().toISOString()));
     // The prospect's way from the demo into the product. Only a demo in their own
     // workspace can be opened by them; one in staff's workspace has no "Explore" step. An
     // organisation people already work in is no newcomer and gets no onboarding.
@@ -447,7 +463,14 @@ async function seed(d: DemoBuildDeps, row: Row, input: DemoInput) {
       orgId,
       actor: { kind: "staff", userId: row.createdBy },
       type: "demo.seeded",
-      detail: { slug, demo_id: row.id, links: seeded.result, published: false },
+      detail: {
+        slug,
+        demo_id: row.id,
+        links: seeded.result,
+        published: false,
+        // Who from dembrane joined the customer's workspace, when this seed added them.
+        ...(staffAdded && { staff_member_added_to_workspace: staffApp?.id }),
+      },
     });
   });
   const out: SeedOutput = {

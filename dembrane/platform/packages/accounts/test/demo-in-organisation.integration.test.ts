@@ -698,6 +698,165 @@ run("a demo placed in an organisation the contact already works in", () => {
     );
   });
 
+  describe("the dembrane person who made the demo is in its held workspace", () => {
+    let builder: Person;
+    beforeAll(async () => {
+      const u = await w.db.transaction((tx) =>
+        ensureUser(tx, {
+          email: "maker@dembrane.com",
+          name: "Demo Maker",
+          passwordHash: null,
+          nowIso: w.clock.now.toISOString(),
+        }),
+      );
+      builder = {
+        appUserId: u.appUserId,
+        directusUserId: u.userId,
+        isStaff: true,
+        email: "maker@dembrane.com",
+      };
+    });
+    /** Starts a demo in the organisation, made by the builder, and builds it to a draft. */
+    const draftByBuilder = async (orgId: string, contact: Person) => {
+      const r = await start(orgId, contact, { sign_in: true });
+      expect(r.status).toBe(201);
+      const id = K.DemoStatus.parse(r.data).id;
+      await w.db
+        .update(schema.account_demo)
+        .set({ createdBy: builder.directusUserId })
+        .where(eq(schema.account_demo.id, id));
+      await buildDemo(deps, id, 1);
+      return statusOf(id);
+    };
+    const projectRole = (who: Person, projectId: string) =>
+      w.deps.access.project(who, projectId, "project:read").then(
+        (a) => a.role,
+        () => null,
+      );
+    const workspaceRole = (who: Person, workspaceId: string) =>
+      w.deps.access.workspace(who, workspaceId, "project:read").then(
+        (a) => a.role,
+        () => null,
+      );
+
+    test("after the seed the builder is its admin and opens the draft, while the organisation's people get nothing of it and nothing is sent", async () => {
+      const { org, owner, contact, colleague } = await organisation("member");
+      const before = await accountOf(w, org.id);
+      w.jobs.jobs.length = 0;
+      const view = await draftByBuilder(org.id, contact);
+      expect(view.status).toBe("draft");
+      const where = await placedIn(view, org.id);
+      const workspaceId = where.workspace_id as string;
+      expect(await placesIn(w, workspaceId, builder)).toEqual([ADMIN_PLACE]);
+      expect(await projectRole(builder, projectOf(view))).toBe("admin");
+      expect(await workspaceRole(builder, workspaceId)).toBe("admin");
+      // Still held back from the organisation: no role for its owner, admin or the contact.
+      const [ws] = await w.db
+        .select({ settings: schema.workspace.settings })
+        .from(schema.workspace)
+        .where(eq(schema.workspace.id, workspaceId));
+      expect(heldForDemo(ws?.settings)).toBe(view.id);
+      for (const who of [owner, colleague, contact]) {
+        expect(await projectRole(who, projectOf(view))).toBeNull();
+        expect(await workspaceRole(who, workspaceId)).toBeNull();
+        expect(await placesIn(w, workspaceId, who)).toEqual([]);
+      }
+      // The organisation is as it was: the builder is in the workspace, not the organisation.
+      expect(await accountOf(w, org.id)).toEqual(before);
+      expect(emailsQueued(w)).toEqual([]);
+      const notices = await w.db
+        .select({ id: schema.notification.id })
+        .from(schema.notification)
+        .where(eq(schema.notification.ref_workspace_id, workspaceId));
+      expect(notices).toEqual([]);
+      // The account's timeline says a dembrane person joined the customer's workspace.
+      const [seeded] = await w.db
+        .select({ detail: schema.account_event.detail })
+        .from(schema.account_event)
+        .where(
+          and(eq(schema.account_event.orgId, org.id), eq(schema.account_event.type, "demo.seeded")),
+        );
+      expect(
+        (seeded?.detail as Record<string, unknown> | undefined)?.staff_member_added_to_workspace,
+      ).toBe(builder.appUserId);
+    });
+
+    test("a builder who already has a live row there keeps it as it is when the seed runs again", async () => {
+      const { org, contact } = await organisation("member");
+      const view = await draftByBuilder(org.id, contact);
+      const workspaceId = (await placedIn(view, org.id)).workspace_id as string;
+      await w.db
+        .update(schema.workspace_membership)
+        .set({ role: "member" })
+        .where(
+          and(
+            eq(schema.workspace_membership.workspace_id, workspaceId),
+            eq(schema.workspace_membership.user_id, builder.appUserId as string),
+          ),
+        );
+      // The seed step again, as a retry after a crash between its commit and its "done".
+      const [row] = await w.db
+        .select({ steps: schema.account_demo.steps })
+        .from(schema.account_demo)
+        .where(eq(schema.account_demo.id, view.id));
+      const steps = row?.steps as Record<string, { status: string }>;
+      await w.db
+        .update(schema.account_demo)
+        .set({
+          status: "failed",
+          steps: {
+            ...steps,
+            seed: { ...steps.seed, status: "failed" },
+            extract: { ...steps.extract, status: "pending" },
+            review: { ...steps.review, status: "pending" },
+          } as never,
+        })
+        .where(eq(schema.account_demo.id, view.id));
+      await buildDemo(deps, view.id, 2);
+      expect((await statusOf(view.id)).status).toBe("draft");
+      expect(await placesIn(w, workspaceId, builder)).toEqual([{ ...ADMIN_PLACE, role: "member" }]);
+    });
+
+    test("handed over with the email on: the contact joins as before and the builder stays its admin", async () => {
+      const { org, contact } = await organisation("member");
+      const view = await draftByBuilder(org.id, contact);
+      const workspaceId = (await placedIn(view, org.id)).workspace_id as string;
+      expect((await publish(view.id, true)).status).toBe(200);
+      expect(await placesIn(w, workspaceId, contact)).toEqual([ADMIN_PLACE]);
+      expect(await placesIn(w, workspaceId, builder)).toEqual([ADMIN_PLACE]);
+      expect(emailsQueued(w).filter((e) => e.to === builder.email)).toEqual([]);
+    });
+
+    test("a builder who is also the demo's contact gets no place at the seed, only at hand-over", async () => {
+      const owner = await personWithAccount(w, "selfowner");
+      const org = await existingOrganisation(w, {
+        name: "Demos self",
+        stage: "customer",
+        members: [
+          { person: owner, role: "owner" },
+          { person: builder, role: "member" },
+        ],
+      });
+      w.jobs.jobs.length = 0;
+      const view = await draftByBuilder(org.id, builder);
+      const workspaceId = (await placedIn(view, org.id)).workspace_id as string;
+      expect(await placesIn(w, workspaceId, builder)).toEqual([]);
+      expect(await workspaceRole(builder, workspaceId)).toBeNull();
+      const [seeded] = await w.db
+        .select({ detail: schema.account_event.detail })
+        .from(schema.account_event)
+        .where(
+          and(eq(schema.account_event.orgId, org.id), eq(schema.account_event.type, "demo.seeded")),
+        );
+      expect(seeded?.detail).not.toHaveProperty("staff_member_added_to_workspace");
+      expect((await publish(view.id, true)).status).toBe(200);
+      expect(await placesIn(w, workspaceId, builder)).toEqual([ADMIN_PLACE]);
+      expect(emailsQueued(w).map((e) => [e.to, e.template])).toEqual([
+        [builder.email, "account_demo_ready"],
+      ]);
+    });
+  });
+
   describe("starting a demo in an existing organisation (criterion 9)", () => {
     const demoCount = async () => (await w.db.select().from(schema.account_demo)).length;
     /** The fields a 422 names, as the forms read them. */

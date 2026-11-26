@@ -165,6 +165,9 @@ A seat is one person. Plans are counted in seats.
 - Only people who are members of a workspace count. An organisation admin who reaches a
   workspace through their organisation role takes no seat. dembrane staff on a
   [support visit](./staff-support-access.md) take no seat.
+- Someone from dembrane who is in one of your workspaces but not in your organisation takes
+  no seat either, for example the person who made a demo for you. Someone from dembrane who
+  is a member of your organisation counts like anyone.
 - An open invite is not billed. It counts once the person accepts. The billing page says
   "{pendingInvites} invite(s) pending. Counted once accepted."
 - No plan has a seat limit. An invite is never refused for the number of people.

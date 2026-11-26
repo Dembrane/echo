@@ -2,26 +2,15 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-	keepPreviousData,
-	useMutation,
-	useQuery,
-	useQueryClient,
-} from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
-import { toast } from "@/components/common/Toaster";
-import { notifyError } from "@/components/error/notifyError";
 import { API_BASE_URL } from "@/config";
-import { ApiRequestError } from "@/lib/errors/read";
-
-type PendingRequest = {
-	id: string;
-	requested_by_name: string;
-	message: string | null;
-	created_at: string | null;
-	expires_at: string | null;
-};
+import {
+	type PendingSupportRequest,
+	pendingSupportRequestsQuery,
+	useResolveSupportRequest,
+} from "./supportRequests";
 
 type SupportAccessEvent = {
 	id: string;
@@ -84,26 +73,16 @@ export function SupportAccessSection({
 	workspaceId: string;
 	canEdit: boolean;
 }) {
-	const queryClient = useQueryClient();
 	const [limit, setLimit] = useState(5);
 	// Native scrollIntoView finds the nearest scrollable ancestor (BaseLayout's
 	// inner overflow-auto); Mantine's useScrollIntoView scrolls the document.
 	const sectionRef = useRef<HTMLDivElement>(null);
 
-	const requestsKey = ["v2", "support-access", "requests", workspaceId];
 	const eventsKey = ["v2", "support-access", "events", workspaceId, limit];
 
 	const { data: requestsData } = useQuery({
+		...pendingSupportRequestsQuery(workspaceId),
 		enabled: canEdit,
-		queryFn: async () => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/workspaces/${workspaceId}/support-access/requests`,
-				{ credentials: "include" },
-			);
-			if (!res.ok) throw new Error(`Failed (${res.status})`);
-			return res.json() as Promise<{ requests: PendingRequest[] }>;
-		},
-		queryKey: requestsKey,
 	});
 
 	const { data: eventsData, isFetching: eventsFetching } = useQuery({
@@ -123,46 +102,10 @@ export function SupportAccessSection({
 		queryKey: eventsKey,
 	});
 
-	const invalidateAll = () => {
-		queryClient.invalidateQueries({ queryKey: ["v2", "support-access"] });
-		queryClient.invalidateQueries({ queryKey: ["v2", "workspace-settings"] });
-	};
+	const resolveMutation = useResolveSupportRequest();
 
-	const resolveMutation = useMutation({
-		mutationFn: async ({
-			requestId,
-			decision,
-		}: {
-			requestId: string;
-			decision: "approve" | "deny";
-		}) => {
-			const res = await fetch(
-				`${API_BASE_URL}/v2/workspaces/${workspaceId}/support-access/requests/${requestId}/${decision}`,
-				{ credentials: "include", method: "POST" },
-			);
-			if (!res.ok) {
-				const err = await res.json().catch(() => ({}));
-				throw new ApiRequestError(res.status, err);
-			}
-			return res.json();
-		},
-		onError: (e) => {
-			void notifyError(e);
-			invalidateAll();
-		},
-		onSuccess: (_data, vars) => {
-			toast.success(
-				vars.decision === "approve"
-					? t`Access granted for 24 hours.`
-					: t`Request declined.`,
-			);
-			invalidateAll();
-		},
-	});
-
-	const [confirmTarget, setConfirmTarget] = useState<PendingRequest | null>(
-		null,
-	);
+	const [confirmTarget, setConfirmTarget] =
+		useState<PendingSupportRequest | null>(null);
 	const [confirmOpened, { open: openConfirm, close: closeConfirm }] =
 		useDisclosure(false);
 
@@ -225,6 +168,7 @@ export function SupportAccessSection({
 											resolveMutation.mutate({
 												decision: "deny",
 												requestId: req.id,
+												workspaceId,
 											})
 										}
 									>
@@ -276,6 +220,7 @@ export function SupportAccessSection({
 						resolveMutation.mutate({
 							decision: "approve",
 							requestId: confirmTarget.id,
+							workspaceId,
 						});
 						closeConfirm();
 						setConfirmTarget(null);

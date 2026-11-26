@@ -1,4 +1,7 @@
 import {
+  type AccessStore,
+  DrizzleAccessStore,
+  endSupportApprovals,
   heldForDemo,
   requireStaff,
   type StaffAudit,
@@ -129,6 +132,7 @@ export function staffRoutes(deps: StaffRouteDeps) {
     return out;
   }
 
+  const accessStore: AccessStore = new DrizzleAccessStore(deps.db);
   const support = new SupportAccess({
     db: deps.db,
     storage: s,
@@ -628,6 +632,65 @@ export function staffRoutes(deps: StaffRouteDeps) {
   });
 
   // ── Support access ───────────────────────────────────────────────────
+  /**
+   * The caller's own visit to a workspace: whether they are in and until when, and whether
+   * it can make changes and until when, by the rule the access check itself applies.
+   */
+  async function visitOf(workspaceId: string, appUserId: string, now: Date) {
+    const live = (await s.supportRows(workspaceId, appUserId)).filter(
+      (r) => !membershipExpired(r.expires_at, now),
+    );
+    if (!live.length)
+      return {
+        active: false,
+        membership_id: null,
+        expires_at: null,
+        can_change: false,
+        change_until: null,
+      };
+    const row = live.reduce((a, b) =>
+      String(b.expires_at ?? "") > String(a.expires_at ?? "") ? b : a,
+    );
+    const membership = await accessStore.workspaceMembership(workspaceId, appUserId, now);
+    return {
+      active: true,
+      membership_id: row.id,
+      expires_at: directusTime(row.expires_at),
+      can_change: membership?.supportApproved === true,
+      change_until: directusTime(membership?.supportChangeUntil ?? null),
+    };
+  }
+
+  // The account page: an organisation's workspaces, each with the caller's visit and waiting
+  // request, so the page asks (and audits) once instead of twice per workspace.
+  app.get(`${A}/orgs/:org_id/workspaces`, async (c) => {
+    const id = c.req.param("org_id");
+    const who = await staff(c, "staff:support_join", "org.workspaces.read", ["org", id]);
+    const org = isUuid(id) ? await s.org(id) : null;
+    if (!org || org.deleted_at) throw new NotFoundError("organisation.not_found");
+    const me = await appUser(who.directusUserId);
+    const now = clock();
+    const workspaces = [];
+    for (const w of await s.orgWorkspaces(id)) {
+      const [pending] = await s.ownRequests(w.id, me.id, "pending");
+      workspaces.push({
+        workspace_id: w.id,
+        name: w.name,
+        support_access_enabled: w.allow_support_access,
+        held_for_demo: heldForDemo(w.settings) !== null,
+        visit: await visitOf(w.id, me.id, now),
+        request: pending
+          ? {
+              id: pending.id,
+              created_at: directusTime(pending.created_at),
+              expires_at: directusTime(pending.expires_at),
+            }
+          : null,
+      });
+    }
+    return c.json({ workspaces });
+  });
+
   app.post(`${A}/workspaces/:workspace_id/join-support`, async (c) => {
     const id = c.req.param("workspace_id");
     const who = await staff(c, "staff:support_join", "workspace.support.join", ["workspace", id]);
@@ -658,19 +721,15 @@ export function staffRoutes(deps: StaffRouteDeps) {
     const id = c.req.param("workspace_id");
     const who = await staff(c, "staff:support_join", "workspace.support.read", ["workspace", id]);
     const me = await appUser(who.directusUserId);
-    const now = clock();
-    const live = isUuid(id)
-      ? (await s.supportRows(id, me.id)).filter((r) => !membershipExpired(r.expires_at, now))
-      : [];
-    if (!live.length) return c.json({ active: false, membership_id: null, expires_at: null });
-    const row = live.reduce((a, b) =>
-      String(b.expires_at ?? "") > String(a.expires_at ?? "") ? b : a,
-    );
-    return c.json({
-      active: true,
-      membership_id: row.id,
-      expires_at: directusTime(row.expires_at),
-    });
+    if (!isUuid(id))
+      return c.json({
+        active: false,
+        membership_id: null,
+        expires_at: null,
+        can_change: false,
+        change_until: null,
+      });
+    return c.json(await visitOf(id, me.id, clock()));
   });
 
   app.delete(`${A}/workspaces/:workspace_id/join-support`, async (c) => {
@@ -683,6 +742,7 @@ export function staffRoutes(deps: StaffRouteDeps) {
     const now = clock();
     for (const r of rows) {
       await s.updateMembership(r.id, { deleted_at: pyIso(now) }, now);
+      await endSupportApprovals(deps.db, r.id);
       await cancelPendingTasks(
         deps.db,
         SUPPORT_TASKS.revokeStaffSupport,
@@ -737,7 +797,8 @@ export function staffRoutes(deps: StaffRouteDeps) {
         message:
           "This workspace holds a demo that is not published yet, so nobody in the organisation can see it or answer a request. Open the demo's draft from the demos page instead.",
       });
-    if (ws.allow_support_access) throw new ConflictError("staff.support_access_already_on");
+    // With the switch on a request still counts: approving it lets a read-only visitor
+    // make changes.
     const me = await appUser(who.directusUserId);
     const [existing] = await s.ownRequests(id, me.id, "pending");
     if (existing) return c.json(requestOut(existing));

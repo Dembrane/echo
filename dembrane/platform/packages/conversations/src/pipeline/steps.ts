@@ -55,12 +55,14 @@ export interface PipelineDeps {
   readonly webhooks: { readonly enabled: boolean; readonly dashboardUrl: string };
   /**
    * Told once per finished conversation whose every chunk is transcribed, inside the
-   * transaction that marks it so. The worker books the project's popcorn read here.
+   * transaction that marks it so. The worker books the project's popcorn read here. Every
+   * read goes through `tx` or `db`, both bound to that transaction: the pool may be empty.
    */
   readonly onTranscribed?: (
     tx: Tx["sql"],
     projectId: string,
     conversationId: string,
+    db: Tx["db"],
   ) => Promise<void>;
   /** The final pass over the whole recording; absent or empty means the live text is the record. */
   readonly final?: FinalSettings;
@@ -815,7 +817,7 @@ export async function claimFinalize(
       .set({ is_all_chunks_transcribed: true, updated_at: d.now().toISOString() })
       .where(eq(conversation.id, conversationId));
     await webhook(d, tx, row.project_id, conversationId, "conversation.transcribed");
-    await d.onTranscribed?.(tx.sql, row.project_id, conversationId);
+    await d.onTranscribed?.(tx.sql, row.project_id, conversationId, tx.db);
     return row.project_id;
   });
   // After the commit: the claim above flips once, so the event is sent once.

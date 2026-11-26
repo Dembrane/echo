@@ -30,6 +30,7 @@ import { Logo } from "@/components/common/Logo";
 import { Protected } from "@/components/common/Protected";
 import { toast } from "@/components/common/Toaster";
 import { ErrorNotice } from "@/components/error/ErrorNotice";
+import { resetSupportRequestSeen } from "@/components/workspace/supportRequestPromptState";
 import { LEGAL_PRIVACY_URL } from "@/config";
 import { resetPromptSeen } from "@/features/accounts/help/tasksPromptState";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
@@ -258,6 +259,7 @@ function SignerInvite({ invite, token }: { invite: Invite; token: string }) {
 					params: { docId, orgId },
 				});
 				resetPromptSeen();
+				resetSupportRequestSeen();
 				clearAllDrafts();
 				emitAuthCacheBoundary();
 				// Reset, not clear: nothing of a previous session survives, and the gate's
@@ -719,6 +721,7 @@ function RoomInvitePage({ token }: { token: string }) {
 					params: { orgId },
 				});
 				resetPromptSeen();
+				resetSupportRequestSeen();
 				emitAuthCacheBoundary();
 				await queryClient.resetQueries();
 				navigate(ROOM_HOME(orgId));
