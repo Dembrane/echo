@@ -223,11 +223,17 @@ export async function submitOnboardingAnswers(
   const me = await onboardedUser(store, who);
   const data = cleanProblem(body.data);
   const answers = { version: body.version, data, skipped: body.skipped };
-  await accountStorage(deps.db).setOnboardingAnswers(me.id, answers, ctx.now);
+  // The answer already stored is read under the same lock as the write, so two posts of
+  // one answer tell staff once.
+  let before: string | null = null;
+  await accountStorage(deps.db).updateAppUserLocked(me.id, ctx.now, (fresh) => {
+    before = storedProblem(fresh.onboarding_answer_json);
+    return { onboarding_answer_json: answers };
+  });
 
   const review = flagReview(data);
   const problem = body.skipped ? null : problemFrom(data);
-  if (problem) {
+  if (problem && problem !== before) {
     try {
       await shareProblem(ctx, me, problem);
     } catch (err) {
@@ -262,6 +268,21 @@ export function problemFrom(answers: readonly unknown[]): string | null {
   for (const a of answers) if (isEntry(a) && typeof a.q4 === "string") last = a.q4;
   return problemText(last);
 }
+
+/** The q4 a stored answers JSON holds, read by the same rule. */
+function storedProblem(json: unknown): string | null {
+  const j = typeof json === "string" ? safeParse(json) : json;
+  if (!isEntry(j) || !Array.isArray(j.data)) return null;
+  return problemFrom(j.data);
+}
+
+const safeParse = (text: string): unknown => {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+};
 
 /** Stores q4 by the rule staff read it with: trimmed and cut, and dropped when unusable. */
 function cleanProblem(data: Record<string, unknown>[]): Record<string, unknown>[] {
@@ -331,7 +352,10 @@ async function notifyStaff(
   else if (r.training === "no") lines.push("Has not followed a training. Organise one.");
   const summary = lines.join(" ") || "Needs onboarding follow-up.";
   // The mail is the one place the training owner reads; the bell notice stays as it was.
-  const mailLines = problem ? [...lines, `Problem they want to solve: ${problem}`] : lines;
+  // Line breaks in the answer would break the list, so they become spaces.
+  const mailLines = problem
+    ? [...lines, `Problem they want to solve: ${problem.replace(/\s*[\r\n]+\s*/g, " ")}`]
+    : lines;
   const title = `Onboarding follow-up: ${who}`;
 
   const staff = await ctx.audiences.staff();

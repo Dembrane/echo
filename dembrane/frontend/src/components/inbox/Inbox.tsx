@@ -19,10 +19,10 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { BellIcon, CheckIcon } from "@phosphor-icons/react";
+import { BellIcon, CaretDown, CaretUp, CheckIcon } from "@phosphor-icons/react";
 import { formatRelative } from "date-fns";
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { AnnouncementItem } from "@/components/announcement/AnnouncementItem";
 import {
@@ -44,6 +44,7 @@ import {
 	useUnreadNotificationCount,
 } from "@/hooks/useNotifications";
 import { avatarUrl } from "@/lib/avatar";
+import { testId } from "@/lib/testUtils";
 
 /**
  * Unified Inbox drawer — single entry point in the header.
@@ -363,6 +364,21 @@ function NotificationRowItem({
 		: "";
 	const isDestructive = row.severity === "destructive";
 	const isActionRequired = row.severity === "action_required" && !row.read;
+	// A message longer than its two lines gets the Announcements tab's Show more. Measured
+	// whenever the clamped text is laid out: the drawer opens after the row mounts.
+	const [showMore, setShowMore] = useState(false);
+	const [overflows, setOverflows] = useState(false);
+	const messageRef = useRef<HTMLParagraphElement>(null);
+	useEffect(() => {
+		const el = messageRef.current;
+		if (!el || showMore || !row.message) return;
+		const check = () => setOverflows(el.scrollHeight > el.clientHeight + 1);
+		check();
+		if (typeof ResizeObserver === "undefined") return;
+		const observer = new ResizeObserver(check);
+		observer.observe(el);
+		return () => observer.disconnect();
+	}, [row.message, showMore]);
 
 	// Clicking the row fires `onClick` (mark-read + navigate when there's
 	// an action). Notifications without a navigation target (matrix §6
@@ -449,9 +465,34 @@ function NotificationRowItem({
 						</Text>
 					)}
 					{row.message && (
-						<Text size="xs" c="dimmed" lineClamp={2}>
+						<Text
+							size="xs"
+							c="dimmed"
+							lineClamp={showMore ? undefined : 2}
+							ref={messageRef}
+						>
 							{renderInlineMarkdown(row.message)}
 						</Text>
+					)}
+					{(overflows || showMore) && (
+						<Group>
+							<Button
+								variant="subtle"
+								color="gray"
+								size="xs"
+								rightSection={
+									showMore ? <CaretUp size={16} /> : <CaretDown size={16} />
+								}
+								// Reading on is neither opening the notice nor marking it read.
+								onClick={(e) => {
+									e.stopPropagation();
+									setShowMore((v) => !v);
+								}}
+								{...testId("notification-show-more-button")}
+							>
+								{showMore ? <Trans>Show less</Trans> : <Trans>Show more</Trans>}
+							</Button>
+						</Group>
 					)}
 					{createdLabel && (
 						<Text size="xs" c="dimmed">

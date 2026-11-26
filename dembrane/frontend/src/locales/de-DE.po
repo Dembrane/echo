@@ -940,7 +940,7 @@ msgstr "{seats, plural, one {# Sitzplatz} other {# Sitzplätze}}"
 msgid "{selectedCount} of {totalCount} fields selected. Accept applies only the ticked ones."
 msgstr "{selectedCount} von {totalCount} Feldern ausgewählt. „Übernehmen“ wendet nur die ausgewählten an."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:340
+#: src/routes/onboarding/OnboardingRoute.tsx:341
 #: src/components/organisation/CreateOrganisationModal.tsx:159
 msgid "{sent} invites sent"
 msgstr "{sent} Einladungen gesendet"
@@ -1151,7 +1151,7 @@ msgstr "Ein blauer Balken am oberen Rand jedes Tabs mit deinem Text und einem Li
 msgid "A cleaner, more accessible dashboard and portal."
 msgstr "Ein übersichtlicheres, barrierefreieres Dashboard und Portal."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:563
+#: src/routes/onboarding/OnboardingRoute.tsx:564
 msgid "A couple of quick questions and you're in."
 msgstr "Nur ein paar kurze Fragen, und schon bist du startklar."
 
@@ -1274,7 +1274,7 @@ msgstr "Ein Platz entspricht einem Mitglied. Füge Mitglieder im Reiter „Perso
 msgid "A seat is one member. Seats stay available until the plan ends; changes won't be charged."
 msgstr "Ein Platz entspricht einem Mitglied. Plätze bleiben bis zum Ende des Tarifs verfügbar; Änderungen werden nicht berechnet."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:635
+#: src/routes/onboarding/OnboardingRoute.tsx:636
 msgid "A sentence or two is plenty. Type it or record it."
 msgstr "Ein, zwei Sätze reichen. Tipp sie ein oder sprich sie ein."
 
@@ -1322,8 +1322,8 @@ msgstr "Angaben"
 msgid "About the suggested project update: {hostNote}"
 msgstr "Zur vorgeschlagenen Projektaktualisierung: {hostNote}"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:180
 #: src/routes/onboarding/OnboardingRoute.tsx:181
+#: src/routes/onboarding/OnboardingRoute.tsx:182
 msgid "About you"
 msgstr "Über dich"
 
@@ -1469,7 +1469,7 @@ msgstr "Aktion von"
 #~ msgstr "Aktion von"
 
 #: src/features/sidebar/views/InboxView.tsx:486
-#: src/components/inbox/Inbox.tsx:442
+#: src/components/inbox/Inbox.tsx:458
 msgid "Action needed"
 msgstr "Handlungsbedarf"
 
@@ -1600,7 +1600,7 @@ msgstr "Benutzerdefiniertes Thema hinzufügen"
 msgid "Add goal text before applying."
 msgstr "Vor dem Anwenden Zieltext eingeben."
 
-#: src/components/feedback/ReportIssueModal.tsx:235
+#: src/components/feedback/ReportIssueModal.tsx:242
 msgid "Add images"
 msgstr "Bilder hinzufügen"
 
@@ -2060,7 +2060,7 @@ msgstr "MCP-Zugriff in {0} erlauben"
 #~ msgid "Allow participants using the link to start new conversations"
 #~ msgstr "Teilnehmern erlauben, über den Link neue Gespräche zu beginnen"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:560
+#: src/routes/onboarding/OnboardingRoute.tsx:561
 msgid "Almost ready"
 msgstr "Fast fertig"
 
@@ -2239,7 +2239,7 @@ msgstr ""
 #~ msgid "and {0} more conversations"
 #~ msgstr "und {0} weitere Gespräche"
 
-#: src/components/inbox/Inbox.tsx:226
+#: src/components/inbox/Inbox.tsx:227
 msgid "Announcements"
 msgstr "Ankündigungen"
 
@@ -2807,7 +2807,7 @@ msgstr "Abwesend"
 #: src/routes/project/report/ProjectReportRoute.tsx:500
 #: src/routes/organisation/OrganisationRoute.tsx:696
 #: src/routes/organisation/OrganisationRoute.tsx:719
-#: src/routes/onboarding/OnboardingRoute.tsx:550
+#: src/routes/onboarding/OnboardingRoute.tsx:551
 #: src/routes/auth/Register.tsx:303
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:323
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:361
@@ -3513,11 +3513,11 @@ msgstr "Prüfung fehlgeschlagen"
 msgid "participant.button.check.microphone.access"
 msgstr "Mikrofonzugriff prüfen"
 
-#: src/components/voice/VoiceInputError.tsx:101
+#: src/components/voice/VoiceInputError.tsx:105
 msgid "Check microphone access"
 msgstr "Mikrofonzugriff prüfen"
 
-#: src/components/feedback/ReportIssueModal.tsx:150
+#: src/components/feedback/ReportIssueModal.tsx:151
 msgid "Check the text and images, then try again"
 msgstr "Prüfe Text und Bilder und versuche es erneut"
 
@@ -3838,7 +3838,7 @@ msgstr "Cluster"
 msgid "Collapse sidebar"
 msgstr "Seitenleiste einklappen"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:441
+#: src/routes/onboarding/OnboardingRoute.tsx:442
 #: src/components/organisation/CreateOrganisationModal.tsx:257
 msgid "Colleagues you invite can explore conversations, share insights, and build reports with you."
 msgstr "Eingeladene Kollegen können Gespräche erkunden, Erkenntnisse teilen und gemeinsam mit dir Berichte erstellen."
@@ -4096,8 +4096,8 @@ msgid "Contextual suggestions"
 msgstr "Kontextbezogene Vorschläge"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:773
-#: src/routes/onboarding/OnboardingRoute.tsx:665
-#: src/routes/onboarding/OnboardingRoute.tsx:797
+#: src/routes/onboarding/OnboardingRoute.tsx:674
+#: src/routes/onboarding/OnboardingRoute.tsx:806
 #: src/routes/auth/Register.tsx:251
 #: src/components/organisation/CreateOrganisationModal.tsx:249
 #: src/components/language/LanguagePicker.tsx:159
@@ -4539,7 +4539,7 @@ msgstr "Die Einladungs-E-Mail konnte nicht gesendet werden. Überprüfe die E-Ma
 #~ msgid "Could not send the report. Try again"
 #~ msgstr "Die Meldung konnte nicht gesendet werden. Versuchen Sie es noch einmal"
 
-#: src/components/feedback/ReportIssueModal.tsx:152
+#: src/components/feedback/ReportIssueModal.tsx:153
 msgid "Could not send your feedback. Try again"
 msgstr "Dein Feedback konnte nicht gesendet werden. Versuche es erneut"
 
@@ -5375,7 +5375,7 @@ msgstr "Kernidee wird destilliert…"
 msgid "Do I need this?"
 msgstr "Benötige ich dies?"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:570
+#: src/routes/onboarding/OnboardingRoute.tsx:571
 msgid "Do you plan to use dembrane in health, education, recruitment, critical infrastructure management, law enforcement or justice contexts?"
 msgstr "Planst du, dembrane im Gesundheitswesen, in der Bildung, Personalbeschaffung, bei kritischen Infrastrukturen, bei Strafverfolgung oder Justiz einzusetzen?"
 
@@ -5406,7 +5406,7 @@ msgstr "Aktualisiert sich nicht von selbst."
 msgid "Does not update on its own. Updated {updatedAgo}."
 msgstr "Aktualisiert sich nicht von selbst. Aktualisiert vor {updatedAgo}."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:665
+#: src/routes/onboarding/OnboardingRoute.tsx:674
 #: src/components/invite/InviteModal.tsx:809
 #: src/components/conversation/ConversationsMiniList.tsx:108
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:574
@@ -6464,7 +6464,7 @@ msgstr "Feedback-Portal"
 msgid "Feedback sent"
 msgstr "Feedback gesendet"
 
-#: src/components/feedback/ReportIssueModal.tsx:157
+#: src/components/feedback/ReportIssueModal.tsx:158
 msgid "Feedback sent. Thank you"
 msgstr "Feedback gesendet. Danke"
 
@@ -6718,7 +6718,7 @@ msgid "for the dembrane team"
 msgstr "für das dembrane-Team"
 
 #: src/features/sidebar/views/InboxView.tsx:176
-#: src/components/inbox/Inbox.tsx:214
+#: src/components/inbox/Inbox.tsx:215
 msgid "For you"
 msgstr "Für dich"
 
@@ -6989,7 +6989,7 @@ msgstr "Während eines Gesprächs eine Antwort erhalten"
 #~ msgid "Get an immediate reply from dembrane to help you deepen the conversation."
 #~ msgstr "Erhalte eine sofortige Antwort von dembrane, um das Gespräch zu vertiefen."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:827
+#: src/routes/onboarding/OnboardingRoute.tsx:836
 #: src/features/sidebar/views/user/UserHomeView.tsx:83
 msgid "Get started"
 msgstr "Loslegen"
@@ -7009,7 +7009,7 @@ msgstr "Chat-Antworten positiv oder negativ bewerten."
 
 #: src/features/sidebar/views/HelpView.tsx:43
 #: src/features/sidebar/blocks/HelpBlock.tsx:47
-#: src/components/feedback/ReportIssueModal.tsx:178
+#: src/components/feedback/ReportIssueModal.tsx:179
 msgid "Give feedback"
 msgstr "Feedback geben"
 
@@ -7163,7 +7163,7 @@ msgstr "Angeleitet"
 msgid "Has verified artifacts"
 msgstr "Hat verifizierte Artefakte"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:592
+#: src/routes/onboarding/OnboardingRoute.tsx:593
 msgid "Have you completed a training?"
 msgstr "Hast du an einer Schulung teilgenommen?"
 
@@ -7487,7 +7487,7 @@ msgstr "Wenn du einer bestehenden Organisation beitreten möchtest, solltest du 
 msgid "Image style"
 msgstr "Bildstil"
 
-#: src/components/feedback/ReportIssueModal.tsx:94
+#: src/components/feedback/ReportIssueModal.tsx:95
 msgid "Images must be under {MAX_FILE_MB}MB"
 msgstr "Bilder dürfen höchstens {MAX_FILE_MB}MB groß sein"
 
@@ -7547,8 +7547,8 @@ msgstr "Inaktiv"
 #: src/features/sidebar/views/InboxView.tsx:158
 #: src/features/sidebar/blocks/InboxBlock.tsx:37
 #: src/components/layout/BaseLayout.tsx:94
-#: src/components/inbox/Inbox.tsx:166
-#: src/components/inbox/Inbox.tsx:181
+#: src/components/inbox/Inbox.tsx:167
+#: src/components/inbox/Inbox.tsx:182
 msgid "Inbox"
 msgstr "Posteingang"
 
@@ -7688,7 +7688,7 @@ msgstr "Ungültige PIN oder E-Mail. Bitte versuche es erneut."
 msgid "Invitations waiting for you. Accept to get started."
 msgstr "Ausstehende Einladungen. Nimm an, um loszulegen."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:181
+#: src/routes/onboarding/OnboardingRoute.tsx:182
 #: src/components/organisation/CreateOrganisationModal.tsx:206
 msgid "Invite"
 msgstr "Einladen"
@@ -7729,7 +7729,7 @@ msgstr "Einladung erneut gesendet"
 msgid "Invite revoked"
 msgstr "Einladung widerrufen"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:340
+#: src/routes/onboarding/OnboardingRoute.tsx:341
 #: src/components/organisation/CreateOrganisationModal.tsx:159
 msgid "Invite sent"
 msgstr "Einladung gesendet"
@@ -7750,7 +7750,7 @@ msgstr "In einen Arbeitsbereich oder nur in die Organisation einladen."
 msgid "Invite to this workspace, or just the organisation."
 msgstr "In diesen Arbeitsbereich oder nur in die Organisation einladen."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:438
+#: src/routes/onboarding/OnboardingRoute.tsx:439
 msgid "Invite your team"
 msgstr "Lade dein Team ein"
 
@@ -8895,7 +8895,7 @@ msgstr "Kartenergebnisse sind noch nicht bereit."
 msgid "Mark all as read"
 msgstr "Alle als gelesen markieren"
 
-#: src/components/inbox/Inbox.tsx:190
+#: src/components/inbox/Inbox.tsx:191
 msgid "Mark all read"
 msgstr "Alle als gelesen markieren"
 
@@ -8905,7 +8905,7 @@ msgstr "Als teilgenommen markieren"
 
 #: src/features/sidebar/views/InboxView.tsx:496
 #: src/features/sidebar/views/InboxView.tsx:587
-#: src/components/inbox/Inbox.tsx:397
+#: src/components/inbox/Inbox.tsx:413
 #: src/components/announcement/AnnouncementItem.tsx:148
 msgid "Mark as read"
 msgstr "Als gelesen markieren"
@@ -9304,7 +9304,7 @@ msgstr "Benenne es nach dem Thema, dem Vorhaben oder der Frage, die du untersuch
 msgid "Name updated"
 msgstr "Name aktualisiert"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:773
+#: src/routes/onboarding/OnboardingRoute.tsx:782
 msgid "Name your organisation to get started. You can invite members right after, or join other organisations later from settings."
 msgstr "Benenne deine Organisation, um loszulegen. Du kannst direkt danach Mitglieder einladen oder später über die Einstellungen anderen Organisationen beitreten."
 
@@ -9513,8 +9513,8 @@ msgstr "Nächste Seite"
 #~ msgid "Next: pick a time"
 #~ msgstr "Als Nächstes: Uhrzeit auswählen"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:583
-#: src/routes/onboarding/OnboardingRoute.tsx:597
+#: src/routes/onboarding/OnboardingRoute.tsx:584
+#: src/routes/onboarding/OnboardingRoute.tsx:598
 msgid "No"
 msgstr "Nein"
 
@@ -9766,7 +9766,7 @@ msgstr "Noch keine Mitglieder."
 msgid "No methodologies yet."
 msgstr "Noch keine Methodiken."
 
-#: src/components/voice/VoiceInputError.tsx:31
+#: src/components/voice/VoiceInputError.tsx:33
 msgid "No microphone was available. Check that one is connected and not in use elsewhere."
 msgstr "Es war kein Mikrofon verfügbar. Prüfe, ob eines angeschlossen ist und nicht anderweitig verwendet wird."
 
@@ -10223,7 +10223,7 @@ msgid "Notes the assistant saved about this workspace from chats. Everyone in th
 msgstr "Notizen, die der Assistent aus Chats zu diesem Arbeitsbereich gespeichert hat. Alle im Arbeitsbereich teilen diese Notizen."
 
 #: src/features/sidebar/views/InboxView.tsx:337
-#: src/components/inbox/Inbox.tsx:259
+#: src/components/inbox/Inbox.tsx:260
 msgid "Nothing from dembrane right now."
 msgstr "Gerade nichts Neues von dembrane."
 
@@ -10444,7 +10444,7 @@ msgstr "Laufend"
 msgid "Only change this setting in consultation with the responsible person(s) for data protection within your organisation."
 msgstr "Ändere diese Einstellung nur in Absprache mit den verantwortlichen Personen für die Datenschutzverantwortung in deiner Organisation."
 
-#: src/components/feedback/ReportIssueModal.tsx:90
+#: src/components/feedback/ReportIssueModal.tsx:91
 msgid "Only images can be attached"
 msgstr "Es können nur Bilder angehängt werden"
 
@@ -10616,7 +10616,7 @@ msgstr "Öffne die ursprüngliche Einladungs-E-Mail und klicke dort auf den Link
 #~ msgid "Open the public page"
 #~ msgstr "Öffentliche Seite öffnen"
 
-#: src/components/voice/VoiceInputError.tsx:92
+#: src/components/voice/VoiceInputError.tsx:96
 msgid "Open the troubleshooting guide"
 msgstr "Leitfaden zur Fehlerbehebung öffnen"
 
@@ -10733,7 +10733,7 @@ msgstr "Nur Organisation"
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:475
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:705
 #: src/routes/organisation/OrganisationExternalView.tsx:39
-#: src/routes/onboarding/OnboardingRoute.tsx:181
+#: src/routes/onboarding/OnboardingRoute.tsx:182
 #: src/features/sidebar/views/org/OrgHomeView.tsx:80
 #: src/features/sidebar/hooks/useSearchHits.ts:136
 #: src/components/training/StaffTrainingPanel.tsx:146
@@ -10777,7 +10777,7 @@ msgid "Organisation members load faster."
 msgstr "Organisationsmitglieder laden schneller."
 
 #: src/routes/organisation/OrganisationRoute.tsx:1140
-#: src/routes/onboarding/OnboardingRoute.tsx:811
+#: src/routes/onboarding/OnboardingRoute.tsx:820
 #: src/components/organisation/CreateOrganisationModal.tsx:225
 msgid "Organisation name"
 msgstr "Name der Organisation"
@@ -12312,7 +12312,7 @@ msgstr "Verbindung wird wiederhergestellt"
 msgid "participant.button.record"
 msgstr "Aufnehmen"
 
-#: src/components/voice/VoiceTextField.tsx:103
+#: src/components/voice/VoiceTextField.tsx:97
 #: src/components/pricing/PricingTextInput.tsx:267
 #: src/components/chat/AgenticChatPanel.tsx:2285
 msgid "Record a voice message"
@@ -12574,7 +12574,7 @@ msgstr "Entfernen"
 #. placeholder {0}: chip.value
 #. placeholder {0}: file.name
 #: src/components/invite/EmailChipsInput.tsx:392
-#: src/components/feedback/ReportIssueModal.tsx:208
+#: src/components/feedback/ReportIssueModal.tsx:215
 msgid "Remove {0}"
 msgstr "{0} entfernen"
 
@@ -13949,7 +13949,7 @@ msgid "Send a new code in {0}s"
 msgstr "Neuen Code in {0} s senden"
 
 #: src/components/results/curate/RowTools.tsx:144
-#: src/components/feedback/ReportIssueModal.tsx:225
+#: src/components/feedback/ReportIssueModal.tsx:232
 msgid "Send feedback"
 msgstr "Feedback senden"
 
@@ -13958,7 +13958,7 @@ msgstr "Feedback senden"
 msgid "Send invite"
 msgstr "Einladung senden"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:474
+#: src/routes/onboarding/OnboardingRoute.tsx:475
 #: src/components/organisation/CreateOrganisationModal.tsx:283
 msgid "Send invites"
 msgstr "Einladungen senden"
@@ -14076,7 +14076,7 @@ msgstr "Arbeitsbereich einrichten"
 msgid "Set up your first organisation"
 msgstr "Erste Organisation einrichten"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:725
+#: src/routes/onboarding/OnboardingRoute.tsx:734
 #: src/features/sidebar/views/user/UserHomeView.tsx:130
 msgid "Set up your organisation"
 msgstr "Deine Organisation einrichten"
@@ -14085,7 +14085,7 @@ msgstr "Deine Organisation einrichten"
 msgid "Set up your portal page by page, with a live preview of what participants see."
 msgstr "Richte dein Portal Seite für Seite ein, mit Live-Vorschau dessen, was Teilnehmende sehen."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:229
+#: src/routes/onboarding/OnboardingRoute.tsx:230
 msgid "Set up your workspace | dembrane"
 msgstr "Richte deinen Arbeitsbereich ein | dembrane"
 
@@ -14093,7 +14093,7 @@ msgstr "Richte deinen Arbeitsbereich ein | dembrane"
 msgid "Set who can see and join."
 msgstr "Lege fest, wer beitreten und Inhalte sehen darf."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:404
+#: src/routes/onboarding/OnboardingRoute.tsx:405
 msgid "Setting things up for you"
 msgstr "Wir richten alles für dich ein"
 
@@ -14335,6 +14335,7 @@ msgid "Show IP addresses"
 msgstr "IP-Adressen anzeigen"
 
 #: src/features/sidebar/views/InboxView.tsx:581
+#: src/components/inbox/Inbox.tsx:493
 #: src/components/chat/CanvasSuggestionCard.tsx:298
 #: src/components/announcement/AnnouncementItem.tsx:119
 msgid "Show less"
@@ -14345,6 +14346,7 @@ msgstr "Weniger anzeigen"
 
 #: src/features/sidebar/views/InboxView.tsx:581
 #: src/components/workspace/SupportAccessSection.tsx:206
+#: src/components/inbox/Inbox.tsx:493
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:237
 #: src/components/chat/CanvasSuggestionCard.tsx:298
 #: src/components/announcement/AnnouncementItem.tsx:121
@@ -14507,8 +14509,8 @@ msgstr "Anmelde-Links prüfen deine Zugriffsberechtigung vor dem Öffnen einer O
 msgid "Six weekends across seven months"
 msgstr "Sechs Wochenenden über sieben Monate hinweg"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:462
-#: src/routes/onboarding/OnboardingRoute.tsx:655
+#: src/routes/onboarding/OnboardingRoute.tsx:463
+#: src/routes/onboarding/OnboardingRoute.tsx:664
 #: src/components/organisation/CreateOrganisationModal.tsx:275
 #: src/components/feedback/ResponseFeedbackControls.tsx:227
 msgid "Skip"
@@ -14636,7 +14638,7 @@ msgstr "Es ist ein Fehler aufgetreten, den wir beheben müssen. Kontaktiere den 
 #~ msgid "Something went wrong while generating the secret."
 #~ msgstr "Beim Generieren des Geheimnisses ist ein Fehler aufgetreten."
 
-#: src/components/voice/VoiceInputError.tsx:49
+#: src/components/voice/VoiceInputError.tsx:53
 msgid "Something went wrong while transcribing. Try again."
 msgstr "Beim Transkribieren ist etwas schiefgelaufen. Bitte versuche es erneut."
 
@@ -14951,7 +14953,7 @@ msgid "Still stuck? Email <0>support@dembrane.com</0>."
 msgstr "Kommst du nicht weiter? Schreibe an <0>support@dembrane.com</0>."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:800
-#: src/components/voice/VoiceTextField.tsx:99
+#: src/components/voice/VoiceTextField.tsx:93
 #: src/components/pricing/PricingTextInput.tsx:263
 #: src/components/chat/AgenticChatPanel.tsx:2280
 msgid "Stop"
@@ -14983,7 +14985,7 @@ msgstr "Graphen nicht mehr nach Valenz einfärben"
 msgid "Stop live"
 msgstr "Live beenden"
 
-#: src/components/voice/VoiceTextField.tsx:91
+#: src/components/voice/VoiceTextField.tsx:85
 #: src/components/pricing/PricingTextInput.tsx:254
 #: src/components/chat/AgenticChatPanel.tsx:2271
 msgid "Stop recording and turn it into text"
@@ -15470,14 +15472,18 @@ msgstr "Das wurde nicht gespeichert. Deine Worte sind noch da."
 msgid "That didn't work out. We have saved your recording."
 msgstr "Das hat nicht geklappt. Wir haben deine Aufnahme gespeichert."
 
-#: src/components/voice/VoiceInputError.tsx:37
+#: src/components/voice/VoiceInputError.tsx:47
+msgid "That is a lot of voice notes in a short time. Type it instead, or try again later."
+msgstr "Das sind viele Sprachnachrichten in kurzer Zeit. Tipp es stattdessen ein oder versuch es später noch einmal."
+
+#: src/components/voice/VoiceInputError.tsx:39
 msgid "That recording is too long to send. Record a shorter note."
 msgstr "Diese Aufnahme ist zu lang zum Senden. Bitte nimm eine kürzere Notiz auf."
 
 #~ msgid "That requires a paid plan. We're going to ask you 5 more quick questions, then you pick a time with the dembrane team. We'll read your answers before the call to bring an offer that fits your needs."
 #~ msgstr "Dazu ist ein kostenpflichtiger Tarif erforderlich. Wir stellen Ihnen noch 5 kurze Fragen, danach wählen Sie einen Termin mit dem dembrane-Team aus. Wir lesen Ihre Antworten vor dem Gespräch, um Ihnen ein passendes Angebot zu unterbreiten."
 
-#: src/components/voice/VoiceInputError.tsx:33
+#: src/components/voice/VoiceInputError.tsx:35
 msgid "That was too short to transcribe. Hold the recording a little longer."
 msgstr "Das war zu kurz für eine Transkription. Halte die Aufnahme etwas länger gedrückt."
 
@@ -15779,7 +15785,7 @@ msgstr "Die Methodik beschreibt, wie dieses Projekt aufgebaut und geleitet wird.
 msgid "The microphone is blocked in your browser, so recording is off. Typing works."
 msgstr "Das Mikrofon ist in deinem Browser blockiert, daher ist die Aufnahme deaktiviert. Tippen funktioniert."
 
-#: src/components/voice/VoiceInputError.tsx:68
+#: src/components/voice/VoiceInputError.tsx:72
 msgid "The microphone is still blocked. Change it in your browser settings, then check again."
 msgstr "Das Mikrofon ist weiterhin blockiert. Ändere dies in deinen Browsereinstellungen und prüfe es dann erneut."
 
@@ -15919,7 +15925,7 @@ msgstr "Die Zusammenfassung wird neu erstellt. Warte, bis sie verfügbar ist."
 msgid "The title could not be generated."
 msgstr "Der Titel konnte nicht erstellt werden."
 
-#: src/components/voice/VoiceInputError.tsx:47
+#: src/components/voice/VoiceInputError.tsx:51
 msgid "The transcript did not come back. Check your connection and try again."
 msgstr "Das Transkript wurde nicht empfangen. Prüfe deine Verbindung und versuche es erneut."
 
@@ -15927,7 +15933,7 @@ msgstr "Das Transkript wurde nicht empfangen. Prüfe deine Verbindung und versuc
 msgid "The transcript is improved once the conversation ends."
 msgstr "Das Transkript wird verbessert, sobald das Gespräch endet."
 
-#: src/components/voice/VoiceInputError.tsx:45
+#: src/components/voice/VoiceInputError.tsx:49
 msgid "The transcription did not finish. Try again."
 msgstr "Die Transkription wurde nicht abgeschlossen. Versuche es erneut."
 
@@ -16010,7 +16016,7 @@ msgstr "Beim Erstellen deines Berichts ist ein Fehler aufgetreten. Bitte versuch
 msgid "There was an error loading your data"
 msgstr "Beim Laden deiner Daten ist ein Fehler aufgetreten"
 
-#: src/components/voice/VoiceInputError.tsx:35
+#: src/components/voice/VoiceInputError.tsx:37
 msgid "There was no speech in that recording."
 msgstr "In dieser Aufnahme war keine Sprache zu hören."
 
@@ -16084,7 +16090,7 @@ msgstr "Dieses Argument drückt Unterstützung, Zustimmung oder eine positive Ha
 msgid "This argument is observational or balanced, neither for nor against."
 msgstr "Dieses Argument ist beobachtend oder ausgewogen, weder dafür noch dagegen."
 
-#: src/components/voice/VoiceInputError.tsx:29
+#: src/components/voice/VoiceInputError.tsx:31
 msgid "This browser cannot record audio. Chrome, Edge and Safari can."
 msgstr "Dieser Browser kann kein Audio aufnehmen. Chrome, Edge und Safari unterstützen dies."
 
@@ -16305,7 +16311,7 @@ msgstr "Das KI-Guthaben für diesen Monat ist aufgebraucht, daher kann die Karte
 msgid "This month's AI is used up, so the map can't update until next month."
 msgstr "Das KI-Guthaben für diesen Monat ist aufgebraucht, daher kann die Karte bis zum nächsten Monat nicht aktualisiert werden."
 
-#: src/components/voice/VoiceInputError.tsx:43
+#: src/components/voice/VoiceInputError.tsx:45
 msgid "This month's AI is used up."
 msgstr "Das KI-Guthaben für diesen Monat ist aufgebraucht."
 
@@ -16377,7 +16383,7 @@ msgstr "Diese Präsentation konnte nicht geladen werden."
 msgid "This presentation is not available."
 msgstr "Diese Präsentation ist nicht verfügbar."
 
-#: src/components/voice/VoiceInputError.tsx:41
+#: src/components/voice/VoiceInputError.tsx:43
 msgid "This project could not be reached."
 msgstr "Dieses Projekt konnte nicht erreicht werden."
 
@@ -16741,7 +16747,7 @@ msgstr "Zu viele Versuche in kurzer Zeit. Warte einen Moment und versuche es ern
 msgid "Too many tries. Wait a moment, then request a new code."
 msgstr "Zu viele Versuche. Warte einen Moment und fordere dann einen neuen Code an."
 
-#: src/components/feedback/ReportIssueModal.tsx:147
+#: src/components/feedback/ReportIssueModal.tsx:148
 msgid "Too much feedback at once. Wait a few minutes and try again"
 msgstr "Zu viel Feedback auf einmal. Warte ein paar Minuten und versuche es erneut"
 
@@ -17249,7 +17255,7 @@ msgstr "Projekt lösen"
 #~ msgid "Unpublished changes"
 #~ msgstr "Unveröffentlichte Änderungen"
 
-#: src/components/inbox/Inbox.tsx:437
+#: src/components/inbox/Inbox.tsx:453
 msgid "Unread"
 msgstr "Ungelesen"
 
@@ -17329,12 +17335,12 @@ msgstr "Bis zu {0} Teilnehmer"
 msgid "Up to {0} participants are included."
 msgstr "Bis zu {0} Teilnehmer sind inbegriffen."
 
-#: src/components/feedback/ReportIssueModal.tsx:98
-#: src/components/feedback/ReportIssueModal.tsx:240
+#: src/components/feedback/ReportIssueModal.tsx:99
+#: src/components/feedback/ReportIssueModal.tsx:247
 msgid "Up to {MAX_FILES} images"
 msgstr "Höchstens {MAX_FILES} Bilder"
 
-#: src/components/voice/VoiceTextField.tsx:108
+#: src/components/voice/VoiceTextField.tsx:102
 msgid "Up to {MAX_MESSAGE_CHARS} characters"
 msgstr "Bis zu {MAX_MESSAGE_CHARS} Zeichen"
 
@@ -18101,7 +18107,7 @@ msgstr "Wir testen dein Mikrofon, um sicherzustellen, dass jeder in der Sitzung 
 #~ msgid "We’re picking up some silence. Try speaking up so your voice comes through clearly."
 #~ msgstr "Wir hören einige Stille. Versuchen Sie, lauter zu sprechen, damit Ihre Stimme deutlich klingt."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:767
+#: src/routes/onboarding/OnboardingRoute.tsx:776
 msgid "We've added organisations so you can organise projects and share them with colleagues. Everything you had before is still here. We just need a name for your organisation."
 msgstr "Wir haben Organisationen eingeführt, damit du Projekte strukturieren und mit Kollegen teilen kannst. Alles, was du bisher hattest, ist weiterhin da. Wir benötigen nur noch einen Namen für deine Organisation."
 
@@ -18146,7 +18152,7 @@ msgstr "Webhooks sind in kostenpflichtigen Tarifen enthalten"
 msgid "Webhooks come with a paid plan."
 msgstr "Webhooks sind in kostenpflichtigen Tarifen enthalten."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:180
+#: src/routes/onboarding/OnboardingRoute.tsx:181
 #: src/routes/auth/Login.tsx:493
 #: src/portal/components/conversation/ConversationMessages.tsx:112
 #: src/features/sidebar/views/project/ProjectPortalView.tsx:29
@@ -18158,11 +18164,11 @@ msgstr "Willkommen"
 msgid "Welcome back"
 msgstr "Welcome back"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:721
+#: src/routes/onboarding/OnboardingRoute.tsx:730
 msgid "Welcome back, {displayName}"
 msgstr "Willkommen zurück, {displayName}"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:718
+#: src/routes/onboarding/OnboardingRoute.tsx:727
 #: src/routes/auth/Login.tsx:166
 msgid "Welcome to dembrane"
 msgstr "Willkommen bei dembrane"
@@ -18179,8 +18185,8 @@ msgstr "Willkommen bei dembrane!"
 msgid "Welcome to Overview Mode! I have summaries of all your conversations loaded. Ask me about patterns, themes, and insights across your data. For exact quotes, start a new chat in Specific Context mode."
 msgstr "Willkommen im Übersichtmodus! Ich hab Zusammenfassungen von all deinen Gesprächen geladen. Frag mich nach Mustern, Themen und Insights in deinen Daten. Für genaue Zitate start eine neue Chat im Modus „Genauer Kontext“."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:716
-#: src/routes/onboarding/OnboardingRoute.tsx:723
+#: src/routes/onboarding/OnboardingRoute.tsx:725
+#: src/routes/onboarding/OnboardingRoute.tsx:732
 msgid "Welcome, {displayName}"
 msgstr "Willkommen, {displayName}"
 
@@ -18205,7 +18211,7 @@ msgstr "Welche Daten werden gesendet?"
 msgid "What did you change?"
 msgstr "Was hast du geändert?"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:606
+#: src/routes/onboarding/OnboardingRoute.tsx:607
 msgid "What do you plan to use dembrane for?"
 msgstr "Wofür planst du dembrane zu nutzen?"
 
@@ -18237,7 +18243,7 @@ msgstr "Worum geht es, wer nimmt teil und wo? Du kannst auch die Tagesordnung od
 #~ msgid "What is it?"
 #~ msgstr "Was ist das?"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:628
+#: src/routes/onboarding/OnboardingRoute.tsx:629
 msgid "What problem are you trying to solve with dembrane?"
 msgstr "Welches Problem möchtest du mit dembrane lösen?"
 
@@ -18249,7 +18255,7 @@ msgstr "Was sollte hieran geändert werden?"
 msgid "What should ECHO analyse or generate from the conversations?"
 msgstr "Was soll ECHO aus den Gesprächen analysieren oder generieren?"
 
-#: src/components/feedback/ReportIssueModal.tsx:189
+#: src/components/feedback/ReportIssueModal.tsx:196
 msgid "What should we know? Paste a screenshot here to attach it"
 msgstr "Was sollten wir wissen? Füge hier einen Screenshot ein, um ihn anzuhängen"
 
@@ -18464,7 +18470,7 @@ msgstr "wird in deinem Bericht enthalten sein"
 msgid "wish"
 msgstr "Wunsch"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:618
+#: src/routes/onboarding/OnboardingRoute.tsx:619
 msgid "With external clients"
 msgstr "Mit externen Kunden"
 
@@ -18513,7 +18519,7 @@ msgstr "Aus der Analyse zurückgezogen"
 msgid "Withdrawn from the analysis."
 msgstr "Aus der Analyse zurückgezogen."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:613
+#: src/routes/onboarding/OnboardingRoute.tsx:614
 msgid "Within my organisation"
 msgstr "Innerhalb meiner Organisation"
 
@@ -18685,8 +18691,8 @@ msgstr "Falsche Sprache oder Tonfall"
 msgid "Wrong sources"
 msgstr "Falsche Quellen"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:582
-#: src/routes/onboarding/OnboardingRoute.tsx:596
+#: src/routes/onboarding/OnboardingRoute.tsx:583
+#: src/routes/onboarding/OnboardingRoute.tsx:597
 msgid "Yes"
 msgstr "Ja"
 
@@ -18732,7 +18738,7 @@ msgstr "Du nutzt den Free-Tarif. Es gibt noch keine Zahlungen zu verwalten."
 msgid "You are the data owner"
 msgstr "Du bist Dateneigentümer"
 
-#: src/routes/onboarding/OnboardingRoute.tsx:810
+#: src/routes/onboarding/OnboardingRoute.tsx:819
 #: src/components/organisation/CreateOrganisationModal.tsx:226
 msgid "You can change this anytime in settings."
 msgstr "Du kannst dies jederzeit in den Einstellungen ändern."
@@ -18822,7 +18828,7 @@ msgstr "Du hast keine Berechtigung, Aussagen zu überprüfen."
 msgid "You do not have permission to generate a map."
 msgstr "Du hast keine Berechtigung, eine Map zu erstellen."
 
-#: src/components/voice/VoiceInputError.tsx:39
+#: src/components/voice/VoiceInputError.tsx:41
 msgid "You do not have permission to transcribe in this project."
 msgstr "Du hast keine Berechtigung, in diesem Projekt zu transkribieren."
 
@@ -18968,7 +18974,7 @@ msgstr "Du wirst als Administrator zu {0} privaten Arbeitsbereichen hinzugefügt
 msgid "You'll be added as an admin to {singleName}. It'll appear in your sidebar right after."
 msgstr "Du wirst als Administrator zu {singleName} hinzugefügt. Der Arbeitsbereich erscheint direkt danach in deiner Seitenleiste."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:832
+#: src/routes/onboarding/OnboardingRoute.tsx:841
 msgid "You'll find all your projects waiting for you."
 msgstr "Alle deine Projekte warten bereits auf dich."
 
@@ -18999,7 +19005,7 @@ msgid "You're about to change your own role to <0>{0}</0>. You'll immediately lo
 msgstr "Du bist im Begriff, deine eigene Rolle in <0>{0}</0> zu ändern. Du verlierst sofort den Zugriff auf Einstellungen des Arbeitsbereichs, Einladungen und die Mitgliederverwaltung."
 
 #: src/features/sidebar/views/InboxView.tsx:262
-#: src/components/inbox/Inbox.tsx:236
+#: src/components/inbox/Inbox.tsx:237
 msgid "You're all caught up."
 msgstr "Alles auf dem neuesten Stand."
 
@@ -19051,22 +19057,22 @@ msgid "You're the only admin. Promote someone else before changing your role."
 msgstr "Du bist der einzige Administrator. Befördere eine andere Person, bevor du deine Rolle änderst."
 
 #. placeholder {0}: inviteOrganisations.length
-#: src/routes/onboarding/OnboardingRoute.tsx:738
+#: src/routes/onboarding/OnboardingRoute.tsx:747
 msgid "You've been invited to collaborate with {0} organisations. We'll take you in once you continue."
 msgstr "Du wurdest eingeladen, mit {0} Organisationen zusammenzuarbeiten. Sobald du fortfährst, leiten wir dich weiter."
 
 #. placeholder {0}: inviteOrganisations[0]
-#: src/routes/onboarding/OnboardingRoute.tsx:732
+#: src/routes/onboarding/OnboardingRoute.tsx:741
 msgid "You've been invited to collaborate with <0>{0}</0>. We'll take you there in a moment."
 msgstr "Du wurdest eingeladen, mit <0>{0}</0> zusammenzuarbeiten. Wir leiten dich gleich weiter."
 
 #. placeholder {0}: inviteOrganisations.length
-#: src/routes/onboarding/OnboardingRoute.tsx:756
+#: src/routes/onboarding/OnboardingRoute.tsx:765
 msgid "You've been invited to join {0} organisations. We'll take you in once you continue."
 msgstr "Du wurdest eingeladen, {0} Organisationen beizutreten. Sobald du fortfährst, leiten wir dich weiter."
 
 #. placeholder {0}: inviteOrganisations[0]
-#: src/routes/onboarding/OnboardingRoute.tsx:750
+#: src/routes/onboarding/OnboardingRoute.tsx:759
 msgid "You've been invited to join <0>{0}</0>. We'll take you there in a moment."
 msgstr "Du wurdest eingeladen, <0>{0}</0> beizutreten. Wir leiten dich gleich weiter."
 
@@ -19131,7 +19137,7 @@ msgstr "Deine aktiven Geräte haben sich geändert. Wähle erneut ein Gerät."
 msgid "Your agent will open dembrane and ask your permission before it can read anything."
 msgstr "Dein Agent öffnet dembrane und bittet um deine Erlaubnis, bevor er Inhalte lesen kann."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:634
+#: src/routes/onboarding/OnboardingRoute.tsx:635
 msgid "Your answer"
 msgstr "Deine Antwort"
 
@@ -19144,7 +19150,7 @@ msgstr "Deine Antwort ist fertig"
 msgid "participant.verify.instructions.approval.helps"
 msgstr "Deine Genehmigung hilft uns zu verstehen, was du wirklich denkst!"
 
-#: src/components/voice/VoiceInputError.tsx:27
+#: src/components/voice/VoiceInputError.tsx:29
 msgid "Your browser is blocking the microphone. Allow access, then try again."
 msgstr "Dein Browser blockiert das Mikrofon. Erlaube den Zugriff und versuche es erneut."
 
@@ -19192,7 +19198,7 @@ msgstr "Deine E-Mail-Adresse ist bestätigt. Melde dich an, um fortzufahren."
 msgid "Your email is verified. Taking you to the login page."
 msgstr "Deine E-Mail-Adresse ist bestätigt. Du wirst zur Anmeldeseite weitergeleitet."
 
-#: src/components/feedback/ReportIssueModal.tsx:188
+#: src/components/feedback/ReportIssueModal.tsx:195
 msgid "Your feedback"
 msgstr "Dein Feedback"
 
@@ -19251,7 +19257,7 @@ msgstr "Dein Mikrofon funktioniert in {appName} möglicherweise nicht."
 msgid "Your name"
 msgstr "Dein Name"
 
-#: src/components/feedback/ReportIssueModal.tsx:244
+#: src/components/feedback/ReportIssueModal.tsx:251
 msgid "Your name, email and current page are included so we can follow up."
 msgstr "Dein Name, deine E-Mail-Adresse und die aktuelle Seite werden mitgesendet, damit wir nachfragen können."
 
@@ -19259,11 +19265,11 @@ msgstr "Dein Name, deine E-Mail-Adresse und die aktuelle Seite werden mitgesende
 msgid "Your organisation is on the free plan by default. One plan covers every workspace, billed per seat once you upgrade."
 msgstr "Deine Organisation nutzt standardmäßig den Free-Tarif. Ein Tarif deckt jeden Arbeitsbereich ab und wird nach dem Upgrade pro Platz abgerechnet."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:761
+#: src/routes/onboarding/OnboardingRoute.tsx:770
 msgid "Your organisation is waiting for you. Click continue to join."
 msgstr "Deine Organisation wartet auf dich. Klicke auf „Weiter“, um beizutreten."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:813
+#: src/routes/onboarding/OnboardingRoute.tsx:822
 #: src/components/organisation/CreateOrganisationModal.tsx:227
 msgid "Your organisation or company"
 msgstr "Deine Organisation oder dein Unternehmen"
@@ -19364,7 +19370,7 @@ msgstr "Deine Sitzung ist abgelaufen. Melde dich erneut an, um fortzufahren."
 #~ msgid "Your view has been created. Please wait as we process and analyse the data."
 #~ msgstr "Ihre Ansicht wurde erstellt. Bitte warten Sie, während wir die Daten verarbeiten und analysieren."
 
-#: src/routes/onboarding/OnboardingRoute.tsx:744
+#: src/routes/onboarding/OnboardingRoute.tsx:753
 msgid "Your workspace is waiting for you. Click continue to collaborate."
 msgstr "Dein Arbeitsbereich wartet auf dich. Klicke auf „Weiter“, um zusammenzuarbeiten."
 

@@ -46,6 +46,18 @@ it("maps each failure the endpoint can return onto its own message", () => {
 	);
 });
 
+it("reads the per-person limit's 429 as rate_limited, not a failure", () => {
+	// The body the platform's limiter answers with (errorBody of rate_limit.exceeded).
+	const limited = axiosErrorWithStatus(429, {
+		action: "wait",
+		code: "rate_limit.exceeded",
+		detail: "Too many requests. Try again later.",
+		params: { retry_after_seconds: 3600 },
+	});
+	expect(transcribeErrorKind(limited)).toBe("rate_limited");
+	expect(transcribeErrorKind(axiosErrorWithStatus(429))).toBe("rate_limited");
+});
+
 it("reads only the AI budget 402 as the AI wall", () => {
 	const budget = axiosErrorWithStatus(402, {
 		code: "billing.tier_limit",

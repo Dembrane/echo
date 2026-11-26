@@ -244,6 +244,30 @@ run("onboarding answers and the problem to solve", () => {
     expect(mails[0]?.data.text).not.toContain("Problem they want to solve");
   });
 
+  test("the same answer posted twice tells staff once; a changed answer tells them again", async () => {
+    await sql`update app_user set onboarding_answer_json = null where id = ${P.olga.app}`;
+    await submit(P.olga, { data: [...plain, { q4: "Hearing residents" }], skipped: false });
+    // A retry, with different spacing: the cleaned answer is the same.
+    await submit(P.olga, { data: [...plain, { q4: "  Hearing residents " }], skipped: false });
+    expect(await notices("ONBOARDING_PROBLEM_SHARED")).toHaveLength(STAFF.length);
+
+    await submit(P.olga, { data: [...plain, { q4: "Hearing young residents" }], skipped: false });
+    const rows = await notices("ONBOARDING_PROBLEM_SHARED");
+    expect(rows).toHaveLength(2 * STAFF.length);
+    expect(rows.map((r) => r.message)).toContain(`${P.olga.email}: Hearing young residents`);
+  });
+
+  test("a multi-line answer is one line in the mail, and stored as typed", async () => {
+    const answer = "First we lose notes.\n\nThen   the report\r\nis late.";
+    await submit(P.nina, { data: [...flagged, { q4: answer }], skipped: false });
+    expect(mails).toHaveLength(1);
+    const text = mails[0]?.data.text ?? "";
+    expect(text).toContain(
+      "- Problem they want to solve: First we lose notes. Then   the report is late.\n",
+    );
+    expect((await stored(P.nina)).data.at(-1)).toEqual({ q4: answer });
+  });
+
   test("a notifier that throws does not fail the save", async () => {
     notifierDown = true;
     const data = [...flagged, { q4: "Still saved" }];

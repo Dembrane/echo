@@ -23,6 +23,7 @@ import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import { InviteEmailList } from "@/components/organisation/InviteEmailList";
 import { useVoiceTranscription } from "@/components/voice/useVoiceTranscription";
+import { VoiceInputError } from "@/components/voice/VoiceInputError";
 import { VoiceTextField } from "@/components/voice/VoiceTextField";
 import { mergeTranscriptIntoDraft } from "@/components/voice/voiceInput";
 import { API_BASE_URL } from "@/config";
@@ -638,6 +639,14 @@ export const OnboardingRoute = () => {
 									maxRows={12}
 									testIdPrefix="onboarding-problem"
 								/>
+								{/* Under the box, next to the Voice button it is about, so the
+								    question stays attached to its box. */}
+								{voice.errorKind && (
+									<VoiceInputError
+										kind={voice.errorKind}
+										onDismiss={voice.dismissError}
+									/>
+								)}
 							</Stack>
 						)}
 

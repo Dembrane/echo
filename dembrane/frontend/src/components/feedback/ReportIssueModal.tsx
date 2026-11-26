@@ -15,6 +15,7 @@ import posthog from "posthog-js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "@/components/common/Toaster";
 import { useVoiceTranscription } from "@/components/voice/useVoiceTranscription";
+import { VoiceInputError } from "@/components/voice/VoiceInputError";
 import { VoiceTextField } from "@/components/voice/VoiceTextField";
 import { mergeTranscriptIntoDraft } from "@/components/voice/voiceInput";
 import { IssueReportError, useSubmitIssueReportMutation } from "./hooks";
@@ -180,6 +181,12 @@ export const ReportIssueModal = ({
 			data-testid="report-issue-modal"
 		>
 			<Stack>
+				{voice.errorKind && (
+					<VoiceInputError
+						kind={voice.errorKind}
+						onDismiss={voice.dismissError}
+					/>
+				)}
 				<VoiceTextField
 					value={message}
 					onChange={setMessage}

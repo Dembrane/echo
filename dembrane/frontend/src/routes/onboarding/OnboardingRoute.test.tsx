@@ -19,6 +19,9 @@ const { tracked, voice } = vi.hoisted(() => ({
 	tracked: [] as { event: string; props: unknown }[],
 	// The latest options the route passed to the voice hook, and a way to move its status.
 	voice: {
+		// One cancel for the whole file, so a test can see who released the voice.
+		cancel: vi.fn(),
+		errorKind: null as null | string,
 		options: null as null | Record<string, unknown>,
 		setStatus: (_s: "idle" | "recording" | "transcribing") => {},
 	},
@@ -40,11 +43,11 @@ vi.mock("@/components/voice/useVoiceTranscription", async () => {
 			voice.options = options;
 			voice.setStatus = setStatus;
 			return {
-				cancel: vi.fn(),
+				cancel: voice.cancel,
 				dismissError: vi.fn(),
 				elapsedMs: 0,
 				errorCause: null,
-				errorKind: null,
+				errorKind: voice.errorKind,
 				isStarting: false,
 				levels: [],
 				start: vi.fn(),
@@ -89,6 +92,8 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 	tracked.length = 0;
 	voice.options = null;
+	voice.errorKind = null;
+	voice.cancel.mockClear();
 	try {
 		window.sessionStorage.clear();
 	} catch {}
@@ -329,4 +334,85 @@ it("Done waits while voice is recording or transcribing", async () => {
 	expect(button("Done").disabled).toBe(true);
 	act(() => voice.setStatus("idle"));
 	expect(button("Done").disabled).toBe(false);
+});
+
+it("Skip on the usage screen still skips the whole step", async () => {
+	const answers = stubFetch();
+	renderRoute();
+	fireEvent.click(await screen.findByLabelText("No"));
+	fireEvent.click(button("Continue"));
+	await screen.findByLabelText("Within my organisation");
+	fireEvent.click(button("Skip"));
+	await waitFor(() => expect(answers).toHaveLength(1));
+	expect(answers[0]).toEqual({ data: [], skipped: true, version: VERSION });
+});
+
+it("Skip on the training screen still skips the whole step", async () => {
+	const answers = stubFetch();
+	renderRoute();
+	fireEvent.click(await screen.findByLabelText("Yes"));
+	fireEvent.click(button("Continue"));
+	await screen.findByText("Have you completed a training?");
+	fireEvent.click(button("Skip"));
+	await waitFor(() => expect(answers).toHaveLength(1));
+	expect(answers[0]).toEqual({ data: [], skipped: true, version: VERSION });
+});
+
+it("the box is read-only while voice is recording or transcribing", async () => {
+	stubFetch();
+	renderRoute();
+	const box = await answerClosedQuestions();
+	expect(box.readOnly).toBe(false);
+	act(() => voice.setStatus("recording"));
+	expect(box.readOnly).toBe(true);
+	act(() => voice.setStatus("transcribing"));
+	expect(box.readOnly).toBe(true);
+	act(() => voice.setStatus("idle"));
+	expect(box.readOnly).toBe(false);
+});
+
+it("Back from the problem screen releases the voice", async () => {
+	stubFetch();
+	renderRoute();
+	await answerClosedQuestions();
+	voice.cancel.mockClear();
+	fireEvent.click(button("Back"));
+	expect(voice.cancel).toHaveBeenCalledTimes(1);
+	expect(await screen.findByLabelText("Within my organisation")).toBeTruthy();
+});
+
+it("Skip on the problem screen releases the voice", async () => {
+	const answers = stubFetch();
+	renderRoute();
+	await answerClosedQuestions();
+	voice.cancel.mockClear();
+	fireEvent.click(button("Skip"));
+	expect(voice.cancel).toHaveBeenCalledTimes(1);
+	await waitFor(() => expect(answers).toHaveLength(1));
+});
+
+it("Done releases the voice", async () => {
+	const answers = stubFetch();
+	renderRoute();
+	const box = await answerClosedQuestions();
+	type(box, "Something typed");
+	voice.cancel.mockClear();
+	fireEvent.click(button("Done"));
+	expect(voice.cancel).toHaveBeenCalledTimes(1);
+	await waitFor(() => expect(answers).toHaveLength(1));
+});
+
+it("a voice error shows under the box, above Skip and Done", async () => {
+	stubFetch();
+	voice.errorKind = "permission";
+	renderRoute();
+	const box = await answerClosedQuestions();
+	const sentence = screen.getByText(
+		"Your browser is blocking the microphone. Allow access, then try again.",
+	);
+	const follows = (a: Node, b: Node) =>
+		Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+	expect(follows(box, sentence)).toBe(true);
+	expect(follows(sentence, button("Skip"))).toBe(true);
+	expect(follows(screen.getByText(QUESTION), box)).toBe(true);
 });

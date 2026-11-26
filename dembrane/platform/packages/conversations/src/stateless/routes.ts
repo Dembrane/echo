@@ -13,13 +13,16 @@ const PURPOSES = ["pricing_intake", "issue_report", "onboarding"] as const;
 const PURPOSE_LIMITS = {
   pricing_intake: { name: "pricing_intake_transcription", capacity: 30, windowSeconds: 3600 },
   issue_report: { name: "issue_report_transcription", capacity: 30, windowSeconds: 3600 },
-  // One answer per person, so a few retries an hour is plenty.
-  onboarding: { name: "onboarding_transcription", capacity: 20, windowSeconds: 3600 },
+  // One answer per person: a few retries a day is plenty, and it is free to anyone signed in.
+  onboarding: { name: "onboarding_transcription", capacity: 20, windowSeconds: 86_400 },
 } as const;
+type Purpose = (typeof PURPOSES)[number];
 // A new account is often at zero budget, and an invited person may have no workspace at all.
-const BUDGET_EXEMPT: readonly string[] = ["issue_report", "onboarding"];
+const BUDGET_EXEMPT: readonly Purpose[] = ["issue_report", "onboarding"];
 
 const MAX_BYTES = 100 * 1024 * 1024;
+// A five-minute voice note is a few MB; the onboarding answer takes nothing bigger.
+const ONBOARDING_MAX_BYTES = 20 * 1024 * 1024;
 // webm/mp4 recordings often carry a video/* type; octet-stream covers clients that set none.
 const ALLOWED_TYPES = ["audio/", "video/", "application/octet-stream"];
 
@@ -110,21 +113,25 @@ export function statelessRoutes(d: ConversationsDeps) {
     const f = await readForm(c.req.raw);
     if (f.purpose !== null && !(PURPOSES as readonly string[]).includes(f.purpose))
       throw new StatusError(422, "upload.unsupported_purpose", { params: { purpose: f.purpose } });
-    const purpose = f.purpose as (typeof PURPOSES)[number] | null;
+    const purpose = f.purpose as Purpose | null;
+    // The onboarding answer is a voice note and nothing else: no payer, no stored audio, no
+    // prompt of the caller's own. Anything else sent with it is treated as not sent.
+    const voiceNoteOnly = purpose === "onboarding";
+    const maxBytes = voiceNoteOnly ? ONBOARDING_MAX_BYTES : MAX_BYTES;
     const input: StatelessInput = {
-      projectId: f.project_id,
-      workspaceId: f.workspace_id,
+      projectId: voiceNoteOnly ? null : f.project_id,
+      workspaceId: voiceNoteOnly ? null : f.workspace_id,
       budgetExempt: purpose !== null && BUDGET_EXEMPT.includes(purpose),
       // The pricing form always spends a workspace's budget; issue reports may stay internal.
       ownWorkspace: purpose === "pricing_intake",
       file: f.file,
-      audioFileUri: f.audio_file_uri,
+      audioFileUri: voiceNoteOnly ? null : f.audio_file_uri,
       language: f.language,
       hotwords: f.hotwords,
       usePiiRedaction: f.use_pii_redaction,
       anonymizeTranscripts: f.anonymize_transcripts,
-      customGuidancePrompt: f.custom_guidance_prompt,
-      promptOverride: f.prompt_override,
+      customGuidancePrompt: voiceNoteOnly ? null : f.custom_guidance_prompt,
+      promptOverride: voiceNoteOnly ? null : f.prompt_override,
     };
     return c.json(
       await transcribeStateless(d, who, input, {
@@ -146,10 +153,10 @@ export function statelessRoutes(d: ConversationsDeps) {
               params: { content_type: file.type },
             });
           if (file.size === 0) throw new StatusError(400, "upload.empty");
-          if (file.size > MAX_BYTES)
+          if (file.size > maxBytes)
             throw new StatusError(413, "upload.too_large", {
-              message: `File size exceeds ${MAX_BYTES / 1024 / 1024}MB limit`,
-              params: { max_mb: MAX_BYTES / 1024 / 1024 },
+              message: `File size exceeds ${maxBytes / 1024 / 1024}MB limit`,
+              params: { max_mb: maxBytes / 1024 / 1024 },
             });
         },
       }),

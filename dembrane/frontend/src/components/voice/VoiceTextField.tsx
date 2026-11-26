@@ -7,12 +7,12 @@ import { roles } from "@/colors";
 import { CharsRemainingIndicator } from "@/components/common/CharsRemainingIndicator";
 import type { UseVoiceTranscriptionResult } from "./useVoiceTranscription";
 import { VoiceInputButton } from "./VoiceInputButton";
-import { VoiceInputError } from "./VoiceInputError";
 import { VoiceRecordingBar } from "./VoiceRecordingBar";
 
 /** A plain text box that takes a voice note as well as typing. The host owns the text
  * and the voice hook, so it decides what a transcript does to the draft and when its
- * own submit waits; this only draws the field the same way everywhere. */
+ * own submit waits; this only draws the field the same way everywhere. The host places
+ * `VoiceInputError` where it reads best on its screen. */
 export const VoiceTextField = ({
 	ariaLabel,
 	maxLength,
@@ -45,12 +45,6 @@ export const VoiceTextField = ({
 
 	return (
 		<Stack>
-			{voice.errorKind && (
-				<VoiceInputError
-					kind={voice.errorKind}
-					onDismiss={voice.dismissError}
-				/>
-			)}
 			{/* One input frame: the text scrolls, the footer with mic controls does
 			    not. A field, so rules at the sides, blue while focused. */}
 			<Box
