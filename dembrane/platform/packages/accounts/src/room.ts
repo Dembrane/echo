@@ -26,7 +26,7 @@ import {
   type RoomPageT,
   type RoomPersonT,
 } from "./contract";
-import { dpaOf } from "./customer";
+import { dpaOf, releaseSignerInvite } from "./customer";
 import { type AccountsDeps, isUuid, type Tx } from "./deps";
 import { emit } from "./events";
 import { joinByInvite, nameNewcomer, roomInviteToken, sameToken, splitName } from "./invite";
@@ -489,8 +489,13 @@ export async function removeRoomPerson(
   await d.db.transaction(async (tx) => {
     await store.deleteRoomPerson(tx, row.id);
     let signerInvite: string | null = null;
+    const withdrawn: string[] = [];
     if (!member) {
-      if (row.orgInviteId) await store.withdrawOrgInvite(tx, row.orgInviteId, now);
+      if (row.orgInviteId && (await store.withdrawOrgInvite(tx, row.orgInviteId, now)))
+        withdrawn.push(row.orgInviteId);
+      // Named before they came into the room, and no longer: the room kept the naming's
+      // invitation standing, and now nothing does. Still named, this leaves it.
+      withdrawn.push(...(await releaseSignerInvite(tx, org.id, row.email, now)));
       // Named to sign meanwhile: the Billing invitation that naming makes stands again. It
       // restores what an owner or admin already did by naming them, so no role check here.
       if ((await store.waitingForSigner(tx, row.email)).some((x) => x.orgId === org.id))
@@ -512,6 +517,7 @@ export async function removeRoomPerson(
       detail: {
         accepted: Boolean(member),
         ...(signerInvite ? { email: row.email, invite_id: signerInvite } : {}),
+        withdrawn_invite_ids: withdrawn,
       },
     });
   });

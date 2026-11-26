@@ -1,4 +1,12 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, setDefaultTimeout, test } from "bun:test";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  setDefaultTimeout,
+  test,
+} from "bun:test";
 import { newId, PlatformError } from "@dembrane/core";
 import { schema } from "@dembrane/db";
 import { and, eq } from "drizzle-orm";
@@ -272,6 +280,7 @@ run("a replaced signer's invitation", () => {
     const [a, b] = [fresh("a"), fresh("b")];
     const doc = await pushed({ customer_signer: person(a) });
     const token = lastToken(a) as string;
+    const naming = (await pending(a))?.id as string;
     // The room keeps the invitation the naming made (one per address).
     const roomRow = await addToRoom(a);
     await staffNames(doc.id, b);
@@ -281,6 +290,10 @@ run("a replaced signer's invitation", () => {
     await takeOutOfRoom(roomRow);
     await shutOut(a, doc.id, token);
     await standing(b, doc.id);
+    const removed = (await store.events(w.db, w.orgId)).find(
+      (e) => e.type === "room.person_removed" && e.subjectId === roomRow,
+    );
+    expect(removed?.detail).toMatchObject({ withdrawn_invite_ids: [naming] });
   });
 
   test("taken out of the room while still named: they keep signing; replaced afterwards, that invitation goes", async () => {
@@ -414,8 +427,6 @@ run("a replaced signer's invitation", () => {
     expect(await pending(signer)).toBeNull();
     await customerNames(other.id, signer);
     expect((await pending(signer))?.role).toBe("billing");
-    expect((await sign(other.id, "late" as keyof World["people"], "Late Signer")).status).toBe(
-      200,
-    );
+    expect((await sign(other.id, "late" as keyof World["people"], "Late Signer")).status).toBe(200);
   });
 });

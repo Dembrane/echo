@@ -390,12 +390,19 @@ export const store = {
     return rows.flatMap((r) => (r.id ? [r.id] : []));
   },
 
-  /** Withdraws an invitation (soft delete): its link and the code sign-in it allowed stop. */
-  async withdrawOrgInvite(c: Conn, id: string, now: Date) {
-    await c
+  /**
+   * Withdraws an invitation (soft delete): its link and the code sign-in it allowed stop.
+   * One already taken up or withdrawn stays as it is. True when this withdrew it.
+   */
+  async withdrawOrgInvite(c: Conn, id: string, now: Date): Promise<boolean> {
+    const rows = await c
       .update(org_invite)
       .set({ deleted_at: now.toISOString() })
-      .where(and(eq(org_invite.id, id), isNull(org_invite.accepted_at)));
+      .where(
+        and(eq(org_invite.id, id), isNull(org_invite.accepted_at), isNull(org_invite.deleted_at)),
+      )
+      .returning({ id: org_invite.id });
+    return rows.length > 0;
   },
 
   async usage(c: Conn, orgId: string) {

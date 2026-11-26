@@ -439,14 +439,18 @@ export async function setSigner(
       now,
     });
     await emailSigner(d, tx, who, org, { ...current, signerEmail: email, signerInvitedAt: now });
+    const withdrawn = replaced
+      ? {
+          withdrawn_invite_ids: await releaseSignerInvite(tx, org.id, replaced.previous_email, now),
+        }
+      : null;
     await emit(d, tx, {
       orgId: org.id,
       actor: how.actor,
       type: replaced ? "document.signer_replaced" : "document.signer_named",
       subject: { type: "document", id: doc.id },
-      detail: { email, name: signer.name, ...replaced, invite_id: inviteId },
+      detail: { email, name: signer.name, ...replaced, invite_id: inviteId, ...withdrawn },
     });
-    if (replaced) await releaseSignerInvite(tx, org.id, replaced.previous_email, now);
   };
   if (how.tx) await write(how.tx);
   else await d.db.transaction(write);
@@ -463,14 +467,26 @@ export async function setSigner(
 }
 
 /**
- * Someone taken off as signer: the invitations their namings made are withdrawn, unless a
- * document still waits on them or they are in the room. Others' invitations stay.
+ * Someone no longer named to sign, or taken out of the room: the invitations their namings
+ * made (each naming keeps its invitation's id on its event) are withdrawn, unless a document
+ * of the organisation still waits on them or the room still gives them access. Invitations
+ * made another way (the Members page, the room) were never on a naming's event, so they
+ * stay, and one already taken up stays a membership. Returns the ids withdrawn, for the
+ * event that records the change. The one place that decides it: setSigner, unsetSigner and
+ * removeRoomPerson call it.
  */
-async function releaseSignerInvite(tx: Conn, orgId: string, email: string, now: Date) {
-  if ((await store.waitingForSigner(tx, email)).some((x) => x.orgId === orgId)) return;
-  if (await store.roomPersonByEmail(tx, orgId, email)) return;
+export async function releaseSignerInvite(
+  tx: Conn,
+  orgId: string,
+  email: string,
+  now: Date,
+): Promise<string[]> {
+  if ((await store.waitingForSigner(tx, email)).some((x) => x.orgId === orgId)) return [];
+  if ((await store.roomPersonByEmail(tx, orgId, email))?.accessGrantedAt) return [];
+  const withdrawn: string[] = [];
   for (const id of await store.signerInviteIds(tx, orgId, email))
-    await store.withdrawOrgInvite(tx, id, now);
+    if (await store.withdrawOrgInvite(tx, id, now)) withdrawn.push(id);
+  return withdrawn;
 }
 
 /**
@@ -497,14 +513,18 @@ export async function unsetSigner(
       signerInvitedAt: null,
       updatedAt: now,
     });
+    const withdrawn = await releaseSignerInvite(tx, org.id, doc.signerEmail as string, now);
     await emit(d, tx, {
       orgId: org.id,
       actor: how.actor,
       type: "document.signer_removed",
       subject: { type: "document", id: doc.id },
-      detail: { previous_email: doc.signerEmail, previous_name: doc.signerName },
+      detail: {
+        previous_email: doc.signerEmail,
+        previous_name: doc.signerName,
+        withdrawn_invite_ids: withdrawn,
+      },
     });
-    await releaseSignerInvite(tx, org.id, doc.signerEmail as string, now);
   };
   if (how.tx) await write(how.tx);
   else await d.db.transaction(write);
