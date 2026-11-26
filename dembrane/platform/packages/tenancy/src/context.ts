@@ -47,16 +47,24 @@ export class WorkspaceContext {
     return this.access.source === "staff_support";
   }
 
-  /** Role, custom policies and the tier gate, as access decides them. */
+  /** A support visit's limits, role, custom policies and the tier gate, as access decides them. */
   allows(policy: Policy): boolean {
+    if (this.limits(policy)) return false;
     if (!roleHas(this.access.role, policy, this.access.extra)) return false;
     const required = TIER_REQUIRED[policy];
     return !required || meetsTier(this.access.workspace.tier, required);
   }
 
   require(policy: Policy): void {
+    // The code Access.check gives, so the dashboard says why a support visit may not.
+    if (this.limits(policy))
+      throw new ForbiddenError("access.support_session_limited", { message: "Access denied" });
     if (!this.allows(policy))
       throw new ForbiddenError("access.forbidden", { message: "Access denied" });
+  }
+
+  private limits(policy: Policy): boolean {
+    return Boolean(this.access.limitedTo && !this.access.limitedTo.has(policy));
   }
 
   /**

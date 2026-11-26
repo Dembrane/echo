@@ -276,4 +276,38 @@ run("staff ask to make changes while support access is on", () => {
     );
     expect(between).toMatchObject({ source: "staff_support", supportApproved: false });
   });
+
+  test("a visit never changes workspace settings; a read-only visit only reads", async () => {
+    const W = `/api/v2/workspaces/${ws.workspace}`;
+    const settings = () =>
+      call(people.staff, "PATCH", `${W}/settings`, { description: "Changed by staff" });
+    const create = (name: string) => call(people.staff, "POST", `${W}/projects`, { name });
+    // Still the approved visit from the test above: projects yes, settings no.
+    expect((await visit()).data).toMatchObject({ active: true, can_change: true });
+    expect((await settings()).status).toBe(403);
+    expect((await create("Made by approved staff")).status).toBe(200);
+
+    // Leave (which turns the switch off), the customer turns it on, staff come back: read only.
+    expect(
+      (await call(people.staff, "DELETE", `/api/v2/admin/workspaces/${ws.workspace}/join-support`))
+        .status,
+    ).toBe(200);
+    expect(
+      (await call(people.customer, "PATCH", `${W}/settings`, { allow_support_access: true }))
+        .status,
+    ).toBe(200);
+    expect(
+      (await call(people.staff, "POST", `/api/v2/admin/workspaces/${ws.workspace}/join-support`))
+        .status,
+    ).toBe(200);
+    expect((await visit()).data).toMatchObject({ active: true, can_change: false });
+    expect((await settings()).status).toBe(403);
+    expect((await create("Made by read-only staff")).status).toBe(403);
+    expect((await call(people.staff, "GET", `${W}/projects`)).status).toBe(200);
+    const [row] = await db
+      .select({ description: schema.workspace.description })
+      .from(schema.workspace)
+      .where(eq(schema.workspace.id, ws.workspace));
+    expect(row?.description).not.toBe("Changed by staff");
+  });
 });
