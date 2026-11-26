@@ -396,6 +396,55 @@ run("staff name the customer's signer", () => {
     expect(await pending("ikteken@testdorp.example")).toBe(false);
   });
 
+  test("a named signer whose invitation is gone still gets a code and opens the document, so naming them again need not invite", async () => {
+    const email = "zonder-uitnodiging@testdorp.example";
+    const doc = await pushed({ customer_signer: { name: "Zonder", email, role: null } });
+    const token = lastToken(email) as string;
+    // Expired or withdrawn by an admin: the invitation is no longer pending.
+    await w.db
+      .update(schema.org_invite)
+      .set({ deleted_at: w.clock.now.toISOString() })
+      .where(and(eq(schema.org_invite.org_id, w.orgId), eq(schema.org_invite.email, email)));
+    expect(await store.pendingOrgInvite(w.db, w.orgId, email, w.clock.now)).toBeNull();
+    expect(
+      (await call(w, "POST", signerPath(doc.id), "staff", { name: "Zonder", email, role: null }))
+        .status,
+    ).toBe(200);
+    expect(await mayGetCode(email)).toBe(true);
+    expect(
+      (await call(w, "GET", `${C()}/documents/${doc.id}/invite?invite=${token}`, null)).status,
+    ).toBe(200);
+  });
+
+  test("someone taken out of the room while named keeps signing; replaced later, that invitation goes too", async () => {
+    const pending = async (email: string) =>
+      Boolean(await store.pendingOrgInvite(w.db, w.orgId, email, w.clock.now));
+    const email = "kamer-weg@testdorp.example";
+    const added = await call(w, "POST", `${C()}/room/people`, "admin", {
+      email,
+      name: "Kamer Weg",
+      labels: ["it_security"],
+      other: null,
+    });
+    expect(added.status).toBeLessThan(300);
+    const doc = await pushed({ customer_signer: { name: "Kamer Weg", email, role: null } });
+    const person = (await store.roomPersonByEmail(w.db, w.orgId, email))?.id as string;
+    expect(
+      (await call(w, "POST", `${C()}/room/people/${person}/remove`, "admin", {})).status,
+    ).toBeLessThan(300);
+    expect(await pending(email)).toBe(true);
+    expect(
+      (
+        await call(w, "POST", signerPath(doc.id), "staff", {
+          name: "Opvolger",
+          email: "kamer-opvolger@testdorp.example",
+          role: null,
+        })
+      ).status,
+    ).toBe(200);
+    expect(await pending(email)).toBe(false);
+  });
+
   test("the invitation page of a staff naming names nobody as from the customer's organisation", async () => {
     const doc = await pushed({
       customer_signer: { name: "Pagina", email: "pagina@testdorp.example", role: null },

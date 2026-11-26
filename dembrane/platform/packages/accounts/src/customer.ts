@@ -399,19 +399,29 @@ export async function setSigner(
   const doc = await awaitingSigner(how.tx ?? d.db, org.id, docId);
   const email = signer.email.trim().toLowerCase();
   // The person already named: their link stands and nobody is emailed again.
-  if (doc.signerInvitedAt && isNamedSigner(doc, email))
-    return keepSigner(d, org.id, doc, signer, how.tx);
+  const named = (x: DocumentRow) => Boolean(x.signerInvitedAt && isNamedSigner(x, email));
   // After the checks, so a refused naming costs the organisation none of its namings.
-  if (how.counted) await d.limiter.check(SIGNER_LIMIT, org.id);
-  const replaced =
-    doc.signerEmail && doc.signerEmail.toLowerCase() !== email
-      ? { previous_email: doc.signerEmail, previous_name: doc.signerName }
-      : null;
+  if (how.counted && !named(doc)) await d.limiter.check(SIGNER_LIMIT, org.id);
   const now = d.now();
+  let kept: DocumentRow | null = null;
   const write = async (tx: Conn) => {
-    // Locked, so a signature at the same moment either lands first (and this is refused)
-    // or waits for the person named here.
-    await lockAwaiting(tx, org.id, doc.id);
+    // Locked and read again, so a signature or another naming at the same moment either
+    // lands first or waits, and who is named is decided on the row as it is now.
+    const current = await lockAwaiting(tx, org.id, doc.id);
+    if (named(current)) {
+      kept = current;
+      if (current.signerName !== signer.name || current.signerRole !== signer.role)
+        await store.updateDocument(tx, doc.id, {
+          signerName: signer.name,
+          signerRole: signer.role,
+          updatedAt: now,
+        });
+      return;
+    }
+    const replaced =
+      current.signerEmail && current.signerEmail.toLowerCase() !== email
+        ? { previous_email: current.signerEmail, previous_name: current.signerName }
+        : null;
     await store.updateDocument(tx, doc.id, {
       signerEmail: email,
       signerName: signer.name,
@@ -428,7 +438,7 @@ export async function setSigner(
       invitedBy: who.appUserId ?? null,
       now,
     });
-    await emailSigner(d, tx, who, org, { ...doc, signerEmail: email, signerInvitedAt: now });
+    await emailSigner(d, tx, who, org, { ...current, signerEmail: email, signerInvitedAt: now });
     await emit(d, tx, {
       orgId: org.id,
       actor: how.actor,
@@ -440,11 +450,12 @@ export async function setSigner(
   };
   if (how.tx) await write(how.tx);
   else await d.db.transaction(write);
+  const was = kept as DocumentRow | null;
   return {
     signer: {
       email,
       name: signer.name,
-      named_at: now.toISOString(),
+      named_at: (was?.signerInvitedAt ?? now).toISOString(),
       reminded_at: null,
       role: signer.role,
     },
@@ -460,37 +471,6 @@ async function releaseSignerInvite(tx: Conn, orgId: string, email: string, now: 
   if (await store.roomPersonByEmail(tx, orgId, email)) return;
   for (const id of await store.signerInviteIds(tx, orgId, email))
     await store.withdrawOrgInvite(tx, id, now);
-}
-
-/** Naming the person already named: only a corrected name or job title is written. */
-async function keepSigner(
-  d: AccountsDeps,
-  orgId: string,
-  doc: DocumentRow,
-  signer: Person,
-  tx: Conn | undefined,
-) {
-  if (doc.signerName !== signer.name || doc.signerRole !== signer.role) {
-    const write = async (c: Conn) => {
-      await lockAwaiting(c, orgId, doc.id);
-      await store.updateDocument(c, doc.id, {
-        signerName: signer.name,
-        signerRole: signer.role,
-        updatedAt: d.now(),
-      });
-    };
-    if (tx) await write(tx);
-    else await d.db.transaction(write);
-  }
-  return {
-    signer: {
-      email: doc.signerEmail as string,
-      name: signer.name,
-      named_at: (doc.signerInvitedAt as Date).toISOString(),
-      reminded_at: null,
-      role: signer.role,
-    },
-  };
 }
 
 /**
@@ -548,6 +528,7 @@ async function lockAwaiting(tx: Conn, orgId: string, docId: string) {
   const locked = await store.documentForUpdate(tx, orgId, docId);
   if (!locked?.requiresSignature || !["sent", "viewed"].includes(locked.status))
     throw new ConflictError("document.not_awaiting_signature");
+  return locked;
 }
 
 /**
