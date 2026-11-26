@@ -419,10 +419,12 @@ export async function setSigner(
       signerInvitedAt: now,
       updatedAt: now,
     });
-    await store.inviteSigner(tx, {
+    // Kept on the event, so taking them off later withdraws only what this naming made.
+    const inviteId = await store.inviteToOrg(tx, {
       id: newId(),
       orgId: org.id,
       email,
+      role: "billing",
       invitedBy: who.appUserId ?? null,
       now,
     });
@@ -432,8 +434,9 @@ export async function setSigner(
       actor: how.actor,
       type: replaced ? "document.signer_replaced" : "document.signer_named",
       subject: { type: "document", id: doc.id },
-      detail: { email, name: signer.name, ...replaced },
+      detail: { email, name: signer.name, ...replaced, invite_id: inviteId },
     });
+    if (replaced) await releaseSignerInvite(tx, org.id, replaced.previous_email, now);
   };
   if (how.tx) await write(how.tx);
   else await d.db.transaction(write);
@@ -446,6 +449,17 @@ export async function setSigner(
       role: signer.role,
     },
   };
+}
+
+/**
+ * Someone taken off as signer: the invitations their namings made are withdrawn, unless a
+ * document still waits on them or they are in the room. Others' invitations stay.
+ */
+async function releaseSignerInvite(tx: Conn, orgId: string, email: string, now: Date) {
+  if ((await store.waitingForSigner(tx, email)).some((x) => x.orgId === orgId)) return;
+  if (await store.roomPersonByEmail(tx, orgId, email)) return;
+  for (const id of await store.signerInviteIds(tx, orgId, email))
+    await store.withdrawOrgInvite(tx, id, now);
 }
 
 /** Naming the person already named: only a corrected name or job title is written. */
@@ -510,6 +524,7 @@ export async function unsetSigner(
       subject: { type: "document", id: doc.id },
       detail: { previous_email: doc.signerEmail, previous_name: doc.signerName },
     });
+    await releaseSignerInvite(tx, org.id, doc.signerEmail as string, now);
   };
   if (how.tx) await write(how.tx);
   else await d.db.transaction(write);

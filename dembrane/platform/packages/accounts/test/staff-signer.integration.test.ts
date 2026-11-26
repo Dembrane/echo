@@ -152,13 +152,13 @@ run("staff name the customer's signer", () => {
     expect(seen.signer?.email).toBe(email);
     const room = K.RoomPage.parse((await call(w, "GET", `${C()}/room`, "admin")).data);
     expect([room.signers.offer?.email, room.signers.offer?.document_id]).toEqual([email, doc.id]);
-    // The invitation page greets them, and names who asked.
+    // The invitation page greets them; staff are not "from" the customer, so it names no one.
     const invite = K.SignerInvite.parse(
       (await call(w, "GET", `${C()}/documents/${doc.id}/invite?invite=${lastToken(email)}`, null))
         .data,
     );
     expect(invite.signer.email).toBe(email);
-    expect(invite.inviter).toEqual({ name: "staff" });
+    expect(invite.inviter).toBeNull();
   });
 
   test("a draft keeps the signer staff gave and invites them only when it is sent", async () => {
@@ -332,6 +332,100 @@ run("staff name the customer's signer", () => {
     expect((await invite(token)).status).toBe(200);
     const after = await row(doc.id);
     expect([after?.signerName, after?.signerRole]).toEqual(["Zelfde Persoon", "Wethouder"]);
+  });
+
+  test("a signer taken off loses the invitation their naming made, unless they have another reason to come in", async () => {
+    const pending = async (email: string) =>
+      Boolean(await store.pendingOrgInvite(w.db, w.orgId, email, w.clock.now));
+    const rename = (docId: string, email: string) =>
+      call(w, "POST", signerPath(docId), "staff", { name: email, email, role: null });
+    const signer = (email: string) => ({ customer_signer: { name: email, email, role: null } });
+
+    // Replaced: the invitation the naming made goes with it.
+    const replaced = await pushed(signer("weg@testdorp.example"));
+    expect(await pending("weg@testdorp.example")).toBe(true);
+    expect((await rename(replaced.id, "opvolger@testdorp.example")).status).toBe(200);
+    expect(await pending("weg@testdorp.example")).toBe(false);
+    expect(await pending("opvolger@testdorp.example")).toBe(true);
+
+    // Still named on another document: the invitation stays.
+    const one = await pushed(signer("dubbel@testdorp.example"));
+    const two = await pushed();
+    expect((await rename(two.id, "dubbel@testdorp.example")).status).toBe(200);
+    expect((await rename(one.id, "ander@testdorp.example")).status).toBe(200);
+    expect(await pending("dubbel@testdorp.example")).toBe(true);
+
+    // Invited by an admin before the naming: not the naming's to take back.
+    await store.inviteToOrg(w.db, {
+      id: crypto.randomUUID(),
+      orgId: w.orgId,
+      email: "eigen@testdorp.example",
+      role: "billing",
+      invitedBy: null,
+      now: w.clock.now,
+    });
+    const own = await pushed(signer("eigen@testdorp.example"));
+    expect((await rename(own.id, "nog-een@testdorp.example")).status).toBe(200);
+    expect(await pending("eigen@testdorp.example")).toBe(true);
+
+    // In the room for what they do: the room keeps them invited.
+    const room = await pushed(signer("kamer@testdorp.example"));
+    const added = await call(w, "POST", `${C()}/room/people`, "admin", {
+      email: "kamer@testdorp.example",
+      name: "Kamer Lid",
+      labels: ["it_security"],
+      other: null,
+    });
+    expect(added.status).toBeLessThan(300);
+    expect((await rename(room.id, "weer-een@testdorp.example")).status).toBe(200);
+    expect(await pending("kamer@testdorp.example")).toBe(true);
+
+    // The admin answers that they sign themselves: the named person's invitation goes.
+    const mine = await pushed(signer("ikteken@testdorp.example"));
+    const task = (await store.tasks(w.db, w.orgId)).find(
+      (t) => t.code === "who_signs" && t.documentId === mine.id,
+    );
+    const answered = await call(w, "POST", `${C()}/tasks/${task?.id}/who-signs`, "admin", {
+      offer_signer: null,
+      dpa_same: true,
+      dpa_signer: null,
+      dpia: false,
+    });
+    expect(answered.status).toBe(200);
+    expect((await row(mine.id))?.signerEmail).toBeNull();
+    expect(await pending("ikteken@testdorp.example")).toBe(false);
+  });
+
+  test("the invitation page of a staff naming names nobody as from the customer's organisation", async () => {
+    const doc = await pushed({
+      customer_signer: { name: "Pagina", email: "pagina@testdorp.example", role: null },
+    });
+    const page = await call(
+      w,
+      "GET",
+      `${C()}/documents/${doc.id}/invite?invite=${lastToken("pagina@testdorp.example")}`,
+      null,
+    );
+    expect(page.status).toBe(200);
+    expect((page.data as { inviter: unknown }).inviter).toBeNull();
+    // A naming by the customer's admin keeps their name on it.
+    w.clock.now = new Date(w.clock.now.getTime() + 60_000);
+    expect(
+      (
+        await call(w, "POST", `${C()}/documents/${doc.id}/signer`, "admin", {
+          name: "Klant Keuze",
+          email: "klantkeuze@testdorp.example",
+          role: null,
+        })
+      ).status,
+    ).toBe(200);
+    const theirs = await call(
+      w,
+      "GET",
+      `${C()}/documents/${doc.id}/invite?invite=${lastToken("klantkeuze@testdorp.example")}`,
+      null,
+    );
+    expect((theirs.data as { inviter: { name: string } | null }).inviter?.name).toBeTruthy();
   });
 
   test("a signed document keeps its signer: staff are refused and nothing changes", async () => {

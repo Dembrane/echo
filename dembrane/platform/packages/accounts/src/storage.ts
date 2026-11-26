@@ -368,6 +368,21 @@ export const store = {
     return row ?? null;
   },
 
+  /** The invitations that namings of `email` as signer made in the organisation. */
+  async signerInviteIds(c: Conn, orgId: string, email: string): Promise<string[]> {
+    const rows = await c
+      .select({ id: sql<string | null>`${event.detail}->>'invite_id'` })
+      .from(event)
+      .where(
+        and(
+          eq(event.orgId, orgId),
+          inArray(event.type, ["document.signer_named", "document.signer_replaced"]),
+          sql`lower(${event.detail}->>'email') = ${email.trim().toLowerCase()}`,
+        ),
+      );
+    return rows.flatMap((r) => (r.id ? [r.id] : []));
+  },
+
   /** Withdraws an invitation (soft delete): its link and the code sign-in it allowed stop. */
   async withdrawOrgInvite(c: Conn, id: string, now: Date) {
     await c
