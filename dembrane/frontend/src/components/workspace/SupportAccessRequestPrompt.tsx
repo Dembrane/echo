@@ -3,6 +3,7 @@ import { Trans } from "@lingui/react/macro";
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
 import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { PersonNote } from "@/components/common/PersonNote";
 import {
 	useMarkNotificationRead,
 	useNotifications,
@@ -106,7 +107,18 @@ export default function SupportAccessRequestPrompt() {
 					support. Access ends automatically.
 				</Trans>
 			}
-			detail={note ? <Trans>Their note: “{note}”</Trans> : null}
+			// Their own words, beside their picture. Without a note there is nothing to quote.
+			detail={
+				note ? (
+					<PersonNote
+						person={{ avatar: request.requested_by_avatar, name }}
+						label={t`Note from ${name}`}
+						data-testid={`${TEST_ID}-note`}
+					>
+						{note}
+					</PersonNote>
+				) : null
+			}
 		/>
 	);
 }

@@ -33,6 +33,8 @@ export type WaitingSupportRequest = PendingSupportRequest & {
 	workspace_id: string;
 	workspace_name: string;
 	notification_id: string | null;
+	/** The staff member's picture, from the request's notification; null shows initials. */
+	requested_by_avatar: string | null;
 };
 
 export const SUPPORT_REQUEST_EVENT = "SUPPORT_ACCESS_REQUESTED";
@@ -103,6 +105,7 @@ export function waitingRequests(
 			out.push({
 				...request,
 				notification_id: notice?.id ?? null,
+				requested_by_avatar: notice?.actor_avatar ?? null,
 				workspace_id: workspaceId,
 				workspace_name:
 					workspaceNames[workspaceId] ||
