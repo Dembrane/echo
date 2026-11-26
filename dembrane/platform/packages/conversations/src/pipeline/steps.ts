@@ -1,6 +1,6 @@
 import type { Capture } from "@dembrane/analytics";
 import { AudioError, durationOf, fileFormatOf, planPieces } from "@dembrane/audio";
-import { PaymentRequiredError } from "@dembrane/core";
+import { NotFoundError, PaymentRequiredError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import type { Models } from "@dembrane/llm";
@@ -211,13 +211,14 @@ export async function recordStatus(
     .catch(() => undefined);
 }
 
-/** Runs fn and records `<event>.completed` or `<event>.failed` with its duration. */
+/** Runs fn and records `<event>.completed`, `.skipped` (an error `skipped` explains) or `.failed`. */
 async function withStatus<T>(
   d: PipelineDeps,
   where: { conversationId: string; chunkId?: string | null },
   event: string,
   message: string,
   fn: () => Promise<T>,
+  skipped?: (err: unknown) => string | undefined,
 ): Promise<T> {
   const started = performance.now();
   try {
@@ -231,10 +232,11 @@ async function withStatus<T>(
     });
     return out;
   } catch (err) {
+    const why = skipped?.(err);
     await recordStatus(d.db, {
       ...where,
-      event: `${event}.failed`,
-      message: (err as Error).message,
+      event: `${event}.${why ? "skipped" : "failed"}`,
+      message: why ?? (err as Error).message,
       durationMs: Math.round(performance.now() - started),
       now: d.now(),
     });
@@ -861,15 +863,22 @@ async function webhook(
  * from the run, so a retry overwrites its own file.
  */
 export async function mergeAudio(d: PipelineDeps, conversationId: string, run: string) {
+  const noChunks = (err: unknown) =>
+    err instanceof NotFoundError && err.code === "conversation.not_found";
   try {
-    await withStatus(d, { conversationId }, "task_merge_conversation_chunks", "", () =>
-      mergeConversationAudio(d, conversationId, run),
+    await withStatus(
+      d,
+      { conversationId },
+      "task_merge_conversation_chunks",
+      "",
+      () => mergeConversationAudio(d, conversationId, run),
+      (err) => (err instanceof NoContent ? "no audio" : noChunks(err) ? "no chunks" : undefined),
     );
     return "merged";
   } catch (err) {
     if (err instanceof NoContent) return "no-content";
     if (err instanceof NoMergeableChunks) return "no-mergeable-audio";
-    if ((err as Error).message === "Conversation not found") return "no-chunks";
+    if (noChunks(err)) return "no-chunks";
     throw err;
   }
 }

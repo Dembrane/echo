@@ -111,7 +111,7 @@ export function world(account: Partial<AccountRow> = {}) {
       if (held.has(key)) return undefined;
       held.add(key);
       try {
-        return await fn();
+        return await fn(store);
       } finally {
         held.delete(key);
       }

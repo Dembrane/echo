@@ -29,6 +29,7 @@ type Draft = {
 
 run("the presentation draft after Show them", () => {
   let database: ReturnType<typeof createDb>;
+  let dbUrl: string;
   let d: PopcornDeps;
   const ticks: string[] = [];
   // The workspace's plan per project: a free one may not share a public link.
@@ -36,6 +37,7 @@ run("the presentation draft after Show them", () => {
 
   beforeAll(async () => {
     const url = await freshDatabase(admin as string, "present_draft_test");
+    dbUrl = url;
     await migrate(url, { appEnv: "test" });
     database = createDb({ url, poolMax: 4 });
     const sql = database.client;
@@ -69,7 +71,7 @@ run("the presentation draft after Show them", () => {
     await database?.close();
   });
 
-  const app = () => {
+  const app = (deps: PopcornDeps = d) => {
     const access = {
       project: async (_who: unknown, projectId: string, policy: Policy) => {
         const tier = tiers.get(projectId) ?? "innovator";
@@ -101,7 +103,7 @@ run("the presentation draft after Show them", () => {
     a.route(
       "/",
       presentRoutes({
-        ...d,
+        ...deps,
         access,
         hub: async () => ({}) as never,
         map: { currentSnapshot: async () => null } as unknown as MapStore,
@@ -185,6 +187,30 @@ run("the presentation draft after Show them", () => {
     expect((await publish(id, held.revision)).status).toBe(200);
     expect((await draft(id)).has_changes).toBe(false);
   });
+
+  test("putting the opening live needs no second connection, so a full pool cannot stall it", async () => {
+    const id = await presentation(6);
+    const single = createDb({ url: dbUrl, poolMax: 1 });
+    try {
+      const opening = async () =>
+        (
+          await app(popcornDeps({ ...d, db: single.db })).request(
+            `/api/v2/bff/present/${id}/opening`,
+            {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ patch: { intro: { subtitle: "Welcome in" } } }),
+            },
+          )
+        ).status;
+      const outcome = await Promise.race([opening(), Bun.sleep(5_000).then(() => "stalled")]);
+      expect(outcome).toBe(200);
+      const intro = (await draft(id)).presentation.settings.intro as { subtitle?: string };
+      expect(intro.subtitle).toBe("Welcome in");
+    } finally {
+      await single.close();
+    }
+  }, 30_000);
 
   test("the public map route carries the project's groups, never who made them", async () => {
     const id = await presentation(5, { tier: "innovator" });
