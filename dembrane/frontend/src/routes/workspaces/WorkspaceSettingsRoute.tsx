@@ -784,7 +784,17 @@ export const WorkspaceSettingsRoute = () => {
 									{settings.my_policies?.includes("chat:use") && (
 										<WorkspaceMemorySection workspaceId={workspaceId} />
 									)}
-									<WorkspaceMethodologiesSection workspaceId={workspaceId} />
+									<WorkspaceMethodologiesSection
+										workspaceId={workspaceId}
+										canCreate={
+											settings.my_policies?.includes("project:create") ?? false
+										}
+										canEdit={
+											(settings.my_policies?.includes("project:create") ||
+												canEditSettings) ??
+											false
+										}
+									/>
 								</Stack>
 							</Tabs.Panel>
 
