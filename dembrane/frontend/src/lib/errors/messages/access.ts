@@ -10,4 +10,9 @@ export const access = {
 		id: "error.access.not_onboarded",
 		message: "Finish setting up your account to continue.",
 	}),
+	"access.support_session_limited": msg({
+		id: "error.access.support_session_limited",
+		message:
+			"You're here for support, so this is left to the workspace's admins.",
+	}),
 } satisfies Messages<"access">;

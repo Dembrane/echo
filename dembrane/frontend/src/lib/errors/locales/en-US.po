@@ -1804,6 +1804,11 @@ msgid "error.workspace.removed_from"
 msgstr "You were removed from this workspace. Ask a workspace admin to invite you back."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/access.ts:13
+msgid "error.access.support_session_limited"
+msgstr "You're here for support, so this is left to the workspace's admins."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:9
 msgid "error.account.email_missing"
 msgstr "Your account has no email address yet. Contact support to add one."

@@ -1804,6 +1804,11 @@ msgid "error.workspace.removed_from"
 msgstr "Byli jste odebráni z tohoto pracovního prostoru. Požádejte správce pracovního prostoru o opětovné pozvání."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/access.ts:13
+msgid "error.access.support_session_limited"
+msgstr "Jste tu kvůli podpoře, takže tohle zůstává na správcích pracovního prostoru."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:9
 msgid "error.account.email_missing"
 msgstr "Váš účet zatím nemá e-mailovou adresu. Chcete-li ji přidat, kontaktujte podporu."

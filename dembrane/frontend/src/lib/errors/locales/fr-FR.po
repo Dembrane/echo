@@ -1804,6 +1804,11 @@ msgid "error.workspace.removed_from"
 msgstr "Vous avez été retiré de cet espace de travail. Demandez à un administrateur de l'espace de travail de vous réinviter."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/access.ts:13
+msgid "error.access.support_session_limited"
+msgstr "Vous êtes là pour le support : cette action revient aux administrateurs de l'espace de travail."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:9
 msgid "error.account.email_missing"
 msgstr "Votre compte n'a pas encore d'adresse e-mail. Contactez l'assistance pour en ajouter une."

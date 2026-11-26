@@ -1804,6 +1804,11 @@ msgid "error.workspace.removed_from"
 msgstr "Вас видалили з цього робочого простору. Попросіть адміністратора робочого простору запросити вас знову."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/access.ts:13
+msgid "error.access.support_session_limited"
+msgstr "Ви тут для підтримки, тож це залишається за адміністраторами робочого простору."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:9
 msgid "error.account.email_missing"
 msgstr "У вашому акаунті ще немає адреси електронної пошти. Зверніться до підтримки, щоб додати її."
