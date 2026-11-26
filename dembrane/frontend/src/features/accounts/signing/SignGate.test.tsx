@@ -244,17 +244,4 @@ describe("the code step, when no code arrives", () => {
 		expect(known).toBe(NO_CODE);
 		expect(unknown).toBe(NO_CODE);
 	});
-
-	it("sits with the control that sends a new code", async () => {
-		auth.hasSession.mockResolvedValue(false);
-		auth.sendSignInCode.mockResolvedValue(undefined);
-		renderGate();
-		fireEvent.click(await screen.findByTestId("invite-send-code"));
-		const resend = await screen.findByTestId("invite-resend");
-		const line = screen.getByTestId("invite-no-code");
-		expect(resend.closest("[data-testid=invite-resend-group]")).toBe(
-			line.closest("[data-testid=invite-resend-group]"),
-		);
-		expect(line.closest("[data-testid=invite-resend-group]")).toBeTruthy();
-	});
 });

@@ -4668,7 +4668,7 @@ msgid "Create account"
 msgstr "Create account"
 
 #: src/routes/auth/Register.tsx:151
-#: src/routes/auth/Login.tsx:779
+#: src/routes/auth/Login.tsx:790
 msgid "Create an account"
 msgstr "Create an account"
 
@@ -5774,7 +5774,7 @@ msgstr "Email address"
 msgid "Email me a code"
 msgstr "Poslat kód e-mailem"
 
-#: src/routes/auth/Login.tsx:754
+#: src/routes/auth/Login.tsx:765
 #: src/components/auth/LoginBlockedNotice.tsx:37
 msgid "Email me a sign-in code instead"
 msgstr "Poslat přihlašovací kód raději e-mailem"
@@ -6756,7 +6756,7 @@ msgstr "Předpověď"
 msgid "Forgetting a saved memory"
 msgstr "Odstraňuje se uložená vzpomínka"
 
-#: src/routes/auth/Login.tsx:764
+#: src/routes/auth/Login.tsx:775
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
 
@@ -9616,9 +9616,13 @@ msgstr "Hledání neodpovídají žádné chaty."
 msgid "No chats yet."
 msgstr "Zatím žádné chaty."
 
+#: src/routes/auth/Login.tsx:722
+msgid "No code after a minute? Check the address above and your spam folder. If someone shared a dembrane page with you, ask them to add you."
+msgstr "Kód nepřišel ani po minutě? Zkontroluj adresu výše a podívej se do složky se spamem. Pokud s tebou někdo sdílel stránku dembrane, požádej ho, ať tě přidá."
+
 #: src/routes/auth/Login.tsx:724
-msgid "No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you."
-msgstr "Kód nepřišel ani po minutě? Podívej se do složky se spamem. Pokud s tebou někdo sdílel stránku dembrane, požádej ho, ať tě přidá."
+#~ msgid "No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you."
+#~ msgstr "Kód nepřišel ani po minutě? Podívej se do složky se spamem. Pokud s tebou někdo sdílel stránku dembrane, požádej ho, ať tě přidá."
 
 #: src/components/settings/AuditLogsCard.tsx:444
 msgid "No collections found"
@@ -10709,7 +10713,7 @@ msgid "Options"
 msgstr "Options"
 
 #: src/routes/auth/Register.tsx:367
-#: src/routes/auth/Login.tsx:770
+#: src/routes/auth/Login.tsx:781
 msgid "or"
 msgstr "or"
 
@@ -17602,6 +17606,10 @@ msgstr "Využití se sleduje pro vaši organizaci. Zobrazit jej můžete v nasta
 msgid "Usage this cycle"
 msgstr "Usage this cycle"
 
+#: src/routes/auth/Login.tsx:738
+msgid "Use a different email"
+msgstr "Použít jiný e-mail"
+
 #~ msgid "use AI features"
 #~ msgstr "používat funkce AI"
 
@@ -17625,7 +17633,7 @@ msgstr "Používejte italštinu pro chat, zprávy, přepis a karty pro onboardin
 msgid "Use latest results"
 msgstr "Použít nejnovější výsledky"
 
-#: src/routes/auth/Login.tsx:739
+#: src/routes/auth/Login.tsx:750
 msgid "Use my password instead"
 msgstr "Místo toho použít heslo"
 

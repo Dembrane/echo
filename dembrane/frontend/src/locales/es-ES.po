@@ -4668,7 +4668,7 @@ msgid "Create account"
 msgstr "Crear cuenta"
 
 #: src/routes/auth/Register.tsx:151
-#: src/routes/auth/Login.tsx:779
+#: src/routes/auth/Login.tsx:790
 msgid "Create an account"
 msgstr "Crear una cuenta"
 
@@ -5774,7 +5774,7 @@ msgstr "Dirección de correo electrónico"
 msgid "Email me a code"
 msgstr "Enviarme un código por correo"
 
-#: src/routes/auth/Login.tsx:754
+#: src/routes/auth/Login.tsx:765
 #: src/components/auth/LoginBlockedNotice.tsx:37
 msgid "Email me a sign-in code instead"
 msgstr "Enviarme un código de acceso por correo"
@@ -6756,7 +6756,7 @@ msgstr "Previsión"
 msgid "Forgetting a saved memory"
 msgstr "Olvidando un recuerdo guardado"
 
-#: src/routes/auth/Login.tsx:764
+#: src/routes/auth/Login.tsx:775
 msgid "Forgot your password?"
 msgstr "¿Olvidaste tu contraseña?"
 
@@ -9616,9 +9616,13 @@ msgstr "Ningún chat coincide con tu búsqueda."
 msgid "No chats yet."
 msgstr "Aún no hay chats."
 
+#: src/routes/auth/Login.tsx:722
+msgid "No code after a minute? Check the address above and your spam folder. If someone shared a dembrane page with you, ask them to add you."
+msgstr "¿Ningún código después de un minuto? Revisa la dirección de arriba y mira en tu carpeta de spam. Si alguien compartió contigo una página de dembrane, pídele que te añada."
+
 #: src/routes/auth/Login.tsx:724
-msgid "No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you."
-msgstr "¿Ningún código después de un minuto? Mira en tu carpeta de spam. Si alguien compartió contigo una página de dembrane, pídele que te añada."
+#~ msgid "No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you."
+#~ msgstr "¿Ningún código después de un minuto? Mira en tu carpeta de spam. Si alguien compartió contigo una página de dembrane, pídele que te añada."
 
 #: src/components/settings/AuditLogsCard.tsx:444
 msgid "No collections found"
@@ -10709,7 +10713,7 @@ msgid "Options"
 msgstr "Opciones"
 
 #: src/routes/auth/Register.tsx:367
-#: src/routes/auth/Login.tsx:770
+#: src/routes/auth/Login.tsx:781
 msgid "or"
 msgstr "o"
 
@@ -17603,6 +17607,10 @@ msgstr "El uso se registra para tu organización. Puedes verlo en los ajustes de
 msgid "Usage this cycle"
 msgstr "Uso en este ciclo"
 
+#: src/routes/auth/Login.tsx:738
+msgid "Use a different email"
+msgstr "Usar otro correo"
+
 #~ msgid "use AI features"
 #~ msgstr "usar funciones de IA"
 
@@ -17626,7 +17634,7 @@ msgstr "Usa italiano para el chat, los informes, la transcripción y las tarjeta
 msgid "Use latest results"
 msgstr "Usar los últimos resultados"
 
-#: src/routes/auth/Login.tsx:739
+#: src/routes/auth/Login.tsx:750
 msgid "Use my password instead"
 msgstr "Usar mi contraseña en su lugar"
 

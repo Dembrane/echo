@@ -4665,7 +4665,7 @@ msgid "Create account"
 msgstr "Account aanmaken"
 
 #: src/routes/auth/Register.tsx:151
-#: src/routes/auth/Login.tsx:779
+#: src/routes/auth/Login.tsx:790
 msgid "Create an account"
 msgstr "Maak een account aan"
 
@@ -5771,7 +5771,7 @@ msgstr "E-mailadres"
 msgid "Email me a code"
 msgstr "Mail me een code"
 
-#: src/routes/auth/Login.tsx:754
+#: src/routes/auth/Login.tsx:765
 #: src/components/auth/LoginBlockedNotice.tsx:37
 msgid "Email me a sign-in code instead"
 msgstr "Mail me liever een inlogcode"
@@ -6753,7 +6753,7 @@ msgstr "Prognose"
 msgid "Forgetting a saved memory"
 msgstr "Een opgeslagen herinnering vergeten"
 
-#: src/routes/auth/Login.tsx:764
+#: src/routes/auth/Login.tsx:775
 msgid "Forgot your password?"
 msgstr "Wachtwoord vergeten?"
 
@@ -9613,9 +9613,13 @@ msgstr "Geen chats gevonden voor je zoekopdracht."
 msgid "No chats yet."
 msgstr "Nog geen chats."
 
+#: src/routes/auth/Login.tsx:722
+msgid "No code after a minute? Check the address above and your spam folder. If someone shared a dembrane page with you, ask them to add you."
+msgstr "Geen code na een minuut? Controleer het adres hierboven en kijk in je spam. Heeft iemand een dembrane-pagina met je gedeeld? Vraag diegene dan om je toe te voegen."
+
 #: src/routes/auth/Login.tsx:724
-msgid "No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you."
-msgstr "Geen code na een minuut? Kijk in je spam. Heeft iemand een dembrane-pagina met je gedeeld? Vraag diegene dan om je toe te voegen."
+#~ msgid "No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you."
+#~ msgstr "Geen code na een minuut? Kijk in je spam. Heeft iemand een dembrane-pagina met je gedeeld? Vraag diegene dan om je toe te voegen."
 
 #: src/components/settings/AuditLogsCard.tsx:444
 msgid "No collections found"
@@ -10706,7 +10710,7 @@ msgid "Options"
 msgstr "Opties"
 
 #: src/routes/auth/Register.tsx:367
-#: src/routes/auth/Login.tsx:770
+#: src/routes/auth/Login.tsx:781
 msgid "or"
 msgstr "of"
 
@@ -17597,6 +17601,10 @@ msgstr "Gebruik wordt bijgehouden voor je organisatie. Bekijk het in de organisa
 msgid "Usage this cycle"
 msgstr "Gebruik deze cyclus"
 
+#: src/routes/auth/Login.tsx:738
+msgid "Use a different email"
+msgstr "Ander e-mailadres gebruiken"
+
 #~ msgid "use AI features"
 #~ msgstr "AI-functies gebruiken"
 
@@ -17620,7 +17628,7 @@ msgstr "Gebruik Italiaans voor chat, rapporten, transcriptie en introductiekaart
 msgid "Use latest results"
 msgstr "Nieuwste resultaten gebruiken"
 
-#: src/routes/auth/Login.tsx:739
+#: src/routes/auth/Login.tsx:750
 msgid "Use my password instead"
 msgstr "Liever met mijn wachtwoord"
 

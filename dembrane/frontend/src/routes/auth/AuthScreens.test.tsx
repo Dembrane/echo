@@ -324,8 +324,37 @@ it("the code step says what to do when no code arrives, the same for every addre
 	fireEvent.click(screen.getByTestId("auth-login-code-send"));
 	const line = await screen.findByTestId("auth-login-no-code");
 	expect(line.textContent).toBe(
-		"No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you.",
+		"No code after a minute? Check the address above and your spam folder. If someone shared a dembrane page with you, ask them to add you.",
 	);
+});
+
+it("a mistyped address can be corrected from the code step and a code sent to the new one", async () => {
+	const calls = stubFetch((url) =>
+		url.endsWith("/auth/email-otp/send-verification-otp")
+			? json(200, { success: true })
+			: undefined,
+	);
+	const sentTo = () =>
+		calls
+			.filter((c) => c.url.endsWith("/auth/email-otp/send-verification-otp"))
+			.map((c) => (c.body as { email: string }).email);
+	wrap(<LoginRoute />, "/login");
+	fireEvent.click(screen.getByTestId("auth-login-code-mode"));
+	fireEvent.change(screen.getByTestId("auth-login-code-email-input"), {
+		target: { value: "ana@exmaple.com" },
+	});
+	fireEvent.click(screen.getByTestId("auth-login-code-send"));
+	fireEvent.click(await screen.findByTestId("auth-login-code-change-email"));
+	// Back on the address, with what was typed kept so only the typo needs fixing.
+	const input = screen.getByTestId(
+		"auth-login-code-email-input",
+	) as HTMLInputElement;
+	expect(input.value).toBe("ana@exmaple.com");
+	expect(screen.queryByTestId("auth-login-no-code")).toBeNull();
+	fireEvent.change(input, { target: { value: "ana@example.com" } });
+	fireEvent.click(screen.getByTestId("auth-login-code-send"));
+	await screen.findByTestId("auth-login-no-code");
+	expect(sentTo()).toEqual(["ana@exmaple.com", "ana@example.com"]);
 });
 
 it("a failure after a successful sign-in is not a failed login: the person is told they are in and can carry on", async () => {

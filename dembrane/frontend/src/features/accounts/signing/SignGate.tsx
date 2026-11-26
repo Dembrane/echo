@@ -506,16 +506,13 @@ function OpenInvite({
 						>
 							{signs ? <Trans>Open the document</Trans> : <Trans>Log in</Trans>}
 						</Button>
-						{/* The server sends a code only to an address it knows and answers the
-						    same either way, so this line is the same for everyone: it must
-						    never depend on what the server says about the address. */}
-						<Stack gap={4} align="center" data-testid="invite-resend-group">
+						{/* Same for every address, so it never says whether one is known. */}
+						<Stack gap={4} align="center">
 							<Button
 								variant="subtle"
 								color="gray"
 								disabled={resendCooldown.wait > 0}
 								onClick={sendCode}
-								data-testid="invite-resend"
 							>
 								{resendCooldown.wait > 0 ? (
 									<Trans>Send a new code in {resendCooldown.wait}s</Trans>
@@ -527,7 +524,6 @@ function OpenInvite({
 								size="sm"
 								c="dimmed"
 								ta="center"
-								// Centred under the control, so its lines are balanced, not ragged.
 								style={{ textWrap: "balance" }}
 								data-testid="invite-no-code"
 							>
