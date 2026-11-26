@@ -45,6 +45,30 @@ export const getReleases = (): Release[] => [
 	{
 		changes: [
 			{
+				text: t`Create a project, workspace or organisation from the new Create button.`,
+				type: "improvement",
+			},
+			{
+				text: t`Quick start is now the first template: a plain project to set up your way.`,
+				type: "improvement",
+			},
+			{
+				text: t`Approve or decline dembrane support's access requests right in the app. Access ends after 24 hours.`,
+				type: "feature",
+			},
+		],
+		publication: { date: "2026-11-26", tag: "v3.7.0" },
+		title: t`Quicker ways to start`,
+		version: "v3.7.0",
+	},
+	{
+		publication: { date: "2026-11-18", tag: "v3.6.1" },
+		title: t`Improvements and bug fixes`,
+		version: "v3.6.1",
+	},
+	{
+		changes: [
+			{
 				text: t`Start from a template, like a focus group or citizens' assembly, already set up for you.`,
 				type: "feature",
 			},

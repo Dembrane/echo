@@ -1139,7 +1139,7 @@ msgstr "6 à 15."
 msgid "8 hours"
 msgstr "8 heures"
 
-#: src/components/release/releases.ts:131
+#: src/components/release/releases.ts:155
 msgid "A banner tells you when this month's free hours are used up."
 msgstr "Une bannière te prévient quand les heures gratuites du mois sont épuisées."
 
@@ -1147,7 +1147,7 @@ msgstr "Une bannière te prévient quand les heures gratuites du mois sont épui
 msgid "A blue bar across the top of every tab, with your text and a link back to the opening."
 msgstr "Une barre bleue en haut de chaque onglet, avec votre texte et un lien vers l'ouverture."
 
-#: src/components/release/releases.ts:197
+#: src/components/release/releases.ts:221
 msgid "A cleaner, more accessible dashboard and portal."
 msgstr "Un tableau de bord et un portail plus clairs et plus accessibles."
 
@@ -1209,7 +1209,7 @@ msgstr "Des imports audio plus fiables"
 msgid "A new assistant and a live monitor"
 msgstr "Un nouvel assistant et un suivi en direct"
 
-#: src/components/release/releases.ts:136
+#: src/components/release/releases.ts:160
 msgid "A new free plan"
 msgstr "Un nouveau forfait gratuit"
 
@@ -2032,7 +2032,7 @@ msgstr "Toutes les conversations visibles sont sélectionnées"
 msgid "All workspaces"
 msgstr "Tous les espaces de travail"
 
-#: src/components/release/releases.ts:177
+#: src/components/release/releases.ts:201
 msgid "All-new Present features: show live results on a big screen during your session."
 msgstr "Nouvelles fonctionnalités de Présenter : affichez les résultats en direct sur grand écran pendant votre session."
 
@@ -2401,6 +2401,10 @@ msgstr "Approuver"
 #: src/components/workspace/SupportAccessRequestPrompt.tsx:98
 msgid "Approve for 24 hours"
 msgstr "Approuver pour 24 heures"
+
+#: src/components/release/releases.ts:56
+msgid "Approve or decline dembrane support's access requests right in the app. Access ends after 24 hours."
+msgstr "Acceptez ou refusez directement dans l'application les demandes d'accès du support dembrane. L'accès prend fin après 24 heures."
 
 #: src/components/workspace/SupportAccessSection.tsx:229
 msgid "Approve support access"
@@ -3439,7 +3443,7 @@ msgstr "Chat créé"
 msgid "Chat deleted"
 msgstr "Chat supprimé"
 
-#: src/components/release/releases.ts:204
+#: src/components/release/releases.ts:228
 msgid "Chat is more reliable."
 msgstr "La discussion est plus fiable."
 
@@ -3459,7 +3463,7 @@ msgstr "Nom du chat"
 msgid "Chat no longer sends duplicate messages accidentally."
 msgstr "Le chat n'envoie plus de messages en double par erreur."
 
-#: src/components/release/releases.ts:90
+#: src/components/release/releases.ts:114
 msgid "Chat suggestions no longer get stuck loading."
 msgstr "Les suggestions du chat ne restent plus bloquées au chargement."
 
@@ -3618,7 +3622,7 @@ msgstr "Choisissez les résultats que votre public peut explorer."
 #~ msgid "Choose the tabs your audience can explore."
 #~ msgstr "Choisissez les onglets que votre public peut explorer."
 
-#: src/components/release/releases.ts:181
+#: src/components/release/releases.ts:205
 msgid "Choose what the room sees: Popcorn, Tensions, Map and Stakeholders."
 msgstr "Choisissez ce que voit la salle : Popcorn, Tensions, Carte et Parties prenantes."
 
@@ -4651,6 +4655,10 @@ msgstr "Créer"
 #~ msgid "Create a new webhook from scratch"
 #~ msgstr "Créer un nouveau webhook à partir de zéro"
 
+#: src/components/release/releases.ts:48
+msgid "Create a project, workspace or organisation from the new Create button."
+msgstr "Créez un projet, un espace de travail ou une organisation avec le nouveau bouton Créer."
+
 #: src/components/workspace/gateWalls.ts:97
 msgid "create a report"
 msgstr "créer un rapport"
@@ -5188,7 +5196,7 @@ msgstr "L'équipe dembrane s'est déconnectée"
 msgid "dembrane staff requested access"
 msgstr "L'équipe dembrane a demandé un accès"
 
-#: src/components/release/releases.ts:214
+#: src/components/release/releases.ts:238
 msgid "dembrane v3"
 msgstr "dembrane v3"
 
@@ -5506,7 +5514,7 @@ msgstr "Glissez les fichiers audio ici ou cliquez pour sélectionner des fichier
 msgid "Drag to reorder"
 msgstr "Glisser pour réorganiser"
 
-#: src/components/release/releases.ts:52
+#: src/components/release/releases.ts:76
 msgid "Drop in an agenda or invitation and dembrane configures the project for you."
 msgstr "Dépose un ordre du jour ou une invitation et dembrane configure le projet pour toi."
 
@@ -5602,15 +5610,15 @@ msgstr "Lancements précédents"
 msgid "Early features you can try on this project before they are ready for everyone."
 msgstr "Fonctionnalités en avant-première que vous pouvez tester sur ce projet avant qu'elles soient disponibles pour tous."
 
-#: src/components/release/releases.ts:77
+#: src/components/release/releases.ts:101
 msgid "Easier onboarding"
 msgstr "Une prise en main plus simple"
 
-#: src/components/release/releases.ts:147
+#: src/components/release/releases.ts:171
 msgid "Easier playback"
 msgstr "Une lecture plus simple"
 
-#: src/components/release/releases.ts:166
+#: src/components/release/releases.ts:190
 msgid "Easier-to-read transcripts"
 msgstr "Des transcriptions plus lisibles"
 
@@ -6139,7 +6147,7 @@ msgstr "Explorer"
 msgid "Explore"
 msgstr "Explorer"
 
-#: src/components/release/releases.ts:68
+#: src/components/release/releases.ts:92
 msgid "Explore can draw on other groups in the project. Turn it off under Cross-pollination."
 msgstr "Explorer peut s'appuyer sur d'autres groupes du projet. Désactive-le sous Pollinisation croisée."
 
@@ -6147,7 +6155,7 @@ msgstr "Explorer peut s'appuyer sur d'autres groupes du projet. Désactive-le so
 msgid "Explore recurring themes in the Library"
 msgstr "Explorez les thèmes récurrents dans la Library"
 
-#: src/components/release/releases.ts:232
+#: src/components/release/releases.ts:256
 msgid "Explore stories and perspectives with the Narratives chat template, in English and Dutch."
 msgstr "Explore les récits et les perspectives avec le modèle de chat Narratives, en anglais et en néerlandais."
 
@@ -7511,8 +7519,9 @@ msgstr "Améliorée"
 msgid "Improvements"
 msgstr "Améliorations"
 
-#: src/components/release/releases.ts:121
-#: src/components/release/releases.ts:171
+#: src/components/release/releases.ts:66
+#: src/components/release/releases.ts:145
+#: src/components/release/releases.ts:195
 msgid "Improvements and bug fixes"
 msgstr "Améliorations et corrections de bugs"
 
@@ -7645,7 +7654,7 @@ msgstr "entretien"
 msgid "Intro"
 msgstr "Intro"
 
-#: src/components/release/releases.ts:250
+#: src/components/release/releases.ts:274
 msgid "Introducing Popcorn"
 msgstr "Voici Popcorn"
 
@@ -8729,7 +8738,7 @@ msgstr "Logo mis à jour"
 #~ msgid "Long context is read on every answer, so keep the essentials: the people, the places and the question."
 #~ msgstr "Un long contexte est lu à chaque réponse : garde l'essentiel, les personnes, les lieux et la question."
 
-#: src/components/release/releases.ts:161
+#: src/components/release/releases.ts:185
 msgid "Long uploads in any audio format are transcribed reliably instead of timing out."
 msgstr "Les longs fichiers dans tous les formats audio sont transcrits de façon fiable au lieu d'expirer."
 
@@ -8955,7 +8964,7 @@ msgstr "L'accès MCP pour {0} est désactivé"
 msgid "MCP access for {0} is on"
 msgstr "L'accès MCP pour {0} est activé"
 
-#: src/components/release/releases.ts:224
+#: src/components/release/releases.ts:248
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "Les connexions MCP permettent à ton agent de trouver des projets, rechercher des conversations, lire des transcriptions et consulter la documentation, avec des contrôles par organisation et un consentement explicite."
 
@@ -9141,7 +9150,7 @@ msgstr "Plus d'options"
 msgid "More reliable conversation summaries"
 msgstr "Des résumés de conversations plus fiables"
 
-#: src/components/release/releases.ts:116
+#: src/components/release/releases.ts:140
 msgid "More reliable uploads"
 msgstr "Des imports plus fiables"
 
@@ -11028,7 +11037,7 @@ msgstr "Vérification des participants"
 msgid "Participants"
 msgstr "Participants"
 
-#: src/components/release/releases.ts:87
+#: src/components/release/releases.ts:111
 msgid "Participants are told when their microphone drops, so they can fix it."
 msgstr "Les participants sont prévenus quand leur micro se coupe, pour pouvoir régler le problème."
 
@@ -11039,7 +11048,7 @@ msgstr "Les participants sont prévenus quand leur micro se coupe, pour pouvoir 
 msgid "Participants can request a reply during a recording."
 msgstr "Les participants peuvent demander une réponse pendant un enregistrement."
 
-#: src/components/release/releases.ts:228
+#: src/components/release/releases.ts:252
 msgid "Participants can share the portal from the header or the thank you page: a QR code, a copyable link, WhatsApp, email or the device's own share sheet."
 msgstr "Les participants peuvent partager le portail depuis l'en-tête ou la page de remerciement : code QR, lien à copier, WhatsApp, e-mail ou menu de partage de l'appareil."
 
@@ -12050,6 +12059,14 @@ msgstr "En file d'attente"
 msgid "Quick project"
 msgstr "Projet rapide"
 
+#: src/components/release/releases.ts:52
+msgid "Quick start is now the first template: a plain project to set up your way."
+msgstr "Démarrage rapide est désormais le premier modèle : un projet vierge à configurer à votre façon."
+
+#: src/components/release/releases.ts:61
+msgid "Quicker ways to start"
+msgstr "Démarrer plus vite"
+
 #: src/components/map/panels/DetailsSheet.tsx:506
 #: src/components/map/panels/ArgumentAccordion.tsx:279
 msgid "Quotes"
@@ -12826,7 +12843,7 @@ msgstr "Rapports"
 #~ msgid "Reports per month"
 #~ msgstr "Rapports par mois"
 
-#: src/components/release/releases.ts:207
+#: src/components/release/releases.ts:231
 msgid "Reports publish, schedule and notify as expected."
 msgstr "Les rapports se publient, se planifient et envoient leurs notifications comme prévu."
 
@@ -13523,7 +13540,7 @@ msgstr "Langue de l'écran"
 msgid "Scroll to bottom"
 msgstr "Défiler vers le bas"
 
-#: src/components/release/releases.ts:96
+#: src/components/release/releases.ts:120
 msgid "Scrolling to the bottom of a transcript now reaches the very end."
 msgstr "Faire défiler une transcription vers le bas mène désormais jusqu'à la toute fin."
 
@@ -13717,7 +13734,7 @@ msgstr "Visualisez les indicateurs de qualité audio pour le bruit, le silence e
 msgid "error.action.upgrade"
 msgstr "Voir les forfaits"
 
-#: src/components/release/releases.ts:185
+#: src/components/release/releases.ts:209
 msgid "See the arguments from your conversations and the quotes behind them on the Map."
 msgstr "Retrouvez sur la Carte les arguments de vos conversations et les citations qui les appuient."
 
@@ -14073,7 +14090,7 @@ msgstr "Configurer votre première organisation"
 msgid "Set up your organisation"
 msgstr "Configurer votre organisation"
 
-#: src/components/release/releases.ts:56
+#: src/components/release/releases.ts:80
 msgid "Set up your portal page by page, with a live preview of what participants see."
 msgstr "Configure ton portail page par page, avec un aperçu en direct de ce que voient les participants."
 
@@ -14220,7 +14237,7 @@ msgstr "Partagé avec {0}"
 msgid "Shared with {0} and {overflow} others"
 msgstr "Partagé avec {0} et {overflow} autres"
 
-#: src/components/release/releases.ts:240
+#: src/components/release/releases.ts:264
 msgid "Sharing a private project with a non-member now offers an invitation instead of an error, granting access when they join the workspace."
 msgstr "Partager un projet privé avec une personne non membre propose désormais une invitation au lieu d’une erreur. L’accès est accordé quand elle rejoint l’espace de travail."
 
@@ -14359,7 +14376,7 @@ msgstr "N’afficher que les conversations portant l’une des étiquettes coch�
 msgid "Show only what changed"
 msgstr "Afficher uniquement les modifications"
 
-#: src/components/release/releases.ts:189
+#: src/components/release/releases.ts:213
 msgid "Show popcorn in up to three extra languages at once."
 msgstr "Affichez le popcorn dans jusqu'à trois langues supplémentaires à la fois."
 
@@ -14820,7 +14837,7 @@ msgstr "Recommencez depuis votre agent. Cela ouvrira une nouvelle requête ici."
 msgid "Start fresh"
 msgstr "Commencer de zéro"
 
-#: src/components/release/releases.ts:48
+#: src/components/release/releases.ts:72
 msgid "Start from a template, like a focus group or citizens' assembly, already set up for you."
 msgstr "Pars d'un modèle, comme un groupe de discussion ou une assemblée citoyenne, déjà configuré pour toi."
 
@@ -14846,7 +14863,7 @@ msgstr "Recommencer"
 msgid "Start recording without an extra ready-to-record confirmation."
 msgstr "Lancer l'enregistrement sans confirmation supplémentaire."
 
-#: src/components/release/releases.ts:127
+#: src/components/release/releases.ts:151
 msgid "Start using dembrane for free, with recording hours included every month."
 msgstr "Utilise dembrane gratuitement, avec des heures d'enregistrement incluses chaque mois."
 
@@ -14899,7 +14916,7 @@ msgstr "Statut"
 msgid "Stay live for"
 msgstr "Rester en direct pendant"
 
-#: src/components/release/releases.ts:193
+#: src/components/release/releases.ts:217
 msgid "Stay signed in on two devices, such as your phone and laptop."
 msgstr "Restez connecté sur deux appareils, comme votre téléphone et votre ordinateur portable."
 
@@ -15280,7 +15297,7 @@ msgstr "Étiquettes"
 msgid "Tags are the vocabulary participants can pick from in the portal. Nothing changes until you apply."
 msgstr "Les étiquettes constituent le vocabulaire parmi lequel les participants peuvent choisir dans le portail. Rien ne change tant que vous n'appliquez pas."
 
-#: src/components/release/releases.ts:92
+#: src/components/release/releases.ts:116
 msgid "Tags stay where you drop them when you drag them into a new order."
 msgstr "Les tags restent là où tu les déposes quand tu les fais glisser dans un nouvel ordre."
 
@@ -15394,7 +15411,7 @@ msgstr "Test"
 msgid "Test and select your microphone before recording."
 msgstr "Testez et sélectionnez votre microphone avant d'enregistrer."
 
-#: src/components/release/releases.ts:60
+#: src/components/release/releases.ts:84
 msgid "Test Explore and Verify on a sample conversation before participants use them."
 msgstr "Teste Explorer et Verify sur une conversation d'exemple avant que les participants les utilisent."
 
@@ -15478,11 +15495,11 @@ msgstr "L'enregistrement était trop court pour être transcrit. Maintenez l'enr
 msgid "participant.modal.wrap_up.title"
 msgstr "C'est dans la boîte"
 
-#: src/components/release/releases.ts:211
+#: src/components/release/releases.ts:235
 msgid "The [help docs](https://docs.dembrane.com/) are rewritten and up to date."
 msgstr "La [documentation d'aide](https://docs.dembrane.com/) a été réécrite et est à jour."
 
-#: src/components/release/releases.ts:142
+#: src/components/release/releases.ts:166
 msgid "The 15-second skip buttons now sit together, so it is easier to replay a moment."
 msgstr "Les boutons de saut de 15 secondes sont désormais côte à côte, pour réécouter plus facilement."
 
@@ -15506,7 +15523,7 @@ msgstr "L'agent et l'entreprise qui l'exploite recevront le contenu de la conver
 msgid "The AI couldn't answer this question. Try rewording it."
 msgstr "L'IA n'a pas pu répondre à cette question. Essayez de la reformuler."
 
-#: src/components/release/releases.ts:201
+#: src/components/release/releases.ts:225
 msgid "The app feels much faster overall."
 msgstr "L'application est globalement beaucoup plus rapide."
 
@@ -15522,7 +15539,7 @@ msgstr "L'assistant l'oubliera dans tous les prochains échanges."
 msgid "The assistant suggests updating {headlineFields}. Waiting on you."
 msgstr "L'assistant suggère de mettre à jour {headlineFields}. En attente de votre décision."
 
-#: src/components/release/releases.ts:157
+#: src/components/release/releases.ts:181
 msgid "The audio player stays in view while you scroll, so you can listen and read along."
 msgstr "Le lecteur audio reste visible pendant que tu fais défiler, pour écouter et lire en même temps."
 
@@ -15551,7 +15568,7 @@ msgstr "La conversation n'a pas pu être chargée. Veuillez réessayer ou contac
 msgid "The conversation list shows clearer totals."
 msgstr "La liste des conversations affiche des totaux plus clairs."
 
-#: src/components/release/releases.ts:236
+#: src/components/release/releases.ts:260
 msgid "The default host guide now reminds hosts to turn on focus mode so notifications stay off the screen while recording."
 msgstr "Le guide de l'hôte par défaut rappelle désormais d'activer le mode Ne pas déranger pour masquer les notifications pendant l'enregistrement."
 
@@ -15662,7 +15679,7 @@ msgstr "Le forfait Free comprend une seule organisation."
 #~ msgid "The free plan includes two chats a month, with 20 questions each."
 #~ msgstr "Le forfait Free comprend deux discussions par mois, de 20 questions chacune."
 
-#: src/components/release/releases.ts:64
+#: src/components/release/releases.ts:88
 msgid "The free plan now includes a monthly AI allowance for chat, reports and more."
 msgstr "Le forfait gratuit comprend désormais un quota mensuel d'IA pour le chat, les rapports et plus."
 
@@ -15884,7 +15901,7 @@ msgstr "la conversation sélectionnée"
 #~ msgid "The shared screen shows your published presentation. Publish changes to update its content and access."
 #~ msgstr "L'écran partagé affiche votre présentation publiée. Publiez les modifications pour mettre à jour son contenu et son accès."
 
-#: src/components/release/releases.ts:244
+#: src/components/release/releases.ts:268
 msgid "The sidebar fits mobile screens more reliably, with corrected French navigation labels."
 msgstr "La barre latérale s'adapte mieux aux écrans mobiles, avec des libellés de navigation en français corrigés."
 
@@ -15892,7 +15909,7 @@ msgstr "La barre latérale s'adapte mieux aux écrans mobiles, avec des libellé
 msgid "The sidebar scrolls on short screens while keeping its header and footer available."
 msgstr "La barre latérale défile sur les écrans courts tout en gardant son en-tête et son pied de page accessibles."
 
-#: src/components/release/releases.ts:100
+#: src/components/release/releases.ts:124
 msgid "The sign-up form tells you which fields are missing."
 msgstr "Le formulaire d'inscription t'indique les champs manquants."
 
@@ -16902,7 +16919,7 @@ msgstr "Erreur de transcription"
 msgid "Transcription failed"
 msgstr "Échec de la transcription"
 
-#: src/components/release/releases.ts:153
+#: src/components/release/releases.ts:177
 msgid "Transcripts are split into paragraphs, so long conversations are easier to read."
 msgstr "Les transcriptions sont découpées en paragraphes, pour lire plus facilement les longues conversations."
 
@@ -17057,7 +17074,7 @@ msgstr "Vous souhaitez rejoindre une organisation existante ?"
 #~ msgid "Trying to join an existing organization?"
 #~ msgstr "Vous souhaitez rejoindre une organisation existante ?"
 
-#: src/components/release/releases.ts:220
+#: src/components/release/releases.ts:244
 msgid "Turn conversations into live slides. Run a live session or an on-demand analysis, present to the room and trace insights to their sources."
 msgstr "Transforme les conversations en diapositives en direct. Lance une session en direct ou une analyse à la demande, présente au groupe et retrouve les sources des observations."
 
@@ -17535,11 +17552,11 @@ msgstr "L'importation d'enregistrements est incluse dans les forfaits payants"
 msgid "Uploading recordings comes with a paid plan."
 msgstr "L'importation d'enregistrements nécessite un forfait payant."
 
-#: src/components/release/releases.ts:111
+#: src/components/release/releases.ts:135
 msgid "Uploads no longer fail because of how a file is named."
 msgstr "Les imports n'échouent plus à cause du nom d'un fichier."
 
-#: src/components/release/releases.ts:205
+#: src/components/release/releases.ts:229
 msgid "Uploads show clearly when they fail."
 msgstr "Les téléversements indiquent clairement lorsqu'ils échouent."
 
@@ -17917,7 +17934,7 @@ msgstr "Les modifications de voix s'appliqueront lors de la prochaine générati
 msgid "Voice input respects the free plan's recording limit."
 msgstr "La saisie vocale respecte la limite d'enregistrement du forfait Free."
 
-#: src/components/release/releases.ts:105
+#: src/components/release/releases.ts:129
 msgid "Voice memos and smoother chat"
 msgstr "Mémos vocaux et chat plus fluide"
 
@@ -18382,7 +18399,7 @@ msgstr "Lorsque le résumé est généré"
 msgid "When the summary is ready (includes both transcript and summary)"
 msgstr "Lorsque le résumé est prêt (inclut à la fois le transcript et le résumé)"
 
-#: src/components/release/releases.ts:72
+#: src/components/release/releases.ts:96
 msgid "When you upgrade, the pricing calculator on dembrane.com helps you pick a plan."
 msgstr "Quand tu passes à un forfait supérieur, le calculateur de prix sur dembrane.com t'aide à choisir."
 
@@ -18744,7 +18761,7 @@ msgstr "Vous pouvez fermer cette page. Nous vous préviendrons dès que ce sera 
 msgid "You can navigate away and come back later. Your report will continue generating in the background."
 msgstr "Vous pouvez quitter cette page et revenir plus tard. Votre rapport continuera à être généré en arrière-plan."
 
-#: src/components/release/releases.ts:83
+#: src/components/release/releases.ts:107
 msgid "You can now upload Apple Voice Memos (.qta and .m4a files)."
 msgstr "Tu peux désormais importer des enregistrements Dictaphone d'Apple (fichiers .qta et .m4a)."
 
