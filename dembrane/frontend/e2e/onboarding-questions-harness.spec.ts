@@ -124,21 +124,25 @@ for (const size of sizes)
 				),
 			).toBeVisible();
 			await expect(done).toBeDisabled();
-			// The pill fades from its enabled look to the disabled one; shoot it settled.
-			await done.evaluate((el) =>
-				Promise.all(el.getAnimations().map((a) => a.finished)),
-			);
-			await page.waitForTimeout(400);
+			// The pill fades between its enabled and disabled looks; shoot it settled.
+			const settled = async () => {
+				await done.evaluate((el) =>
+					Promise.all(el.getAnimations().map((a) => a.finished)),
+				);
+				await page.waitForTimeout(400);
+			};
+			await settled();
 			await shot("problem-empty");
 			await noSideScroll();
 
 			await box.fill(TYPED[l]);
 			await expect(done).toBeEnabled();
+			await settled();
 			await shot("problem-typed");
 
-			// About 1500 characters: the box stops growing and scrolls.
-			const long = Array.from({ length: 14 }, () => TYPED[l]).join(" ");
-			await box.fill(long.slice(0, 1500));
+			// Well over a screen of text: the box stops growing and scrolls.
+			const long = Array.from({ length: 12 }, () => TYPED[l]).join(" ");
+			await box.fill(long);
 			await page.waitForTimeout(200);
 			await shot("problem-long");
 			await noSideScroll();
@@ -178,6 +182,7 @@ for (const size of sizes)
 			releaseNow();
 			await expect(box).toHaveValue(`${TYPED[l]} ${SPOKEN[l]}`);
 			await expect(done).toBeEnabled();
+			await settled();
 			await shot("problem-transcribed");
 
 			// The transcription fails.
