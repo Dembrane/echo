@@ -287,6 +287,8 @@ export async function grantSupportMembership(
     status = "extended";
   } else if (deleted) {
     membershipId = deleted.id;
+    // A new visit on the old row: whatever ended the last one, its approvals end here.
+    await endSupportApprovals(tx, membershipId);
     await updateMembership(tx, membershipId, {
       deleted_at: null,
       role: "admin",
