@@ -4664,7 +4664,7 @@ msgid "Create account"
 msgstr "Створити акаунт"
 
 #: src/routes/auth/Register.tsx:151
-#: src/routes/auth/Login.tsx:779
+#: src/routes/auth/Login.tsx:790
 msgid "Create an account"
 msgstr "Створіть акаунт"
 
@@ -5770,7 +5770,7 @@ msgstr "Електронна пошта"
 msgid "Email me a code"
 msgstr "Надіслати код на пошту"
 
-#: src/routes/auth/Login.tsx:754
+#: src/routes/auth/Login.tsx:765
 #: src/components/auth/LoginBlockedNotice.tsx:37
 msgid "Email me a sign-in code instead"
 msgstr "Надіслати код для входу на пошту"
@@ -6752,7 +6752,7 @@ msgstr "Прогноз"
 msgid "Forgetting a saved memory"
 msgstr "Забуваємо збережений спогад"
 
-#: src/routes/auth/Login.tsx:764
+#: src/routes/auth/Login.tsx:775
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
 
@@ -9612,9 +9612,13 @@ msgstr "За вашим запитом чатів не знайдено."
 msgid "No chats yet."
 msgstr "Чатів ще немає."
 
+#: src/routes/auth/Login.tsx:722
+msgid "No code after a minute? Check the address above and your spam folder. If someone shared a dembrane page with you, ask them to add you."
+msgstr "Код не прийшов за хвилину? Перевір адресу вище й папку зі спамом. Якщо хтось поділився з тобою сторінкою dembrane, попроси цю людину додати тебе."
+
 #: src/routes/auth/Login.tsx:724
-msgid "No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you."
-msgstr "Код не прийшов за хвилину? Перевір папку зі спамом. Якщо хтось поділився з тобою сторінкою dembrane, попроси цю людину додати тебе."
+#~ msgid "No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you."
+#~ msgstr "Код не прийшов за хвилину? Перевір папку зі спамом. Якщо хтось поділився з тобою сторінкою dembrane, попроси цю людину додати тебе."
 
 #: src/components/settings/AuditLogsCard.tsx:444
 msgid "No collections found"
@@ -10705,7 +10709,7 @@ msgid "Options"
 msgstr "Options"
 
 #: src/routes/auth/Register.tsx:367
-#: src/routes/auth/Login.tsx:770
+#: src/routes/auth/Login.tsx:781
 msgid "or"
 msgstr "or"
 
@@ -17593,6 +17597,10 @@ msgstr "Використання відстежується для вашої о
 msgid "Usage this cycle"
 msgstr "Використання за цей цикл"
 
+#: src/routes/auth/Login.tsx:738
+msgid "Use a different email"
+msgstr "Використати іншу пошту"
+
 #~ msgid "use AI features"
 #~ msgstr "використовувати функції ШІ"
 
@@ -17616,7 +17624,7 @@ msgstr "Використовуйте італійську для чату, зв�
 msgid "Use latest results"
 msgstr "Використати останні результати"
 
-#: src/routes/auth/Login.tsx:739
+#: src/routes/auth/Login.tsx:750
 msgid "Use my password instead"
 msgstr "Натомість використати пароль"
 

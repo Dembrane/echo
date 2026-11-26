@@ -711,9 +711,7 @@ export const LoginRoute = () => {
 											<Trans>Send a new code</Trans>
 										)}
 									</Button>
-									{/* The same for every address, so it says nothing about
-									    whether this one is known: a code only goes to someone
-									    with an account or an invitation. */}
+									{/* Same for every address, so it never says whether one is known. */}
 									<Text
 										size="sm"
 										c="dimmed"
@@ -722,10 +720,23 @@ export const LoginRoute = () => {
 										{...testId("auth-login-no-code")}
 									>
 										<Trans>
-											No code after a minute? Check your spam folder. If someone
-											shared a dembrane page with you, ask them to add you.
+											No code after a minute? Check the address above and your
+											spam folder. If someone shared a dembrane page with you,
+											ask them to add you.
 										</Trans>
 									</Text>
+									<Button
+										variant="subtle"
+										color="gray"
+										onClick={() => {
+											setCodeSent(false);
+											setCode("");
+											clearNotices();
+										}}
+										{...testId("auth-login-code-change-email")}
+									>
+										<Trans>Use a different email</Trans>
+									</Button>
 								</>
 							)}
 							<Button
