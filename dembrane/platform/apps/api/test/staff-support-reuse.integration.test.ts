@@ -243,4 +243,29 @@ run("an approval ends with the support visit it was given to", () => {
     expect(await canChange()).toBe(false);
     expect((await rename("Changed after leaving")).status).toBe(403);
   });
+
+  test("staff removed from the organisation and back: they come back to read only", async () => {
+    expect((await leave()).status).toBe(200);
+    expect((await setSwitch(false)).status).toBe(200);
+    // Staff who are also a member of the customer's organisation.
+    await db.insert(schema.org_membership).values({
+      id: newId(),
+      org_id: ws.org,
+      user_id: people.staff.appUserId as string,
+      role: "member",
+    });
+    const visitRow = await approvedVisit();
+    const removed = await call(
+      people.customer,
+      "DELETE",
+      `/api/v2/orgs/${ws.org}/members/${people.staff.appUserId}`,
+    );
+    expect(removed.status).toBe(200);
+    expect((await setSwitch(true)).status).toBe(200);
+    const back = await join();
+    expect(back.status).toBe(200);
+    expect(back.data.membership_id).toBe(visitRow);
+    expect(await canChange()).toBe(false);
+    expect((await rename("Changed after removal from the organisation")).status).toBe(403);
+  });
 });

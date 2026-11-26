@@ -18,6 +18,7 @@ export const createFixtureMethodologies = (
 		versions_count: 1,
 	},
 	{
+		can_edit: true,
 		description: "A reusable setup for day-long panel sessions",
 		framing:
 			"Keep tables aligned around neighbourhood concerns and suggestions.",

@@ -82,10 +82,14 @@ const DISPLAY_ORDER: readonly Policy[] = [
 ];
 
 export function myPolicies(ctx: WorkspaceContext): string[] {
-  if (ctx.role === "owner") return [...POLICIES].sort();
+  // A support visit lists only what it may do, so the dashboard offers nothing the API refuses.
+  const limit = ctx.access.limitedTo;
+  const within = (ps: readonly string[]) =>
+    limit ? ps.filter((p) => limit.has(p as Policy)) : [...ps];
+  if (ctx.role === "owner") return within([...POLICIES].sort());
   // The role's preset, then extra policies granted on the membership, as the old API listed them.
   const preset = DISPLAY_ORDER.filter((p) => ROLE_POLICIES[ctx.role].has(p));
-  return [...preset, ...ctx.access.extra];
+  return within([...preset, ...ctx.access.extra]);
 }
 
 const LEGAL_BASIS = ["client-managed", "consent", "dembrane-events"] as const;

@@ -1804,6 +1804,11 @@ msgid "error.workspace.removed_from"
 msgstr "Je bent verwijderd uit deze werkruimte. Vraag een beheerder van de werkruimte om je opnieuw uit te nodigen."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/access.ts:13
+msgid "error.access.support_session_limited"
+msgstr "Je bent hier voor support, dus dit laat je aan de beheerders van de werkruimte."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:9
 msgid "error.account.email_missing"
 msgstr "Er is nog geen e-mailadres gekoppeld aan je account. Neem contact op met support om er een toe te voegen."

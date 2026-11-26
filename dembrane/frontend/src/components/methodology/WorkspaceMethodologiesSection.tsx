@@ -69,8 +69,11 @@ const textToContent = (value: string): unknown => {
 
 export const WorkspaceMethodologiesSection = ({
 	workspaceId,
+	canCreate = true,
 }: {
 	workspaceId: string;
+	/** project:create, as the server asks to make one. */
+	canCreate?: boolean;
 }) => {
 	const methodologiesQuery = useMethodologies(workspaceId);
 	const createMutation = useCreateMethodologyMutation(workspaceId);
@@ -164,16 +167,18 @@ export const WorkspaceMethodologiesSection = ({
 							<Trans>Named ways of working your team can reuse.</Trans>
 						</Text>
 					</Stack>
-					<Button
-						size="sm"
-						onClick={() => {
-							setForm(emptyForm);
-							setNewOpen(true);
-						}}
-						{...testId("methodology-new-button")}
-					>
-						<Trans>Create methodology</Trans>
-					</Button>
+					{canCreate && (
+						<Button
+							size="sm"
+							onClick={() => {
+								setForm(emptyForm);
+								setNewOpen(true);
+							}}
+							{...testId("methodology-new-button")}
+						>
+							<Trans>Create methodology</Trans>
+						</Button>
+					)}
 				</Group>
 
 				{methodologiesQuery.isLoading ? (
@@ -226,7 +231,7 @@ export const WorkspaceMethodologiesSection = ({
 									<Text size="xs">
 										<Trans>Read-only</Trans>
 									</Text>
-								) : (
+								) : methodology.can_edit ? (
 									<Button
 										size="xs"
 										onClick={() => setEditing(methodology)}
@@ -234,7 +239,7 @@ export const WorkspaceMethodologiesSection = ({
 									>
 										<Trans>Edit</Trans>
 									</Button>
-								)}
+								) : null}
 							</Group>
 						))}
 					</Stack>

@@ -1804,6 +1804,11 @@ msgid "error.workspace.removed_from"
 msgstr "Non fai più parte di questo spazio di lavoro. Chiedi a un amministratore dello spazio di lavoro di invitarti di nuovo."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/access.ts:13
+msgid "error.access.support_session_limited"
+msgstr "Sei qui per il supporto, quindi questo spetta agli amministratori dello spazio di lavoro."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:9
 msgid "error.account.email_missing"
 msgstr "Il tuo account non ha ancora un indirizzo email. Contatta l'assistenza per aggiungerne uno."

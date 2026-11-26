@@ -276,4 +276,113 @@ run("staff ask to make changes while support access is on", () => {
     );
     expect(between).toMatchObject({ source: "staff_support", supportApproved: false });
   });
+
+  test("a visit never changes workspace settings; a read-only visit only reads", async () => {
+    const W = `/api/v2/workspaces/${ws.workspace}`;
+    const settings = () =>
+      call(people.staff, "PATCH", `${W}/settings`, { description: "Changed by staff" });
+    const create = (name: string) => call(people.staff, "POST", `${W}/projects`, { name });
+    /** What the dashboard is told the caller may do: it offers only that. */
+    const policies = async () =>
+      (await call(people.staff, "GET", `${W}/settings`)).data.my_policies as string[];
+    // Still the approved visit from the test above: projects yes, settings no.
+    expect((await visit()).data).toMatchObject({ active: true, can_change: true });
+    expect((await settings()).status).toBe(403);
+    expect((await create("Made by approved staff")).status).toBe(200);
+    const approved = await policies();
+    expect(approved).toContain("project:create");
+    expect(approved).not.toContain("settings:manage");
+    expect(approved).not.toContain("member:manage");
+
+    // Leave (which turns the switch off), the customer turns it on, staff come back: read only.
+    expect(
+      (await call(people.staff, "DELETE", `/api/v2/admin/workspaces/${ws.workspace}/join-support`))
+        .status,
+    ).toBe(200);
+    expect(
+      (await call(people.customer, "PATCH", `${W}/settings`, { allow_support_access: true }))
+        .status,
+    ).toBe(200);
+    expect(
+      (await call(people.staff, "POST", `/api/v2/admin/workspaces/${ws.workspace}/join-support`))
+        .status,
+    ).toBe(200);
+    expect((await visit()).data).toMatchObject({ active: true, can_change: false });
+    expect((await settings()).status).toBe(403);
+    expect((await create("Made by read-only staff")).status).toBe(403);
+    expect((await call(people.staff, "GET", `${W}/projects`)).status).toBe(200);
+    expect((await policies()).sort()).toEqual([
+      "conversation:read",
+      "project:read",
+      "report:view",
+      "workspace:view_usage",
+    ]);
+    const [row] = await db
+      .select({ description: schema.workspace.description })
+      .from(schema.workspace)
+      .where(eq(schema.workspace.id, ws.workspace));
+    expect(row?.description).not.toBe("Changed by staff");
+  });
+  test("each methodology says whether the caller may edit it, as editing decides", async () => {
+    const list = async (who: Signed) =>
+      (await call(who, "GET", `/api/v2/bff/methodologies?workspace_id=${ws.workspace}`))
+        .data as unknown as {
+        name: string;
+        can_edit: boolean;
+      }[];
+    const made = await call(people.customer, "POST", "/api/v2/bff/methodologies", {
+      workspace_id: ws.workspace,
+      name: "Customer's own way",
+      description: "Our evenings",
+      framing: "How we run evenings",
+      content: {},
+    });
+    expect(made.status).toBe(200);
+    const theirs = (who: Signed) =>
+      list(who).then((l) => l.find((m) => m.name === "Customer's own way")?.can_edit);
+    expect(await theirs(people.customer)).toBe(true);
+    // Still the read-only visit from the test above: not theirs, no settings:manage.
+    expect(await theirs(people.staff)).toBe(false);
+    const edit = await call(
+      people.staff,
+      "POST",
+      `/api/v2/bff/methodologies/${made.data.id}/versions`,
+      { name: "Changed by staff" },
+    );
+    expect(edit.status).toBe(403);
+
+    // Approved: project:create without settings:manage. Their own yes, the customer's no.
+    const asked = await call(
+      people.staff,
+      "POST",
+      `/api/v2/admin/workspaces/${ws.workspace}/support-access/request`,
+      {},
+    );
+    expect(asked.status).toBe(200);
+    expect(
+      (
+        await call(
+          people.customer,
+          "POST",
+          `/api/v2/workspaces/${ws.workspace}/support-access/requests/${asked.data.id}/approve`,
+        )
+      ).status,
+    ).toBe(200);
+    expect((await visit()).data).toMatchObject({ can_change: true });
+    expect(await theirs(people.staff)).toBe(false);
+    const own = await call(people.staff, "POST", "/api/v2/bff/methodologies", {
+      workspace_id: ws.workspace,
+      name: "Staff's own way",
+      description: "Made during support",
+      framing: "A way staff set up",
+      content: {},
+    });
+    expect(own.status).toBe(200);
+    const mine = (await list(people.staff)).find((m) => m.name === "Staff's own way");
+    expect(mine?.can_edit).toBe(true);
+    // The customer, who runs the workspace, may edit it too.
+    expect((await list(people.customer)).find((m) => m.name === "Staff's own way")?.can_edit).toBe(
+      true,
+    );
+  });
 });

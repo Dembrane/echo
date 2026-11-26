@@ -96,6 +96,8 @@ export class SupportAccess {
       try {
         if (deleted) {
           membershipId = deleted.id;
+          // A new visit on the old row: whatever ended the last one, its approvals end here.
+          await endSupportApprovals(this.d.db, membershipId);
           await this.s.updateMembership(
             membershipId,
             { deleted_at: null, role: "admin", source: "staff_support", expires_at: expiresIso },

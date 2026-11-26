@@ -1804,6 +1804,11 @@ msgid "error.workspace.removed_from"
 msgstr "Du wurdest aus diesem Arbeitsbereich entfernt. Bitte einen Arbeitsbereich-Administrator, dich erneut einzuladen."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/access.ts:13
+msgid "error.access.support_session_limited"
+msgstr "Du bist für den Support hier, deshalb bleibt das den Admins des Workspace überlassen."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/account.ts:9
 msgid "error.account.email_missing"
 msgstr "Für dein Konto ist noch keine E-Mail-Adresse hinterlegt. Kontaktiere den Support, um eine hinzuzufügen."
