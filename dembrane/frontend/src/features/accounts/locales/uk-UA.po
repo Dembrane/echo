@@ -183,7 +183,7 @@ msgstr "Запрошення для {first} скасовано, і посила�
 msgid "{inviter} from {org} invited you to sign"
 msgstr "{inviter} з {org} запрошує вас підписати"
 
-#: src/features/accounts/signing/SignGate.tsx:702
+#: src/features/accounts/signing/SignGate.tsx:715
 msgid "{inviter} invited you to {org}"
 msgstr "{inviter} запросив тебе до {org}"
 
@@ -549,7 +549,7 @@ msgstr "Поставити запитання"
 msgid "Ask a workspace's admins to let you in. If they approve your request, you can edit for 24 hours. If they have turned support access on themselves, you can join to read, and still ask to edit."
 msgstr "Попросіть адміністраторів робочого простору впустити вас. Якщо вони схвалять запит, ви зможете редагувати протягом 24 годин. Якщо вони самі ввімкнули доступ для підтримки, ви можете приєднатися для перегляду й однаково попросити про редагування."
 
-#: src/features/accounts/signing/SignGate.tsx:760
+#: src/features/accounts/signing/SignGate.tsx:773
 msgid "Ask the person who invited you to send a new one."
 msgstr "Попроси людину, яка тебе запросила, надіслати нове."
 
@@ -1564,7 +1564,7 @@ msgstr "Як"
 msgid "How do you want to get invoices?"
 msgstr "Як ви хочете отримувати рахунки?"
 
-#: src/features/accounts/signing/SignGate.tsx:541
+#: src/features/accounts/signing/SignGate.tsx:554
 msgid "How we handle your details"
 msgstr "Як ми обробляємо ваші дані"
 
@@ -1656,7 +1656,7 @@ msgstr "Поля ініціалів використовують цей підп
 msgid "Intro"
 msgstr "Вступ"
 
-#: src/features/accounts/signing/SignGate.tsx:675
+#: src/features/accounts/signing/SignGate.tsx:688
 msgid "Invitation | dembrane"
 msgstr "Запрошення | dembrane"
 
@@ -1875,7 +1875,7 @@ msgstr "Заблоковано"
 
 #: src/features/accounts/signing/signInLink.tsx:29
 #: src/features/accounts/signing/SignGate.tsx:507
-#: src/features/accounts/signing/SignGate.tsx:772
+#: src/features/accounts/signing/SignGate.tsx:785
 msgid "Log in"
 msgstr "Увійти"
 
@@ -1883,7 +1883,7 @@ msgstr "Увійти"
 msgid "Log in to download the signed copy."
 msgstr "Увійдіть, щоб завантажити підписаний примірник."
 
-#: src/features/accounts/signing/SignGate.tsx:688
+#: src/features/accounts/signing/SignGate.tsx:701
 msgid "Log in to read the offer and the DPA."
 msgstr "Увійди, щоб прочитати пропозицію і DPA."
 
@@ -2036,6 +2036,10 @@ msgstr "Немає акаунту"
 #: src/features/accounts/staff/InvoicePlanFields.tsx:132
 msgid "No charge"
 msgstr "Безкоштовно"
+
+#: src/features/accounts/signing/SignGate.tsx:530
+msgid "No code after a minute? Check your spam folder, or ask the person who shared this with you to add you."
+msgstr "Код не прийшов за хвилину? Перевір папку зі спамом або попроси людину, яка поділилася цим із тобою, додати тебе."
 
 #: src/features/accounts/customer/BillingForm.tsx:370
 msgid "No country found"
@@ -2731,7 +2735,7 @@ msgstr "Лише перегляд"
 #~ msgid "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link."
 #~ msgstr "Ознайомтеся з пропозицією та підпишіть її тут. За вашу організацію підписує хтось інший? Вкажіть цю людину в пропозиції, і вона отримає власне посилання."
 
-#: src/features/accounts/signing/SignGate.tsx:712
+#: src/features/accounts/signing/SignGate.tsx:725
 msgid "Read the offer and the DPA with your team"
 msgstr "Читай пропозицію і DPA разом зі своєю командою"
 
@@ -2985,12 +2989,12 @@ msgstr "Виберіть поле, щоб налаштувати його тип
 msgid "Send"
 msgstr "Надіслати"
 
-#: src/features/accounts/signing/SignGate.tsx:519
+#: src/features/accounts/signing/SignGate.tsx:520
 msgid "Send a new code"
 msgstr "Надіслати новий код"
 
 #. placeholder {0}: resendCooldown.wait
-#: src/features/accounts/signing/SignGate.tsx:517
+#: src/features/accounts/signing/SignGate.tsx:518
 msgid "Send a new code in {0}s"
 msgstr "Надіслати новий код через {0} с"
 
@@ -3598,7 +3602,7 @@ msgstr "Запрошення надіслано на"
 #~ msgid "The invitation was sent to this address."
 #~ msgstr ""
 
-#: src/features/accounts/signing/SignGate.tsx:741
+#: src/features/accounts/signing/SignGate.tsx:754
 msgid "The invitation was withdrawn, or a newer one replaced it. Ask the person who invited you to send it again."
 msgstr "Запрошення скасовано або замінено новішим. Попроси людину, яка тебе запросила, надіслати його знову."
 
@@ -3772,7 +3776,7 @@ msgstr "Цей документ надіслано. Його поля зафік
 msgid "This invitation could not be loaded"
 msgstr "Не вдалося завантажити це запрошення"
 
-#: src/features/accounts/signing/SignGate.tsx:757
+#: src/features/accounts/signing/SignGate.tsx:770
 msgid "This invitation has closed"
 msgstr "Це запрошення закінчилося"
 
@@ -3785,7 +3789,7 @@ msgid "This is not an email address."
 msgstr "Це не адреса електронної пошти."
 
 #: src/features/accounts/signing/SignGate.tsx:191
-#: src/features/accounts/signing/SignGate.tsx:738
+#: src/features/accounts/signing/SignGate.tsx:751
 msgid "This link no longer works"
 msgstr "Це посилання більше не працює"
 
@@ -4350,7 +4354,7 @@ msgstr "ти"
 msgid "You"
 msgstr "Ви"
 
-#: src/features/accounts/signing/SignGate.tsx:685
+#: src/features/accounts/signing/SignGate.tsx:698
 msgid "You accepted this invitation"
 msgstr "Ти прийняв це запрошення"
 
@@ -4369,7 +4373,7 @@ msgstr "У вас уже є обліковий запис dembrane з {email}. �
 #~ msgid "You are all set. Nothing needs you right now."
 #~ msgstr "Усе готово. Зараз від вас нічого не потрібно."
 
-#: src/features/accounts/signing/SignGate.tsx:706
+#: src/features/accounts/signing/SignGate.tsx:719
 msgid "You are invited to {org}"
 msgstr "Тебе запрошено до {org}"
 
@@ -4421,7 +4425,7 @@ msgstr "Тебе запросили. Яка твоя роль у цьому рі
 msgid "You will not sign it. {newName} gets a link to sign instead."
 msgstr "Ти не підписуватимеш. {newName} отримає посилання, щоб підписати замість тебе."
 
-#: src/features/accounts/signing/SignGate.tsx:529
+#: src/features/accounts/signing/SignGate.tsx:542
 msgid "You'll sign electronically. Your electronic signature is as binding as one made by hand."
 msgstr "Ви підпишете електронно. Ваш електронний підпис має таку ж силу, як і власноручний."
 

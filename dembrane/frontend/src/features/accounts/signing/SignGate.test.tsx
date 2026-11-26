@@ -47,22 +47,37 @@ vi.mock("../i18n", () => ({
 vi.mock("./SignRoute", () => ({
 	SignRoute: () => <div data-testid="sign-route" />,
 }));
+// The person the invitation names. By default someone the server knows; a test may swap in
+// an address it does not, which the page cannot tell apart (the server answers the same).
+const KNOWN = {
+	email: "signer@example.org",
+	first_name: "Sig",
+	has_account: true,
+	last_name: "Ner",
+};
+const fixture = vi.hoisted(() => ({
+	signer: null as null | {
+		email: string;
+		first_name: string;
+		has_account: boolean;
+		last_name: string;
+	},
+}));
 vi.mock("../api/client", () => ({
 	AccountsApiError: class extends Error {
 		status = 0;
 	},
-	call: async () => ({
-		document: { reference: "DMB-1", title: "Offer (sample)" },
-		has_account: true,
-		inviter: { name: "Sam" },
-		organisation: { name: "Acme Civic (sample)" },
-		signer: {
-			email: "signer@example.org",
-			first_name: "Sig",
-			last_name: "Ner",
-		},
-		status: "open",
-	}),
+	call: async () => {
+		const { has_account, ...signer } = fixture.signer ?? KNOWN;
+		return {
+			document: { reference: "DMB-1", title: "Offer (sample)" },
+			has_account,
+			inviter: { name: "Sam" },
+			organisation: { name: "Acme Civic (sample)" },
+			signer,
+			status: "open",
+		};
+	},
 }));
 
 import { SignGate } from "./SignGate";
@@ -87,6 +102,7 @@ beforeAll(() => {
 afterEach(() => {
 	cleanup();
 	vi.resetAllMocks();
+	fixture.signer = null;
 });
 
 const hideThenShowTab = async () => {
@@ -188,5 +204,44 @@ describe("the invitation page", () => {
 		expect(screen.queryByTestId("invite-page")).toBeNull();
 		await act(async () => finish(false));
 		expect(await screen.findByTestId("invite-page")).toBeTruthy();
+	});
+});
+
+// The server emails a code only to an address it knows, and says the same either way, so
+// strangers cannot learn which addresses exist. The person waiting for a code that never
+// comes is told what to do, in words that are the same for every address.
+describe("the code step, when no code arrives", () => {
+	const NO_CODE =
+		"No code after a minute? Check your spam folder, or ask the person who shared this with you to add you.";
+
+	const lineFor = async (signer: typeof KNOWN) => {
+		fixture.signer = signer;
+		auth.hasSession.mockResolvedValue(false);
+		auth.sendSignInCode.mockResolvedValue(undefined);
+		renderGate();
+		fireEvent.click(await screen.findByTestId("invite-send-code"));
+		await screen.findByTestId("invite-code");
+		const text = screen.getByTestId("invite-no-code").textContent;
+		cleanup();
+		return text;
+	};
+
+	it("is not there before the code step", async () => {
+		auth.hasSession.mockResolvedValue(false);
+		renderGate();
+		expect(await screen.findByTestId("invite-send-code")).toBeTruthy();
+		expect(screen.queryByTestId("invite-no-code")).toBeNull();
+	});
+
+	it("says the same for an address the server knows and one it does not", async () => {
+		const known = await lineFor(KNOWN);
+		const unknown = await lineFor({
+			email: "stranger@example.net",
+			first_name: "Stran",
+			has_account: false,
+			last_name: "Ger",
+		});
+		expect(known).toBe(NO_CODE);
+		expect(unknown).toBe(NO_CODE);
 	});
 });

@@ -506,7 +506,8 @@ function OpenInvite({
 						>
 							{signs ? <Trans>Open the document</Trans> : <Trans>Log in</Trans>}
 						</Button>
-						<Group justify="center">
+						{/* Same for every address, so it never says whether one is known. */}
+						<Stack gap={4} align="center">
 							<Button
 								variant="subtle"
 								color="gray"
@@ -519,7 +520,19 @@ function OpenInvite({
 									<Trans>Send a new code</Trans>
 								)}
 							</Button>
-						</Group>
+							<Text
+								size="sm"
+								c="dimmed"
+								ta="center"
+								style={{ textWrap: "balance" }}
+								data-testid="invite-no-code"
+							>
+								<Trans>
+									No code after a minute? Check your spam folder, or ask the
+									person who shared this with you to add you.
+								</Trans>
+							</Text>
+						</Stack>
 					</Stack>
 				)}
 

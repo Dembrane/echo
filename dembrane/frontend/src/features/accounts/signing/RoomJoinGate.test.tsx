@@ -227,6 +227,21 @@ describe("the room invitation page, signed out", () => {
 		});
 	});
 
+	it("tells someone waiting for a code what to do, only on the code step", async () => {
+		await open();
+		fireEvent.click(await screen.findByTestId("invite-send-code"));
+		await screen.findByTestId("invite-code");
+		expect(screen.getByTestId("invite-no-code").textContent).toBe(
+			"No code after a minute? Check your spam folder, or ask the person who shared this with you to add you.",
+		);
+	});
+
+	it("does not say it before the code step", async () => {
+		await open();
+		expect(await screen.findByTestId("invite-send-code")).toBeTruthy();
+		expect(screen.queryByTestId("invite-no-code")).toBeNull();
+	});
+
 	it("says an accepted invitation is accepted, and offers to log in", async () => {
 		state.status = "accepted";
 		await open();
