@@ -749,12 +749,9 @@ run("accounts routes against Postgres", () => {
         (e) => e.subjectId === id && e.type.startsWith("document.signer_"),
       );
     expect((await call(w, "POST", path, "admin", first)).status).toBe(200);
-    // The same person again is a new invitation, not a replacement.
+    // The same person again changes nothing: no new invitation, nothing on the timeline.
     expect((await call(w, "POST", path, "admin", first)).status).toBe(200);
-    expect((await mine()).map((e) => e.type)).toEqual([
-      "document.signer_named",
-      "document.signer_named",
-    ]);
+    expect((await mine()).map((e) => e.type)).toEqual(["document.signer_named"]);
     // Naming and changing the signer is for owners and admins (signer-naming tests).
     const r = await call(w, "POST", path, "admin", second);
     expect(K.NameSignerResponse.parse(r.data).signer.email).toBe("second@example.test");
@@ -774,17 +771,19 @@ run("accounts routes against Postgres", () => {
     expect(card.timeline.some((e) => e.type === "document.signer_replaced")).toBe(true);
 
     // Ten an hour for the organisation, the namings above included; that owners and admins
-    // share it is in the signer-naming tests.
+    // share it is in the signer-naming tests. Each naming changes who signs: naming the one
+    // already named costs nothing.
     const named = async () =>
       (await store.events(w.db, w.orgId)).filter((e) => e.type.startsWith("document.signer_"))
         .length;
     let status = 200;
     for (let i = 0; i < 10 && status === 200; i++)
-      status = (await call(w, "POST", path, "admin", first)).status;
+      status = (await call(w, "POST", path, "admin", i % 2 ? second : first)).status;
     expect(status).toBe(429);
     expect(await named()).toBe(10);
     const signer = (await store.document(w.db, w.orgId, id))?.signerEmail;
-    expect((await call(w, "POST", path, "admin", second)).status).toBe(429);
+    const third = { name: "Third Person", email: "third@example.test", role: null };
+    expect((await call(w, "POST", path, "admin", third)).status).toBe(429);
     expect((await store.document(w.db, w.orgId, id))?.signerEmail).toBe(signer as string);
   });
 
