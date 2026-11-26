@@ -6,6 +6,7 @@ import { resolveNextPath } from "@/components/auth/utils/nextPath";
 import { Logo } from "@/components/common/Logo";
 import { LanguagePicker } from "@/components/language/LanguagePicker";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { Toaster } from "../common/Toaster";
 import { Footer } from "./Footer";
 import {
@@ -59,12 +60,28 @@ const AuthLayoutInner = (props: PropsWithChildren) => {
 		location.pathname.endsWith(p),
 	);
 
+	// Checked against their workspaces, as Login does, so a /w/ link of theirs still opens.
+	const { workspaces, isLoading: workspacesLoading } = useWorkspace();
+
 	useEffect(() => {
-		if (auth.isAuthenticated && !isActive && !skipRedirect) {
-			const nextLink = resolveNextPath(query.get("next"), []) ?? "/o";
+		if (
+			auth.isAuthenticated &&
+			!isActive &&
+			!skipRedirect &&
+			!workspacesLoading
+		) {
+			const nextLink = resolveNextPath(query.get("next"), workspaces) ?? "/o";
 			navigate(nextLink);
 		}
-	}, [auth.isAuthenticated, isActive, navigate, query, skipRedirect]);
+	}, [
+		auth.isAuthenticated,
+		isActive,
+		navigate,
+		query,
+		skipRedirect,
+		workspaces,
+		workspacesLoading,
+	]);
 
 	return (
 		<>
