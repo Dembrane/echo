@@ -18,9 +18,11 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
 // Email link target: /verify-email?token=...
-// First click verifies; later clicks short-circuit on auth state or
-// Directus's INVALID_TOKEN. 15s mutation timeout prevents the original
-// infinite-loading bug.
+// The token names the address it verifies, so the call is made whoever is
+// signed in: a link opened in a browser where someone else is signed in still
+// verifies its own address. A used or expired link answers INVALID_TOKEN; for
+// a signed-in person that is their own link clicked again. 15s mutation
+// timeout prevents the original infinite-loading bug.
 export const VerifyEmailRoute = () => {
 	useDocumentTitle(t`Email verification | dembrane`);
 	const [search] = useSearchParams();
@@ -36,18 +38,19 @@ export const VerifyEmailRoute = () => {
 
 	useEffect(() => {
 		// Wait for the session check first — firing before we know auth
-		// state was the cause of the infinite-loading race. Authenticated
-		// users skip the call entirely (token is stale → misleading error).
+		// state was the cause of the infinite-loading race.
 		if (authLoading) return;
 		if (!token) return;
 		if (ranRef.current) return;
-		if (isAuthenticated) return;
 
 		ranRef.current = true;
 		verifyMutation.mutate(
 			{ token },
 			{
 				onSuccess: () => {
+					// Someone signed in stays where they are: the login page is not
+					// their next step.
+					if (isAuthenticated) return;
 					setTimeout(() => navigate("/login?verified=1"), 1500);
 				},
 			},
@@ -55,14 +58,16 @@ export const VerifyEmailRoute = () => {
 	}, [authLoading, isAuthenticated, token, verifyMutation, navigate]);
 
 	const missingToken = !token;
-	const showAlreadyVerified = !missingToken && !authLoading && isAuthenticated;
+	const signedIn = !authLoading && isAuthenticated;
 	const showVerifying =
-		!missingToken &&
-		!authLoading &&
-		!isAuthenticated &&
-		verifyMutation.isPending;
-	const showSuccess = !missingToken && verifyMutation.isSuccess;
-	const showError = !missingToken && verifyMutation.isError;
+		!missingToken && !authLoading && verifyMutation.isPending;
+	const showSuccess = !missingToken && !signedIn && verifyMutation.isSuccess;
+	const showVerifiedSignedIn =
+		!missingToken && signedIn && verifyMutation.isSuccess;
+	// Their own link, clicked again: it did its job the first time.
+	const showAlreadyVerified =
+		!missingToken && signedIn && verifyMutation.isError;
+	const showError = !missingToken && !signedIn && verifyMutation.isError;
 	const showSessionLoading = !missingToken && authLoading;
 
 	return (
@@ -95,7 +100,20 @@ export const VerifyEmailRoute = () => {
 						</Group>
 					)}
 
-					{/* Authenticated → token already did its job; skip the call. */}
+					{showVerifiedSignedIn && (
+						<Stack gap="sm">
+							<Text size="sm" c="dimmed">
+								<Trans>
+									The email address this link was sent to is verified. You are
+									still signed in to your own account here.
+								</Trans>
+							</Text>
+							<Button variant="filled" size="md" onClick={() => navigate("/o")}>
+								<Trans>Go to dashboard</Trans>
+							</Button>
+						</Stack>
+					)}
+
 					{showAlreadyVerified && (
 						<Stack gap="sm">
 							<Alert color="blue" variant="light">
