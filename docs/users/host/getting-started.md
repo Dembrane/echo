@@ -53,9 +53,10 @@ project exists yet: you make one in the next step. More on the two levels in
 
 ## 3. Create a project
 
-1. You land on the home screen, which greets you and asks "Where would you like to go?".
+1. You land on the home screen, which greets you and asks "What would you like to do?".
    Pick your workspace, "Default", from the list.
-2. The empty workspace says "Let's hear your first conversation." Press "Create project".
+2. The workspace holds one project to look around in, "Best practices (sample)". Press
+   "Create" above the search box, then "Project from a template".
 3. Go through the four steps. Only the name is required.
    - "Name": a "Project name" for your own use, and a few sentences of "Project context"
      about the topic and what you want to learn.

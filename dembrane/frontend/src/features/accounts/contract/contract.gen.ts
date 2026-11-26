@@ -1446,8 +1446,15 @@ export const DemoCreateRequest = z.object({
   /** An event or customer situation to set the demo in, if there is one. */
   example: optText(2000),
   contact_name: text(255),
-  /** Becomes the organisation's admin. */
+  /** Becomes the new organisation's admin; with `org_id` their role there stays as it is. */
   contact_email: z.email().max(255),
+  /**
+   * Put the demo in this organisation, which the contact must be a live member of: it gets
+   * a workspace of its own there, named after `organisation_name`, and no new organisation,
+   * account manager, stage or onboarding tasks. Not together with `offer`. Omitted: a new
+   * prospect organisation, as before.
+   */
+  org_id: nullish(Uuid),
   /** Invite the contact to sign in with an email code when the demo is published. */
   sign_in: z.boolean().default(false),
   /** Prepare an offer draft on the organisation; staff send it later. */
@@ -1481,6 +1488,12 @@ export const DemoStatus = z.object({
   sign_in: z.boolean(),
   /** Set by the seed step, when the organisation and its contact are created. */
   org_id: Uuid.nullable(),
+  /**
+   * The organisation the contact already worked in that staff chose for the demo, set from
+   * the start. Null for a demo with a new organisation of its own, and for every demo made
+   * before the choice existed.
+   */
+  existing_organisation: z.object({ id: Uuid, name: z.string() }).nullable(),
   slug: z.string().nullable(),
   steps: z.array(DemoStep),
   links: z.object({
@@ -1513,6 +1526,51 @@ export const DemoList = z.object({ demos: z.array(DemoStatus) });
  * The invitation goes out once: publishing again after an unpublish sends no second one.
  */
 export const DemoPublishRequest = z.object({ sign_in: z.boolean().nullish() });
+
+/**
+ * POST .../demos/check: what the new demo form knows before staff build. The answer says
+ * whether an address has an account, so it is staff only and the email travels in the
+ * body, never in the URL. Either field may be left out; nothing in the answer blocks
+ * building.
+ */
+export const DemoCheckRequest = z.object({
+  contact_email: nullish(z.email().max(255)),
+  /** Matched trimmed and case-insensitive, against organisations and earlier demos. */
+  organisation_name: optText(255),
+});
+
+export const DemoCheck = z.object({
+  /** Null when no email was asked about. */
+  contact: z
+    .object({
+      has_account: z.boolean(),
+      /** Their name as dembrane has it; null without an account or a name. */
+      name: z.string().nullable(),
+      /**
+       * The organisations they are a live member of, deleted ones left out: the ones a demo
+       * can go to, with their role there. Customers and organisations with no stage first,
+       * prospects last. Empty without an account.
+       */
+      organisations: z.array(
+        OrganisationRef.extend({ role: z.enum(["owner", "admin", "billing", "member"]) }),
+      ),
+    })
+    .nullable(),
+  /** Live organisations with the same name that are not in the contact's list. */
+  organisations_named: z.array(OrganisationRef),
+  /** Earlier demos for the same contact email or organisation name: newest first, at most 5. */
+  demos: z.array(
+    z.object({
+      id: Uuid,
+      organisation_name: z.string(),
+      contact_email: z.string(),
+      status: DemoStatusName,
+      created_at: IsoTime,
+      same_contact: z.boolean(),
+      same_organisation: z.boolean(),
+    }),
+  ),
+});
 
 // ── events out (POSTed to ACCOUNTS_EVENTS_URL, signed like project webhooks) ──
 
@@ -2162,6 +2220,14 @@ export const ROUTES = {
     response: DemoStatus,
     status: 201,
   },
+  /** The new demo form's look-up: see DemoCheckRequest. */
+  checkDemo: {
+    method: "POST",
+    path: `${S}/demos/check`,
+    permission: "staff:accounts",
+    request: DemoCheckRequest,
+    response: DemoCheck,
+  },
   demoStatus: {
     method: "GET",
     path: `${S}/demos/:demoId`,
@@ -2223,6 +2289,7 @@ export type OfferContentT = z.output<typeof OfferContent>;
 export type DocumentFieldT = z.output<typeof DocumentField>;
 export type SignRequestT = z.output<typeof SignRequest>;
 export type DemoStatusT = z.output<typeof DemoStatus>;
+export type DemoCheckT = z.output<typeof DemoCheck>;
 export type TasksSummaryT = z.output<typeof TasksSummary>;
 export type RoomLabelT = z.output<typeof RoomLabel>;
 export type RoomPersonT = z.output<typeof RoomPerson>;

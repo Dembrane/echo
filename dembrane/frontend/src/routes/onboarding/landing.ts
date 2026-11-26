@@ -1,7 +1,7 @@
 /**
  * Where onboarding ends. A self-serve host who set up their own organisation just now, and
- * has no project of their own, goes straight to the template picker in the workspace
- * onboarding made for them (ECHO-1042: most self-serve sign-ups never reached "Create
+ * has no project of their own, goes straight to the create flow's start screen (the
+ * templates) in the workspace onboarding made for them (ECHO-1042: most self-serve sign-ups never reached "Create
  * project" from the organisation overview). Everyone else lands on /o as before: invited
  * people join someone else's work, a host with projects from before workspaces has some,
  * and a returning host never passes the organisation step.

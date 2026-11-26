@@ -827,6 +827,38 @@ msgid "email.account_invite.footer"
 msgstr "Vous recevez cet e-mail parce que quelqu'un chez dembrane a créé un compte pour {org_name} avec cette adresse."
 
 #. js-lingui-explicit-id
+msgid "email.account_demo_ready.subject"
+msgstr "Votre démo est prête : {demo_name}"
+
+#. js-lingui-explicit-id
+msgid "email.account_demo_ready.preview"
+msgstr "Votre démo sur {demo_name} vous attend dans {org_name}."
+
+#. js-lingui-explicit-id
+msgid "email.account_demo_ready.heading"
+msgstr "Votre démo est prête"
+
+#. js-lingui-explicit-id
+msgid "email.account_demo_ready.body"
+msgstr "Nous avons préparé une démo sur {demo_name} pour vous. Elle se trouve dans {org_name} sur dembrane, dans un espace de travail qui lui est propre."
+
+#. js-lingui-explicit-id
+msgid "email.account_demo_ready.invented"
+msgstr "Les conversations qu'elle contient sont inventées : vous pouvez tout essayer librement."
+
+#. js-lingui-explicit-id
+msgid "email.account_demo_ready.cta"
+msgstr "Ouvrir la démo"
+
+#. js-lingui-explicit-id
+msgid "email.account_demo_ready.text_cta"
+msgstr "Ouvrir la démo :"
+
+#. js-lingui-explicit-id
+msgid "email.account_demo_ready.footer"
+msgstr "Vous recevez cet e-mail parce que quelqu'un chez dembrane a préparé une démo pour vous dans {org_name}."
+
+#. js-lingui-explicit-id
 msgid "email.sign_in_code.lead"
 msgstr "Saisissez ce code pour continuer :"
 

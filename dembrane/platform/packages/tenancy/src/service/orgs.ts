@@ -4,6 +4,7 @@ import {
   ROLE_RANK,
   resolveWorkspace,
   type WorkspaceRole,
+  workspaceReach,
 } from "@dembrane/access";
 import {
   allowanceForWorkspace,
@@ -31,7 +32,7 @@ import { orgInviteEmail } from "../emails";
 import { emailJob } from "../jobs";
 import { inviteAcceptUrl, inviteHash } from "../links";
 import { checkLogoFile, deleteLogo, isOwnedFile, saveLogo } from "../logos";
-import { derivationView, effectiveMembers, followsOrgAdmins, seatState } from "../members";
+import { effectiveMembers, followsOrgAdmins, seatState } from "../members";
 import { emit, emitToAll, staffAppUsers } from "../notify";
 import { pyInt, pyRound } from "../numbers";
 import {
@@ -156,7 +157,7 @@ export function orgService(deps: TenancyDeps) {
       ).map((m) => `${m.workspace_id}:${m.user_id}`),
     );
     for (const w of workspaces) {
-      const view = derivationView(w);
+      const view = workspaceReach(w);
       for (const uid of userIds)
         if (pairs.has(`${w.id}:${uid}`) || deriveWorkspaceRole(view, roles.get(uid) ?? null, uid))
           counts.set(uid, (counts.get(uid) ?? 0) + 1);
@@ -602,12 +603,17 @@ export function orgService(deps: TenancyDeps) {
       let isMember = callerRole !== null;
       if (isMember && !isManager && (await isOrgExternalOnly(db, orgId, member.appUserId)))
         isMember = false;
+      // The caller's own rows: a guest sees only those, and a workspace held for a demo
+      // they are a direct member of (the staff member who made it) is not left out. The
+      // private-workspace rule below still applies: a plain member of the organisation
+      // gets no card for a private workspace, held or not, even with a direct row.
+      const mine = (await membershipsOfUser(db, member.appUserId)).map((m) => m.workspace_id);
       let accessible: string[] | null = null;
       if (!isMember) {
-        accessible = (await membershipsOfUser(db, member.appUserId)).map((m) => m.workspace_id);
+        accessible = mine;
         if (!accessible.length) throw new ForbiddenError("organisation.no_access");
       }
-      const rows = await orgWorkspacesForCards(db, orgId, accessible);
+      const rows = await orgWorkspacesForCards(db, orgId, accessible, mine);
       if (!rows.length) return [];
       const accounts = await billingAccountsByIds(
         db,

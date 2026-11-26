@@ -1,3 +1,4 @@
+import { endSupportApprovals } from "@dembrane/access";
 import {
   type BillingStore,
   type Notifier,
@@ -420,6 +421,7 @@ export class SupportAccess {
     // A soft-deleted id can come back as a genuine direct member; never strip that.
     if (!m || m.deleted_at || m.source !== "staff_support") return false;
     await this.s.updateMembership(membershipId, { deleted_at: pyIso(now) }, now);
+    await endSupportApprovals(this.d.db, membershipId);
     await this.record({
       workspaceId,
       eventCode: EVENTS.staffAutoRevoked,

@@ -111,6 +111,13 @@ it("tells the host the map can't update and opens the AI wall", () => {
 	expect(modal.dataset.tier).toBe("free");
 });
 
+it("tells the host of a sample project too", () => {
+	state.sample = { data: { is_sample: true }, isSuccess: true };
+	state.allowance = spent;
+	renderNotice();
+	expect(screen.getByTestId("map-free-notice")).toBeTruthy();
+});
+
 it("says next month when the reset is unknown", () => {
 	state.sample = { data: { is_sample: false }, isSuccess: true };
 	state.allowance = { ...spent, resets_at: null };
@@ -121,7 +128,7 @@ it("says next month when the reset is unknown", () => {
 	);
 });
 
-it("stays quiet while the AI has room, the map is off, or the project is a sample", () => {
+it("stays quiet while the AI has room, the map is off, or the project is loading", () => {
 	state.sample = { data: { is_sample: false }, isSuccess: true };
 	state.allowance = {
 		...spent,
@@ -135,11 +142,6 @@ it("stays quiet while the AI has room, the map is off, or the project is a sampl
 	renderNotice(false);
 	expect(screen.queryByTestId("map-free-notice")).toBeNull();
 	expect(state.allowanceFor.at(-1)).toBeFalsy();
-	cleanup();
-
-	state.sample = { data: { is_sample: true }, isSuccess: true };
-	renderNotice();
-	expect(screen.queryByTestId("map-free-notice")).toBeNull();
 	cleanup();
 
 	state.sample = { isSuccess: false };

@@ -1,8 +1,11 @@
 import { SimpleGrid, Skeleton } from "@mantine/core";
 import { useState } from "react";
 import {
-	type CardKey,
+	type ChoiceKey,
+	cardFacts,
 	NO_FILTER,
+	offeredCards,
+	type TemplateChoiceContext,
 	type TemplateFilter,
 	type TemplateSummary,
 	visibleCards,
@@ -10,17 +13,15 @@ import {
 import { TemplateCardButton } from "../TemplateCard/TemplateCardButton";
 import { TemplateChooser } from "../TemplateChooser/TemplateChooser";
 import { TemplateFilters } from "../TemplateFilters/TemplateFilters";
-import type { TemplateChoiceContext } from "../TemplatePicker/TemplatePicker";
 
 interface AllFormatsProps {
 	/** From GET /v2/project-templates; undefined while it loads. */
 	templates: readonly TemplateSummary[] | undefined;
 	failed?: boolean;
 	/** A card was pressed: the flow moves on with it. */
-	onChoose: (key: CardKey, context: TemplateChoiceContext) => void;
+	onChoose: (key: ChoiceKey, context: TemplateChoiceContext) => void;
 	onFilterChange?: (filter: "verb" | "setup", value: string) => void;
 	onUpload: () => void;
-	onStartBlank: () => void;
 }
 
 const activeFilters = (f: TemplateFilter): string[] => [
@@ -30,8 +31,10 @@ const activeFilters = (f: TemplateFilter): string[] => [
 
 /**
  * "All formats" (ECHO-1058), for a host who skipped the upload and the row: the filters
- * first, then every template as a card. Pressing a card chooses it and moves on. Under the
- * grid, the quiet ways out: upload recordings, or start blank. Props in, callbacks out.
+ * first, then Quick start and every template as a card. A filter shows only the formats
+ * that match, or Quick start alone when none do (offeredCards). Pressing a card chooses it
+ * and moves on. Under the grid, the quiet way out: upload recordings. Props in, callbacks
+ * out.
  */
 export const AllFormats = ({
 	templates,
@@ -39,20 +42,15 @@ export const AllFormats = ({
 	onChoose,
 	onFilterChange,
 	onUpload,
-	onStartBlank,
 }: AllFormatsProps) => {
 	const [filter, setFilter] = useState<TemplateFilter>(NO_FILTER);
-	const cards = (
-		templates ? visibleCards(templates, filter, true) : []
-	) as (TemplateSummary & {
-		key: CardKey;
-	})[];
+	const formats = templates && !failed ? visibleCards(templates, filter) : [];
+	const { cards, count } = offeredCards(formats, filter);
 
 	return (
 		<TemplateChooser
 			templates={templates}
 			failed={failed}
-			order={5}
 			skeleton={
 				<>
 					<Skeleton height={40} />
@@ -62,17 +60,15 @@ export const AllFormats = ({
 			filters={
 				<TemplateFilters
 					value={filter}
-					count={cards.length}
+					count={count}
 					onChange={(next, changed) => {
 						setFilter(next);
 						onFilterChange?.(changed, next[changed] ?? "none");
 					}}
 				/>
 			}
-			empty={cards.length === 0}
+			empty={formats.length === 0}
 			onUpload={onUpload}
-			onStartBlank={onStartBlank}
-			gap="lg"
 			testId="all-formats"
 		>
 			<SimpleGrid
@@ -86,11 +82,9 @@ export const AllFormats = ({
 						template={tpl}
 						onChoose={() =>
 							onChoose(tpl.key, {
-								featured: tpl.card.featured,
+								...cardFacts(tpl),
 								filtersActive: activeFilters(filter),
 								list: "all_formats",
-								setup: tpl.card.setup,
-								verbs: tpl.card.verbs,
 							})
 						}
 					/>

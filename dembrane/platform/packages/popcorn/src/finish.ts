@@ -1,4 +1,5 @@
 import { newId } from "@dembrane/core";
+import type { Db } from "@dembrane/db";
 import type { Logger } from "@dembrane/observability";
 import type postgres from "postgres";
 import type { PopcornAllowance } from "./free";
@@ -81,12 +82,18 @@ export function finishReads(deps: {
   readonly flags: PopcornFlags;
   readonly logger: Logger;
   readonly now?: () => Date;
-  readonly free?: Pick<PopcornAllowance, "status">;
+  /**
+   * The free AI budget, read through the claim's own transaction. A read on the pool would
+   * need a second connection while the claim holds one: with the pool's size of claims
+   * finishing together, every claim waits on the pool and the worker stops transcribing.
+   */
+  readonly free?: (db: Db) => Pick<PopcornAllowance, "status">;
 }) {
   return async (
     tx: postgres.TransactionSql,
     projectId: string,
     conversationId: string,
+    db: Db,
   ): Promise<void> => {
     if (!deps.flags.present && !deps.flags.canvas) return;
     try {
@@ -97,7 +104,7 @@ export function finishReads(deps: {
           projectId,
           (deps.now ?? (() => new Date()))(),
           conversationId,
-          deps.free ?? null,
+          deps.free?.(db) ?? null,
         ),
       );
     } catch (err) {

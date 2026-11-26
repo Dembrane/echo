@@ -18,6 +18,10 @@ import { TransitionCurtainProvider } from "./TransitionCurtainProvider";
 const SignPromptBanner = lazy(
 	() => import("@/features/accounts/help/TasksPrompt"),
 );
+// The consent dialog for a support access request, in its own chunk as well.
+const SupportAccessRequestPrompt = lazy(
+	() => import("@/components/workspace/SupportAccessRequestPrompt"),
+);
 
 const SidebarFailure = () => (
 	<aside
@@ -63,6 +67,13 @@ export const BaseLayout = ({ children }: PropsWithChildren) => {
 							<ErrorBoundary fallback={null}>
 								<Suspense fallback={null}>
 									<SignPromptBanner />
+								</Suspense>
+							</ErrorBoundary>
+						) : null}
+						{isAuthenticated ? (
+							<ErrorBoundary fallback={null}>
+								<Suspense fallback={null}>
+									<SupportAccessRequestPrompt />
 								</Suspense>
 							</ErrorBoundary>
 						) : null}

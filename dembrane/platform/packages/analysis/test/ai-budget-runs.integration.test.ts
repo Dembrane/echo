@@ -214,11 +214,20 @@ run("analysis runs and the AI budget", () => {
     expect(r?.status).toBe("queued");
   });
 
-  test("paid and sample projects never refuse", async () => {
-    for (const p of [await project("changemaker"), await project("free", true)]) {
-      await spend(p.accountId, LIMIT * 2);
-      for (const recipe of ["arguments", "stakeholders"])
-        expect((await post(p.pid, { recipe_id: recipe, mode: "regenerate" })).status).toBe(202);
-    }
+  test("paid projects never refuse", async () => {
+    const p = await project("changemaker");
+    await spend(p.accountId, LIMIT * 2);
+    for (const recipe of ["arguments", "stakeholders"])
+      expect((await post(p.pid, { recipe_id: recipe, mode: "regenerate" })).status).toBe(202);
+  });
+
+  test("a free sample project at zero refuses", async () => {
+    const { pid, accountId } = await project("free", true);
+    await spend(accountId, LIMIT);
+    expect(await post(pid, { recipe_id: "arguments", mode: "regenerate" })).toMatchObject({
+      status: 402,
+      limit: "ai_budget",
+    });
+    expect(await runs(pid)).toBe(0);
   });
 });

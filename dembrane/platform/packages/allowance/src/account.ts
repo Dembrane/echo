@@ -116,21 +116,3 @@ export async function projectAllowance(
   );
   return { account: pick(rows[0], now), sample: rows[0]?.is_sample === true };
 }
-
-// The account a project's usage counts against; null when unlimited or a sample project.
-export async function allowanceForCountedProject(
-  db: Db,
-  projectId: string,
-  now: Date,
-): Promise<AllowanceAccount | null> {
-  const { account, sample } = await projectAllowance(db, projectId, now);
-  return sample ? null : account;
-}
-
-// A workspace's sample copy: its usage counts against no one.
-export async function isSampleProject(db: Db, projectId: string): Promise<boolean> {
-  const rows = await db.execute<{ is_sample: boolean | null }>(
-    sql`select is_sample from project where id = ${projectId}`,
-  );
-  return rows[0]?.is_sample === true;
-}

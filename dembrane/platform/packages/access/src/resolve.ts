@@ -75,13 +75,16 @@ export async function resolveWorkspace(
 
 /**
  * The org-derived part of the ladder, pure. Exported so rollups that list who can reach a
- * workspace (member counts, previews) count exactly what access grants.
+ * workspace (member counts, previews) count exactly what access grants. A workspace held
+ * back for a demo gives nobody a role, the org owner included: until staff hand it over
+ * only a direct row opens it.
  */
 export function deriveWorkspaceRole(
-  ws: Pick<WorkspaceRow, "stickyRemoved" | "visibility" | "inheritOrgMembers">,
+  ws: Pick<WorkspaceRow, "stickyRemoved" | "visibility" | "inheritOrgMembers" | "held">,
   orgRole: string | null,
   appUserId: string,
 ): WorkspaceRole | null {
+  if (ws.held) return null;
   if (ws.stickyRemoved.includes(appUserId)) return null;
   if (orgRole === "owner") return "admin";
   if (ws.visibility !== "open_to_organisation") return null;

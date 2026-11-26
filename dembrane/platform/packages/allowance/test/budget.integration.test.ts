@@ -121,15 +121,14 @@ run("ai budget", () => {
         await f().catch(() => {});
         return c.log.map((l) => l.q);
       };
-      // One resolve that also reads is_sample, then the override and usage at once.
+      // One resolve, then the override and usage at once.
       const free = await sent(() => requireAiBudget(c.db, s.project, NOW));
       expect(free).toHaveLength(3);
       expect(free[0]).toContain("as own_id");
-      expect(free[0]).toContain("is_sample");
       expect(await refusal(requireAiBudget(c.db, s.project, NOW, "free"))).toBeInstanceOf(
         PaymentRequiredError,
       );
-      expect(await sent(() => requireAiBudget(c.db, sample, NOW))).toHaveLength(1);
+      expect(await sent(() => requireAiBudget(c.db, sample, NOW))).toHaveLength(3);
       expect(await sent(() => requireAiBudget(c.db, paid.project, NOW))).toHaveLength(1);
       expect(await sent(() => requireAiBudget(c.db, paid.project, NOW, "changemaker"))).toEqual([]);
     } finally {
@@ -184,19 +183,26 @@ run("ai budget", () => {
     expect((await aiBudgetForProject(db, s.project, NOW))?.percentUsed).toBe(100);
   });
 
-  test("paid, sample and unknown projects have no budget and never refuse", async () => {
+  test("a sample project spends its account's budget and refuses at zero", async () => {
+    const free = await seed();
+    const sample = await project(free.ws, true);
+    await spend(free.accountId, 2_500_000);
+    expect(await aiBudgetForProject(db, sample, NOW)).toMatchObject({
+      accountId: free.accountId,
+      spentMicroEur: 2_500_000,
+      percentUsed: 50,
+    });
+    await spend(free.accountId, 5_000_000);
+    expect(await refusal(requireAiBudget(db, sample, NOW))).toBeInstanceOf(PaymentRequiredError);
+  });
+
+  test("paid and unknown projects have no budget and never refuse", async () => {
     const paid = await seed("paid");
     await spend(paid.accountId, 50_000_000);
     expect(await aiBudgetForProject(db, paid.project, NOW)).toBeNull();
     expect(await aiBudgetForWorkspace(db, paid.ws, NOW)).toBeNull();
     await requireAiBudget(db, paid.project, NOW);
     await requireAiBudgetForWorkspace(db, paid.ws, NOW);
-
-    const free = await seed();
-    await spend(free.accountId, 50_000_000);
-    const sample = await project(free.ws, true);
-    expect(await aiBudgetForProject(db, sample, NOW)).toBeNull();
-    await requireAiBudget(db, sample, NOW);
 
     expect(await aiBudgetForProject(db, randomUUID(), NOW)).toBeNull();
     expect(await aiBudgetForWorkspace(db, "not-a-uuid", NOW)).toBeNull();

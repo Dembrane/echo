@@ -679,7 +679,7 @@ export function AiCostsPanel({
 										label={t`Internal`}
 										value={formatAiCost(data.internal_micro_eur)}
 										title={exactAiCost(data.internal_micro_eur)}
-										caption={t`Demos, voice outside projects, dev tools`}
+										caption={t`Staff demos and voice outside projects`}
 										testId="ai-cost-internal"
 									/>
 								</Strip>

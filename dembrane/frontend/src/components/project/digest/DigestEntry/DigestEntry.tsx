@@ -93,7 +93,8 @@ export const DigestEntry = ({
 			)}
 		>
 			{!compact && (
-				<Text size="lg" id={`${privacyId}-lead`}>
+				// A heading of its own, a peer of "Start from a template" above it.
+				<Text component="h3" size="lg" m={0} id={`${privacyId}-lead`}>
 					<Trans>
 						Have an agenda, invitation or run sheet? Drop it here and dembrane
 						sets the project up.

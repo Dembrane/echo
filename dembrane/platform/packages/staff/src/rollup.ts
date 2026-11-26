@@ -1,3 +1,4 @@
+import { madeForDemo, ORG_ROLES, staffGuestTakesNoSeat } from "@dembrane/access";
 import { isFreeTier, type Meter } from "@dembrane/allowance";
 import {
   applyDiscount,
@@ -255,7 +256,9 @@ export async function billingRollup(s: StaffStorage, now: Date, monthOffset: num
   const [projects, memberships, orgMembers] = await Promise.all([
     s.liveProjects(wsIds),
     s.memberships(wsIds),
-    s.orgMembershipsIn([...new Set(orgIds)], ["owner", "admin", "member"]),
+    // Every role, so "a member of the organisation" below is any live membership; deriving
+    // a role still reads only the roles that derive one (effectiveMembersFromRows).
+    s.orgMembershipsIn([...new Set(orgIds)], ORG_ROLES),
   ]);
   const wsByProject = new Map<string, string>();
   for (const p of projects) if (p.workspace_id) wsByProject.set(p.id, p.workspace_id);
@@ -295,6 +298,30 @@ export async function billingRollup(s: StaffStorage, now: Date, monthOffset: num
     );
   }
 
+  // A workspace dembrane made for a demo takes no seats, and a dembrane person outside the
+  // workspace's organisation takes none (staffGuestTakesNoSeat), as billing counts them.
+  const wsById = new Map(workspaces.map((w) => [w.id, w]));
+  const inOrganisation = new Set(orgMembers.map((r) => `${r.org_id}:${r.user_id}`));
+  const outside = new Set<string>();
+  for (const ws of workspaces)
+    for (const m of membersByWs.get(ws.id) ?? [])
+      if (m.source === "direct" && !inOrganisation.has(`${ws.org_id}:${m.user_id}`))
+        outside.add(m.user_id);
+  const outsideEmail = new Map(
+    (await s.appUsers([...outside])).map((u) => [u.id, u.email] as const),
+  );
+  const seatHolders = (ws: (typeof workspaces)[number] | undefined) =>
+    ws && !madeForDemo(ws.settings)
+      ? (membersByWs.get(ws.id) ?? []).filter(
+          (m) =>
+            m.source !== "direct" ||
+            !staffGuestTakesNoSeat(
+              outsideEmail.get(m.user_id),
+              inOrganisation.has(`${ws.org_id}:${m.user_id}`),
+            ),
+        )
+      : [];
+
   let rows: BillingRow[] = [];
   let totalBase = 0;
   const labels = new Map<string, string | null>();
@@ -304,7 +331,7 @@ export async function billingRollup(s: StaffStorage, now: Date, monthOffset: num
     const tier = ws.tier ?? "pioneer";
     const cap = getCapacity(tier);
     const hours = hoursByWs.get(ws.id) ?? 0;
-    const [, seatCount, externalCount, observerCount] = seatState(membersByWs.get(ws.id) ?? []);
+    const [, seatCount, externalCount, observerCount] = seatState(seatHolders(ws));
     // Free hours are the allowance ledger's monthly meter, not calendar hours here.
     const includedHours = cap && !isFreeTier(tier) ? cap.includedHours : null;
     const includedSeats = cap ? cap.includedSeats : null;
@@ -390,7 +417,7 @@ export async function billingRollup(s: StaffStorage, now: Date, monthOffset: num
   const pooled = new Map<string, number>();
   for (const [acc, ids] of wsIdsByAccount) {
     const all = new Set<string>();
-    for (const id of ids) for (const u of seatUserIds(membersByWs.get(id) ?? [])) all.add(u);
+    for (const id of ids) for (const u of seatUserIds(seatHolders(wsById.get(id)))) all.add(u);
     pooled.set(acc, all.size);
   }
   const accounts = aggregateAccounts(rows, orgNames, labels, modes, pooled, budgets, now);

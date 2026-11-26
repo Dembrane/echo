@@ -21,11 +21,11 @@ msgstr "Akkoord, verder"
 msgid "Accept the rest"
 msgstr "Accepteer de rest"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:175
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:176
 msgid "Add a link"
 msgstr "Link toevoegen"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:126
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:127
 msgid "Add from a file"
 msgstr "Toevoegen uit een bestand"
 
@@ -41,7 +41,7 @@ msgstr "Alle sjablonen"
 msgid "Also fits:"
 msgstr "Past ook:"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:197
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:198
 msgid "An invitation or project page. dembrane reads it once."
 msgstr "Een uitnodiging of projectpagina. dembrane leest die één keer."
 
@@ -74,8 +74,12 @@ msgstr "Wijzig: {part}"
 #~ msgstr "Kijk elk onderdeel na, pas aan wat niet klopt en zet uit wat je niet wilt. Er wordt niets opgeslagen tot je het project aanmaakt."
 
 #: src/components/project/digest/DigestConnected.tsx:226
-msgid "Choose a format below to continue."
-msgstr "Kies hieronder een werkvorm om verder te gaan."
+#~ msgid "Choose a format below to continue."
+#~ msgstr "Kies hieronder een werkvorm om verder te gaan."
+
+#: src/components/project/digest/DigestConnected.tsx:226
+msgid "Choose a template above to continue."
+msgstr "Kies hierboven een sjabloon om verder te gaan."
 
 #: src/components/project/digest/DigestConnected.tsx:204
 #~ msgid "Choose a template below to continue."
@@ -101,11 +105,11 @@ msgstr "dembrane kon hier niets uit halen om toe te voegen."
 msgid "dembrane couldn't set the project up from this."
 msgstr "dembrane kon het project hiermee niet inrichten."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:128
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:129
 msgid "Drop files here, or choose them"
 msgstr "Sleep bestanden hierheen, of kies ze"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:112
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:113
 msgid "Drop files or choose them"
 msgstr "Sleep bestanden of kies ze"
 
@@ -122,7 +126,7 @@ msgstr "Aanpassen"
 msgid "Explore question"
 msgstr "Verkennen-vraag"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:228
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:229
 msgid "Files stay on your device. Only their text is sent to dembrane's model provider to prepare the setup. Don't drop material you may not share."
 msgstr "Bestanden blijven op je apparaat. Alleen hun tekst gaat naar de modelleverancier van dembrane om de opzet voor te bereiden. Sleep geen materiaal dat je niet mag delen."
 
@@ -150,7 +154,7 @@ msgstr "Doel"
 #~ msgid "Have an agenda or invitation? Drop it here and dembrane sets the project up."
 #~ msgstr "Heb je een agenda of uitnodiging? Sleep die hierheen en dembrane richt het project in."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:97
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:98
 msgid "Have an agenda, invitation or run sheet? Drop it here and dembrane sets the project up."
 msgstr "Heb je een agenda, uitnodiging of draaiboek? Sleep het hierheen en dembrane richt het project in."
 
@@ -171,7 +175,7 @@ msgstr "Kernbegrippen"
 msgid "Larger than 10 MB. Try a shorter version, or paste the part that matters."
 msgstr "Groter dan 10 MB. Probeer een kortere versie, of plak het deel dat ertoe doet."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:196
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:197
 msgid "Link to a page about it"
 msgstr "Link naar een pagina erover"
 
@@ -217,20 +221,20 @@ msgstr "Of kies een ander"
 msgid "Participants tap the round they are in before they record."
 msgstr "Deelnemers tikken op hun ronde voordat ze opnemen."
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:157
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:158
 msgid "Paste text"
 msgstr "Tekst plakken"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:183
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:184
 msgid "Paste the agenda, the invitation or the brief."
 msgstr "Plak de agenda, de uitnodiging of de briefing."
 
 #: src/components/project/digest/useDigestRun.ts:117
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:182
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:183
 msgid "Pasted text"
 msgstr "Geplakte tekst"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:132
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:133
 msgid "PDF, Word, PowerPoint or text. Up to {MAX_FILES} files of 10 MB."
 msgstr "PDF, Word, PowerPoint of tekst. Tot {MAX_FILES} bestanden van 10 MB."
 
@@ -281,7 +285,7 @@ msgstr "Klaar om te maken"
 msgid "Rounds as tags"
 msgstr "Rondes als tags"
 
-#: src/components/project/digest/DigestEntry/DigestEntry.tsx:216
+#: src/components/project/digest/DigestEntry/DigestEntry.tsx:217
 msgid "Set up from this"
 msgstr "Hiermee inrichten"
 
@@ -429,8 +433,12 @@ msgid "Your material was long, so dembrane read its start and a condensed versio
 msgstr "Je materiaal was lang, dus dembrane las het begin en een ingekorte versie. Kijk of er niets belangrijks ontbreekt."
 
 #: src/components/project/digest/DigestConnected.tsx:221
-msgid "Your text is in the project context: choose a format below to continue."
-msgstr "Je tekst staat in de projectcontext: kies hieronder een werkvorm om verder te gaan."
+#~ msgid "Your text is in the project context: choose a format below to continue."
+#~ msgstr "Je tekst staat in de projectcontext: kies hieronder een werkvorm om verder te gaan."
+
+#: src/components/project/digest/DigestConnected.tsx:221
+msgid "Your text is in the project context: choose a template above to continue."
+msgstr "Je tekst staat in de projectcontext: kies hierboven een sjabloon om verder te gaan."
 
 #: src/components/project/digest/DigestConnected.tsx:199
 #~ msgid "Your text is in the project context: choose a template below to continue."

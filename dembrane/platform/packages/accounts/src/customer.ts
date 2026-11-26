@@ -584,10 +584,10 @@ async function emailSigner(
   doc: DocumentRow,
 ) {
   const email = doc.signerEmail ?? "";
-  const me = await store.identity(d.db, who.directusUserId);
+  const me = await store.identity(tx, who.directusUserId);
   // The signer's own language when they have an account, else the document's.
   const language =
-    (await localeOfEmail(d.db, email).catch(() => null)) ?? resolveLocale(doc.language);
+    (await localeOfEmail(tx, email).catch(() => null)) ?? resolveLocale(doc.language);
   await d.jobs.enqueue(
     sendEmail,
     {

@@ -1,6 +1,6 @@
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
-import { and, eq, gt, isNull, or } from "drizzle-orm";
+import { and, desc, eq, gt, isNull, or, type SQL, sql } from "drizzle-orm";
 import type { AccessStore, WorkspaceRow } from "./store";
 
 const {
@@ -12,6 +12,22 @@ const {
   billing_account,
   support_access_request,
 } = schema;
+
+type Conn = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+/** How long an approved support request lets its visit make changes. */
+const SUPPORT_APPROVAL_MS = 86_400_000;
+
+/**
+ * Ends the approvals a support visit rests on. A visit row is reused when staff come back,
+ * so every place that ends a visit calls this: a rejoin starts read only, as a new visit.
+ */
+export async function endSupportApprovals(db: Conn, membershipId: string) {
+  await db
+    .update(support_access_request)
+    .set({ membership_id: null })
+    .where(eq(support_access_request.membership_id, membershipId));
+}
 
 export class DrizzleAccessStore implements AccessStore {
   constructor(private readonly db: Db) {}
@@ -64,10 +80,11 @@ export class DrizzleAccessStore implements AccessStore {
     if (!row) return null;
     const { id, ...membership } = row;
     if (membership.source !== "staff_support") return membership;
-    // An approval resolved in the last 24 hours is what lets a support session act.
-    const since = new Date(now.getTime() - 86_400_000).toISOString();
-    const approved = await this.db
-      .select({ id: support_access_request.id })
+    // An approval resolved in the last 24 hours is what lets a support session act, until
+    // 24 hours after it was resolved.
+    const since = new Date(now.getTime() - SUPPORT_APPROVAL_MS).toISOString();
+    const [approval] = await this.db
+      .select({ resolvedAt: support_access_request.resolved_at })
       .from(support_access_request)
       .where(
         and(
@@ -76,8 +93,12 @@ export class DrizzleAccessStore implements AccessStore {
           gt(support_access_request.resolved_at, since),
         ),
       )
+      .orderBy(desc(support_access_request.resolved_at))
       .limit(1);
-    return { ...membership, supportApproved: approved.length > 0 };
+    const until = approval?.resolvedAt
+      ? new Date(new Date(approval.resolvedAt).getTime() + SUPPORT_APPROVAL_MS).toISOString()
+      : null;
+    return { ...membership, supportApproved: until !== null, supportChangeUntil: until };
   }
 
   async orgRole(orgId: string, appUserId: string) {
@@ -136,13 +157,14 @@ export class DrizzleAccessStore implements AccessStore {
 
 /**
  * What a workspace row says about who derives access to it from the organisation: its
- * visibility, the members removed for good, and whether plain members join. Read the same
- * way wherever a rule must count exactly what access grants (deriveWorkspaceRole).
+ * visibility, the members removed for good, whether plain members join, and whether it is
+ * held back for a demo. Read the same way wherever a rule must count exactly what access
+ * grants (deriveWorkspaceRole).
  */
 export function workspaceReach(row: {
   readonly visibility: string | null;
   readonly settings: unknown;
-}): Pick<WorkspaceRow, "visibility" | "stickyRemoved" | "inheritOrgMembers"> {
+}): Pick<WorkspaceRow, "visibility" | "stickyRemoved" | "inheritOrgMembers" | "held"> {
   const settings = (row.settings ?? {}) as {
     sticky_removed?: unknown;
     inherit_organisation_members?: unknown;
@@ -151,8 +173,54 @@ export function workspaceReach(row: {
     visibility: (row.visibility ?? "open_to_organisation") as WorkspaceRow["visibility"],
     stickyRemoved: stickyRemovedIds(settings.sticky_removed),
     inheritOrgMembers: settings.inherit_organisation_members === true,
+    held: heldForDemo(row.settings) !== null,
   };
 }
+
+/**
+ * The key in workspace.settings that holds a workspace back from its own organisation: a
+ * demo staff placed in an organisation its contact already works in (accounts' demo build
+ * sets it, publishing with the email on clears it). The value is the demo's id. Only demo
+ * code writes it.
+ *
+ * While it is set the workspace is not there for the organisation's people: nobody derives
+ * a role in it from the organisation, its owner included (deriveWorkspaceRole), and no list
+ * or count shown to them includes it (`shownToOrganisation`), the free tier's workspace
+ * limit included: until it is handed over it is not the organisation's. A direct row still
+ * opens it to that one person: the @dembrane.com staff member who made the demo has one
+ * from the seed on, which shows it in their own workspace list and nobody else's.
+ */
+export const HELD_FOR_DEMO = "held_for_demo";
+
+/** The demo a workspace is held back for, or null for every other workspace. */
+export function heldForDemo(settings: unknown): string | null {
+  const value = (settings as Record<string, unknown> | null)?.[HELD_FOR_DEMO];
+  return typeof value === "string" && value !== "" ? value : null;
+}
+
+/**
+ * The key in workspace.settings that says a workspace was made by dembrane for a demo staff
+ * placed in an organisation its contact already works in. The value is the demo's id. The
+ * demo build sets it with HELD_FOR_DEMO; unlike that one, the hand-over never clears it.
+ *
+ * Billing reads it: a demo workspace takes no seats, so handing one over adds no seat for
+ * its contact (someone with a seat elsewhere on the account keeps that one seat). A
+ * commercial rule, not an access rule: access, lists and counts do not read it.
+ */
+export const MADE_FOR_DEMO = "made_for_demo";
+
+/** The demo a workspace was made for, or null for every other workspace. */
+export function madeForDemo(settings: unknown): string | null {
+  const value = (settings as Record<string, unknown> | null)?.[MADE_FOR_DEMO];
+  return typeof value === "string" && value !== "" ? value : null;
+}
+
+const heldKey = sql.raw(`'${HELD_FOR_DEMO}'`);
+/**
+ * heldForDemo in SQL, negated: true for a workspace its organisation's people may see. Like
+ * heldForDemo, only a non-empty JSON string holds; `true`, a number or an object does not.
+ */
+export const shownToOrganisation: SQL = sql`not coalesce(json_typeof(${workspace.settings}->${heldKey}) = 'string' and ${workspace.settings}->>${heldKey} <> '', false)`;
 
 /**
  * Tombstones are stored as `{user_id, removed_at, removed_by}` objects by the old API and

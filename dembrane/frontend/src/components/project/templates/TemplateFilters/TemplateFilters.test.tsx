@@ -33,7 +33,6 @@ const renderFilters = (
 				<TemplateFilters
 					value={NO_FILTER}
 					onChange={() => {}}
-					showAll={{ on: false, onChange: () => {} }}
 					count={6}
 					{...props}
 				/>
@@ -101,8 +100,8 @@ describe("TemplateFilters", () => {
 		expect(count.getAttribute("aria-live")).toBe("polite");
 	});
 
-	it("without a Show all toggle, every card shows and only the count is said", () => {
-		renderFilters({ count: 16, showAll: undefined });
+	it("has no Show all toggle: every card shows and only the count is said", () => {
+		renderFilters({ count: 16 });
 		expect(screen.queryByTestId("template-filter-show-all")).toBeNull();
 		expect(screen.getByTestId("template-filter-count").textContent).toBe(
 			"16 templates",

@@ -729,6 +729,11 @@ msgid "error.map.selection_other_snapshot"
 msgstr "De kaart is bijgewerkt sinds je deze selectie maakte. Vernieuw de kaart en selecteer opnieuw."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/demo.ts:12
+msgid "error.demo.organisation_deleted"
+msgstr "De organisatie van deze demo is verwijderd, dus er is niets gedaan. Zet haar terug en probeer het opnieuw, of publiceer met de mail uit."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/offer.ts:54
 msgid "error.offer.invoice_shares_total"
 msgstr "De delen tellen op tot {total}. Laat ze optellen tot 100%."
@@ -787,6 +792,11 @@ msgstr "Er is nog geen betaalmethode om bij te werken. Kies eerst een abonnement
 #: src/lib/errors/messages/room.ts:30
 msgid "error.room.no_labels_question"
 msgstr "Hier valt niets te beantwoorden."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/demo.ts:7
+msgid "error.demo.contact_not_in_organisation"
+msgstr "Ze zitten niet meer in deze organisatie, dus de demo is niet gepubliceerd. Voeg ze weer toe, of publiceer met de mail uit."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/billing.ts:9

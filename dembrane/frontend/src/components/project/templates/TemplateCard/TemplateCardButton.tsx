@@ -1,16 +1,16 @@
 import type { KeyboardEvent, Ref } from "react";
 import {
-	type CardKey,
+	type ChoiceCard,
+	cardLine,
 	cardTags,
-	type TemplateSummary,
-	templateGreatFor,
 	templateName,
 } from "../projectTemplates";
 import { TemplateCard } from "./TemplateCard";
 import classes from "./TemplateCardButton.module.css";
 
 interface TemplateCardButtonProps {
-	template: TemplateSummary & { key: CardKey };
+	/** A format from the list, or Quick start. */
+	template: ChoiceCard;
 	/** Pressing the card chooses the template and moves on: there is no Continue. */
 	onChoose: () => void;
 	tabIndex?: number;
@@ -43,7 +43,7 @@ export const TemplateCardButton = ({
 			<TemplateCard
 				template={key}
 				name={templateName(key)}
-				greatFor={templateGreatFor(key)}
+				greatFor={cardLine(key)}
 				tags={cardTags(template)}
 			/>
 		</button>

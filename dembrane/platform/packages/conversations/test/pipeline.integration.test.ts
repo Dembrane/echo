@@ -569,6 +569,48 @@ run("conversation pipeline", () => {
     expect(await measureDuration(h.deps, cid)).toBeNull();
   });
 
+  const mergeStatuses = async (cid: string) =>
+    (
+      await h.sql`select event, message from processing_status
+        where conversation_id = ${cid} and event like 'task_merge_conversation_chunks.%'`
+    ).map((r) => `${r.event}: ${r.message}`);
+
+  test("a conversation with no chunks records its merge as skipped", async () => {
+    const cid = newId();
+    await seed(h.sql, cid);
+    await finishAndSettle(cid);
+    expect(await mergeStatuses(cid)).toEqual(["task_merge_conversation_chunks.skipped: no chunks"]);
+  });
+
+  test("a conversation with only typed text records its merge as skipped", async () => {
+    const cid = newId();
+    await seed(h.sql, cid);
+    await h.sql`insert into conversation_chunk (id, conversation_id, timestamp, transcript, source)
+      values (${newId()}, ${cid}, now(), 'typed words', 'PORTAL_TEXT')`;
+    await finishAndSettle(cid);
+    expect(await mergeStatuses(cid)).toEqual(["task_merge_conversation_chunks.skipped: no audio"]);
+  });
+
+  test("a merge that fails records the failure with its message", async () => {
+    const cid = newId();
+    await seed(h.sql, cid);
+    await upload(cid, await tone(join(h.bucket.root, "mf.webm"), 2), "mf.webm");
+    await until(async () => (await chunks(cid))[0]?.transcript);
+    const timeout = "media merge unreachable: The operation timed out.";
+    await withMedia(
+      "merge",
+      async () => {
+        throw new AudioError("transient", timeout);
+      },
+      async () => {
+        await finishAndSettle(cid);
+      },
+    );
+    expect(new Set(await mergeStatuses(cid))).toEqual(
+      new Set([`task_merge_conversation_chunks.failed: ${timeout}`]),
+    );
+  });
+
   test("audio after a merged finish reopens, and the second finish counts both recordings", async () => {
     const cid = newId();
     await seed(h.sql, cid);

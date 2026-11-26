@@ -10,9 +10,10 @@ import {
 import type { Access, Policy } from "@dembrane/access";
 import { AI_SPEND_KEY, allowanceForProject, invalidateFreeLimits } from "@dembrane/allowance";
 import { newId } from "@dembrane/core";
-import { connect, createDb, migrate } from "@dembrane/db";
+import { connect, createDb, type Db, migrate, schema } from "@dembrane/db";
 import { type CompletionRequest, FakeCompleter } from "@dembrane/llm";
 import { MemoryRateCounter, RateLimiter } from "@dembrane/ratelimit";
+import { drizzle } from "drizzle-orm/postgres-js";
 import { Hono } from "hono";
 import type postgres from "postgres";
 import { finishReads } from "../src/finish";
@@ -36,6 +37,7 @@ const LIMIT = 5_000_000;
 run("popcorn on the AI budget", () => {
   setDefaultTimeout(60_000);
   let database: ReturnType<typeof createDb>;
+  let dbUrl: string;
   let sql: postgres.Sql;
   const quiet = { info() {}, warn() {}, error() {}, debug() {} } as never;
 
@@ -69,6 +71,7 @@ run("popcorn on the AI budget", () => {
 
   beforeAll(async () => {
     const url = await freshDatabase(admin as string, DB);
+    dbUrl = url;
     await migrate(url, { appEnv: "test" });
     database = createDb({ url, poolMax: 8 });
     sql = connect(url, { max: 2, onnotice: () => {} });
@@ -177,16 +180,38 @@ run("popcorn on the AI budget", () => {
     });
   });
 
-  test("paid and sample projects past the budget are never refused", async () => {
+  test("paid projects past the budget are never refused", async () => {
     const pop = popcornAllowance(database.db);
     const now = new Date();
-    for (const s of [await seed("guardian"), await seed("free", { sample: true })]) {
-      await useAll(s);
-      expect(await pop.admit(s.projectId, now)).toBe(true);
-      expect(await pop.status(s.projectId, now)).toBeNull();
-      await pop.requireRoom(s.projectId, now);
-      expect(await withAiBudget(database.db, {}, s.projectId, now)).toEqual({ ai_budget: null });
-    }
+    const s = await seed("guardian");
+    await useAll(s);
+    expect(await pop.admit(s.projectId, now)).toBe(true);
+    expect(await pop.status(s.projectId, now)).toBeNull();
+    await pop.requireRoom(s.projectId, now);
+    expect(await withAiBudget(database.db, {}, s.projectId, now)).toEqual({ ai_budget: null });
+  });
+
+  test("a free sample project past the budget is refused", async () => {
+    const pop = popcornAllowance(database.db);
+    const now = new Date();
+    const s = await seed("free", { sample: true });
+    await useAll(s);
+    expect(await pop.admit(s.projectId, now)).toBe(false);
+    expect(await pop.status(s.projectId, now)).toEqual({ exhausted: true });
+    const err = await pop.requireRoom(s.projectId, now).then(
+      () => null,
+      (e) => e,
+    );
+    expect(err).toMatchObject({ status: 402, details: { limit: "ai_budget" } });
+  });
+
+  test("a free sample gets the free cadence floor, a paid project the fastest", async () => {
+    const pop = popcornAllowance(database.db);
+    const now = new Date();
+    const sample = await seed("free", { sample: true });
+    expect(await pop.cadenceFloorMinutes(sample.projectId, now)).toBe(5);
+    const paid = await seed("guardian");
+    expect(await pop.cadenceFloorMinutes(paid.projectId, now)).toBe(1);
   });
 
   test("at zero a scheduled live tick goes back to manual with no model call", async () => {
@@ -613,14 +638,22 @@ run("popcorn on the AI budget", () => {
     expect(await row()).toEqual(before);
   });
 
-  const book = (projectId: string, conv: string) =>
-    client(database.db).begin((tx) =>
+  // The claim's transaction as a Db, the way the conversation pipeline hands it over.
+  const onTx = (pool: Db, tx: postgres.TransactionSql): Db => {
+    const options = (pool as unknown as { $client: postgres.Sql }).$client.options;
+    return drizzle(Object.assign(tx, { options }) as unknown as postgres.Sql, {
+      schema,
+    }) as unknown as Db;
+  };
+  const bookOn = (pool: Db, projectId: string, conv: string) =>
+    client(pool).begin((tx) =>
       finishReads({
         flags: { present: true, canvas: true },
         logger: quiet,
-        free: popcornAllowance(database.db),
-      })(tx, projectId, conv),
+        free: popcornAllowance,
+      })(tx, projectId, conv, onTx(pool, tx)),
     );
+  const book = (projectId: string, conv: string) => bookOn(database.db, projectId, conv);
   const finishTasks = async (loopId: string) =>
     Number(
       (
@@ -656,6 +689,21 @@ run("popcorn on the AI budget", () => {
     const paid = await seed("guardian");
     await book(paid.projectId, paid.conv);
     expect(await finishTasks(paid.loopId)).toBe(1);
+  });
+
+  test("a free finish booking needs no second connection, so a full pool cannot stall it", async () => {
+    const s = await seed("free");
+    const single = createDb({ url: dbUrl, poolMax: 1 });
+    try {
+      const outcome = await Promise.race([
+        bookOn(single.db, s.projectId, s.conv).then(() => "booked"),
+        Bun.sleep(5_000).then(() => "stalled"),
+      ]);
+      expect(outcome).toBe("booked");
+      expect(await finishTasks(s.loopId)).toBe(0);
+    } finally {
+      await single.close();
+    }
   });
 
   test("a finish read while live or booked runs on free", async () => {

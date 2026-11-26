@@ -27,12 +27,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useParams } from "react-router";
 import { I18nLink } from "@/components/common/i18nLink";
-import { presentError } from "@/lib/errors/present";
+import { ErrorNotice } from "@/components/error/ErrorNotice";
 import { call } from "../api/client";
 import { accountKeys } from "../api/hooks";
 import type { DemoStatusT } from "../contract/contract.gen";
 import { formatDateTime } from "../format";
 import { AccountsI18n } from "../i18n";
+import { Whole } from "../ui";
 import { StaffOnly } from "./AccountCardRoute";
 
 type Step = DemoStatusT["steps"][number];
@@ -73,7 +74,7 @@ function Demo() {
 	const [busy, setBusy] = useState<"retry" | "publish" | "unpublish" | null>(
 		null,
 	);
-	const [error, setError] = useState<string | null>(null);
+	const [error, setError] = useState<unknown>(null);
 	const { data: demo, isLoading } = useQuery({
 		enabled: Boolean(demoId),
 		queryFn: () => call("demoStatus", { params: { demoId: demoId as string } }),
@@ -107,7 +108,7 @@ function Demo() {
 			queryClient.setQueryData(demoKey(demoId), next);
 			await queryClient.invalidateQueries({ queryKey: accountKeys.all });
 		} catch (e) {
-			setError((await presentError(e, i18n)).message);
+			setError(e);
 		} finally {
 			setBusy(null);
 		}
@@ -131,6 +132,9 @@ function Demo() {
 						</Group>
 					</Anchor>
 					<Title order={3}>{demo.organisation_name}</Title>
+					{demo.existing_organisation && (
+						<Placement organisation={demo.existing_organisation} />
+					)}
 					<Text size="sm" c="dimmed">
 						{demo.status === "published" ? (
 							<Trans>
@@ -167,13 +171,24 @@ function Demo() {
 						onUnpublish={() => act("unpublish")}
 					/>
 				)}
-				{error && (
-					<Text size="sm" c="red">
-						{error}
-					</Text>
-				)}
+				{/* Under Publish: why a publish, unpublish or retry was refused, in the screen's
+				    language. */}
+				{error != null && <ErrorNotice error={error} />}
 			</Stack>
 		</Container>
+	);
+}
+
+/**
+ * Where a demo placed in an organisation the contact already works in lives. The name is
+ * plain text: "The account" below is the way to its card.
+ */
+function Placement({ organisation }: { organisation: { name: string } }) {
+	const name = organisation.name;
+	return (
+		<Text size="sm" c="dimmed" data-testid="demo-existing-organisation">
+			<Trans>A workspace in {name}.</Trans>
+		</Text>
 	);
 }
 
@@ -252,6 +267,10 @@ function Draft({
 }) {
 	const [signIn, setSignIn] = useState(demo.sign_in);
 	const published = demo.status === "published";
+	// In an organisation the contact already works in, publishing with the email on adds
+	// them to the demo's workspace and emails them the link; there is no sign-in invitation.
+	const inOrganisation = demo.existing_organisation !== null;
+	const email = <Whole>{demo.contact_email}</Whole>;
 	return (
 		<Stack gap="md" data-testid="demo-draft">
 			<Stack gap={6}>
@@ -338,7 +357,9 @@ function Draft({
 			{published ? (
 				<Stack gap="xs">
 					<Alert color="green" variant="light" data-testid="demo-published">
-						{demo.invited_at ? (
+						{demo.invited_at && inOrganisation ? (
+							<Trans>Published. The link was emailed to {email}.</Trans>
+						) : demo.invited_at ? (
 							<Trans>
 								Published. {demo.contact_email} has the sign-in invitation.
 							</Trans>
@@ -365,13 +386,37 @@ function Draft({
 				</Stack>
 			) : (
 				<Stack gap="sm">
-					{demo.invited_at ? (
+					{demo.invited_at && inOrganisation ? (
+						<Text size="sm" data-testid="demo-already-invited">
+							<Trans>
+								{email} already has the email with the link to the demo.
+								Publishing sends no new email.
+							</Trans>
+						</Text>
+					) : demo.invited_at ? (
 						<Text size="sm" data-testid="demo-already-invited">
 							<Trans>
 								{demo.contact_email} already has the sign-in invitation.
 								Publishing sends no new email.
 							</Trans>
 						</Text>
+					) : inOrganisation ? (
+						<Switch
+							checked={signIn}
+							onChange={(e) => setSignIn(e.currentTarget.checked)}
+							label={t`Email them the demo`}
+							description={
+								signIn ? (
+									<Trans>
+										Publishing adds {email} to the workspace and emails them the
+										link.
+									</Trans>
+								) : (
+									t`Publishing makes the demo live. No email goes out and they are not added.`
+								)
+							}
+							data-testid="demo-publish-sign-in"
+						/>
 					) : (
 						<Switch
 							checked={signIn}
