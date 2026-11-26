@@ -780,7 +780,10 @@ export const WorkspaceSettingsRoute = () => {
 											.endsWith("@dembrane.com")}
 									/>
 									<Divider />
-									<WorkspaceMemorySection workspaceId={workspaceId} />
+									{/* Read by the chat's policy: a read-only support visit has no chat. */}
+									{settings.my_policies?.includes("chat:use") && (
+										<WorkspaceMemorySection workspaceId={workspaceId} />
+									)}
 									<WorkspaceMethodologiesSection workspaceId={workspaceId} />
 								</Stack>
 							</Tabs.Panel>
