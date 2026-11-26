@@ -1039,7 +1039,8 @@ export const ProjectChatRoute = () => {
 							</Text>
 							<Text size="xs" className="italic" c="dimmed">
 								<Trans>
-									dembrane can make mistakes. Please double-check responses.
+									dembrane uses AI and can make mistakes. Please double-check
+									responses with participants.
 								</Trans>
 							</Text>
 						</Group>
@@ -1049,7 +1050,8 @@ export const ProjectChatRoute = () => {
 							</Text>
 							<Text size="xs" className="italic" c="dimmed">
 								<Trans>
-									dembrane can make mistakes. Please double-check responses.
+									dembrane uses AI and can make mistakes. Please double-check
+									responses with participants.
 								</Trans>
 							</Text>
 						</Stack>

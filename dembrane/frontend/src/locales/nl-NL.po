@@ -5144,8 +5144,8 @@ msgstr "dembrane B.V. {0}, alle rechten voorbehouden."
 #: src/routes/project/chat/ProjectChatRoute.tsx:1041
 #: src/routes/project/chat/ProjectChatRoute.tsx:1051
 #: src/components/chat/AgenticChatPanel.tsx:2393
-msgid "dembrane can make mistakes. Please double-check responses."
-msgstr "dembrane kan fouten maken. Controleer antwoorden altijd even."
+#~ msgid "dembrane can make mistakes. Please double-check responses."
+#~ msgstr "dembrane kan fouten maken. Controleer antwoorden altijd even."
 
 #: src/components/popcorn/PopcornVoiceSection.tsx:60
 msgid "dembrane default"
@@ -5192,6 +5192,12 @@ msgstr "dembrane-medewerker is vertrokken"
 #: src/components/workspace/SupportAccessSection.tsx:33
 msgid "dembrane staff requested access"
 msgstr "dembrane-medewerker heeft toegang aangevraagd"
+
+#: src/routes/project/chat/ProjectChatRoute.tsx:1041
+#: src/routes/project/chat/ProjectChatRoute.tsx:1052
+#: src/components/chat/AgenticChatPanel.tsx:2393
+msgid "dembrane uses AI and can make mistakes. Please double-check responses with participants."
+msgstr "dembrane gebruikt AI en kan fouten maken. Controleer antwoorden altijd even bij deelnemers."
 
 #: src/components/release/releases.ts:238
 msgid "dembrane v3"
@@ -6638,7 +6644,7 @@ msgstr "Focus"
 
 #: src/components/chat/AgenticChatPanel.tsx:2261
 #: src/components/chat/AgenticChatPanel.tsx:2262
-#: src/components/chat/AgenticChatPanel.tsx:2403
+#: src/components/chat/AgenticChatPanel.tsx:2404
 msgid "Focus on conversations"
 msgstr "Focus op gesprekken"
 
@@ -13853,7 +13859,7 @@ msgstr "Gesprek selecteren"
 #: src/routes/project/chat/ProjectChatRoute.tsx:914
 #: src/routes/project/chat/ProjectChatRoute.tsx:976
 #: src/routes/project/chat/ProjectChatRoute.tsx:977
-#: src/routes/project/chat/ProjectChatRoute.tsx:1062
+#: src/routes/project/chat/ProjectChatRoute.tsx:1064
 #: src/routes/project/chat/NewChatRoute.tsx:633
 #: src/routes/project/chat/NewChatRoute.tsx:635
 #: src/routes/project/chat/NewChatRoute.tsx:746
@@ -17644,7 +17650,7 @@ msgid "Use pinned and saved question templates, including the / shortcut, from A
 msgstr "Gebruik vastgepinde en opgeslagen vraagtemplates, inclusief de /-sneltoets, vanuit Ask."
 
 #: src/routes/project/chat/ProjectChatRoute.tsx:1038
-#: src/routes/project/chat/ProjectChatRoute.tsx:1048
+#: src/routes/project/chat/ProjectChatRoute.tsx:1049
 #: src/components/chat/AgenticChatPanel.tsx:2389
 msgid "Use Shift + Enter to add a new line"
 msgstr "Gebruik Shift + Enter om een nieuwe regel toe te voegen"
