@@ -167,6 +167,13 @@ async function twice<T>(fn: () => Promise<T>): Promise<T> {
 /**
  * The workflow body. `runStep` is the queue's checkpointed step in the worker and a plain
  * call in tests; either way each step is skipped when the row says it is done.
+ *
+ * Every step goes through `runStep`, a finished one included, and the row is only read
+ * inside it. The queue replays a resumed run by position: the first step this body asks
+ * for must be the first one it recorded. A body that skipped the finished steps on its own
+ * asked for "extract" where "fetch" was recorded, the queue refused the run outside any
+ * step, and the demo stayed "running" for good (staging, 26 Nov 2026, a build cut off by a
+ * deploy).
  */
 export async function buildDemo(
   d: DemoBuildDeps,
@@ -183,10 +190,11 @@ export async function buildDemo(
     name: DemoStep,
     fn: (row: Row) => Promise<Partial<typeof schema.account_demo.$inferInsert>>,
   ) => {
-    row = await load(d, demoId);
-    const steps = row.steps as Steps;
-    if (steps[name].status === "done") return;
     await runStep(name, async () => {
+      row = await load(d, demoId);
+      const steps = row.steps as Steps;
+      // A retry is a new run: the steps an earlier run finished are kept.
+      if (steps[name].status === "done") return null;
       const started = d.now().toISOString();
       await save(d, demoId, {
         steps: {

@@ -11,7 +11,7 @@ import {
 import { schema } from "@dembrane/db";
 import type { Signed } from "@dembrane/http";
 import { localeOfEmail, resolveLocale } from "@dembrane/i18n";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { assertPersonSends, staffCan } from "../access";
 import type { AccountsDeps, Tx } from "../deps";
 import { isUuid } from "../deps";
@@ -79,12 +79,63 @@ export function demoView(d: Pick<AccountsDeps, "settings">, row: Row) {
   };
 }
 
+/** What staff read on the step a build stopped in. */
+export const BUILD_STOPPED =
+  "The build stopped before this step finished. Retry to go on from this step.";
+
+/** A minute past the job's own limit, for the clocks of the queue and of this process. */
+const BUILD_LIMIT_MS = (demoBuild.expireInSeconds + 60) * 1000;
+
+/**
+ * A build still "running" after its job's time limit has no run behind it: the queue ended
+ * it at the limit, or lost it before. The row then says so on the step it stopped in, which
+ * is what the demo's page needs to show a failed step with its retry and never an endless
+ * "Building the demo". Every reader of a demo comes through here, so the page, the list and
+ * the retry agree. The write is guarded by the row's last change: a build that finishes at
+ * the same moment wins.
+ */
+async function settle(d: AccountsDeps, row: Row): Promise<Row> {
+  if (row.status !== "running") return row;
+  const now = d.now();
+  if (now.getTime() - row.updatedAt.getTime() < BUILD_LIMIT_MS) return row;
+  const steps = { ...(row.steps as Steps) };
+  // The step it was in, or the first one not done when it stopped between two.
+  const stopped =
+    DEMO_STEPS.find((name) => steps[name].status === "running") ??
+    DEMO_STEPS.find((name) => steps[name].status !== "done");
+  if (stopped)
+    steps[stopped] = {
+      status: "failed",
+      started_at: steps[stopped].started_at,
+      finished_at: now.toISOString(),
+      error: BUILD_STOPPED,
+    };
+  const [settled] = await d.db
+    .update(schema.account_demo)
+    .set({ status: "failed", steps, updatedAt: now })
+    .where(
+      and(
+        eq(schema.account_demo.id, row.id),
+        eq(schema.account_demo.status, "running"),
+        eq(schema.account_demo.updatedAt, row.updatedAt),
+      ),
+    )
+    .returning();
+  if (settled) return settled;
+  const [latest] = await d.db
+    .select()
+    .from(schema.account_demo)
+    .where(eq(schema.account_demo.id, row.id))
+    .limit(1);
+  return latest ?? row;
+}
+
 async function load(d: AccountsDeps, id: string): Promise<Row> {
   const [row] = isUuid(id)
     ? await d.db.select().from(schema.account_demo).where(eq(schema.account_demo.id, id)).limit(1)
     : [];
   if (!row) throw new NotFoundError("demo.not_found");
-  return row;
+  return settle(d, row);
 }
 
 /**
@@ -137,7 +188,8 @@ export async function listDemos(d: AccountsDeps) {
     .from(schema.account_demo)
     .orderBy(desc(schema.account_demo.createdAt))
     .limit(50);
-  return { demos: rows.map((r) => demoView(d, r)) };
+  const settled = await Promise.all(rows.map((r) => settle(d, r)));
+  return { demos: settled.map((r) => demoView(d, r)) };
 }
 
 /**
