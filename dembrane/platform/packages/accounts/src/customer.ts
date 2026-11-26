@@ -397,9 +397,12 @@ export async function setSigner(
   how: { actor: Actor; counted?: boolean; tx?: Conn },
 ) {
   const doc = await awaitingSigner(how.tx ?? d.db, org.id, docId);
+  const email = signer.email.trim().toLowerCase();
+  // The person already named: their link stands and nobody is emailed again.
+  if (doc.signerInvitedAt && isNamedSigner(doc, email))
+    return keepSigner(d, org.id, doc, signer, how.tx);
   // After the checks, so a refused naming costs the organisation none of its namings.
   if (how.counted) await d.limiter.check(SIGNER_LIMIT, org.id);
-  const email = signer.email.trim().toLowerCase();
   const replaced =
     doc.signerEmail && doc.signerEmail.toLowerCase() !== email
       ? { previous_email: doc.signerEmail, previous_name: doc.signerName }
@@ -439,6 +442,37 @@ export async function setSigner(
       email,
       name: signer.name,
       named_at: now.toISOString(),
+      reminded_at: null,
+      role: signer.role,
+    },
+  };
+}
+
+/** Naming the person already named: only a corrected name or job title is written. */
+async function keepSigner(
+  d: AccountsDeps,
+  orgId: string,
+  doc: DocumentRow,
+  signer: Person,
+  tx: Conn | undefined,
+) {
+  if (doc.signerName !== signer.name || doc.signerRole !== signer.role) {
+    const write = async (c: Conn) => {
+      await lockAwaiting(c, orgId, doc.id);
+      await store.updateDocument(c, doc.id, {
+        signerName: signer.name,
+        signerRole: signer.role,
+        updatedAt: d.now(),
+      });
+    };
+    if (tx) await write(tx);
+    else await d.db.transaction(write);
+  }
+  return {
+    signer: {
+      email: doc.signerEmail as string,
+      name: signer.name,
+      named_at: (doc.signerInvitedAt as Date).toISOString(),
       reminded_at: null,
       role: signer.role,
     },

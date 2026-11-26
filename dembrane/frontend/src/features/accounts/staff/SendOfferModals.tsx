@@ -21,12 +21,15 @@ type CustomerEmail = NonNullable<DocumentDetailT["customer_email"]>;
 export function SendOfferConfirmModal({
 	opened,
 	orgName,
+	signerName,
 	loading,
 	onApprove,
 	onCancel,
 }: {
 	opened: boolean;
 	orgName: string;
+	/** The customer's signer named on the draft: dembrane emails them on sending. */
+	signerName?: string | null;
 	loading: boolean;
 	onApprove: () => void;
 	onCancel: () => void;
@@ -49,8 +52,17 @@ export function SendOfferConfirmModal({
 							The offer and its documents appear in {org}'s dembrane space.
 						</Trans>
 					</Text>
-					<Text size="sm">
-						<Trans>dembrane sends no email. You send the email yourself.</Trans>
+					<Text size="sm" data-testid="send-offer-email-note">
+						{signerName ? (
+							<Trans>
+								dembrane emails {signerName} a link to sign. Any other email,
+								you send yourself.
+							</Trans>
+						) : (
+							<Trans>
+								dembrane sends no email. You send the email yourself.
+							</Trans>
+						)}
 					</Text>
 				</Stack>
 				<Group gap="xs">

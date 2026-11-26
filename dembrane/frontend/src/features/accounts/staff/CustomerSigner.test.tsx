@@ -32,6 +32,11 @@ vi.mock("../api/client", async (importOriginal) => {
 	};
 });
 
+const toasts: string[] = [];
+vi.mock("@/components/common/Toaster", () => ({
+	toast: { success: (m: string) => toasts.push(m) },
+}));
+
 beforeAll(() => {
 	i18n.load("en", {});
 	i18n.activate("en");
@@ -54,6 +59,7 @@ beforeAll(() => {
 afterEach(() => {
 	cleanup();
 	calls.length = 0;
+	toasts.length = 0;
 });
 
 const ROBIN = {
@@ -170,6 +176,11 @@ describe("the customer's signer, for staff", () => {
 		fireEvent.click(screen.getByTestId("customer-signer-save"));
 		await waitFor(() => expect(calls).toHaveLength(1));
 		expect(screen.queryByTestId("customer-signer-confirm")).toBeNull();
+		await waitFor(() =>
+			expect(toasts).toEqual([
+				"Robin de Vries stays the signer. Their link still works.",
+			]),
+		);
 	});
 
 	it("a DPA uses its own wording", async () => {

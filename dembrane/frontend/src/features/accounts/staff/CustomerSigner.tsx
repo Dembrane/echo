@@ -260,7 +260,11 @@ function NameSignerForm({
 			{
 				onError: () => setConfirming(false),
 				onSuccess: () => {
-					toast.success(t`${newName} gets an email with a link to sign.`);
+					toast.success(
+						before && !replaces
+							? t`${newName} stays the signer. Their link still works.`
+							: t`${newName} gets an email with a link to sign.`,
+					);
 					onClose();
 				},
 			},

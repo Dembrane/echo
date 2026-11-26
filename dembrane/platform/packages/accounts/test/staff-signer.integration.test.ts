@@ -307,6 +307,33 @@ run("staff name the customer's signer", () => {
     });
   });
 
+  test("naming the same person again sends nothing and keeps their link; a new name or job title is kept", async () => {
+    const email = "zelfde@testdorp.example";
+    const doc = await pushed({ customer_signer: { name: "Zelfde", email, role: null } });
+    const token = lastToken(email) as string;
+    const invite = (t: string) =>
+      call(w, "GET", `${C()}/documents/${doc.id}/invite?invite=${t}`, null);
+    const before = { traces: await traces(email), namings: (await namings(doc.id)).length };
+    w.clock.now = new Date(w.clock.now.getTime() + 60_000);
+    const staff = await call(w, "POST", signerPath(doc.id), "staff", {
+      name: "Zelfde Persoon",
+      email,
+      role: "Wethouder",
+    });
+    expect(staff.status).toBe(200);
+    const own = await call(w, "POST", `${C()}/documents/${doc.id}/signer`, "admin", {
+      name: "Zelfde Persoon",
+      email,
+      role: "Wethouder",
+    });
+    expect(own.status).toBe(200);
+    expect(await traces(email)).toEqual(before.traces);
+    expect((await namings(doc.id)).length).toBe(before.namings);
+    expect((await invite(token)).status).toBe(200);
+    const after = await row(doc.id);
+    expect([after?.signerName, after?.signerRole]).toEqual(["Zelfde Persoon", "Wethouder"]);
+  });
+
   test("a signed document keeps its signer: staff are refused and nothing changes", async () => {
     const doc = await pushed();
     expect((await sign(doc.id, "billing", "Bram Jansen")).status).toBe(200);
