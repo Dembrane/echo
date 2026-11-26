@@ -932,6 +932,7 @@ const eventLabel = (type: string): string =>
 		"document.signed_outside": t`Signed outside dembrane`,
 		"document.signer_named": t`Signer named`,
 		"document.signer_reminded": t`Signer reminded`,
+		"document.signer_removed": t`Signer taken off`,
 		"document.signer_replaced": t`Signer replaced`,
 		"document.updated": t`Draft changed`,
 		"document.viewed": t`Document viewed`,

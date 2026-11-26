@@ -45,6 +45,7 @@ import {
 	VoidAcceptanceModal,
 } from "./AcceptedOutsideModals";
 import { StaffOnly } from "./AccountCardRoute";
+import { CustomerSignerLine } from "./CustomerSigner";
 import { AnnexesPanel, CountersignModal } from "./OfferExtras";
 import { PushOfferModal } from "./PushOfferModal";
 import { CustomerEmailModal, SendOfferConfirmModal } from "./SendOfferModals";
@@ -96,6 +97,7 @@ function DocumentPage() {
 	const d = doc.data;
 	const draft = d.status === "draft";
 	const draftOffer = draft && d.kind === "offer";
+	const signerName = d.signer ? d.signer.name || d.signer.email : null;
 	// The customer's signatures. dembrane's own, applied when sending, holds nothing back.
 	const theirs = d.signatures.filter((s) => s.slot !== "dembrane");
 	// A sent offer is fixed; a new version replaces it until it is signed.
@@ -295,6 +297,7 @@ function DocumentPage() {
 						)}
 					</Group>
 				</Group>
+				<CustomerSignerLine orgId={orgId} doc={d} />
 				{draftOffer && <AnnexesPanel orgId={orgId} doc={d} />}
 				{draftOffer && (
 					<Text size="sm" c="dimmed" data-testid="draft-note">
@@ -306,11 +309,18 @@ function DocumentPage() {
 				)}
 				{d.customer_links && !d.signed_at && (
 					<Stack gap="xs" data-testid="customer-links">
-						<Text size="sm" c="dimmed">
-							<Trans>
-								No email went to the customer. Send them these links in your own
-								email.
-							</Trans>
+						<Text size="sm" c="dimmed" data-testid="customer-links-note">
+							{signerName ? (
+								<Trans>
+									dembrane emailed {signerName} a link to sign. Nothing else
+									went to the customer: send them these links in your own email.
+								</Trans>
+							) : (
+								<Trans>
+									No email went to the customer. Send them these links in your
+									own email.
+								</Trans>
+							)}
 						</Text>
 						{d.customer_email && (
 							<Box>
@@ -367,6 +377,7 @@ function DocumentPage() {
 				<SendOfferConfirmModal
 					opened={confirming}
 					orgName={orgName}
+					signerName={signerName}
 					loading={send.isPending}
 					onCancel={() => setConfirming(false)}
 					onApprove={() =>
@@ -379,7 +390,9 @@ function DocumentPage() {
 									if (sent.customer_email) setEmailOpen(true);
 									else
 										toast.success(
-											t`Offer sent. It is in the customer's account; no email went out.`,
+											signerName
+												? t`Offer sent. It is in the customer's account; ${signerName} got an email with a link to sign.`
+												: t`Offer sent. It is in the customer's account; no email went out.`,
 										);
 								},
 							},

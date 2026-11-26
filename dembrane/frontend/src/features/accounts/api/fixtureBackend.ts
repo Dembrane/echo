@@ -1204,6 +1204,77 @@ const publicDemo = ({
 
 type Body = Record<string, unknown>;
 
+/** Someone named to sign, as staff and customers give them (a draft's may lack a name). */
+type Named = { email: string; name: string | null; role: string | null };
+
+/**
+ * Names who signs a document, or changes who it is, as the server's setSigner does for
+ * every path: the customer's route, their answer to "who signs", the staff route and an
+ * offer sent with its signer. One signer per document; the room's list follows.
+ */
+function nameSignerIn(
+	s: Store,
+	d: DocumentDetailT,
+	p: Named,
+	actor: "customer" | "staff",
+) {
+	const previous = d.signer;
+	const email = p.email.trim().toLowerCase();
+	d.signer = {
+		email,
+		name: p.name,
+		named_at: now(),
+		reminded_at: null,
+		role: p.role ?? null,
+	};
+	if (d.kind === "offer" || d.kind === "dpa")
+		room.nameRoomSigner(roomOf(s), d.kind, {
+			document_id: d.id,
+			email,
+			name: p.name,
+		});
+	const replaced = previous && previous.email !== email;
+	event(
+		s,
+		replaced ? "document.signer_replaced" : "document.signer_named",
+		actor,
+		{ id: d.id, type: "document" },
+		replaced ? { email, previous_email: previous.email } : { email },
+	);
+	return { signer: d.signer };
+}
+
+/** Takes a naming off, as the server's unsetSigner does: whoever runs the account signs. */
+function unnameSignerIn(
+	s: Store,
+	d: DocumentDetailT,
+	actor: "customer" | "staff",
+) {
+	const previous = d.signer;
+	if (!previous) return;
+	d.signer = null;
+	if (d.kind === "offer" || d.kind === "dpa") roomOf(s).signers[d.kind] = null;
+	event(
+		s,
+		"document.signer_removed",
+		actor,
+		{ id: d.id, type: "document" },
+		{ previous_email: previous.email, previous_name: previous.name },
+	);
+}
+
+/** The customer's signer as a draft keeps it: named, not invited until it is sent. */
+const draftSigner = (p: Named | null | undefined): DocumentDetailT["signer"] =>
+	p
+		? {
+				email: p.email.trim().toLowerCase(),
+				name: p.name,
+				named_at: null,
+				reminded_at: null,
+				role: p.role ?? null,
+			}
+		: null;
+
 /** One handler per contract route; the client parses whatever this returns. */
 export async function handle(
 	name: RouteName,
@@ -1748,32 +1819,17 @@ export async function handle(
 			}
 			case "nameSigner": {
 				if (!room.mayNameSigner(roomOf(s))) throw room.nameSignerRefused();
+				return nameSignerIn(s, doc(), body as unknown as Named, "customer");
+			}
+			case "staffNameSigner": {
 				const d = doc();
-				const previous = d.signer;
-				d.signer = {
-					email: String(body.email),
-					name: String(body.name),
-					named_at: now(),
-					reminded_at: null,
-					role: (body.role as string | null) ?? null,
-				};
-				if (d.kind === "offer" || d.kind === "dpa")
-					room.nameRoomSigner(roomOf(s), d.kind, {
-						document_id: d.id,
-						email: String(body.email),
-						name: String(body.name),
-					});
-				const replaced = previous && previous.email !== body.email;
-				event(
-					s,
-					replaced ? "document.signer_replaced" : "document.signer_named",
-					"customer",
-					{ id: d.id, type: "document" },
-					replaced
-						? { email: body.email, previous_email: previous.email }
-						: { email: body.email },
-				);
-				return { signer: d.signer };
+				if (d.status === "draft") throw notFound();
+				if (!d.requires_signature || !["sent", "viewed"].includes(d.status))
+					throw new AccountsApiError(
+						409,
+						"This document is not waiting for a signature",
+					);
+				return nameSignerIn(s, d, body as unknown as Named, "staff");
 			}
 			case "remindSigner": {
 				const d = doc();
@@ -1860,52 +1916,45 @@ export async function handle(
 				return s.billing;
 			}
 			case "answerWhoSigns": {
-				// Billing answers "I sign"; naming someone else is for owners and admins.
-				if (
-					(body.offer_signer || body.dpa_signer) &&
-					!room.mayNameSigner(roomOf(s))
-				)
-					throw room.nameSignerRefused();
 				const t = task();
 				if (t.code !== "who_signs") throw notFound();
 				if (t.status !== "open" && t.status !== "changes_requested")
 					throw new AccountsApiError(409, "This task is not waiting on you.");
 				const offer = s.docs.find((x) => x.id === t.document_id);
 				if (!offer) throw notFound();
-				type Named = { email: string; name: string; role: string | null };
-				const name = (d: DocumentDetailT, p: Named) => {
-					d.signer = {
-						email: p.email.toLowerCase(),
-						name: p.name,
-						named_at: now(),
-						reminded_at: null,
-						role: p.role,
-					};
-					if (d.kind === "offer" || d.kind === "dpa")
-						room.nameRoomSigner(roomOf(s), d.kind, {
-							document_id: d.id,
-							email: p.email,
-							name: p.name,
-						});
-					event(
-						s,
-						"document.signer_named",
-						"customer",
-						{
-							id: d.id,
-							type: "document",
-						},
-						{ email: p.email },
-					);
-				};
 				const offerSigner = body.offer_signer as Named | null;
 				const dpaSigner =
 					body.dpa_same === true
 						? offerSigner
 						: (body.dpa_signer as Named | null);
-				if (offerSigner) name(offer, offerSigner);
-				const dpa = dpaOf(s, offer.id);
-				if (dpa && dpaSigner && dpa.status !== "signed") name(dpa, dpaSigner);
+				const found = dpaOf(s, offer.id);
+				const dpa = found && found.status !== "signed" ? found : null;
+				// The answer is made true, as the server's answerWhoSigns does: someone else is
+				// named, or "I sign" takes someone else's naming off. Changing who signs is for
+				// owners and admins; keeping the person named is not a change.
+				const me = room.actorEmail().toLowerCase();
+				const isNamed = (d: DocumentDetailT, email: string) =>
+					d.signer?.email.toLowerCase() === email.trim().toLowerCase();
+				const names = (d: DocumentDetailT | null, p: Named | null) =>
+					p !== null && !(d && isNamed(d, p.email));
+				const unnames = (d: DocumentDetailT | null, p: Named | null) =>
+					p === null && d !== null && d.signer !== null && !isNamed(d, me);
+				if (
+					(names(offer, offerSigner) ||
+						names(dpa, dpaSigner) ||
+						unnames(offer, offerSigner) ||
+						unnames(dpa, dpaSigner)) &&
+					!room.mayNameSigner(roomOf(s))
+				)
+					throw room.nameSignerRefused();
+				for (const [d, p] of [
+					[offer, offerSigner],
+					[dpa, dpaSigner],
+				] as const) {
+					if (!d) continue;
+					if (p && names(d, p)) nameSignerIn(s, d, p, "customer");
+					else if (unnames(d, p)) unnameSignerIn(s, d, "customer");
+				}
 				t.status = "done";
 				t.submitted_at = now();
 				t.next_reminder_at = null;
@@ -2118,8 +2167,10 @@ export async function handle(
 					template: body.template as "subscription" | "event",
 					...offerTerms(body),
 				};
-				// Absent keeps the draft's currency, as the API does.
+				// Absent keeps the draft's currency and signer, as the API does; null drops the signer.
 				d.currency = (body.currency as string | undefined) ?? d.currency;
+				if (body.customer_signer !== undefined)
+					d.signer = draftSigner(body.customer_signer as Named | null);
 				d.language = language;
 				d.reference = reference;
 				d.lines = lines;
@@ -2202,6 +2253,8 @@ export async function handle(
 					sha256: sha,
 					signature: null,
 					signed_at: null,
+					// Kept on a draft; the send names them, as the API does.
+					signer: draftSigner(body.customer_signer as Named | null | undefined),
 					signing_note:
 						language === "nl"
 							? "Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en verwerkersovereenkomst gelden."
@@ -2243,6 +2296,8 @@ export async function handle(
 					{ id: d.id, type: "document" },
 					{ kind: "offer", total_cents: d.total_cents },
 				);
+				if (body.send !== false && d.signer)
+					nameSignerIn(s, d, d.signer, "staff");
 				return {
 					document: withUrls(d, sBase, "staff"),
 					task: t ? publicTask(t) : null,
@@ -2449,6 +2504,8 @@ export async function handle(
 					{ id: d.id, type: "document" },
 					{ kind: d.kind },
 				);
+				if (d.kind === "offer" && d.signer && !d.signer.named_at)
+					nameSignerIn(s, d, d.signer, "staff");
 				return withUrls(d, sBase, "staff");
 			}
 			case "voidDocument": {

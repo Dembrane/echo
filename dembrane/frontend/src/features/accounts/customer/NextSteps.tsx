@@ -256,6 +256,7 @@ function OpenTask({
 	const signing = task.kind === "sign" && task.document_id;
 	const validUntil = formatDate(doc?.valid_until, i18n.locale);
 	const due = formatDate(task.due_on, i18n.locale);
+	const signerName = doc?.signer?.name || doc?.signer?.email || "";
 
 	// One fact under the title; the title already says what to do.
 	const fact =
@@ -269,7 +270,13 @@ function OpenTask({
 				withDpa && <Trans>Includes the DPA</Trans>,
 			)
 		) : task.code === "who_signs" ? (
-			<Trans>2 questions</Trans>
+			// Someone named already (staff may name them when sending): the question is to
+			// confirm that, so the line says it instead of asking from nothing.
+			doc?.signer ? (
+				<Trans>{signerName} is named to sign the offer.</Trans>
+			) : (
+				<Trans>2 questions</Trans>
+			)
 		) : (
 			facts(
 				due && <Trans>Before {due}</Trans>,

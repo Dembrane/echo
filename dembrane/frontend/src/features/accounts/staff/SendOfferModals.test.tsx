@@ -78,6 +78,25 @@ it("the confirm window names the organisation, says no email is sent, and asks o
 	expect(onCancel).toHaveBeenCalledTimes(1);
 });
 
+it("with a named signer the confirm window says dembrane emails them", async () => {
+	wrap(
+		<SendOfferConfirmModal
+			opened
+			orgName="Gemeente Proefstad"
+			signerName="Antoine Burgers"
+			loading={false}
+			onApprove={() => {}}
+			onCancel={() => {}}
+		/>,
+	);
+	expect((await screen.findByTestId("send-offer-email-note")).textContent).toBe(
+		"dembrane emails Antoine Burgers a link to sign. Any other email, you send yourself.",
+	);
+	expect(
+		screen.queryByText("dembrane sends no email. You send the email yourself."),
+	).toBeNull();
+});
+
 it("the email window shows the email to copy, a mail link, and what to tell sam", async () => {
 	const onClose = vi.fn();
 	const writeText = vi.fn(async () => {});

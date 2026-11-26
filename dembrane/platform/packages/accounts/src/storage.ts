@@ -368,6 +368,28 @@ export const store = {
     return row ?? null;
   },
 
+  /**
+   * The invitations made because `email` was named to sign in the organisation: by a naming,
+   * or again when they were taken out of the room while still named.
+   */
+  async signerInviteIds(c: Conn, orgId: string, email: string): Promise<string[]> {
+    const rows = await c
+      .select({ id: sql<string | null>`${event.detail}->>'invite_id'` })
+      .from(event)
+      .where(
+        and(
+          eq(event.orgId, orgId),
+          inArray(event.type, [
+            "document.signer_named",
+            "document.signer_replaced",
+            "room.person_removed",
+          ]),
+          sql`lower(${event.detail}->>'email') = ${email.trim().toLowerCase()}`,
+        ),
+      );
+    return rows.flatMap((r) => (r.id ? [r.id] : []));
+  },
+
   /** Withdraws an invitation (soft delete): its link and the code sign-in it allowed stop. */
   async withdrawOrgInvite(c: Conn, id: string, now: Date) {
     await c

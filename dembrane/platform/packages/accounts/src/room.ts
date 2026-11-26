@@ -488,15 +488,17 @@ export async function removeRoomPerson(
   const now = d.now();
   await d.db.transaction(async (tx) => {
     await store.deleteRoomPerson(tx, row.id);
+    let signerInvite: string | null = null;
     if (!member) {
       if (row.orgInviteId) await store.withdrawOrgInvite(tx, row.orgInviteId, now);
       // Named to sign meanwhile: the Billing invitation that naming makes stands again. It
       // restores what an owner or admin already did by naming them, so no role check here.
       if ((await store.waitingForSigner(tx, row.email)).some((x) => x.orgId === org.id))
-        await store.inviteSigner(tx, {
+        signerInvite = await store.inviteToOrg(tx, {
           id: newId(),
           orgId: org.id,
           email: row.email,
+          role: "billing",
           invitedBy: who.appUserId ?? null,
           now,
         });
@@ -506,7 +508,11 @@ export async function removeRoomPerson(
       actor: { kind: "customer", userId: who.directusUserId },
       type: "room.person_removed",
       subject: { type: "room_person", id: row.id },
-      detail: { accepted: Boolean(member) },
+      // Recorded like a naming's, so taking them off as signer withdraws it (signerInviteIds).
+      detail: {
+        accepted: Boolean(member),
+        ...(signerInvite ? { email: row.email, invite_id: signerInvite } : {}),
+      },
     });
   });
   const me = await store.identity(d.db, who.directusUserId);

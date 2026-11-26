@@ -106,6 +106,7 @@ export const pushOfferRequest: Out<typeof PushOfferRequest> = {
   amendments: [],
   external_ref: "attio-deal-8f2c",
   supersedes_id: null,
+  customer_signer: { name: "Robin de Vries", email: "robin@example.org", role: "Wethouder" },
   send: true,
   notify: false,
 };

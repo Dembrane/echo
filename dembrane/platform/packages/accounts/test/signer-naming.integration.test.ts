@@ -351,12 +351,15 @@ run("who may name a signer", () => {
     w.clock.now = new Date(w.clock.now.getTime() + 3_700_000);
     const path = `${C()}/documents/${offerId}/signer`;
     const first = { name: "First Person", email: "first@example.test", role: null };
+    const second = { name: "Second Person", email: "second@example.test", role: null };
     for (let i = 0; i < 3; i++)
       expect((await call(w, "POST", path, "billing", first)).status).toBe(403);
     let status = 200;
     let made = 0;
+    // Each naming changes who signs: naming the one already named costs nothing.
     for (let i = 0; i < 10 && status === 200; i++) {
-      status = (await call(w, "POST", path, i % 2 ? "admin" : owner, first)).status;
+      const who = i % 2 ? second : first;
+      status = (await call(w, "POST", path, i % 2 ? "admin" : owner, who)).status;
       if (status === 200) made++;
     }
     expect([made, status]).toEqual([10, 200]);

@@ -82,7 +82,7 @@ export async function signerInvite(d: AccountsDeps, orgId: string, docId: string
   const { doc, org } = await invitedDocument(d, orgId, docId, token);
   const email = (doc.signerEmail as string).toLowerCase();
   const [named] = await d.db
-    .select({ actor: schema.account_event.actorUserId })
+    .select({ actor: schema.account_event.actorUserId, kind: schema.account_event.actorKind })
     .from(schema.account_event)
     .where(
       and(
@@ -91,9 +91,11 @@ export async function signerInvite(d: AccountsDeps, orgId: string, docId: string
         inArray(schema.account_event.type, ["document.signer_named", "document.signer_replaced"]),
       ),
     )
-    .orderBy(desc(schema.account_event.createdAt))
+    .orderBy(desc(schema.account_event.createdAt), desc(schema.account_event.id))
     .limit(1);
-  const inviter = named?.actor ? await store.identity(d.db, named.actor) : null;
+  // A dembrane person is not "from" the customer's organisation: their naming reads as its.
+  const inviter =
+    named?.actor && named.kind !== "staff" ? await store.identity(d.db, named.actor) : null;
   const appUser = await store.appUserByEmail(d.db, email);
   return {
     organisation: { name: org.name },
