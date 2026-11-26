@@ -1,8 +1,10 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
+import { Access, DrizzleAccessStore } from "@dembrane/access";
 import { newId, PlatformError } from "@dembrane/core";
-import { schema } from "@dembrane/db";
+import { createDb, schema } from "@dembrane/db";
 import { and, eq } from "drizzle-orm";
 import * as K from "../src/contract";
+import { nameSigner, remindSigner } from "../src/customer";
 import { ensureUser } from "../src/prospect";
 import { accountsRoutes } from "../src/routes";
 import { store } from "../src/storage";
@@ -394,5 +396,24 @@ run("who may name a signer", () => {
       dpia: false,
     });
     expect(ok.status).toBe(200);
+  });
+
+  test("naming and reminding a signer need no second connection, so a full pool cannot stall them", async () => {
+    w.clock.now = new Date(w.clock.now.getTime() + 3_700_000);
+    const { offerId } = await pushOffer();
+    const single = createDb({ url: w.url, poolMax: 1 });
+    const d = { ...w.deps, db: single.db, access: new Access(new DrizzleAccessStore(single.db)) };
+    const done = (p: Promise<unknown>) =>
+      Promise.race([p.then(() => "done"), Bun.sleep(5_000).then(() => "stalled")]);
+    const email = "full-pool@example.test";
+    try {
+      const signer = { name: "Full Pool", email, role: null };
+      expect(await done(nameSigner(d, w.people.admin, w.orgId, offerId, signer))).toBe("done");
+      expect(await done(remindSigner(d, w.people.admin, w.orgId, offerId))).toBe("done");
+      expect(await signerOf(offerId)).toBe(email);
+      expect(await traces(email)).toEqual({ invites: 1, mails: 2 });
+    } finally {
+      await single.close();
+    }
   });
 });

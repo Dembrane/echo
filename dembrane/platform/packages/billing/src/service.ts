@@ -80,9 +80,13 @@ export interface BillingDeps {
   /**
    * Runs fn while holding a per-key lock, or returns undefined without running it when
    * another caller holds it. Serialises activation across the webhook, the return sync
-   * and the reconcile schedule so only one of them creates the subscription.
+   * and the reconcile schedule so only one of them creates the subscription. fn reads and
+   * writes through the store it is handed, on the lock's connection: the pool may be empty.
    */
-  readonly tryLock: <T>(key: string, fn: () => Promise<T>) => Promise<T | undefined>;
+  readonly tryLock: <T>(
+    key: string,
+    fn: (store: BillingStore) => Promise<T>,
+  ) => Promise<T | undefined>;
   readonly clock: () => Date;
 }
 
@@ -597,9 +601,9 @@ export class BillingService {
     m: Record<string, unknown>,
     customerId: string,
   ) {
-    const ran = await this.d.tryLock(`billing:activation:${accountId}`, async () => {
-      const account = await this.store.account(accountId);
-      if (!account || account.mollie_subscription_id) return;
+    const ran = await this.d.tryLock(`billing:activation:${accountId}`, async (store) => {
+      const account = await store.account(accountId);
+      if (!account || account.mollie_subscription_id) return null;
       const tier = str(m.tier) || account.tier;
       const interval = str(m.interval) || "12 months";
       const amount = Number(m.amount_eur || 0);
@@ -615,28 +619,38 @@ export class BillingService {
         webhookUrl: this.d.config.webhookUrl ?? "",
         metadata: { billing_account_id: accountId },
       });
-      await this.update(accountId, {
-        tier,
-        status: "active",
-        payment_mode: "mollie",
-        mollie_subscription_id: str(sub.id),
-        billing_period: str(m.billing_period),
-        tier_expires_at: null,
-        type_discount: null,
-        provisioned_seats: seats,
-        payment_failed_notified: false,
-        reconcile_failed_at: null,
-      });
-      this.d.logger.info({ accountId, tier, subscription: sub.id }, "activated billing account");
-      await this.d.capture(accountId, "server_subscription_activated", {
-        billing_account_id: accountId,
-        tier,
-        billing_period: billingPeriod,
-        amount_eur: amount,
-        seats,
-      });
+      await store.updateAccount(
+        accountId,
+        {
+          tier,
+          status: "active",
+          payment_mode: "mollie",
+          mollie_subscription_id: str(sub.id),
+          billing_period: str(m.billing_period),
+          tier_expires_at: null,
+          type_discount: null,
+          provisioned_seats: seats,
+          payment_failed_notified: false,
+          reconcile_failed_at: null,
+        },
+        this.now(),
+      );
+      return { tier, subscription: sub.id, billingPeriod, amount, seats };
     });
     if (ran === undefined) this.d.logger.info({ accountId }, "activation already in progress");
+    if (!ran) return;
+    // After the commit, so a slow capture never holds the activation uncommitted.
+    this.d.logger.info(
+      { accountId, tier: ran.tier, subscription: ran.subscription },
+      "activated billing account",
+    );
+    await this.d.capture(accountId, "server_subscription_activated", {
+      billing_account_id: accountId,
+      tier: ran.tier,
+      billing_period: ran.billingPeriod,
+      amount_eur: ran.amount,
+      seats: ran.seats,
+    });
   }
 
   /** Brings status in line with Mollie after a return from checkout or a missed webhook. */

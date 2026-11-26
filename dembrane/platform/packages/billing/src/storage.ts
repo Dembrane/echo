@@ -331,12 +331,12 @@ export function billingStorage(db: Db): BillingStore {
  * A transaction-scoped advisory lock, so a crashed holder can never wedge the key.
  */
 export function pgTryLock(db: Db) {
-  return async <T>(key: string, fn: () => Promise<T>): Promise<T | undefined> =>
+  return async <T>(key: string, fn: (store: BillingStore) => Promise<T>): Promise<T | undefined> =>
     db.transaction(async (tx) => {
       const rows = (await tx.execute(
         sql`select pg_try_advisory_xact_lock(hashtext(${key})) as got`,
       )) as unknown as { got: boolean }[];
       if (!rows[0]?.got) return undefined;
-      return fn();
+      return fn(billingStorage(tx as unknown as Db));
     });
 }

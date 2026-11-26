@@ -363,19 +363,20 @@ export async function publishDraft(
 /**
  * A few words of the opening live, the rest of the draft left alone: merged onto the
  * published settings and onto the draft in one write, under the lock, so it asks for no
- * revision. `validate` sees the published settings the write would leave.
+ * revision. `validate` sees the published settings the write would leave, and reads through
+ * the lock's `store`: the pool may be empty.
  */
 export async function publishOpening(
   d: PopcornDeps,
   report: Row,
   patch: Json,
-  validate: (published: Json) => Promise<void>,
+  validate: (published: Json, store: PopcornStore) => Promise<void>,
 ): Promise<DraftState> {
   return settingsLock(d, String(report.id), async (store, tx: Sql) => {
     const state = await draftState(store, report);
     const fallbackTitle = orStr(report.user_instructions, "Popcorn");
     const published = mergeSettings(state.published, patch, fallbackTitle);
-    await validate(published);
+    await validate(published, store);
     const settings = mergeSettings(state.settings, patch, fallbackTitle);
     const raw = state.config.popcorn_settings;
     let revision = state.revision;

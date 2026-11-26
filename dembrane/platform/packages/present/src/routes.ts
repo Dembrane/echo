@@ -24,6 +24,7 @@ import {
   normalizeState,
   orStr,
   type PopcornDeps,
+  type PopcornStore,
   popcornReport,
   projectJson,
   projectWith,
@@ -96,12 +97,17 @@ export function presentRoutes(deps: PresentRoutesDeps) {
   };
 
   /** _validate_draft_settings: the mark needs its tier, a demo's frame stays the demo's. */
-  const validateDraft = async (report: Row, tier: string | null, settings: Json) => {
+  const validateDraft = async (
+    report: Row,
+    tier: string | null,
+    settings: Json,
+    store: PopcornStore = d.store,
+  ) => {
     requireBrandingTier(orStr(tier, "free"), settings.show_branding === false);
     await requireUnlockedFrame(
-      d.store,
+      store,
       report,
-      await d.store.loopForReport(String(report.id)),
+      await store.loopForReport(String(report.id)),
       settings,
     );
   };
@@ -213,8 +219,8 @@ export function presentRoutes(deps: PresentRoutesDeps) {
     const patch: Json = {};
     for (const [block, value] of Object.entries(words)) if (truthy(value)) patch[block] = value;
     if (!Object.keys(patch).length) throw new ValidationError("present.opening_patch_empty");
-    const state = await publishOpening(d, report, patch, (published) =>
-      validateDraft(report, access.tier, published),
+    const state = await publishOpening(d, report, patch, (published, store) =>
+      validateDraft(report, access.tier, published, store),
     );
     return c.json(await envelope(report, project, state));
   });
