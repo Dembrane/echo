@@ -19,12 +19,15 @@
  * Everything is square except the pill. --app-rule-color lets states
  * recolour a rule (blue when active, red on error).
  *
- * Order: the pill comes first in its row and the row sits at the left. A row
- * of steps (a wizard, an onboarding, any sequence with Back) runs the way time
- * does instead: Back on the left, the pill on the right (Jor, 30 Oct 2026).
- * Back is the tertiary, text-only button (variant="subtle"): the pill is the
- * row's one weight (flow.steps-back-tertiary).
- * Such a row carries data-steps, which is what both checks look for. */
+ * Order: the pill comes first in its row and the row sits at the left. A pill
+ * with a Back beside it (a wizard, an onboarding, a dialog with a way back)
+ * runs the way time does instead: Back in the left corner, the pill in the
+ * right corner, all the row's free space between them (Jor, 30 Oct and
+ * 26 Nov 2026). Back is the tertiary, text-only button (variant="subtle"):
+ * the pill is the row's one weight (flow.steps-back-tertiary).
+ * Such a row carries data-steps: the checks look for it, and it is what puts
+ * the two in their corners (below, "A pill with a Back beside it"). A Back
+ * beside a pill in a row without it is flow.back-corner. */
 
 /* The colours, once, named after the roles in src/colors.ts. Every colour
  * below is one of these; a theme (dark) redefines them and nothing else.
@@ -818,12 +821,26 @@
   margin-inline-end: 12px;
 }
 
-/* Dialog actions align with the text they answer, at the left. A row of
- * steps (data-steps) keeps its own justify: Back left, the pill right. */
+/* Dialog actions align with the text they answer, at the left. A row with a
+ * Back (data-steps) is the exception, in a dialog as on a page. */
 :root
   .mantine-Modal-body
   .mantine-Group-root:not([data-steps]):not(:has(> :not(.mantine-Button-root))) {
   justify-content: flex-start;
+}
+
+/* A pill with a Back beside it (data-steps): Back in the left corner, the
+ * pill in the right corner, all the row's free space between them, whatever
+ * justify the row was given. The pill holds its corner by its own margin, so
+ * it keeps the right edge when the two do not fit on one line and it drops
+ * under Back (a phone, a long label), and when it is alone in the row on the
+ * step that has no Back. A Back alone stays at the left. */
+:root [data-steps] {
+  justify-content: space-between;
+}
+:root [data-steps] > :only-child:not([data-variant="subtle"]),
+:root [data-steps] > :nth-child(2):last-child {
+  margin-inline-start: auto;
 }
 
 /* Radio: the dot grows from the centre (Mantine's default rises from below). */

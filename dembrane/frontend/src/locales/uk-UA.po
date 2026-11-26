@@ -829,7 +829,7 @@ msgstr "{m} хв"
 #~ msgid "{name} from dembrane asks for admin access to {workspaceName} for 24 hours, to help you with support. Access ends automatically."
 #~ msgstr "{name} з dembrane просить доступ адміністратора до {workspaceName} на 24 години, щоб допомогти вам із підтримкою. Доступ припиниться автоматично."
 
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:103
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:104
 msgid "{name} from dembrane asks for admin access to <0>{workspaceName}</0> for 24 hours, to help you with support. Access ends automatically."
 msgstr "{name} з dembrane просить права адміністратора для <0>{workspaceName}</0> на 24 години, щоб допомогти вам із підтримкою. Доступ припиниться автоматично."
 
@@ -1366,7 +1366,7 @@ msgstr "Доступ діє до"
 msgid "Access expires after"
 msgstr "Термін дії доступу закінчується через"
 
-#: src/components/workspace/supportRequests.ts:222
+#: src/components/workspace/supportRequests.ts:225
 msgid "Access granted for 24 hours."
 msgstr "Доступ надано на 24 години."
 
@@ -2398,7 +2398,7 @@ msgid "Approve"
 msgstr "Схвалити"
 
 #: src/components/workspace/SupportAccessSection.tsx:231
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:98
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:99
 msgid "Approve for 24 hours"
 msgstr "Схвалити на 24 години"
 
@@ -2823,7 +2823,7 @@ msgid "participant.button.back"
 msgstr "Back"
 
 #. js-lingui-explicit-id
-#: src/portal/components/verify/VerifyArtefactError.tsx:37
+#: src/portal/components/verify/VerifyArtefactError.tsx:39
 msgid "participant.concrete.artefact.action.button.go.back"
 msgstr "Назад"
 
@@ -2930,7 +2930,7 @@ msgstr "Перш ніж завершити"
 #: src/components/conversation/RetranscribeConversation.tsx:180
 #: src/components/chat/ChatModeSelector.tsx:105
 #: src/components/chat/AgenticIntroModal.tsx:25
-#: src/components/agent-access/AgentAccessSection.tsx:152
+#: src/components/agent-access/AgentAccessSection.tsx:153
 msgid "Beta"
 msgstr "Beta"
 
@@ -3560,7 +3560,7 @@ msgstr "Перевірено {checkedAgo}. Нічого нового з часу
 msgid "Checking live conversations"
 msgstr "Перевірка активних розмов"
 
-#: src/routes/auth/VerifyEmail.tsx:93
+#: src/routes/auth/VerifyEmail.tsx:98
 msgid "Checking your session."
 msgstr "Перевіряємо вашу сесію."
 
@@ -4004,11 +4004,11 @@ msgstr "Підтвердьте пароль"
 msgid "Confirm your password to generate a new secret for your authenticator app."
 msgstr "Confirm your password to generate a new secret for your authenticator app."
 
-#: src/components/agent-access/AgentAccessSection.tsx:174
+#: src/components/agent-access/AgentAccessSection.tsx:175
 msgid "Connect"
 msgstr "Підключити"
 
-#: src/components/agent-access/AgentAccessSection.tsx:149
+#: src/components/agent-access/AgentAccessSection.tsx:150
 msgid "Connect your agent"
 msgstr "Підключіть свого агента"
 
@@ -4018,7 +4018,7 @@ msgstr "Підключіть свого агента | dembrane"
 
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:203
 #: src/components/agent-access/AgentGrantsCard.tsx:68
-#: src/components/agent-access/AgentAccessSection.tsx:193
+#: src/components/agent-access/AgentAccessSection.tsx:194
 msgid "Connected agents"
 msgstr "Підключені агенти"
 
@@ -4946,7 +4946,7 @@ msgstr "Зручні дати, контекст, будь-що інше"
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/invite/MyInvitesRoute.tsx:236
 #: src/components/workspace/SupportAccessSection.tsx:175
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:99
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:100
 #: src/components/workspace/AccessRequestsList.tsx:195
 msgid "Decline"
 msgstr "Відхилити"
@@ -5602,6 +5602,10 @@ msgstr "Раніше в центрі уваги"
 msgid "Earlier map result"
 msgstr "Попередній результат карти"
 
+#: src/components/release/ReleaseVideoModal.tsx:364
+msgid "Earlier release notes"
+msgstr "Попередні примітки до випуску"
+
 #: src/components/popcorn/PopcornHistory.tsx:36
 msgid "Earlier runs"
 msgstr "Попередні запуски"
@@ -5783,11 +5787,11 @@ msgstr "Надіслати код на пошту"
 msgid "Email me a sign-in code instead"
 msgstr "Надіслати код для входу на пошту"
 
-#: src/routes/auth/VerifyEmail.tsx:73
+#: src/routes/auth/VerifyEmail.tsx:78
 msgid "Email verification"
 msgstr "Підтвердження електронної пошти"
 
-#: src/routes/auth/VerifyEmail.tsx:25
+#: src/routes/auth/VerifyEmail.tsx:27
 msgid "Email verification | dembrane"
 msgstr "Підтвердження електронної пошти | dembrane"
 
@@ -7029,7 +7033,7 @@ msgstr "Вкажіть назву сесії"
 #~ msgstr "Дає кожній розмові назву"
 
 #: src/routes/settings/UserSettingsRoute.tsx:53
-#: src/components/agent-access/AgentAccessSection.tsx:127
+#: src/components/agent-access/AgentAccessSection.tsx:120
 msgid "Go back"
 msgstr "Go back"
 
@@ -7062,7 +7066,8 @@ msgstr "Перейти до чатів"
 msgid "Go to conversations"
 msgstr "Перейти до розмов"
 
-#: src/routes/auth/VerifyEmail.tsx:115
+#: src/routes/auth/VerifyEmail.tsx:112
+#: src/routes/auth/VerifyEmail.tsx:133
 msgid "Go to dashboard"
 msgstr "Перейти до панелі керування"
 
@@ -7090,9 +7095,9 @@ msgstr "Перейти до огляду"
 msgid "Go to portal editor"
 msgstr "Перейти до редактора порталу"
 
-#: src/components/release/ReleaseVideoModal.tsx:365
-msgid "Go to previous release notes"
-msgstr "До попередніх приміток до випуску"
+#: src/components/release/ReleaseVideoModal.tsx:364
+#~ msgid "Go to previous release notes"
+#~ msgstr "До попередніх приміток до випуску"
 
 #: src/routes/project/CreateProjectRoute.tsx:716
 msgid "Go to project home"
@@ -7126,7 +7131,7 @@ msgstr "Влучна знахідка"
 msgid "Good response"
 msgstr "Гарна відповідь"
 
-#: src/components/release/ReleaseVideoModal.tsx:356
+#: src/components/release/ReleaseVideoModal.tsx:367
 msgid "Got it"
 msgstr "Зрозуміло"
 
@@ -7414,7 +7419,7 @@ msgstr "Мені потрібні суворі гарантії конфіден
 msgid "participant.button.i.understand"
 msgstr "I understand"
 
-#: src/components/agent-access/AgentAccessSection.tsx:118
+#: src/components/agent-access/AgentAccessSection.tsx:128
 msgid "I understand"
 msgstr "Зрозуміло"
 
@@ -7855,7 +7860,7 @@ msgstr "It looks like we couldn't load this outcome. This might be a temporary i
 msgid "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 msgstr "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 
-#: src/routes/auth/VerifyEmail.tsx:147
+#: src/routes/auth/VerifyEmail.tsx:165
 msgid "It may have already been used or expired. If your email is verified, log in to continue."
 msgstr "Посилання вже використано або його термін минув. Якщо вашу електронну пошту підтверджено, увійдіть, щоб продовжити."
 
@@ -8671,7 +8676,7 @@ msgid "Locked to match the invite. To use a different address, ask the admin to 
 msgstr "Зафіксовано відповідно до запрошення. Щоб використати іншу адресу, попросіть адміністратора надіслати запрошення повторно."
 
 #: src/routes/invite/AcceptInviteRoute.tsx:285
-#: src/routes/auth/VerifyEmail.tsx:161
+#: src/routes/auth/VerifyEmail.tsx:179
 #: src/routes/auth/Login.tsx:584
 #: src/routes/auth/Login.tsx:688
 msgid "Log in"
@@ -8968,7 +8973,7 @@ msgstr "Доступ через MCP для {0} увімкнено"
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "З’єднання MCP дають твоєму агенту змогу знаходити проєкти, шукати розмови, читати транскрипти та переглядати документацію з контролем організації та явною згодою."
 
-#: src/components/agent-access/AgentAccessSection.tsx:157
+#: src/components/agent-access/AgentAccessSection.tsx:158
 msgid "MCP is a bridge that lets an AI assistant such as Claude, ChatGPT or Le Chat read your dembrane conversations and projects. It can see everything you can see, in the organisations you allow."
 msgstr "MCP: це міст, який дозволяє ШІ-асистентам, як-от Claude, ChatGPT чи Le Chat, читати ваші розмови та проєкти в dembrane. Він бачить усе, що бачите ви, у дозволених вами організаціях."
 
@@ -10209,6 +10214,10 @@ msgstr "Мало користуюся"
 #: src/components/chat/InsightNoteCard.tsx:23
 msgid "note"
 msgstr "примітка"
+
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:115
+msgid "Note from {name}"
+msgstr "Примітка від {name}"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2022
 #: src/components/training/StaffTrainingPanel.tsx:164
@@ -12550,7 +12559,7 @@ msgid "Relevant"
 msgstr "Відповідне"
 
 #. js-lingui-explicit-id
-#: src/portal/components/verify/VerifyArtefactError.tsx:49
+#: src/portal/components/verify/VerifyArtefactError.tsx:51
 msgid "participant.concrete.artefact.action.button.reload"
 msgstr "Перезавантажити сторінку"
 
@@ -12881,7 +12890,7 @@ msgstr "Запит схвалено"
 msgid "Request declined"
 msgstr "Запит відхилено"
 
-#: src/components/workspace/supportRequests.ts:223
+#: src/components/workspace/supportRequests.ts:226
 msgid "Request declined."
 msgstr "Запит відхилено."
 
@@ -14661,7 +14670,7 @@ msgstr "Щось пішло не так під час транскрибуван
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 
-#: src/routes/auth/VerifyEmail.tsx:78
+#: src/routes/auth/VerifyEmail.tsx:83
 msgid "Something went wrong. Please open the link from your email again, or <0>start over</0>."
 msgstr "Щось пішло не так. Будь ласка, відкрийте посилання з листа знову або <0>почніть спочатку</0>."
 
@@ -15181,7 +15190,7 @@ msgstr "Доступ для підтримки подовжено ще на 24 �
 msgid "Support access granted. It ends automatically in 24 hours."
 msgstr "Доступ для підтримки надано. Він автоматично завершиться через 24 години."
 
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:96
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:97
 msgid "Support access request"
 msgstr "Запит на доступ для підтримки"
 
@@ -15596,6 +15605,10 @@ msgstr "Не вдалося завантажити чернетку"
 msgid "The edge budget must be a whole number above zero, so {applied} applies."
 msgstr "Ліміт зв'язків має бути цілим числом більше нуля, тому застосовано {applied}."
 
+#: src/routes/auth/VerifyEmail.tsx:106
+msgid "The email address this link was sent to is verified. You are still signed in to your own account here."
+msgstr "Електронну адресу, на яку надіслано це посилання, підтверджено. Ви й далі ввійшли тут у власний обліковий запис."
+
 #: src/components/auth/utils/errorUtils.ts:95
 msgid "The email or password is not right. Check them and try again."
 msgstr "Неправильна електронна адреса або пароль. Перевірте їх і спробуйте знову."
@@ -15978,8 +15991,8 @@ msgid "The workspace this invite was for has been deleted. There's nothing to jo
 msgstr "Робочий простір із цього запрошення видалено. Приєднуватися нікуди."
 
 #: src/components/workspace/SupportAccessRequestPrompt.tsx:109
-msgid "Their note: “{note}”"
-msgstr "Їхня примітка: «{note}»"
+#~ msgid "Their note: “{note}”"
+#~ msgstr "Їхня примітка: «{note}»"
 
 #: src/components/workspace/SupportAccessRequestPrompt.tsx:106
 #~ msgid "Their note: {note}"
@@ -16272,11 +16285,11 @@ msgstr "Це вам недоступно"
 #~ msgid "This language will be used for the Participant's Portal."
 #~ msgstr "This language will be used for the Participant's Portal."
 
-#: src/routes/auth/VerifyEmail.tsx:107
+#: src/routes/auth/VerifyEmail.tsx:125
 msgid "This link has already been used. You're signed in and ready to go."
 msgstr "Це посилання вже використано. Ви увійшли та готові до роботи."
 
-#: src/routes/auth/VerifyEmail.tsx:144
+#: src/routes/auth/VerifyEmail.tsx:162
 msgid "This link is no longer valid"
 msgstr "Це посилання більше не дійсне"
 
@@ -17028,7 +17041,7 @@ msgstr "Пробні та безкоштовні облікові записи, 
 msgid "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 
-#: src/routes/auth/VerifyEmail.tsx:164
+#: src/routes/auth/VerifyEmail.tsx:182
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Не вдається увійти? Напишіть на support@dembrane.com."
 
@@ -17833,7 +17846,7 @@ msgstr "Перевіряйте результати й уточнюйте від
 msgid "Verifying"
 msgstr "Перевірка"
 
-#: src/routes/auth/VerifyEmail.tsx:124
+#: src/routes/auth/VerifyEmail.tsx:142
 msgid "Verifying your email address."
 msgstr "Перевіряємо вашу адресу електронної пошти."
 
@@ -19146,7 +19159,7 @@ msgstr "У ваш обліковий запис можна ввійти щона
 msgid "Your active devices changed. Choose a device again."
 msgstr "Ваші активні пристрої змінилися. Виберіть пристрій знову."
 
-#: src/components/agent-access/AgentAccessSection.tsx:184
+#: src/components/agent-access/AgentAccessSection.tsx:185
 msgid "Your agent will open dembrane and ask your permission before it can read anything."
 msgstr "Ваш агент відкриє dembrane і попросить у вас дозвіл перед тим, як щось прочитати."
 
@@ -19191,7 +19204,7 @@ msgstr "Вашу чернетку не буде збережено."
 msgid "Your edits to this guide are lost and it goes back to the default text."
 msgstr "Ваші зміни в цьому посібнику буде втрачено, і він повернеться до стандартного тексту."
 
-#: src/routes/auth/VerifyEmail.tsx:104
+#: src/routes/auth/VerifyEmail.tsx:122
 msgid "Your email is already verified"
 msgstr "Вашу електронну пошту вже підтверджено"
 
@@ -19203,7 +19216,7 @@ msgstr "Вашу електронну пошту ще не підтвердже�
 msgid "Your email is verified. Log in to continue."
 msgstr "Вашу електронну пошту підтверджено. Увійдіть, щоб продовжити."
 
-#: src/routes/auth/VerifyEmail.tsx:131
+#: src/routes/auth/VerifyEmail.tsx:149
 msgid "Your email is verified. Taking you to the login page."
 msgstr "Вашу електронну пошту підтверджено. Переходимо на сторінку входу."
 
@@ -19283,7 +19296,7 @@ msgstr "Ваша організація чекає на вас. Натисніт
 msgid "Your organisation or company"
 msgstr "Ваша організація або компанія"
 
-#: src/components/agent-access/AgentAccessSection.tsx:167
+#: src/components/agent-access/AgentAccessSection.tsx:168
 msgid "Your organisations"
 msgstr "Ваші організації"
 

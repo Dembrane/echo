@@ -829,7 +829,7 @@ msgstr "{m}m"
 #~ msgid "{name} from dembrane asks for admin access to {workspaceName} for 24 hours, to help you with support. Access ends automatically."
 #~ msgstr "{name} van dembrane vraagt 24 uur beheerderstoegang tot {workspaceName}, om je te helpen met support. De toegang stopt vanzelf."
 
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:103
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:104
 msgid "{name} from dembrane asks for admin access to <0>{workspaceName}</0> for 24 hours, to help you with support. Access ends automatically."
 msgstr "{name} van dembrane vraagt 24 uur adminrechten voor <0>{workspaceName}</0>, om je te helpen met support. De toegang stopt automatisch."
 
@@ -1366,7 +1366,7 @@ msgstr "Toegang stopt op"
 msgid "Access expires after"
 msgstr "Toegang verloopt na"
 
-#: src/components/workspace/supportRequests.ts:222
+#: src/components/workspace/supportRequests.ts:225
 msgid "Access granted for 24 hours."
 msgstr "Toegang verleend voor 24 uur."
 
@@ -2395,7 +2395,7 @@ msgid "Approve"
 msgstr "Goedkeuren"
 
 #: src/components/workspace/SupportAccessSection.tsx:231
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:98
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:99
 msgid "Approve for 24 hours"
 msgstr "Goedkeuren voor 24 uur"
 
@@ -2820,7 +2820,7 @@ msgid "participant.button.back"
 msgstr "Terug"
 
 #. js-lingui-explicit-id
-#: src/portal/components/verify/VerifyArtefactError.tsx:37
+#: src/portal/components/verify/VerifyArtefactError.tsx:39
 msgid "participant.concrete.artefact.action.button.go.back"
 msgstr "Terug"
 
@@ -2927,7 +2927,7 @@ msgstr "Voordat je afrondt"
 #: src/components/conversation/RetranscribeConversation.tsx:180
 #: src/components/chat/ChatModeSelector.tsx:105
 #: src/components/chat/AgenticIntroModal.tsx:25
-#: src/components/agent-access/AgentAccessSection.tsx:152
+#: src/components/agent-access/AgentAccessSection.tsx:153
 msgid "Beta"
 msgstr "Bèta"
 
@@ -3557,7 +3557,7 @@ msgstr "Gecontroleerd {checkedAgo}. Niets nieuws sinds je laatste gesprek. Bijge
 msgid "Checking live conversations"
 msgstr "Live gesprekken controleren"
 
-#: src/routes/auth/VerifyEmail.tsx:93
+#: src/routes/auth/VerifyEmail.tsx:98
 msgid "Checking your session."
 msgstr "Je sessie wordt gecontroleerd."
 
@@ -4001,11 +4001,11 @@ msgstr "Bevestig je wachtwoord"
 msgid "Confirm your password to generate a new secret for your authenticator app."
 msgstr "Bevestig je wachtwoord om een nieuw geheim voor je authenticator-app te genereren."
 
-#: src/components/agent-access/AgentAccessSection.tsx:174
+#: src/components/agent-access/AgentAccessSection.tsx:175
 msgid "Connect"
 msgstr "Koppelen"
 
-#: src/components/agent-access/AgentAccessSection.tsx:149
+#: src/components/agent-access/AgentAccessSection.tsx:150
 msgid "Connect your agent"
 msgstr "Koppel je agent"
 
@@ -4015,7 +4015,7 @@ msgstr "Koppel je agent | dembrane"
 
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:203
 #: src/components/agent-access/AgentGrantsCard.tsx:68
-#: src/components/agent-access/AgentAccessSection.tsx:193
+#: src/components/agent-access/AgentAccessSection.tsx:194
 msgid "Connected agents"
 msgstr "Gekoppelde agents"
 
@@ -4943,7 +4943,7 @@ msgstr "Data die passen, context, alles wat verder relevant is"
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/invite/MyInvitesRoute.tsx:236
 #: src/components/workspace/SupportAccessSection.tsx:175
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:99
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:100
 #: src/components/workspace/AccessRequestsList.tsx:195
 msgid "Decline"
 msgstr "Weigeren"
@@ -5599,6 +5599,10 @@ msgstr "Eerder in de spotlight"
 msgid "Earlier map result"
 msgstr "Eerder kaartresultaat"
 
+#: src/components/release/ReleaseVideoModal.tsx:364
+msgid "Earlier release notes"
+msgstr "Eerdere release-opmerkingen"
+
 #: src/components/popcorn/PopcornHistory.tsx:36
 msgid "Earlier runs"
 msgstr "Eerdere runs"
@@ -5780,11 +5784,11 @@ msgstr "Mail me een code"
 msgid "Email me a sign-in code instead"
 msgstr "Mail me liever een inlogcode"
 
-#: src/routes/auth/VerifyEmail.tsx:73
+#: src/routes/auth/VerifyEmail.tsx:78
 msgid "Email verification"
 msgstr "E-mailverificatie"
 
-#: src/routes/auth/VerifyEmail.tsx:25
+#: src/routes/auth/VerifyEmail.tsx:27
 msgid "Email verification | dembrane"
 msgstr "E-mailverificatie | dembrane"
 
@@ -7026,7 +7030,7 @@ msgstr "Geef de sessie een titel"
 #~ msgstr "Geeft elk gesprek een titel"
 
 #: src/routes/settings/UserSettingsRoute.tsx:53
-#: src/components/agent-access/AgentAccessSection.tsx:127
+#: src/components/agent-access/AgentAccessSection.tsx:120
 msgid "Go back"
 msgstr "Ga terug"
 
@@ -7059,7 +7063,8 @@ msgstr "Naar chats"
 msgid "Go to conversations"
 msgstr "Naar gesprekken"
 
-#: src/routes/auth/VerifyEmail.tsx:115
+#: src/routes/auth/VerifyEmail.tsx:112
+#: src/routes/auth/VerifyEmail.tsx:133
 msgid "Go to dashboard"
 msgstr "Naar dashboard"
 
@@ -7087,9 +7092,9 @@ msgstr "Naar het overzicht"
 msgid "Go to portal editor"
 msgstr "Naar de portal-editor"
 
-#: src/components/release/ReleaseVideoModal.tsx:365
-msgid "Go to previous release notes"
-msgstr "Ga naar eerdere release-opmerkingen"
+#: src/components/release/ReleaseVideoModal.tsx:364
+#~ msgid "Go to previous release notes"
+#~ msgstr "Ga naar eerdere release-opmerkingen"
 
 #: src/routes/project/CreateProjectRoute.tsx:716
 msgid "Go to project home"
@@ -7123,7 +7128,7 @@ msgstr "Goede bevinding"
 msgid "Good response"
 msgstr "Goed antwoord"
 
-#: src/components/release/ReleaseVideoModal.tsx:356
+#: src/components/release/ReleaseVideoModal.tsx:367
 msgid "Got it"
 msgstr "Begrepen"
 
@@ -7411,7 +7416,7 @@ msgstr "Ik heb strikte privacygaranties nodig"
 msgid "participant.button.i.understand"
 msgstr "Ik begrijp het"
 
-#: src/components/agent-access/AgentAccessSection.tsx:118
+#: src/components/agent-access/AgentAccessSection.tsx:128
 msgid "I understand"
 msgstr "Ik begrijp het"
 
@@ -7852,7 +7857,7 @@ msgstr "We konden deze uitkomst niet laden. Dit kan een tijdelijk probleem zijn.
 msgid "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 msgstr "Het lijkt erop dat u nog geen rapport voor dit project heeft. Genereer er een om een overzicht van uw gesprekken te krijgen."
 
-#: src/routes/auth/VerifyEmail.tsx:147
+#: src/routes/auth/VerifyEmail.tsx:165
 msgid "It may have already been used or expired. If your email is verified, log in to continue."
 msgstr "Misschien is hij al gebruikt of verlopen. Als je e-mail geverifieerd is, log dan in om door te gaan."
 
@@ -8668,7 +8673,7 @@ msgid "Locked to match the invite. To use a different address, ask the admin to 
 msgstr "Vergrendeld om bij de uitnodiging te passen. Wil je een ander adres gebruiken? Vraag de admin om dat e-mailadres opnieuw uit te nodigen."
 
 #: src/routes/invite/AcceptInviteRoute.tsx:285
-#: src/routes/auth/VerifyEmail.tsx:161
+#: src/routes/auth/VerifyEmail.tsx:179
 #: src/routes/auth/Login.tsx:584
 #: src/routes/auth/Login.tsx:688
 msgid "Log in"
@@ -8965,7 +8970,7 @@ msgstr "MCP-toegang voor {0} staat aan"
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "Met MCP-verbindingen kan je agent projecten vinden, gesprekken doorzoeken, transcripties lezen en documentatie raadplegen, met organisatie-instellingen en expliciete toestemming."
 
-#: src/components/agent-access/AgentAccessSection.tsx:157
+#: src/components/agent-access/AgentAccessSection.tsx:158
 msgid "MCP is a bridge that lets an AI assistant such as Claude, ChatGPT or Le Chat read your dembrane conversations and projects. It can see everything you can see, in the organisations you allow."
 msgstr "MCP is een koppeling waarmee een AI-assistent zoals Claude, ChatGPT of Le Chat je dembrane-gesprekken en -projecten kan lezen. De assistent kan alles zien wat jij kunt zien, binnen de organisaties die je toestaat."
 
@@ -10206,6 +10211,10 @@ msgstr "Ik gebruik het te weinig"
 #: src/components/chat/InsightNoteCard.tsx:23
 msgid "note"
 msgstr "notitie"
+
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:115
+msgid "Note from {name}"
+msgstr "Notitie van {name}"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2022
 #: src/components/training/StaffTrainingPanel.tsx:164
@@ -12547,7 +12556,7 @@ msgid "Relevant"
 msgstr "Relevant"
 
 #. js-lingui-explicit-id
-#: src/portal/components/verify/VerifyArtefactError.tsx:49
+#: src/portal/components/verify/VerifyArtefactError.tsx:51
 msgid "participant.concrete.artefact.action.button.reload"
 msgstr "Pagina herladen"
 
@@ -12878,7 +12887,7 @@ msgstr "Aanvraag goedgekeurd"
 msgid "Request declined"
 msgstr "Aanvraag afgewezen"
 
-#: src/components/workspace/supportRequests.ts:223
+#: src/components/workspace/supportRequests.ts:226
 msgid "Request declined."
 msgstr "Verzoek afgewezen."
 
@@ -14658,7 +14667,7 @@ msgstr "Er ging iets mis tijdens het transcriberen. Probeer het opnieuw."
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Er ging iets mis met het gesprek. Probeer het alstublieft opnieuw of neem contact op met de ondersteuning als het probleem blijft bestaan"
 
-#: src/routes/auth/VerifyEmail.tsx:78
+#: src/routes/auth/VerifyEmail.tsx:83
 msgid "Something went wrong. Please open the link from your email again, or <0>start over</0>."
 msgstr "Er ging iets mis. Open de link uit je e-mail opnieuw, of <0>begin opnieuw</0>."
 
@@ -15178,7 +15187,7 @@ msgstr "Supporttoegang met 24 uur verlengd."
 msgid "Support access granted. It ends automatically in 24 hours."
 msgstr "Supporttoegang verleend. Deze stopt automatisch na 24 uur."
 
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:96
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:97
 msgid "Support access request"
 msgstr "Verzoek om supporttoegang"
 
@@ -15593,6 +15602,10 @@ msgstr "Het concept kon niet worden geladen"
 msgid "The edge budget must be a whole number above zero, so {applied} applies."
 msgstr "Het randbudget moet een heel getal boven nul zijn, dus geldt {applied}."
 
+#: src/routes/auth/VerifyEmail.tsx:106
+msgid "The email address this link was sent to is verified. You are still signed in to your own account here."
+msgstr "Het e-mailadres waar deze link naartoe is gestuurd, is geverifieerd. Je bent hier nog steeds ingelogd met je eigen account."
+
 #: src/components/auth/utils/errorUtils.ts:95
 msgid "The email or password is not right. Check them and try again."
 msgstr "Het e-mailadres of wachtwoord klopt niet. Controleer ze en probeer het opnieuw."
@@ -15974,8 +15987,8 @@ msgid "The workspace this invite was for has been deleted. There's nothing to jo
 msgstr "De werkruimte waarvoor deze uitnodiging was, is verwijderd. Er is niets om aan deel te nemen."
 
 #: src/components/workspace/SupportAccessRequestPrompt.tsx:109
-msgid "Their note: “{note}”"
-msgstr "Hun notitie: ‘{note}’"
+#~ msgid "Their note: “{note}”"
+#~ msgstr "Hun notitie: ‘{note}’"
 
 #: src/components/workspace/SupportAccessRequestPrompt.tsx:106
 #~ msgid "Their note: {note}"
@@ -16268,11 +16281,11 @@ msgstr "Dit is niet beschikbaar voor jou"
 #~ msgid "This language will be used for the Participant's Portal."
 #~ msgstr "Deze taal wordt gebruikt voor de Portal van de deelnemer."
 
-#: src/routes/auth/VerifyEmail.tsx:107
+#: src/routes/auth/VerifyEmail.tsx:125
 msgid "This link has already been used. You're signed in and ready to go."
 msgstr "Deze link is al gebruikt. Je bent ingelogd en kunt aan de slag."
 
-#: src/routes/auth/VerifyEmail.tsx:144
+#: src/routes/auth/VerifyEmail.tsx:162
 msgid "This link is no longer valid"
 msgstr "Deze link is niet meer geldig"
 
@@ -17022,7 +17035,7 @@ msgstr "Proef- en gratis accounts, niet meegerekend in het betalende totaal."
 msgid "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgstr "Trigger automatische workflows in tools like Zapier, Make, or n8n"
 
-#: src/routes/auth/VerifyEmail.tsx:164
+#: src/routes/auth/VerifyEmail.tsx:182
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Problemen met inloggen? Neem contact op via support@dembrane.com."
 
@@ -17827,7 +17840,7 @@ msgstr "Verifieer uitkomsten en verfijn antwoorden"
 msgid "Verifying"
 msgstr "Verifieert"
 
-#: src/routes/auth/VerifyEmail.tsx:124
+#: src/routes/auth/VerifyEmail.tsx:142
 msgid "Verifying your email address."
 msgstr "Je e-mailadres wordt geverifieerd."
 
@@ -19139,7 +19152,7 @@ msgstr "Je account kan op maximaal twee apparaten tegelijk ingelogd zijn. Kies e
 msgid "Your active devices changed. Choose a device again."
 msgstr "Je actieve apparaten zijn gewijzigd. Kies opnieuw een apparaat."
 
-#: src/components/agent-access/AgentAccessSection.tsx:184
+#: src/components/agent-access/AgentAccessSection.tsx:185
 msgid "Your agent will open dembrane and ask your permission before it can read anything."
 msgstr "Je agent opent dembrane en vraagt om je toestemming voordat deze iets kan lezen."
 
@@ -19184,7 +19197,7 @@ msgstr "Je concept wordt niet opgeslagen."
 msgid "Your edits to this guide are lost and it goes back to the default text."
 msgstr "Je aanpassingen aan deze gids gaan verloren en de standaardtekst komt terug."
 
-#: src/routes/auth/VerifyEmail.tsx:104
+#: src/routes/auth/VerifyEmail.tsx:122
 msgid "Your email is already verified"
 msgstr "Je e-mailadres is al geverifieerd"
 
@@ -19196,7 +19209,7 @@ msgstr "Je e-mailadres is nog niet geverifieerd. Kijk in je inbox voor de verifi
 msgid "Your email is verified. Log in to continue."
 msgstr "Je e-mailadres is geverifieerd. Log in om door te gaan."
 
-#: src/routes/auth/VerifyEmail.tsx:131
+#: src/routes/auth/VerifyEmail.tsx:149
 msgid "Your email is verified. Taking you to the login page."
 msgstr "Je e-mailadres is geverifieerd. We brengen je naar de loginpagina."
 
@@ -19276,7 +19289,7 @@ msgstr "Je organisatie staat voor je klaar. Klik op doorgaan om mee te doen."
 msgid "Your organisation or company"
 msgstr "Je organisatie of bedrijf"
 
-#: src/components/agent-access/AgentAccessSection.tsx:167
+#: src/components/agent-access/AgentAccessSection.tsx:168
 msgid "Your organisations"
 msgstr "Je organisaties"
 

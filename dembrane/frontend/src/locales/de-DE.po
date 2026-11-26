@@ -829,7 +829,7 @@ msgstr "{m} Min."
 #~ msgid "{name} from dembrane asks for admin access to {workspaceName} for 24 hours, to help you with support. Access ends automatically."
 #~ msgstr "{name} von dembrane bittet um 24 Stunden Administratorzugriff auf {workspaceName}, um dir beim Support zu helfen. Der Zugriff endet automatisch."
 
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:103
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:104
 msgid "{name} from dembrane asks for admin access to <0>{workspaceName}</0> for 24 hours, to help you with support. Access ends automatically."
 msgstr "{name} von dembrane bittet um 24 Stunden Administratorzugriff auf <0>{workspaceName}</0>, um dir beim Support zu helfen. Der Zugriff endet automatisch."
 
@@ -1366,7 +1366,7 @@ msgstr "Zugriff endet am"
 msgid "Access expires after"
 msgstr "Zugriff läuft ab nach"
 
-#: src/components/workspace/supportRequests.ts:222
+#: src/components/workspace/supportRequests.ts:225
 msgid "Access granted for 24 hours."
 msgstr "Zugriff für 24 Stunden gewährt."
 
@@ -2398,7 +2398,7 @@ msgid "Approve"
 msgstr "Genehmigen"
 
 #: src/components/workspace/SupportAccessSection.tsx:231
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:98
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:99
 msgid "Approve for 24 hours"
 msgstr "Für 24 Stunden genehmigen"
 
@@ -2823,7 +2823,7 @@ msgid "participant.button.back"
 msgstr "Zurück"
 
 #. js-lingui-explicit-id
-#: src/portal/components/verify/VerifyArtefactError.tsx:37
+#: src/portal/components/verify/VerifyArtefactError.tsx:39
 msgid "participant.concrete.artefact.action.button.go.back"
 msgstr "Zurück"
 
@@ -2930,7 +2930,7 @@ msgstr "Bevor du abschließt"
 #: src/components/conversation/RetranscribeConversation.tsx:180
 #: src/components/chat/ChatModeSelector.tsx:105
 #: src/components/chat/AgenticIntroModal.tsx:25
-#: src/components/agent-access/AgentAccessSection.tsx:152
+#: src/components/agent-access/AgentAccessSection.tsx:153
 msgid "Beta"
 msgstr "Beta"
 
@@ -3560,7 +3560,7 @@ msgstr "Zuletzt geprüft {checkedAgo}. Nichts Neues seit deinem letzten Gespräc
 msgid "Checking live conversations"
 msgstr "Laufende Gespräche werden geprüft"
 
-#: src/routes/auth/VerifyEmail.tsx:93
+#: src/routes/auth/VerifyEmail.tsx:98
 msgid "Checking your session."
 msgstr "Deine Sitzung wird überprüft."
 
@@ -4004,11 +4004,11 @@ msgstr "Bestätige dein Passwort"
 msgid "Confirm your password to generate a new secret for your authenticator app."
 msgstr "Bestätige dein Passwort, um ein neues Geheimnis für deine Authentifizierungs-App zu generieren."
 
-#: src/components/agent-access/AgentAccessSection.tsx:174
+#: src/components/agent-access/AgentAccessSection.tsx:175
 msgid "Connect"
 msgstr "Verbinden"
 
-#: src/components/agent-access/AgentAccessSection.tsx:149
+#: src/components/agent-access/AgentAccessSection.tsx:150
 msgid "Connect your agent"
 msgstr "Agenten verbinden"
 
@@ -4018,7 +4018,7 @@ msgstr "Agenten verbinden | dembrane"
 
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:203
 #: src/components/agent-access/AgentGrantsCard.tsx:68
-#: src/components/agent-access/AgentAccessSection.tsx:193
+#: src/components/agent-access/AgentAccessSection.tsx:194
 msgid "Connected agents"
 msgstr "Verbundene Agenten"
 
@@ -4946,7 +4946,7 @@ msgstr "Mögliche Termine, Kontext, sonstiges"
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/invite/MyInvitesRoute.tsx:236
 #: src/components/workspace/SupportAccessSection.tsx:175
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:99
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:100
 #: src/components/workspace/AccessRequestsList.tsx:195
 msgid "Decline"
 msgstr "Ablehnen"
@@ -5602,6 +5602,10 @@ msgstr "Zuvor im Spotlight"
 msgid "Earlier map result"
 msgstr "Früheres Kartenergebnis"
 
+#: src/components/release/ReleaseVideoModal.tsx:364
+msgid "Earlier release notes"
+msgstr "Frühere Versionshinweise"
+
 #: src/components/popcorn/PopcornHistory.tsx:36
 msgid "Earlier runs"
 msgstr "Frühere Durchläufe"
@@ -5783,11 +5787,11 @@ msgstr "Code per E-Mail senden"
 msgid "Email me a sign-in code instead"
 msgstr "Stattdessen Anmeldecode per E-Mail senden"
 
-#: src/routes/auth/VerifyEmail.tsx:73
+#: src/routes/auth/VerifyEmail.tsx:78
 msgid "Email verification"
 msgstr "E-Mail-Bestätigung"
 
-#: src/routes/auth/VerifyEmail.tsx:25
+#: src/routes/auth/VerifyEmail.tsx:27
 msgid "Email verification | dembrane"
 msgstr "E-Mail-Bestätigung | dembrane"
 
@@ -7029,7 +7033,7 @@ msgstr "Gib der Sitzung einen Titel"
 #~ msgstr "Gibt jedem Gespräch einen Titel"
 
 #: src/routes/settings/UserSettingsRoute.tsx:53
-#: src/components/agent-access/AgentAccessSection.tsx:127
+#: src/components/agent-access/AgentAccessSection.tsx:120
 msgid "Go back"
 msgstr "Go back"
 
@@ -7062,7 +7066,8 @@ msgstr "Zu den Chats"
 msgid "Go to conversations"
 msgstr "Zu den Gesprächen"
 
-#: src/routes/auth/VerifyEmail.tsx:115
+#: src/routes/auth/VerifyEmail.tsx:112
+#: src/routes/auth/VerifyEmail.tsx:133
 msgid "Go to dashboard"
 msgstr "Zum Dashboard"
 
@@ -7090,9 +7095,9 @@ msgstr "Zur Übersicht"
 msgid "Go to portal editor"
 msgstr "Zum Portal-Editor"
 
-#: src/components/release/ReleaseVideoModal.tsx:365
-msgid "Go to previous release notes"
-msgstr "Zu früheren Versionshinweisen"
+#: src/components/release/ReleaseVideoModal.tsx:364
+#~ msgid "Go to previous release notes"
+#~ msgstr "Zu früheren Versionshinweisen"
 
 #: src/routes/project/CreateProjectRoute.tsx:716
 msgid "Go to project home"
@@ -7126,7 +7131,7 @@ msgstr "Gute Erkenntnis"
 msgid "Good response"
 msgstr "Gute Antwort"
 
-#: src/components/release/ReleaseVideoModal.tsx:356
+#: src/components/release/ReleaseVideoModal.tsx:367
 msgid "Got it"
 msgstr "Verstanden"
 
@@ -7414,7 +7419,7 @@ msgstr "Ich benötige strenge Datenschutzgarantien"
 msgid "participant.button.i.understand"
 msgstr "Ich verstehe"
 
-#: src/components/agent-access/AgentAccessSection.tsx:118
+#: src/components/agent-access/AgentAccessSection.tsx:128
 msgid "I understand"
 msgstr "Ich verstehe"
 
@@ -7855,7 +7860,7 @@ msgstr "Wir konnten dieses Ergebnis nicht laden. Dies könnte ein vorübergehend
 msgid "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 msgstr "Es sieht so aus, als hättest du noch keinen Bericht für dieses Projekt. Erstelle einen, um eine Übersicht deiner Gespräche zu erhalten."
 
-#: src/routes/auth/VerifyEmail.tsx:147
+#: src/routes/auth/VerifyEmail.tsx:165
 msgid "It may have already been used or expired. If your email is verified, log in to continue."
 msgstr "Er wurde möglicherweise bereits verwendet oder ist abgelaufen. Wenn deine E-Mail-Adresse bestätigt ist, melde dich an, um fortzufahren."
 
@@ -8671,7 +8676,7 @@ msgid "Locked to match the invite. To use a different address, ask the admin to 
 msgstr "Gesperrt, um mit der Einladung übereinzustimmen. Um eine andere Adresse zu verwenden, bitte den Administrator um eine neue Einladung an diese E-Mail-Adresse."
 
 #: src/routes/invite/AcceptInviteRoute.tsx:285
-#: src/routes/auth/VerifyEmail.tsx:161
+#: src/routes/auth/VerifyEmail.tsx:179
 #: src/routes/auth/Login.tsx:584
 #: src/routes/auth/Login.tsx:688
 msgid "Log in"
@@ -8968,7 +8973,7 @@ msgstr "MCP-Zugriff für {0} ist aktiviert"
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "Über MCP-Verbindungen kann dein Agent Projekte finden, Gespräche durchsuchen, Transkripte lesen und Dokumentation nutzen, mit Organisationskontrollen und ausdrücklicher Zustimmung."
 
-#: src/components/agent-access/AgentAccessSection.tsx:157
+#: src/components/agent-access/AgentAccessSection.tsx:158
 msgid "MCP is a bridge that lets an AI assistant such as Claude, ChatGPT or Le Chat read your dembrane conversations and projects. It can see everything you can see, in the organisations you allow."
 msgstr "MCP ist eine Schnittstelle, mit der ein KI-Assistent wie Claude, ChatGPT oder Le Chat deine dembrane-Gespräche und -Projekte lesen kann. Er kann alles sehen, was du sehen kannst – in den Organisationen, die du freigibst."
 
@@ -10209,6 +10214,10 @@ msgstr "Ich nutze es zu selten"
 #: src/components/chat/InsightNoteCard.tsx:23
 msgid "note"
 msgstr "Notiz"
+
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:115
+msgid "Note from {name}"
+msgstr "Notiz von {name}"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2022
 #: src/components/training/StaffTrainingPanel.tsx:164
@@ -12550,7 +12559,7 @@ msgid "Relevant"
 msgstr "Relevant"
 
 #. js-lingui-explicit-id
-#: src/portal/components/verify/VerifyArtefactError.tsx:49
+#: src/portal/components/verify/VerifyArtefactError.tsx:51
 msgid "participant.concrete.artefact.action.button.reload"
 msgstr "Seite neu laden"
 
@@ -12881,7 +12890,7 @@ msgstr "Anfrage genehmigt"
 msgid "Request declined"
 msgstr "Anfrage abgelehnt"
 
-#: src/components/workspace/supportRequests.ts:223
+#: src/components/workspace/supportRequests.ts:226
 msgid "Request declined."
 msgstr "Anfrage abgelehnt."
 
@@ -14661,7 +14670,7 @@ msgstr "Beim Transkribieren ist etwas schiefgelaufen. Bitte versuche es erneut."
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Beim Gespräch ist ein Fehler aufgetreten. Bitte versuche es erneut oder wende dich an den Support, wenn das Problem weiterhin besteht"
 
-#: src/routes/auth/VerifyEmail.tsx:78
+#: src/routes/auth/VerifyEmail.tsx:83
 msgid "Something went wrong. Please open the link from your email again, or <0>start over</0>."
 msgstr "Etwas ist schiefgelaufen. Bitte öffne den Link aus deiner E-Mail erneut oder <0>beginne von vorn</0>."
 
@@ -15181,7 +15190,7 @@ msgstr "Support-Zugriff um weitere 24 Stunden verlängert."
 msgid "Support access granted. It ends automatically in 24 hours."
 msgstr "Support-Zugriff gewährt. Er endet automatisch in 24 Stunden."
 
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:96
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:97
 msgid "Support access request"
 msgstr "Anfrage für Support-Zugriff"
 
@@ -15596,6 +15605,10 @@ msgstr "Der Entwurf konnte nicht geladen werden"
 msgid "The edge budget must be a whole number above zero, so {applied} applies."
 msgstr "Das Edge-Budget muss eine ganze Zahl größer als null sein, daher gilt {applied}."
 
+#: src/routes/auth/VerifyEmail.tsx:106
+msgid "The email address this link was sent to is verified. You are still signed in to your own account here."
+msgstr "Die E-Mail-Adresse, an die dieser Link gesendet wurde, ist bestätigt. Du bist hier weiterhin mit deinem eigenen Konto angemeldet."
+
 #: src/components/auth/utils/errorUtils.ts:95
 msgid "The email or password is not right. Check them and try again."
 msgstr "Die E-Mail-Adresse oder das Passwort ist nicht korrekt. Bitte prüfen und erneut versuchen."
@@ -15978,8 +15991,8 @@ msgid "The workspace this invite was for has been deleted. There's nothing to jo
 msgstr "Der Arbeitsbereich, für den diese Einladung bestimmt war, wurde gelöscht. Du kannst ihm nicht beitreten."
 
 #: src/components/workspace/SupportAccessRequestPrompt.tsx:109
-msgid "Their note: “{note}”"
-msgstr "Die Notiz dazu: „{note}“"
+#~ msgid "Their note: “{note}”"
+#~ msgstr "Die Notiz dazu: „{note}“"
 
 #: src/components/workspace/SupportAccessRequestPrompt.tsx:106
 #~ msgid "Their note: {note}"
@@ -16272,11 +16285,11 @@ msgstr "Dies ist für dich nicht verfügbar"
 #~ msgid "This language will be used for the Participant's Portal."
 #~ msgstr "Diese Sprache wird für das Teilnehmerportal verwendet."
 
-#: src/routes/auth/VerifyEmail.tsx:107
+#: src/routes/auth/VerifyEmail.tsx:125
 msgid "This link has already been used. You're signed in and ready to go."
 msgstr "Dieser Link wurde bereits verwendet. Du bist angemeldet und startklar."
 
-#: src/routes/auth/VerifyEmail.tsx:144
+#: src/routes/auth/VerifyEmail.tsx:162
 msgid "This link is no longer valid"
 msgstr "Dieser Link ist nicht mehr gültig"
 
@@ -17026,7 +17039,7 @@ msgstr "Test- und Gratis-Konten, nicht in der Gesamtzahl der zahlenden Konten en
 msgid "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgstr "Automatisierte Workflows in Tools wie Zapier, Make oder n8n auslösen"
 
-#: src/routes/auth/VerifyEmail.tsx:164
+#: src/routes/auth/VerifyEmail.tsx:182
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Probleme bei der Anmeldung? Wende dich an support@dembrane.com."
 
@@ -17831,7 +17844,7 @@ msgstr "Ergebnisse prüfen und Antworten verfeinern"
 msgid "Verifying"
 msgstr "Wird verifiziert"
 
-#: src/routes/auth/VerifyEmail.tsx:124
+#: src/routes/auth/VerifyEmail.tsx:142
 msgid "Verifying your email address."
 msgstr "Deine E-Mail-Adresse wird überprüft."
 
@@ -19144,7 +19157,7 @@ msgstr "Dein Konto kann auf bis zu zwei Geräten gleichzeitig angemeldet sein. W
 msgid "Your active devices changed. Choose a device again."
 msgstr "Deine aktiven Geräte haben sich geändert. Wähle erneut ein Gerät."
 
-#: src/components/agent-access/AgentAccessSection.tsx:184
+#: src/components/agent-access/AgentAccessSection.tsx:185
 msgid "Your agent will open dembrane and ask your permission before it can read anything."
 msgstr "Dein Agent öffnet dembrane und bittet um deine Erlaubnis, bevor er Inhalte lesen kann."
 
@@ -19189,7 +19202,7 @@ msgstr "Dein Entwurf wird nicht gespeichert."
 msgid "Your edits to this guide are lost and it goes back to the default text."
 msgstr "Deine Änderungen an diesem Leitfaden gehen verloren und der Standardtext wird wiederhergestellt."
 
-#: src/routes/auth/VerifyEmail.tsx:104
+#: src/routes/auth/VerifyEmail.tsx:122
 msgid "Your email is already verified"
 msgstr "Deine E-Mail-Adresse ist bereits bestätigt"
 
@@ -19201,7 +19214,7 @@ msgstr "Deine E-Mail-Adresse ist noch nicht bestätigt. Bitte prüfe deinen Post
 msgid "Your email is verified. Log in to continue."
 msgstr "Deine E-Mail-Adresse ist bestätigt. Melde dich an, um fortzufahren."
 
-#: src/routes/auth/VerifyEmail.tsx:131
+#: src/routes/auth/VerifyEmail.tsx:149
 msgid "Your email is verified. Taking you to the login page."
 msgstr "Deine E-Mail-Adresse ist bestätigt. Du wirst zur Anmeldeseite weitergeleitet."
 
@@ -19281,7 +19294,7 @@ msgstr "Deine Organisation wartet auf dich. Klicke auf „Weiter“, um beizutre
 msgid "Your organisation or company"
 msgstr "Deine Organisation oder dein Unternehmen"
 
-#: src/components/agent-access/AgentAccessSection.tsx:167
+#: src/components/agent-access/AgentAccessSection.tsx:168
 msgid "Your organisations"
 msgstr "Deine Organisationen"
 

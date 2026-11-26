@@ -829,7 +829,7 @@ msgstr "{m} min"
 #~ msgid "{name} from dembrane asks for admin access to {workspaceName} for 24 hours, to help you with support. Access ends automatically."
 #~ msgstr "{name} z dembrane žádá o 24hodinový přístup správce k {workspaceName} kvůli podpoře. Přístup skončí automaticky."
 
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:103
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:104
 msgid "{name} from dembrane asks for admin access to <0>{workspaceName}</0> for 24 hours, to help you with support. Access ends automatically."
 msgstr "{name} z dembrane žádá o 24hodinový přístup správce k <0>{workspaceName}</0> kvůli podpoře. Přístup skončí automaticky."
 
@@ -1366,7 +1366,7 @@ msgstr "Přístup končí"
 msgid "Access expires after"
 msgstr "Přístup vyprší za"
 
-#: src/components/workspace/supportRequests.ts:222
+#: src/components/workspace/supportRequests.ts:225
 msgid "Access granted for 24 hours."
 msgstr "Přístup udělen na 24 hodin."
 
@@ -2398,7 +2398,7 @@ msgid "Approve"
 msgstr "Approve"
 
 #: src/components/workspace/SupportAccessSection.tsx:231
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:98
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:99
 msgid "Approve for 24 hours"
 msgstr "Schválit na 24 hodin"
 
@@ -2823,7 +2823,7 @@ msgid "participant.button.back"
 msgstr "Back"
 
 #. js-lingui-explicit-id
-#: src/portal/components/verify/VerifyArtefactError.tsx:37
+#: src/portal/components/verify/VerifyArtefactError.tsx:39
 msgid "participant.concrete.artefact.action.button.go.back"
 msgstr "Zpět"
 
@@ -2930,7 +2930,7 @@ msgstr "Než skončíte"
 #: src/components/conversation/RetranscribeConversation.tsx:180
 #: src/components/chat/ChatModeSelector.tsx:105
 #: src/components/chat/AgenticIntroModal.tsx:25
-#: src/components/agent-access/AgentAccessSection.tsx:152
+#: src/components/agent-access/AgentAccessSection.tsx:153
 msgid "Beta"
 msgstr "Beta"
 
@@ -3560,7 +3560,7 @@ msgstr "Zkontrolováno {checkedAgo}. Od vašeho posledního rozhovoru nic novéh
 msgid "Checking live conversations"
 msgstr "Kontrola probíhajících rozhovorů"
 
-#: src/routes/auth/VerifyEmail.tsx:93
+#: src/routes/auth/VerifyEmail.tsx:98
 msgid "Checking your session."
 msgstr "Checking your session."
 
@@ -4004,11 +4004,11 @@ msgstr "Potvrďte své heslo"
 msgid "Confirm your password to generate a new secret for your authenticator app."
 msgstr "Confirm your password to generate a new secret for your authenticator app."
 
-#: src/components/agent-access/AgentAccessSection.tsx:174
+#: src/components/agent-access/AgentAccessSection.tsx:175
 msgid "Connect"
 msgstr "Připojit"
 
-#: src/components/agent-access/AgentAccessSection.tsx:149
+#: src/components/agent-access/AgentAccessSection.tsx:150
 msgid "Connect your agent"
 msgstr "Připojte svého agenta"
 
@@ -4018,7 +4018,7 @@ msgstr "Připojte svého agenta | dembrane"
 
 #: src/components/agent-access/OrgAgentAccessPanel.tsx:203
 #: src/components/agent-access/AgentGrantsCard.tsx:68
-#: src/components/agent-access/AgentAccessSection.tsx:193
+#: src/components/agent-access/AgentAccessSection.tsx:194
 msgid "Connected agents"
 msgstr "Připojení agenti"
 
@@ -4946,7 +4946,7 @@ msgstr "Termíny, které se vám hodí, kontext a cokoliv dalšího"
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/invite/MyInvitesRoute.tsx:236
 #: src/components/workspace/SupportAccessSection.tsx:175
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:99
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:100
 #: src/components/workspace/AccessRequestsList.tsx:195
 msgid "Decline"
 msgstr "Decline"
@@ -5602,6 +5602,10 @@ msgstr "Dříve ve středu pozornosti"
 msgid "Earlier map result"
 msgstr "Dřívější výsledek mapy"
 
+#: src/components/release/ReleaseVideoModal.tsx:364
+msgid "Earlier release notes"
+msgstr "Předchozí poznámky k vydání"
+
 #: src/components/popcorn/PopcornHistory.tsx:36
 msgid "Earlier runs"
 msgstr "Dřívější běhy"
@@ -5783,11 +5787,11 @@ msgstr "Poslat kód e-mailem"
 msgid "Email me a sign-in code instead"
 msgstr "Poslat přihlašovací kód raději e-mailem"
 
-#: src/routes/auth/VerifyEmail.tsx:73
+#: src/routes/auth/VerifyEmail.tsx:78
 msgid "Email verification"
 msgstr "Email verification"
 
-#: src/routes/auth/VerifyEmail.tsx:25
+#: src/routes/auth/VerifyEmail.tsx:27
 msgid "Email verification | dembrane"
 msgstr "Email verification | dembrane"
 
@@ -7029,7 +7033,7 @@ msgstr "Pojmenujte relaci"
 #~ msgstr "Každému rozhovoru dá název"
 
 #: src/routes/settings/UserSettingsRoute.tsx:53
-#: src/components/agent-access/AgentAccessSection.tsx:127
+#: src/components/agent-access/AgentAccessSection.tsx:120
 msgid "Go back"
 msgstr "Go back"
 
@@ -7062,7 +7066,8 @@ msgstr "Přejít na chaty"
 msgid "Go to conversations"
 msgstr "Přejít na rozhovory"
 
-#: src/routes/auth/VerifyEmail.tsx:115
+#: src/routes/auth/VerifyEmail.tsx:112
+#: src/routes/auth/VerifyEmail.tsx:133
 msgid "Go to dashboard"
 msgstr "Go to dashboard"
 
@@ -7090,9 +7095,9 @@ msgstr "Přejít na přehled"
 msgid "Go to portal editor"
 msgstr "Přejít do editoru portálu"
 
-#: src/components/release/ReleaseVideoModal.tsx:365
-msgid "Go to previous release notes"
-msgstr "Přejít na předchozí poznámky k vydání"
+#: src/components/release/ReleaseVideoModal.tsx:364
+#~ msgid "Go to previous release notes"
+#~ msgstr "Přejít na předchozí poznámky k vydání"
 
 #: src/routes/project/CreateProjectRoute.tsx:716
 msgid "Go to project home"
@@ -7126,7 +7131,7 @@ msgstr "Dobrý poznatek"
 msgid "Good response"
 msgstr "Dobrá odpověď"
 
-#: src/components/release/ReleaseVideoModal.tsx:356
+#: src/components/release/ReleaseVideoModal.tsx:367
 msgid "Got it"
 msgstr "Rozumím"
 
@@ -7414,7 +7419,7 @@ msgstr "Požaduji přísné záruky ochrany soukromí"
 msgid "participant.button.i.understand"
 msgstr "I understand"
 
-#: src/components/agent-access/AgentAccessSection.tsx:118
+#: src/components/agent-access/AgentAccessSection.tsx:128
 msgid "I understand"
 msgstr "Rozumím"
 
@@ -7855,7 +7860,7 @@ msgstr "It looks like we couldn't load this outcome. This might be a temporary i
 msgid "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 msgstr "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 
-#: src/routes/auth/VerifyEmail.tsx:147
+#: src/routes/auth/VerifyEmail.tsx:165
 msgid "It may have already been used or expired. If your email is verified, log in to continue."
 msgstr "It may have already been used or expired. If your email is verified, log in to continue."
 
@@ -8671,7 +8676,7 @@ msgid "Locked to match the invite. To use a different address, ask the admin to 
 msgstr "Locked to match the invite. To use a different address, ask the admin to re-invite that email."
 
 #: src/routes/invite/AcceptInviteRoute.tsx:285
-#: src/routes/auth/VerifyEmail.tsx:161
+#: src/routes/auth/VerifyEmail.tsx:179
 #: src/routes/auth/Login.tsx:584
 #: src/routes/auth/Login.tsx:688
 msgid "Log in"
@@ -8968,7 +8973,7 @@ msgstr "Přístup přes MCP pro {0} je zapnutý"
 msgid "MCP connections let your agent find projects, search conversations, read transcripts and consult documentation, with organisation controls and explicit consent."
 msgstr "Připojení MCP umožní tvému agentovi hledat projekty a konverzace, číst přepisy a procházet dokumentaci, s kontrolou organizace a výslovným souhlasem."
 
-#: src/components/agent-access/AgentAccessSection.tsx:157
+#: src/components/agent-access/AgentAccessSection.tsx:158
 msgid "MCP is a bridge that lets an AI assistant such as Claude, ChatGPT or Le Chat read your dembrane conversations and projects. It can see everything you can see, in the organisations you allow."
 msgstr "MCP představuje propojení, které umožňuje asistentům AI (jako Claude, ChatGPT nebo Le Chat) číst vaše rozhovory a projekty v dembrane. Uvidí vše, k čemu máte přístup vy, v organizacích, které povolíte."
 
@@ -10209,6 +10214,10 @@ msgstr "Nepoužívám ho dost často"
 #: src/components/chat/InsightNoteCard.tsx:23
 msgid "note"
 msgstr "poznámka"
+
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:115
+msgid "Note from {name}"
+msgstr "Poznámka od {name}"
 
 #: src/routes/admin/AdminSettingsRoute.tsx:2022
 #: src/components/training/StaffTrainingPanel.tsx:164
@@ -12550,7 +12559,7 @@ msgid "Relevant"
 msgstr "Relevantní"
 
 #. js-lingui-explicit-id
-#: src/portal/components/verify/VerifyArtefactError.tsx:49
+#: src/portal/components/verify/VerifyArtefactError.tsx:51
 msgid "participant.concrete.artefact.action.button.reload"
 msgstr "Znovu načíst stránku"
 
@@ -12881,7 +12890,7 @@ msgstr "Request approved"
 msgid "Request declined"
 msgstr "Request declined"
 
-#: src/components/workspace/supportRequests.ts:223
+#: src/components/workspace/supportRequests.ts:226
 msgid "Request declined."
 msgstr "Žádost byla zamítnuta."
 
@@ -14661,7 +14670,7 @@ msgstr "Při přepisu došlo k chybě. Zkuste to znovu."
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 
-#: src/routes/auth/VerifyEmail.tsx:78
+#: src/routes/auth/VerifyEmail.tsx:83
 msgid "Something went wrong. Please open the link from your email again, or <0>start over</0>."
 msgstr "Something went wrong. Please open the link from your email again, or <0>start over</0>."
 
@@ -15181,7 +15190,7 @@ msgstr "Přístup podpory byl prodloužen o dalších 24 hodin."
 msgid "Support access granted. It ends automatically in 24 hours."
 msgstr "Přístup podpory byl udělen. Automaticky skončí za 24 hodin."
 
-#: src/components/workspace/SupportAccessRequestPrompt.tsx:96
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:97
 msgid "Support access request"
 msgstr "Žádost o přístup pro podporu"
 
@@ -15596,6 +15605,10 @@ msgstr "Koncept se nepodařilo načíst"
 msgid "The edge budget must be a whole number above zero, so {applied} applies."
 msgstr "Rozpočet hran musí být celé číslo větší než nula, proto platí {applied}."
 
+#: src/routes/auth/VerifyEmail.tsx:106
+msgid "The email address this link was sent to is verified. You are still signed in to your own account here."
+msgstr "E-mailová adresa, na kterou byl tento odkaz odeslán, je ověřena. Zde jste stále přihlášeni ke svému vlastnímu účtu."
+
 #: src/components/auth/utils/errorUtils.ts:95
 msgid "The email or password is not right. Check them and try again."
 msgstr "E-mail nebo heslo není správné. Zkontrolujte je a zkuste to znovu."
@@ -15977,8 +15990,8 @@ msgid "The workspace this invite was for has been deleted. There's nothing to jo
 msgstr "The workspace this invite was for has been deleted. There's nothing to join."
 
 #: src/components/workspace/SupportAccessRequestPrompt.tsx:109
-msgid "Their note: “{note}”"
-msgstr "Jejich poznámka: „{note}“"
+#~ msgid "Their note: “{note}”"
+#~ msgstr "Jejich poznámka: „{note}“"
 
 #: src/components/workspace/SupportAccessRequestPrompt.tsx:106
 #~ msgid "Their note: {note}"
@@ -16271,11 +16284,11 @@ msgstr "This isn't available to you"
 #~ msgid "This language will be used for the Participant's Portal."
 #~ msgstr "This language will be used for the Participant's Portal."
 
-#: src/routes/auth/VerifyEmail.tsx:107
+#: src/routes/auth/VerifyEmail.tsx:125
 msgid "This link has already been used. You're signed in and ready to go."
 msgstr "This link has already been used. You're signed in and ready to go."
 
-#: src/routes/auth/VerifyEmail.tsx:144
+#: src/routes/auth/VerifyEmail.tsx:162
 msgid "This link is no longer valid"
 msgstr "This link is no longer valid"
 
@@ -17027,7 +17040,7 @@ msgstr "Zkušební a bezplatné účty, nezapočítané do celkového počtu pla
 msgid "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 
-#: src/routes/auth/VerifyEmail.tsx:164
+#: src/routes/auth/VerifyEmail.tsx:182
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Trouble logging in? Contact support@dembrane.com."
 
@@ -17832,7 +17845,7 @@ msgstr "Ověřuj výsledky a zpřesňuj odpovědi"
 msgid "Verifying"
 msgstr "Ověřování"
 
-#: src/routes/auth/VerifyEmail.tsx:124
+#: src/routes/auth/VerifyEmail.tsx:142
 msgid "Verifying your email address."
 msgstr "Verifying your email address."
 
@@ -19144,7 +19157,7 @@ msgstr "Váš účet může být přihlášen nejvýše na dvou zařízeních. V
 msgid "Your active devices changed. Choose a device again."
 msgstr "Vaše aktivní zařízení se změnila. Vyberte zařízení znovu."
 
-#: src/components/agent-access/AgentAccessSection.tsx:184
+#: src/components/agent-access/AgentAccessSection.tsx:185
 msgid "Your agent will open dembrane and ask your permission before it can read anything."
 msgstr "Váš agent otevře dembrane a než si bude moci cokoli přečíst, požádá vás o povolení."
 
@@ -19189,7 +19202,7 @@ msgstr "Your draft won't be saved."
 msgid "Your edits to this guide are lost and it goes back to the default text."
 msgstr "Vaše úpravy tohoto průvodce budou ztraceny a vrátí se k výchozímu textu."
 
-#: src/routes/auth/VerifyEmail.tsx:104
+#: src/routes/auth/VerifyEmail.tsx:122
 msgid "Your email is already verified"
 msgstr "Your email is already verified"
 
@@ -19201,7 +19214,7 @@ msgstr "Váš e-mail ještě není ověřený. Zkontrolujte schránku a kliknět
 msgid "Your email is verified. Log in to continue."
 msgstr "Your email is verified. Log in to continue."
 
-#: src/routes/auth/VerifyEmail.tsx:131
+#: src/routes/auth/VerifyEmail.tsx:149
 msgid "Your email is verified. Taking you to the login page."
 msgstr "Your email is verified. Taking you to the login page."
 
@@ -19281,7 +19294,7 @@ msgstr "Your organisation is waiting for you. Click continue to join."
 msgid "Your organisation or company"
 msgstr "Your organisation or company"
 
-#: src/components/agent-access/AgentAccessSection.tsx:167
+#: src/components/agent-access/AgentAccessSection.tsx:168
 msgid "Your organisations"
 msgstr "Vaše organizace"
 

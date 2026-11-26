@@ -180,7 +180,7 @@ A Royal Blue outline with Royal Blue text can be used on anything pressable that
 
 ### Tertiary
 
-- Back in a row of steps (a wizard, an onboarding, any sequence with Back) is tertiary: Back on the left, the primary pill on the right
+- Back beside a primary pill (a wizard, an onboarding, a dialog with a way back) is tertiary: Back in the left corner, the primary pill in the right corner, with all the row's free space between them
 - Default: Text only, Royal Blue, no border, standard corners
 - Hover: 10% Royal Blue opacity background
 - Click: 20% Royal Blue opacity background
@@ -208,7 +208,7 @@ A Royal Blue outline with Royal Blue text can be used on anything pressable that
 - Clear, direct title (action-oriented when appropriate)
 - Body text: one or two sentences max
 - Warning callouts: Golden Pollen background, brief text
-- Actions: Primary on right, Cancel on left
+- Actions: at the left, primary first, then Cancel. With a Back beside it, Back sits in the left corner and the primary in the right corner
 
 ### Forms
 

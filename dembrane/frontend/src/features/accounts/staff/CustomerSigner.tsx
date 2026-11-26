@@ -284,7 +284,15 @@ function NameSignerForm({
 					]}
 					newName={newName}
 				/>
-				<Group gap="xs">
+				{/* Back in the left corner, the pill in the right corner (rules.css). */}
+				<Group data-steps justify="space-between" gap="xs">
+					<Button
+						variant="subtle"
+						color="gray"
+						onClick={() => setConfirming(false)}
+					>
+						<Trans>Back</Trans>
+					</Button>
 					<Button
 						variant="filled"
 						onClick={submit}
@@ -292,13 +300,6 @@ function NameSignerForm({
 						data-testid="customer-signer-confirm-change"
 					>
 						<Trans>Change who signs</Trans>
-					</Button>
-					<Button
-						variant="subtle"
-						color="gray"
-						onClick={() => setConfirming(false)}
-					>
-						<Trans>Back</Trans>
 					</Button>
 				</Group>
 			</Stack>
