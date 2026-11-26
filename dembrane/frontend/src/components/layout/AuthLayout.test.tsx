@@ -2,7 +2,7 @@
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
-import { cleanup, render, waitFor } from "@testing-library/react";
+import { act, cleanup, render, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
@@ -40,20 +40,21 @@ const context = (
 	...over,
 });
 
+const tree = (next: string, value: WorkspaceContextValue) => (
+	<I18nProvider i18n={i18n}>
+		<MantineProvider env="test">
+			<WorkspaceContext.Provider value={value}>
+				<MemoryRouter
+					initialEntries={[`/login?next=${encodeURIComponent(next)}`]}
+				>
+					<AuthLayout />
+				</MemoryRouter>
+			</WorkspaceContext.Provider>
+		</MantineProvider>
+	</I18nProvider>
+);
 const show = (next: string, value: WorkspaceContextValue) =>
-	render(
-		<I18nProvider i18n={i18n}>
-			<MantineProvider env="test">
-				<WorkspaceContext.Provider value={value}>
-					<MemoryRouter
-						initialEntries={[`/login?next=${encodeURIComponent(next)}`]}
-					>
-						<AuthLayout />
-					</MemoryRouter>
-				</WorkspaceContext.Provider>
-			</MantineProvider>
-		</I18nProvider>,
-	);
+	render(tree(next, value));
 
 beforeAll(() => {
 	i18n.load("en", {});
@@ -84,21 +85,10 @@ describe("a signed-in person on a sign-in link", () => {
 
 	it("waits for their workspaces before deciding", async () => {
 		const view = show(PROJECT, context({ isLoading: true }));
-		await new Promise((r) => setTimeout(r, 50));
+		// Effects have run once the layout is on screen: nothing was decided yet.
+		await act(async () => {});
 		expect(navigate).not.toHaveBeenCalled();
-		view.rerender(
-			<I18nProvider i18n={i18n}>
-				<MantineProvider env="test">
-					<WorkspaceContext.Provider value={context({ workspaces: mine })}>
-						<MemoryRouter
-							initialEntries={[`/login?next=${encodeURIComponent(PROJECT)}`]}
-						>
-							<AuthLayout />
-						</MemoryRouter>
-					</WorkspaceContext.Provider>
-				</MantineProvider>
-			</I18nProvider>,
-		);
+		view.rerender(tree(PROJECT, context({ workspaces: mine })));
 		await waitFor(() => expect(navigate).toHaveBeenCalledWith(PROJECT));
 	});
 
