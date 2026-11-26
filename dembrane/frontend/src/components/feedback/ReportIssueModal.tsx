@@ -1,7 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
-	Box,
 	Button,
 	CloseButton,
 	FileButton,
@@ -10,18 +9,13 @@ import {
 	Modal,
 	Stack,
 	Text,
-	Textarea,
 } from "@mantine/core";
-import { Paperclip, StopIcon } from "@phosphor-icons/react";
+import { Paperclip } from "@phosphor-icons/react";
 import posthog from "posthog-js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { roles } from "@/colors";
-import { CharsRemainingIndicator } from "@/components/common/CharsRemainingIndicator";
 import { toast } from "@/components/common/Toaster";
 import { useVoiceTranscription } from "@/components/voice/useVoiceTranscription";
-import { VoiceInputButton } from "@/components/voice/VoiceInputButton";
-import { VoiceInputError } from "@/components/voice/VoiceInputError";
-import { VoiceRecordingBar } from "@/components/voice/VoiceRecordingBar";
+import { VoiceTextField } from "@/components/voice/VoiceTextField";
 import { mergeTranscriptIntoDraft } from "@/components/voice/voiceInput";
 import { IssueReportError, useSubmitIssueReportMutation } from "./hooks";
 
@@ -73,7 +67,6 @@ export const ReportIssueModal = ({
 		workspaceId,
 	});
 	const isVoiceActive = voice.status !== "idle";
-	const atMessageLimit = message.length >= MAX_MESSAGE_CHARS;
 
 	const previews = useMemo(
 		() => files.map((file) => URL.createObjectURL(file)),
@@ -187,81 +180,17 @@ export const ReportIssueModal = ({
 			data-testid="report-issue-modal"
 		>
 			<Stack>
-				{voice.errorKind && (
-					<VoiceInputError
-						kind={voice.errorKind}
-						onDismiss={voice.dismissError}
-					/>
-				)}
-				{/* One input frame: the text scrolls, the footer with mic controls does
-				    not. A field, so rules at the sides, blue while focused. */}
-				<Box
-					className="border-x border-y-0 border-solid border-[color:var(--app-control-rule)] focus-within:border-[var(--app-action)]"
-					px="sm"
-					pt="xs"
-					pb="xs"
-					style={{ backgroundColor: roles.surface }}
-				>
-					<Textarea
-						value={message}
-						onChange={(event) => setMessage(event.currentTarget.value)}
-						onPaste={handlePaste}
-						readOnly={isVoiceActive}
-						aria-label={t`Your feedback`}
-						placeholder={t`What should we know? Paste a screenshot here to attach it`}
-						maxLength={MAX_MESSAGE_CHARS}
-						minRows={6}
-						maxRows={MAX_MESSAGE_ROWS}
-						autosize
-						resize="none"
-						variant="unstyled"
-						styles={{ input: { backgroundColor: "transparent", padding: 0 } }}
-						data-testid="report-issue-message"
-					/>
-					<Group
-						justify="flex-end"
-						align="center"
-						gap="sm"
-						wrap="nowrap"
-						mt="xs"
-					>
-						{isVoiceActive && (
-							<Box className="flex-1">
-								<VoiceRecordingBar
-									elapsedMs={voice.elapsedMs}
-									isTranscribing={voice.status === "transcribing"}
-									levels={voice.levels}
-								/>
-							</Box>
-						)}
-						{voice.status === "recording" ? (
-							<Button
-								aria-label={t`Stop recording and turn it into text`}
-								onClick={voice.stop}
-								leftSection={<StopIcon size={20} />}
-								color="red"
-								size="compact-sm"
-								type="button"
-								data-testid="report-issue-voice-stop"
-							>
-								<Trans>Stop</Trans>
-							</Button>
-						) : voice.status === "transcribing" ? null : (
-							<VoiceInputButton
-								ariaLabel={t`Record a voice message`}
-								disabled={voice.isStarting || atMessageLimit}
-								onClick={voice.start}
-								testId="report-issue-voice-record"
-								tooltip={
-									atMessageLimit
-										? t`Up to ${MAX_MESSAGE_CHARS} characters`
-										: undefined
-								}
-							/>
-						)}
-					</Group>
-				</Box>
-				<CharsRemainingIndicator value={message} max={MAX_MESSAGE_CHARS} />
+				<VoiceTextField
+					value={message}
+					onChange={setMessage}
+					onPaste={handlePaste}
+					voice={voice}
+					ariaLabel={t`Your feedback`}
+					placeholder={t`What should we know? Paste a screenshot here to attach it`}
+					maxLength={MAX_MESSAGE_CHARS}
+					maxRows={MAX_MESSAGE_ROWS}
+					testIdPrefix="report-issue"
+				/>
 				{files.length > 0 && (
 					<Group gap="xs">
 						{files.map((file, index) => (

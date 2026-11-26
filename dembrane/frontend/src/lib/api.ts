@@ -1086,7 +1086,10 @@ export type StatelessTranscriptionResponse = {
  * seconds.
  */
 /** Named reasons the transcribe endpoint accepts without a project to bill. */
-export type TranscribePurpose = "pricing_intake" | "issue_report";
+export type TranscribePurpose =
+	| "pricing_intake"
+	| "issue_report"
+	| "onboarding";
 
 export const transcribeStateless = async (
 	payload: {

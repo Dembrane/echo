@@ -305,6 +305,71 @@ run("AI budget: voice input", () => {
     });
   });
 
+  test("onboarding with no project and no workspace transcribes for someone with no workspace", async () => {
+    // An invited person may have no workspace of their own yet.
+    const nobody = await person();
+    expect(await voice(nobody, { purpose: "onboarding" })).toMatchObject({
+      status: 200,
+      transcribed: 1,
+      payer: { internal: "voice_without_project" },
+    });
+  });
+
+  test("onboarding from a free workspace at zero still transcribes and spends nothing", async () => {
+    const { ws, as } = await account();
+    await spend(ws);
+    const r = await voice(as, { purpose: "onboarding" });
+    expect({ ...r, used: await audioUsed(ws) }).toMatchObject({
+      status: 200,
+      transcribed: 1,
+      payer: { internal: "voice_without_project" },
+      used: 0,
+    });
+  });
+
+  test("onboarding is rate limited per person, 20 notes an hour", async () => {
+    const as = await person();
+    const real = limiter;
+    limiter = new RateLimiter(new MemoryRateCounter());
+    try {
+      for (let i = 0; i < 20; i++)
+        expect((await voice(as, { purpose: "onboarding" })).status).toBe(200);
+      expect(await voice(as, { purpose: "onboarding" })).toMatchObject({
+        status: 429,
+        transcribed: 0,
+      });
+      // Its own counter: another person is not held back.
+      expect((await voice(await person(), { purpose: "onboarding" })).status).toBe(200);
+    } finally {
+      limiter = real;
+    }
+  });
+
+  test("onboarding is checked under its own limit name", async () => {
+    const as = await person();
+    const checked: string[] = [];
+    const real = limiter;
+    limiter = {
+      async check(limit: Limit, identifier: string) {
+        checked.push(`${limit.name}:${identifier}`);
+      },
+    } as unknown as RateLimiter;
+    try {
+      expect((await voice(as, { purpose: "onboarding" })).status).toBe(200);
+      expect(checked).toEqual([`onboarding_transcription:${people.get(as)?.directusUserId}`]);
+    } finally {
+      limiter = real;
+    }
+  });
+
+  test("an unknown purpose is still refused with 422", async () => {
+    const as = await person();
+    expect(await voice(as, { purpose: "signup" })).toMatchObject({
+      status: 422,
+      transcribed: 0,
+    });
+  });
+
   test("a workspace the caller can't view is refused with 403", async () => {
     const { ws } = await account();
     const stranger = await person();

@@ -8,12 +8,16 @@ import { type StatelessInput, transcribeStateless } from "./service";
 const { str, bool, nullable } = p;
 
 // The purposes a caller may name to transcribe without a project.
-const PURPOSES = ["pricing_intake", "issue_report"] as const;
+const PURPOSES = ["pricing_intake", "issue_report", "onboarding"] as const;
 // Tighter than any form's own ceiling: this spends transcription, not a row.
 const PURPOSE_LIMITS = {
   pricing_intake: { name: "pricing_intake_transcription", capacity: 30, windowSeconds: 3600 },
   issue_report: { name: "issue_report_transcription", capacity: 30, windowSeconds: 3600 },
+  // One answer per person, so a few retries an hour is plenty.
+  onboarding: { name: "onboarding_transcription", capacity: 20, windowSeconds: 3600 },
 } as const;
+// A new account is often at zero budget, and an invited person may have no workspace at all.
+const BUDGET_EXEMPT: readonly string[] = ["issue_report", "onboarding"];
 
 const MAX_BYTES = 100 * 1024 * 1024;
 // webm/mp4 recordings often carry a video/* type; octet-stream covers clients that set none.
@@ -110,7 +114,7 @@ export function statelessRoutes(d: ConversationsDeps) {
     const input: StatelessInput = {
       projectId: f.project_id,
       workspaceId: f.workspace_id,
-      budgetExempt: purpose === "issue_report",
+      budgetExempt: purpose !== null && BUDGET_EXEMPT.includes(purpose),
       // The pricing form always spends a workspace's budget; issue reports may stay internal.
       ownWorkspace: purpose === "pricing_intake",
       file: f.file,
@@ -125,10 +129,10 @@ export function statelessRoutes(d: ConversationsDeps) {
     return c.json(
       await transcribeStateless(d, who, input, {
         async gate() {
-          // Issue reports skip the budget, so they are rate limited even with a project.
+          // An exempt purpose skips the budget, so it is rate limited even with a project.
           if (input.projectId) {
-            if (purpose === "issue_report")
-              await d.limiter.check(PURPOSE_LIMITS.issue_report, who.directusUserId);
+            if (purpose && input.budgetExempt)
+              await d.limiter.check(PURPOSE_LIMITS[purpose], who.directusUserId);
             return;
           }
           // A purpose alone is rate limited per person; staff alone may name neither.

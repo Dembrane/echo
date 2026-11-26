@@ -41,6 +41,11 @@ const DOC = n("d1", 1);
 const SIG = n("d2", 1);
 const AVATAR = n("d3", 1);
 const ANN = n("d4", 1);
+// Staff notices with Alice as actor: the two onboarding ones quote her answers.
+const N_FOLLOWUP = n("d6", 1);
+const N_PROBLEM = n("d6", 2);
+const N_OTHER = n("d6", 3);
+const N_BOB_PROBLEM = n("d6", 4);
 
 const logger = createLogger(
   { service: "t", release: "r", env: "test", level: "error" },
@@ -263,6 +268,22 @@ run("data subject export and erasure against Postgres", () => {
     expect(await files.exists(exportKey.key)).toBe(false);
     expect(await files.exists("avatar.png")).toBe(false);
     expect(await files.exists("signed/doc.pdf")).toBe(true);
+  });
+
+  test("erase: staff notices quoting the person's onboarding answers go, other notices stay", async () => {
+    // Runs after the erase above.
+    const rows = await db()
+      .select({ id: schema.notification.id, actor: schema.notification.actor_user_id })
+      .from(schema.notification)
+      .where(eq(schema.notification.audience_user_id, STAFF.app));
+    const byId = new Map(rows.map((r) => [r.id, r.actor]));
+    expect(byId.has(N_FOLLOWUP)).toBe(false);
+    expect(byId.has(N_PROBLEM)).toBe(false);
+    // Other codes keep today's behaviour: the row stays, the actor link is cleared.
+    expect(byId.has(N_OTHER)).toBe(true);
+    expect(byId.get(N_OTHER)).toBeNull();
+    // Someone else's answer is not touched.
+    expect(byId.get(N_BOB_PROBLEM)).toBe(BOB.app);
   });
 
   test("staff grants: dembrane addresses only, audited, and revoke returns the signup role", async () => {
@@ -508,4 +529,22 @@ async function seed(
     signedPdfKey: "signed/doc.pdf",
     signedPdfSha256: "ghi",
   });
+  const notice = (id: string, actor: string, code: string, title: string) => ({
+    id,
+    audience_user_id: STAFF.app,
+    actor_user_id: actor,
+    event_code: code,
+    title,
+    message: `${code} message`,
+    action: "NONE",
+    severity: "info",
+  });
+  await db
+    .insert(s.notification)
+    .values([
+      notice(N_FOLLOWUP, ALICE.app, "ONBOARDING_FOLLOWUP", "Onboarding follow-up: Alice"),
+      notice(N_PROBLEM, ALICE.app, "ONBOARDING_PROBLEM_SHARED", "Problem to solve: Alice"),
+      notice(N_OTHER, ALICE.app, "WORKSPACE_MEMBER_JOINED", "Alice joined"),
+      notice(N_BOB_PROBLEM, BOB.app, "ONBOARDING_PROBLEM_SHARED", "Problem to solve: Bob"),
+    ]);
 }

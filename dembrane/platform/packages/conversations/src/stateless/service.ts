@@ -23,7 +23,7 @@ export interface StatelessInput {
   readonly workspaceId: string | null;
   /** Without a project or workspace, the caller's own workspace pays. */
   readonly ownWorkspace: boolean;
-  /** Issue reports transcribe even at zero budget. */
+  /** Issue reports and onboarding answers transcribe even at zero budget. */
   readonly budgetExempt: boolean;
   readonly file: File | null;
   readonly audioFileUri: string | null;
