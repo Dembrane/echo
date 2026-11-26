@@ -27,7 +27,11 @@
  * the pill is the row's one weight (flow.steps-back-tertiary).
  * Such a row carries data-steps: the checks look for it, and it is what puts
  * the two in their corners (below, "A pill with a Back beside it"). A Back
- * beside a pill in a row without it is flow.back-corner. */
+ * beside a pill in a row without it is flow.back-corner.
+ * Beside means in one row of buttons. A Back link at the top of a form, and a
+ * "Back to ..." link stacked under a full-width pill, are not that row. Where
+ * the pill fills the row (the auth card, onboarding, the participant portal's
+ * cards) it reaches the right corner by its width and Back keeps the left. */
 
 /* The colours, once, named after the roles in src/colors.ts. Every colour
  * below is one of these; a theme (dark) redefines them and nothing else.
@@ -834,12 +838,15 @@
  * justify the row was given. The pill holds its corner by its own margin, so
  * it keeps the right edge when the two do not fit on one line and it drops
  * under Back (a phone, a long label), and when it is alone in the row on the
- * step that has no Back. A Back alone stays at the left. */
+ * step that has no Back. Only the pill, or the wrapper around it, takes the
+ * margin: Back, Cancel and a group of the two stay at the left when the row
+ * has no pill. */
 :root [data-steps] {
   justify-content: space-between;
 }
-:root [data-steps] > :only-child:not([data-variant="subtle"]),
-:root [data-steps] > :nth-child(2):last-child {
+:root
+  [data-steps]
+  > :last-child:is([data-variant="filled"], :has([data-variant="filled"])) {
   margin-inline-start: auto;
 }
 

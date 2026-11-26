@@ -90,8 +90,9 @@ const BUILD_LIMIT_MS = (demoBuild.expireInSeconds + 60) * 1000;
  * A build still "running" after its job's time limit has no run behind it: the queue ended
  * it at the limit, or lost it before. The row then says so on the step it stopped in, which
  * is what the demo's page needs to show a failed step with its retry and never an endless
- * "Building the demo". Every reader of a demo comes through here, so the page, the list and
- * the retry agree. The write is guarded by the row's last change: a build that finishes at
+ * "Building the demo". The demo's page, the demo list, retry, publish and unpublish read
+ * through here, so they agree; the earlier demos listed on the new-demo form show the
+ * stored status. The write is guarded by the row's last change: a build that finishes at
  * the same moment wins.
  */
 async function settle(d: AccountsDeps, row: Row): Promise<Row> {

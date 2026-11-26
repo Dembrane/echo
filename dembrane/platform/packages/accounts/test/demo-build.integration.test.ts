@@ -531,6 +531,8 @@ run("demos made in echo", () => {
         .update(schema.account_demo)
         .set({
           status: "failed",
+          // As the retry leaves it: the row is on the attempt the run below is.
+          attempt: 2,
           steps: {
             ...steps,
             seed: { ...steps.seed, status: "failed" },
@@ -1470,6 +1472,59 @@ run("demos made in echo", () => {
       const fetchedBefore = fetched.length;
       await buildDemo(deps, status.id, 2);
       expect(fetched.length).toBe(fetchedBefore);
+      expect((await read()).status).toBe("draft");
+    } finally {
+      w.clock.now = started;
+    }
+  });
+
+  test("a run that comes back after the build was marked as stopped, or retried, leaves the row alone", async () => {
+    const status = K.DemoStatus.parse(
+      (await start({ contact_email: "laat@voorbeeldstad.example" })).data,
+    );
+    // The popcorn read outlives the job's time limit and answers afterwards.
+    const reached = Promise.withResolvers<void>();
+    const answer = Promise.withResolvers<string>();
+    const slow: DemoBuildDeps = {
+      ...deps,
+      extract: () => {
+        reached.resolve();
+        return answer.promise;
+      },
+    };
+    const run = buildDemo(slow, status.id, 1);
+    await reached.promise;
+    const read = async () =>
+      K.DemoStatus.parse(
+        (await call(w, "GET", `/api/v2/admin/accounts/demos/${status.id}`, "staff")).data,
+      );
+    const started = w.clock.now;
+    try {
+      w.clock.now = new Date(started.getTime() + 32 * 60_000);
+      expect((await read()).status).toBe("failed");
+
+      // The late answer does not turn the stopped step into a finished one, and the run ends.
+      answer.resolve("ok");
+      await run;
+      const after = await read();
+      expect(after.status).toBe("failed");
+      expect(after.steps.find((s) => s.name === "extract")).toMatchObject({
+        status: "failed",
+        error: BUILD_STOPPED,
+      });
+      expect(after.steps.find((s) => s.name === "review")?.status).toBe("pending");
+
+      // Retried: the first attempt, resumed late by the queue, stands down.
+      const retried = K.DemoStatus.parse(
+        (await call(w, "POST", `/api/v2/admin/accounts/demos/${status.id}/retry`, "staff")).data,
+      );
+      expect(retried.status).toBe("queued");
+      const reads = extracted.length;
+      await buildDemo(deps, status.id, 1);
+      expect(extracted.length).toBe(reads);
+      expect((await read()).status).toBe("queued");
+
+      await buildDemo(deps, status.id, 2);
       expect((await read()).status).toBe("draft");
     } finally {
       w.clock.now = started;

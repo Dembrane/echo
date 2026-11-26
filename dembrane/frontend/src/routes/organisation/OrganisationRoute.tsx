@@ -692,10 +692,7 @@ export const OrganisationRoute = () => {
 						We couldn't load this organisation. Try again in a moment.
 					</Trans>
 				}
-				secondaryAction={{
-					label: <Trans>Back</Trans>,
-					onClick: () => navigate("/o"),
-				}}
+				onBack={() => navigate("/o")}
 			/>
 		);
 	}

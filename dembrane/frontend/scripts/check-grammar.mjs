@@ -940,22 +940,40 @@ function scanSource(rel) {
 			// read from the button's own words; a way back under another name is marked by
 			// hand and held by the rendered check.
 			if (ts.isJsxOpeningElement(node) && /^(Group|Flex)$/.test(tag)) {
+				// Buttons are read one wrapper deep as well (a Tooltip, a Box, a Group
+				// that holds Back and Cancel together): the row is still that row. An
+				// inner row that holds both Back and the pill is its own row and is
+				// judged there.
 				const buttons = [];
-				const walk = (k) => {
-					if (ts.isJsxElement(k)) {
-						if (tagName(k.openingElement) === "Button")
-							buttons.push(k.openingElement);
-					} else if (ts.isJsxSelfClosingElement(k)) {
-						if (tagName(k) === "Button") buttons.push(k);
-					} else if (ts.isJsxExpression(k) && k.expression) walk(k.expression);
-					else if (ts.isParenthesizedExpression(k)) walk(k.expression);
-					else if (ts.isBinaryExpression(k)) walk(k.right);
+				const walk = (k, depth, into) => {
+					const el = ts.isJsxElement(k)
+						? k.openingElement
+						: ts.isJsxSelfClosingElement(k)
+							? k
+							: null;
+					if (el) {
+						const name = tagName(el);
+						if (name === "Button") into.push(el);
+						else if (depth === 0 && ts.isJsxElement(k)) {
+							const inner = [];
+							for (const c of k.children) walk(c, 1, inner);
+							const own =
+								/^(Group|Flex)$/.test(name) &&
+								inner.some(isBack) &&
+								inner.some(isPill);
+							if (!own) into.push(...inner);
+						}
+					} else if (ts.isJsxExpression(k) && k.expression)
+						walk(k.expression, depth, into);
+					else if (ts.isParenthesizedExpression(k))
+						walk(k.expression, depth, into);
+					else if (ts.isBinaryExpression(k)) walk(k.right, depth, into);
 					else if (ts.isConditionalExpression(k)) {
-						walk(k.whenTrue);
-						walk(k.whenFalse);
-					} else if (ts.isJsxFragment(k)) for (const c of k.children) walk(c);
+						walk(k.whenTrue, depth, into);
+						walk(k.whenFalse, depth, into);
+					} else if (ts.isJsxFragment(k))
+						for (const c of k.children) walk(c, depth, into);
 				};
-				for (const k of node.parent.children) walk(k);
 				// Every piece of text a button can show, one per branch.
 				const words = (b) => {
 					const out = [];
@@ -986,10 +1004,11 @@ function scanSource(rel) {
 							return attrValue(a);
 					return undefined;
 				};
-				const back = buttons.findIndex((b) =>
-					words(b).some((w) => /^(Back|Go back)$/.test(w)),
-				);
-				const pill = buttons.findIndex((b) => variantOf(b) === "filled");
+				const isBack = (b) => words(b).some((w) => /^(Back|Go back)$/.test(w));
+				const isPill = (b) => variantOf(b) === "filled";
+				for (const k of node.parent.children) walk(k, 0, buttons);
+				const back = buttons.findIndex(isBack);
+				const pill = buttons.findIndex(isPill);
 				if (back !== -1 && pill !== -1) {
 					if (!attrs.has("data-steps"))
 						report(

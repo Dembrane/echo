@@ -170,4 +170,39 @@ describe("a pill with a Back beside it", () => {
 			),
 		).toHaveLength(0);
 	});
+	it("reads a Back one wrapper deep", () => {
+		expect(
+			scan(
+				"wrapped.tsx",
+				pair(
+					"<Group>",
+					`<Group gap="xs">
+			${BACK}
+			<Button variant="subtle" color="gray">
+				<Trans>Cancel</Trans>
+			</Button>
+		</Group>`,
+					PILL,
+				),
+				"flow.back-corner",
+			),
+		).toHaveLength(1);
+	});
+
+	it("leaves an inner row that holds both to its own check", () => {
+		expect(
+			scan(
+				"inner.tsx",
+				pair(
+					'<Group justify="flex-end">',
+					"<span />",
+					`<Group data-steps justify="space-between">
+			${BACK}
+			${PILL}
+		</Group>`,
+				),
+				"flow.back-corner",
+			),
+		).toHaveLength(0);
+	});
 });

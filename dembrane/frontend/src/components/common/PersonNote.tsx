@@ -26,7 +26,10 @@ export const PersonNote = ({
 		aria-label={label}
 		data-testid={dataTestId}
 	>
-		<PersonAvatar person={person} size={32} />
+		{/* The label already names the writer: the picture or initials would only repeat it. */}
+		<span aria-hidden className="flex shrink-0">
+			<PersonAvatar person={person} size={32} />
+		</span>
 		<Paper px="sm" py="xs" className="min-w-0">
 			<Text size="sm" className="whitespace-pre-wrap break-words">
 				{children}

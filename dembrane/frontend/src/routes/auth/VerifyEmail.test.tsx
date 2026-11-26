@@ -78,15 +78,28 @@ it("someone else signed in: the link still verifies its own address, and says wh
 	expect(screen.getByRole("button", { name: "Go to dashboard" })).toBeTruthy();
 });
 
-it("signed in, their own link clicked again: already verified, no error", async () => {
+it("signed in, their own link clicked again: the server answers verified, and so does the page", async () => {
 	session.mockResolvedValue(true);
-	verify.mockRejectedValue(new Error("INVALID_TOKEN"));
+	verify.mockResolvedValue();
 	open();
-	await screen.findByText("Your email is already verified");
+	await screen.findByText(
+		/The email address this link was sent to is verified/,
+	);
 	expect(screen.queryByText("This link is no longer valid")).toBeNull();
 });
 
-it("signed out, a used link: no longer valid, with Log in", async () => {
+it("signed in, an expired link: no longer valid, and nothing is said about whose address is verified", async () => {
+	session.mockResolvedValue(true);
+	verify.mockRejectedValue(new Error("TOKEN_EXPIRED"));
+	open();
+	await screen.findByText("This link is no longer valid");
+	screen.getByText(/You are still signed in to your own account here/);
+	expect(screen.queryByText(/already verified/)).toBeNull();
+	expect(screen.getByRole("button", { name: "Go to dashboard" })).toBeTruthy();
+	expect(screen.queryByRole("button", { name: "Log in" })).toBeNull();
+});
+
+it("signed out, an expired link: no longer valid, with Log in", async () => {
 	session.mockResolvedValue(false);
 	verify.mockRejectedValue(new Error("INVALID_TOKEN"));
 	open();
