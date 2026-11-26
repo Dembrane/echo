@@ -23,6 +23,10 @@ tabs:
 Click a notification to open the place it is about. That also marks it read. "All read"
 marks the whole tab read. The inbox refreshes about once a minute.
 
+A support access request that still waits opens its dialog instead, so you can answer it
+where you are ([staff support access](./staff-support-access.md#a-request)). Once it is
+answered or expired, the click goes to "Access history" in workspace settings.
+
 An invite leaves your inbox when it expires. It is marked read when you accept or decline
 it, or when the sender revokes it.
 

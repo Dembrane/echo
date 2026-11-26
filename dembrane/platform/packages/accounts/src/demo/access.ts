@@ -6,7 +6,8 @@ import { sql } from "drizzle-orm";
  * The access the demo build reads with. The popcorn read acts as the demo project's owner,
  * the contact, who has no place yet where the demo lives: a held contact is no member of
  * the new organisation until staff release them, and in an organisation the contact already
- * works in the demo's workspace is held back from everyone until publishing hands it over.
+ * works in the demo's workspace is held back from its people until publishing hands it
+ * over (only the staff member who made the demo has a row there).
  * The build's own read counts a held contact as the admin they become, in the organisation
  * of their demo only, and the contact of a held-back workspace as its admin, in that
  * workspace only. Nothing else may use this store: every request reads the plain one, where

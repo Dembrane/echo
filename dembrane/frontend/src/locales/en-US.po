@@ -102,7 +102,7 @@ msgstr "(You)"
 #~ msgstr "{0, plural, one {(# workspace)} other {(# workspaces)}}"
 
 #. placeholder {0}: rows.length
-#: src/routes/admin/AdminSettingsRoute.tsx:2332
+#: src/routes/admin/AdminSettingsRoute.tsx:2037
 msgid "{0, plural, one {# agreement} other {# agreements}}"
 msgstr "{0, plural, one {# agreement} other {# agreements}}"
 
@@ -185,8 +185,8 @@ msgstr "{0, plural, one {# part to transcribe} other {# parts to transcribe}}"
 
 #. placeholder {0}: filteredRows.length
 #. placeholder {0}: group.rows.length
-#: src/routes/admin/AdminSettingsRoute.tsx:2801
-#: src/routes/admin/AdminSettingsRoute.tsx:2834
+#: src/routes/admin/AdminSettingsRoute.tsx:2506
+#: src/routes/admin/AdminSettingsRoute.tsx:2539
 msgid "{0, plural, one {# payment} other {# payments}}"
 msgstr "{0, plural, one {# payment} other {# payments}}"
 
@@ -263,7 +263,7 @@ msgstr "{0, plural, one {# word removed} other {# words removed}}"
 #. placeholder {0}: organisation.workspace_count
 #. placeholder {0}: rows.length
 #: src/routes/organisation/OrganisationRoute.tsx:737
-#: src/routes/admin/AdminSettingsRoute.tsx:1312
+#: src/routes/admin/AdminSettingsRoute.tsx:1017
 msgid "{0, plural, one {# workspace} other {# workspaces}}"
 msgstr "{0, plural, one {# workspace} other {# workspaces}}"
 
@@ -369,7 +369,7 @@ msgstr "{0} / seat × {1}. Not charged after this period."
 #. placeholder {0}: data.account_count
 #. placeholder {1}: data.workspace_count
 #. placeholder {2}: data.active_workspace_count
-#: src/routes/admin/AdminSettingsRoute.tsx:1988
+#: src/routes/admin/AdminSettingsRoute.tsx:1693
 msgid "{0} accounts, {1} workspaces, {2} active"
 msgstr "{0} accounts, {1} workspaces, {2} active"
 
@@ -379,7 +379,7 @@ msgid "{0} across all"
 msgstr "{0} across all"
 
 #. placeholder {0}: b.active
-#: src/routes/admin/AdminSettingsRoute.tsx:1336
+#: src/routes/admin/AdminSettingsRoute.tsx:1041
 msgid "{0} active"
 msgstr "{0} active"
 
@@ -427,7 +427,7 @@ msgid "{0} file(s) failed to upload. Try those again."
 msgstr "{0} file(s) failed to upload. Try those again."
 
 #. placeholder {0}: req.requested_by_name
-#: src/components/workspace/SupportAccessSection.tsx:205
+#: src/components/workspace/SupportAccessSection.tsx:148
 msgid "{0} from dembrane"
 msgstr "{0} from dembrane"
 
@@ -587,13 +587,13 @@ msgstr "{0} workspaces · {1} seats · {2} free observers · {3} in {4}"
 #. placeholder {0}: account.workspace_count
 #. placeholder {1}: account.seat_count + account.external_count
 #. placeholder {2}: account.observer_count > 0 ? ` · ${account.observer_count} free observers` : ""
-#: src/routes/admin/AdminSettingsRoute.tsx:1461
+#: src/routes/admin/AdminSettingsRoute.tsx:1166
 msgid "{0} workspaces, {1} seats pooled{2}"
 msgstr "{0} workspaces, {1} seats pooled{2}"
 
 #. placeholder {0}: row.org_name
 #. placeholder {1}: row.workspace_id.slice(0, 8)
-#: src/routes/admin/AdminSettingsRoute.tsx:1231
+#: src/routes/admin/AdminSettingsRoute.tsx:933
 msgid "{0}, workspace id {1}"
 msgstr "{0}, workspace id {1}"
 
@@ -665,7 +665,7 @@ msgstr "{changes, plural, one {# change not shown yet} other {# changes not show
 msgid "{clientName} and the company running it will receive the conversation content you allow."
 msgstr "{clientName} and the company running it will receive the conversation content you allow."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2008
+#: src/routes/admin/AdminSettingsRoute.tsx:1713
 msgid "{compedCount, plural, one {# comped} other {# comped}}"
 msgstr "{compedCount, plural, one {# comped} other {# comped}}"
 
@@ -824,6 +824,14 @@ msgstr "{m}m"
 
 #~ msgid "{n} min"
 #~ msgstr "{n} min"
+
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:101
+#~ msgid "{name} from dembrane asks for admin access to {workspaceName} for 24 hours, to help you with support. Access ends automatically."
+#~ msgstr "{name} from dembrane asks for admin access to {workspaceName} for 24 hours, to help you with support. Access ends automatically."
+
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:103
+msgid "{name} from dembrane asks for admin access to <0>{workspaceName}</0> for 24 hours, to help you with support. Access ends automatically."
+msgstr "{name} from dembrane asks for admin access to <0>{workspaceName}</0> for 24 hours, to help you with support. Access ends automatically."
 
 #: src/components/workspace/OrganisationUsageRollup.tsx:987
 msgid "{name} has used this month's free recording hours. Recording is paused until the month resets."
@@ -1085,7 +1093,7 @@ msgstr "1. You provide a URL where you want to receive notifications"
 msgid "16 to 40."
 msgstr "16 to 40."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:259
+#: src/routes/admin/AdminSettingsRoute.tsx:258
 msgid "2 months ago"
 msgstr "2 months ago"
 
@@ -1110,7 +1118,7 @@ msgstr "250 to 1000."
 msgid "3 days"
 msgstr "3 days"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:260
+#: src/routes/admin/AdminSettingsRoute.tsx:259
 msgid "3 months ago"
 msgstr "3 months ago"
 
@@ -1147,15 +1155,15 @@ msgstr "A cleaner, more accessible dashboard and portal."
 msgid "A couple of quick questions and you're in."
 msgstr "A couple of quick questions and you're in."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3043
+#: src/routes/admin/AdminSettingsRoute.tsx:2748
 msgid "A dembrane staff app_user id. The server checks the @dembrane.com address."
 msgstr "A dembrane staff app_user id. The server checks the @dembrane.com address."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:621
+#: src/routes/admin/AdminSettingsRoute.tsx:620
 msgid "A downgrade applies the matrix downgrade effects and notifies workspace admins. A paid tier puts the account on dembrane-managed billing."
 msgstr "A downgrade applies the matrix downgrade effects and notifies workspace admins. A paid tier puts the account on dembrane-managed billing."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:669
+#: src/routes/admin/AdminSettingsRoute.tsx:668
 msgid "A downgrade limits features immediately."
 msgstr "A downgrade limits features immediately."
 
@@ -1350,7 +1358,7 @@ msgstr "Access"
 msgid "Access controls explain when you need to join a workspace first."
 msgstr "Access controls explain when you need to join a workspace first."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:849
+#: src/routes/admin/AdminSettingsRoute.tsx:848
 msgid "Access ends on"
 msgstr "Access ends on"
 
@@ -1358,27 +1366,27 @@ msgstr "Access ends on"
 msgid "Access expires after"
 msgstr "Access expires after"
 
-#: src/components/workspace/SupportAccessSection.tsx:156
+#: src/components/workspace/supportRequests.ts:222
 msgid "Access granted for 24 hours."
 msgstr "Access granted for 24 hours."
 
-#: src/components/workspace/SupportAccessSection.tsx:243
+#: src/components/workspace/SupportAccessSection.tsx:187
 msgid "Access history"
 msgstr "Access history"
 
-#: src/components/workspace/SupportAccessSection.tsx:46
+#: src/components/workspace/SupportAccessSection.tsx:35
 msgid "Access request approved"
 msgstr "Access request approved"
 
-#: src/components/workspace/SupportAccessSection.tsx:48
+#: src/components/workspace/SupportAccessSection.tsx:37
 msgid "Access request denied"
 msgstr "Access request denied"
 
-#: src/components/workspace/SupportAccessSection.tsx:50
+#: src/components/workspace/SupportAccessSection.tsx:39
 msgid "Access request expired"
 msgstr "Access request expired"
 
-#: src/components/workspace/SupportAccessSection.tsx:52
+#: src/components/workspace/SupportAccessSection.tsx:41
 msgid "Access request withdrawn"
 msgstr "Access request withdrawn"
 
@@ -1387,11 +1395,11 @@ msgid "Access requests"
 msgstr "Access requests"
 
 #: src/routes/admin/AiCostsPanel.tsx:742
-#: src/routes/admin/AdminSettingsRoute.tsx:482
-#: src/routes/admin/AdminSettingsRoute.tsx:1361
-#: src/routes/admin/AdminSettingsRoute.tsx:1573
-#: src/routes/admin/AdminSettingsRoute.tsx:2587
-#: src/routes/admin/AdminSettingsRoute.tsx:3006
+#: src/routes/admin/AdminSettingsRoute.tsx:481
+#: src/routes/admin/AdminSettingsRoute.tsx:1066
+#: src/routes/admin/AdminSettingsRoute.tsx:1278
+#: src/routes/admin/AdminSettingsRoute.tsx:2292
+#: src/routes/admin/AdminSettingsRoute.tsx:2711
 #: src/features/sidebar/shell/UserMenu.tsx:87
 #: src/features/sidebar/hooks/useSearchHits.ts:148
 #: src/components/settings/AccountSettingsCard.tsx:130
@@ -1409,16 +1417,16 @@ msgstr "Account & security"
 msgid "Account default"
 msgstr "Account default"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3042
+#: src/routes/admin/AdminSettingsRoute.tsx:2747
 #: src/components/billing/BillingManager.tsx:350
 msgid "Account manager"
 msgstr "Account manager"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2949
+#: src/routes/admin/AdminSettingsRoute.tsx:2654
 msgid "Account manager assigned."
 msgstr "Account manager assigned."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:754
+#: src/routes/admin/AdminSettingsRoute.tsx:753
 msgid "Account moved to self-serve billing."
 msgstr "Account moved to self-serve billing."
 
@@ -1426,11 +1434,11 @@ msgstr "Account moved to self-serve billing."
 msgid "Account password"
 msgstr "Account password"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:755
+#: src/routes/admin/AdminSettingsRoute.tsx:754
 msgid "Account set to managed billing."
 msgstr "Account set to managed billing."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2941
+#: src/routes/admin/AdminSettingsRoute.tsx:2646
 msgid "Account set to managed."
 msgstr "Account set to managed."
 
@@ -1438,7 +1446,7 @@ msgstr "Account set to managed."
 msgid "Accounts and providers"
 msgstr "Accounts and providers"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2791
+#: src/routes/admin/AdminSettingsRoute.tsx:2496
 msgid "Accounts billed"
 msgstr "Accounts billed"
 
@@ -1456,7 +1464,7 @@ msgstr "Action by"
 #~ msgid "Action By"
 #~ msgstr "Action By"
 
-#: src/features/sidebar/views/InboxView.tsx:470
+#: src/features/sidebar/views/InboxView.tsx:486
 #: src/components/inbox/Inbox.tsx:442
 msgid "Action needed"
 msgstr "Action needed"
@@ -1477,9 +1485,9 @@ msgstr "Actions"
 msgid "Actions and proposals said out loud, and who was named."
 msgstr "Actions and proposals said out loud, and who was named."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1518
-#: src/routes/admin/AdminSettingsRoute.tsx:1722
-#: src/routes/admin/AdminSettingsRoute.tsx:2040
+#: src/routes/admin/AdminSettingsRoute.tsx:1223
+#: src/routes/admin/AdminSettingsRoute.tsx:1427
+#: src/routes/admin/AdminSettingsRoute.tsx:1745
 #: src/components/workspace/OrganisationUsageRollup.tsx:423
 #: src/components/workspace/OrganisationUsageRollup.tsx:574
 #: src/components/billing/BillingManager.tsx:1242
@@ -1794,7 +1802,7 @@ msgstr "Adjust the base font size for the interface"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:991
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1007
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1056
-#: src/routes/admin/AdminSettingsRoute.tsx:3220
+#: src/routes/admin/AdminSettingsRoute.tsx:2925
 #: src/lib/roles.ts:9
 #: src/components/invite/RoleSelect.tsx:53
 msgid "Admin"
@@ -1808,7 +1816,7 @@ msgstr "Admin dashboard"
 msgid "Admin here via organisation role"
 msgstr "Admin here via organisation role"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3188
+#: src/routes/admin/AdminSettingsRoute.tsx:2893
 msgid "Admin, dembrane"
 msgstr "Admin, dembrane"
 
@@ -1930,8 +1938,8 @@ msgstr "AI this month"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:808
 #: src/routes/organisation/OrganisationRoute.tsx:911
-#: src/routes/admin/AdminSettingsRoute.tsx:2039
-#: src/routes/admin/AdminSettingsRoute.tsx:2709
+#: src/routes/admin/AdminSettingsRoute.tsx:1744
+#: src/routes/admin/AdminSettingsRoute.tsx:2414
 #: src/components/workspace/OrganisationUsageRollup.tsx:573
 #: src/components/training/StaffTrainingPanel.tsx:124
 #: src/components/results/curate/ArgumentsTab.tsx:226
@@ -1984,7 +1992,7 @@ msgstr "All projects"
 msgid "All quotes"
 msgstr "All quotes"
 
-#: src/features/sidebar/views/InboxView.tsx:179
+#: src/features/sidebar/views/InboxView.tsx:195
 msgid "All read"
 msgstr "All read"
 
@@ -2011,7 +2019,7 @@ msgstr "All templates"
 #~ msgid "All Templates"
 #~ msgstr "All Templates"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2027
+#: src/routes/admin/AdminSettingsRoute.tsx:1732
 #: src/components/workspace/OrganisationUsageRollup.tsx:561
 msgid "All tiers"
 msgstr "All tiers"
@@ -2097,7 +2105,7 @@ msgstr "Always on, it lives on our website"
 msgid "Always on. The screen opens here, so the room has something to read while the rest gets ready."
 msgstr "Always on. The screen opens here, so the room has something to read while the rest gets ready."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2613
+#: src/routes/admin/AdminSettingsRoute.tsx:2318
 #: src/components/billing/BillingManager.tsx:778
 msgid "Amount"
 msgstr "Amount"
@@ -2106,7 +2114,7 @@ msgstr "Amount"
 msgid "Amount per month"
 msgstr "Amount per month"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3068
+#: src/routes/admin/AdminSettingsRoute.tsx:2773
 msgid "Amounts default to the account's seats times the per-seat price. Override only when you need to."
 msgstr "Amounts default to the account's seats times the per-seat price. Override only when you need to."
 
@@ -2355,7 +2363,7 @@ msgstr "Applies this wording and refresh behavior to the existing canvas."
 msgid "Applies while the account is on the free plan."
 msgstr "Applies while the account is on the free plan."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:650
+#: src/routes/admin/AdminSettingsRoute.tsx:649
 #: src/components/goal/GoalSuggestionCard.tsx:128
 #: src/components/common/ImageCropModal.tsx:143
 #: src/components/chat/TagsUpdateSuggestionCard.tsx:210
@@ -2384,16 +2392,17 @@ msgstr "Approaching limit: {0} / 32,000 characters"
 msgid "participant.concrete.action.button.approve"
 msgstr "Approve"
 
-#: src/components/workspace/SupportAccessSection.tsx:219
+#: src/components/workspace/SupportAccessSection.tsx:162
 #: src/components/workspace/AccessRequestsList.tsx:182
 msgid "Approve"
 msgstr "Approve"
 
-#: src/components/workspace/SupportAccessSection.tsx:286
+#: src/components/workspace/SupportAccessSection.tsx:231
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:98
 msgid "Approve for 24 hours"
 msgstr "Approve for 24 hours"
 
-#: src/components/workspace/SupportAccessSection.tsx:284
+#: src/components/workspace/SupportAccessSection.tsx:229
 msgid "Approve support access"
 msgstr "Approve support access"
 
@@ -2598,7 +2607,7 @@ msgstr "Ask your admin"
 #~ msgid "Aspects"
 #~ msgstr "Aspects"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3053
+#: src/routes/admin/AdminSettingsRoute.tsx:2758
 msgid "Assign"
 msgstr "Assign"
 
@@ -2871,7 +2880,7 @@ msgstr "Back to workspaces"
 msgid "Back to your workspaces"
 msgstr "Back to your workspaces"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1340
+#: src/routes/admin/AdminSettingsRoute.tsx:1045
 msgid "Base"
 msgstr "Base"
 
@@ -2987,7 +2996,7 @@ msgstr "Billing details saved."
 msgid "Billing is managed by your organisation"
 msgstr "Billing is managed by your organisation"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:777
+#: src/routes/admin/AdminSettingsRoute.tsx:776
 msgid "Billing mode"
 msgstr "Billing mode"
 
@@ -3022,7 +3031,7 @@ msgstr "Both"
 msgid "Breakdown · {0} active"
 msgstr "Breakdown · {0} active"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1308
+#: src/routes/admin/AdminSettingsRoute.tsx:1013
 msgid "Breakdown by tier"
 msgstr "Breakdown by tier"
 
@@ -3108,9 +3117,9 @@ msgstr "Calls no account could be matched to"
 #: src/routes/organisation/OrganisationRoute.tsx:2102
 #: src/routes/organisation/OrganisationRoute.tsx:2144
 #: src/routes/invite/MyInvitesRoute.tsx:80
-#: src/routes/admin/AdminSettingsRoute.tsx:867
-#: src/routes/admin/AdminSettingsRoute.tsx:1181
+#: src/routes/admin/AdminSettingsRoute.tsx:866
 #: src/lib/openConfirm.tsx:54
+#: src/components/workspace/SupportRequestNoteModal.tsx:64
 #: src/components/workspace/OrganisationProjectsTable.tsx:164
 #: src/components/training/TrainingRowActions.tsx:199
 #: src/components/training/TrainingRowActions.tsx:312
@@ -3140,7 +3149,7 @@ msgstr "Calls no account could be matched to"
 #: src/components/conversation/ConversationAccordion.tsx:337
 #: src/components/common/InputModal.tsx:87
 #: src/components/common/ImageCropModal.tsx:146
-#: src/components/common/ConfirmModal.tsx:63
+#: src/components/common/ConfirmModal.tsx:83
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:675
 #: src/components/chat/AgenticChatPanel.tsx:755
 #: src/components/chat/AgenticChatPanel.tsx:2257
@@ -3194,7 +3203,7 @@ msgstr "Cancel override"
 msgid "Cancel plan"
 msgstr "Cancel plan"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1140
+#: src/routes/admin/JoinSupportControl.tsx:124
 msgid "Cancel request"
 msgstr "Cancel request"
 
@@ -3329,10 +3338,10 @@ msgstr "Change role"
 msgid "Change the wording, read the evidence, or keep a finding out of this presentation. Shared results stay available in Analysis."
 msgstr "Change the wording, read the evidence, or keep a finding out of this presentation. Shared results stay available in Analysis."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:618
-#: src/routes/admin/AdminSettingsRoute.tsx:659
-#: src/routes/admin/AdminSettingsRoute.tsx:661
-#: src/routes/admin/AdminSettingsRoute.tsx:1251
+#: src/routes/admin/AdminSettingsRoute.tsx:617
+#: src/routes/admin/AdminSettingsRoute.tsx:658
+#: src/routes/admin/AdminSettingsRoute.tsx:660
+#: src/routes/admin/AdminSettingsRoute.tsx:953
 msgid "Change tier"
 msgstr "Change tier"
 
@@ -3717,20 +3726,20 @@ msgstr "Click to edit"
 msgid "Click to see all {totalCount} conversations"
 msgstr "Click to see all {totalCount} conversations"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2133
+#: src/routes/admin/AdminSettingsRoute.tsx:1838
 #: src/components/workspace/OrganisationUsageRollup.tsx:634
 msgid "Click to sort"
 msgstr "Click to sort"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2287
+#: src/routes/admin/AdminSettingsRoute.tsx:1992
 msgid "Client discount %"
 msgstr "Client discount %"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2268
+#: src/routes/admin/AdminSettingsRoute.tsx:1973
 msgid "Client organisation"
 msgstr "Client organisation"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2419
+#: src/routes/admin/AdminSettingsRoute.tsx:2124
 msgid "Client orgs from partners"
 msgstr "Client orgs from partners"
 
@@ -3920,12 +3929,12 @@ msgstr "Compare & Contrast"
 msgid "Compare & Contrast Insights"
 msgstr "Compare & Contrast Insights"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1395
+#: src/routes/admin/AdminSettingsRoute.tsx:1100
 msgid "Comped trial. €0 revenue."
 msgstr "Comped trial. €0 revenue."
 
 #. placeholder {0}: formatDate(account.tier_expires_at)
-#: src/routes/admin/AdminSettingsRoute.tsx:1394
+#: src/routes/admin/AdminSettingsRoute.tsx:1099
 msgid "Comped trial. Expires {0}. €0 revenue."
 msgstr "Comped trial. Expires {0}. €0 revenue."
 
@@ -3955,7 +3964,7 @@ msgid "participant.mic.settings.modal.second.confirm.button"
 msgstr "Confirm"
 
 #: src/lib/openConfirm.tsx:47
-#: src/components/common/ConfirmModal.tsx:55
+#: src/components/common/ConfirmModal.tsx:75
 msgid "Confirm"
 msgstr "Confirm"
 
@@ -4424,7 +4433,7 @@ msgstr "Could not go live"
 msgid "Could not load methodologies."
 msgstr "Could not load methodologies."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2698
+#: src/routes/admin/AdminSettingsRoute.tsx:2403
 msgid "Could not load payments. Check auth and backend logs."
 msgstr "Could not load payments. Check auth and backend logs."
 
@@ -4451,7 +4460,7 @@ msgstr "Could not load the latest results"
 msgid "Could not load the library."
 msgstr "Could not load the library."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1898
+#: src/routes/admin/AdminSettingsRoute.tsx:1603
 msgid "Could not load the rollup. Check auth and backend logs."
 msgstr "Could not load the rollup. Check auth and backend logs."
 
@@ -4752,12 +4761,12 @@ msgstr "Create workspace | dembrane"
 msgid "Create your own project to keep going."
 msgstr "Create your own project to keep going."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2406
+#: src/routes/admin/AdminSettingsRoute.tsx:2111
 #: src/components/workspace/OrganisationProjectsTable.tsx:230
 msgid "Created"
 msgstr "Created"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2400
+#: src/routes/admin/AdminSettingsRoute.tsx:2105
 msgid "Created by"
 msgstr "Created by"
 
@@ -4906,7 +4915,7 @@ msgstr "Data policy"
 msgid "Data policy and disclosure"
 msgstr "Data policy and disclosure"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2563
+#: src/routes/admin/AdminSettingsRoute.tsx:2268
 #: src/components/report/ScheduleDateTimePicker.tsx:85
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:165
 #: src/components/billing/BillingManager.tsx:772
@@ -4928,7 +4937,8 @@ msgstr "Dates that work, context, anything else"
 
 #: src/routes/invite/MyInvitesRoute.tsx:80
 #: src/routes/invite/MyInvitesRoute.tsx:236
-#: src/components/workspace/SupportAccessSection.tsx:231
+#: src/components/workspace/SupportAccessSection.tsx:175
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:99
 #: src/components/workspace/AccessRequestsList.tsx:195
 msgid "Decline"
 msgstr "Decline"
@@ -4971,8 +4981,8 @@ msgstr "Deep Dive"
 
 #: src/routes/admin/FreeLimitsPanel.tsx:274
 #: src/routes/admin/AiBudgetEditor.tsx:144
-#: src/routes/admin/AdminSettingsRoute.tsx:3077
-#: src/routes/admin/AdminSettingsRoute.tsx:3093
+#: src/routes/admin/AdminSettingsRoute.tsx:2782
+#: src/routes/admin/AdminSettingsRoute.tsx:2798
 #: src/components/chat/CanvasSuggestionCard.tsx:106
 msgid "Default"
 msgstr "Default"
@@ -5158,23 +5168,23 @@ msgstr "dembrane is not responsible for what a third party does with that conten
 msgid "dembrane reads the first 4,000 characters on every answer, so keep the essentials near the top: the people, the places and the question."
 msgstr "dembrane reads the first 4,000 characters on every answer, so keep the essentials near the top: the people, the places and the question."
 
-#: src/components/workspace/SupportAccessSection.tsx:60
+#: src/components/workspace/SupportAccessSection.tsx:49
 msgid "dembrane staff access ended automatically"
 msgstr "dembrane staff access ended automatically"
 
-#: src/components/workspace/SupportAccessSection.tsx:56
+#: src/components/workspace/SupportAccessSection.tsx:45
 msgid "dembrane staff extended their session"
 msgstr "dembrane staff extended their session"
 
-#: src/components/workspace/SupportAccessSection.tsx:54
+#: src/components/workspace/SupportAccessSection.tsx:43
 msgid "dembrane staff joined for support"
 msgstr "dembrane staff joined for support"
 
-#: src/components/workspace/SupportAccessSection.tsx:58
+#: src/components/workspace/SupportAccessSection.tsx:47
 msgid "dembrane staff left"
 msgstr "dembrane staff left"
 
-#: src/components/workspace/SupportAccessSection.tsx:44
+#: src/components/workspace/SupportAccessSection.tsx:33
 msgid "dembrane staff requested access"
 msgstr "dembrane staff requested access"
 
@@ -5215,7 +5225,7 @@ msgstr "Describe your session in the project context, or add a file or link belo
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1578
 #: src/routes/organisation/OrganisationRoute.tsx:1163
-#: src/routes/admin/AdminSettingsRoute.tsx:2660
+#: src/routes/admin/AdminSettingsRoute.tsx:2365
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:262
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:328
 #: src/components/billing/BillingManager.tsx:775
@@ -5306,7 +5316,7 @@ msgstr "Discard this workspace?"
 msgid "Disclosure"
 msgstr "Disclosure"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:429
+#: src/routes/admin/AdminSettingsRoute.tsx:428
 msgid "Discount"
 msgstr "Discount"
 
@@ -5407,7 +5417,7 @@ msgstr "Done"
 #~ msgid "Done reviewing"
 #~ msgstr "Done reviewing"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:837
+#: src/routes/admin/AdminSettingsRoute.tsx:836
 msgid "Downgrade to Free now"
 msgstr "Downgrade to Free now"
 
@@ -5500,7 +5510,7 @@ msgstr "Drag to reorder"
 msgid "Drop in an agenda or invitation and dembrane configures the project for you."
 msgstr "Drop in an agenda or invitation and dembrane configures the project for you."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:838
+#: src/routes/admin/AdminSettingsRoute.tsx:837
 msgid "Drops to the free tier. They can subscribe to a paid plan anytime."
 msgstr "Drops to the free tier. They can subscribe to a paid plan anytime."
 
@@ -5521,7 +5531,7 @@ msgstr "Dutch documentation is updated."
 msgid "Dutch-speaking hosts see the Dutch What's new walkthrough."
 msgstr "Dutch-speaking hosts see the Dutch What's new walkthrough."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3100
+#: src/routes/admin/AdminSettingsRoute.tsx:2805
 msgid "E-invoice"
 msgstr "E-invoice"
 
@@ -5545,7 +5555,7 @@ msgstr "e.g. Client onboarding interviews, Q1 product research"
 msgid "e.g. Climate Listening, Q1 Research"
 msgstr "e.g. Climate Listening, Q1 Research"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1167
+#: src/components/workspace/SupportRequestNoteModal.tsx:42
 msgid "e.g. investigating the report issue you emailed about"
 msgstr "e.g. investigating the report issue you emailed about"
 
@@ -6092,7 +6102,7 @@ msgstr "Exceeds seat cap. Overage billing applies."
 msgid "Exit fullscreen"
 msgstr "Exit fullscreen"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1608
+#: src/routes/admin/AdminSettingsRoute.tsx:1313
 msgid "Expand workspaces"
 msgstr "Expand workspaces"
 
@@ -6105,7 +6115,7 @@ msgstr "Experimental"
 msgid "Expired"
 msgstr "Expired"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2307
+#: src/routes/admin/AdminSettingsRoute.tsx:2012
 #: src/components/agent-access/AgentGrantsCard.tsx:99
 msgid "Expires"
 msgstr "Expires"
@@ -6158,11 +6168,11 @@ msgstr "Exploring"
 msgid "Export"
 msgstr "Export"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2049
+#: src/routes/admin/AdminSettingsRoute.tsx:1754
 msgid "Export CSV"
 msgstr "Export CSV"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1101
+#: src/routes/admin/JoinSupportControl.tsx:83
 msgid "Extend 24h"
 msgstr "Extend 24h"
 
@@ -6185,7 +6195,7 @@ msgstr "External"
 msgid "External of {0}"
 msgstr "External of {0}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2390
+#: src/routes/admin/AdminSettingsRoute.tsx:2095
 msgid "External of partner"
 msgstr "External of partner"
 
@@ -6246,8 +6256,8 @@ msgid "Factual status does not apply to this object."
 msgstr "Factual status does not apply to this object."
 
 #: src/routes/project/analysis/ProjectAnalysisRoute.tsx:99
-#: src/routes/admin/AdminSettingsRoute.tsx:2711
-#: src/routes/admin/AdminSettingsRoute.tsx:2773
+#: src/routes/admin/AdminSettingsRoute.tsx:2416
+#: src/routes/admin/AdminSettingsRoute.tsx:2478
 #: src/features/sidebar/primitives/NavItem.tsx:285
 #: src/components/invite/InviteResultsList.tsx:61
 #: src/components/dropzone/UploadConversationDropzone.tsx:913
@@ -6703,7 +6713,7 @@ msgstr "For invoices, a shared contract, to discuss a partnership, or anything c
 msgid "for the dembrane team"
 msgstr "for the dembrane team"
 
-#: src/features/sidebar/views/InboxView.tsx:160
+#: src/features/sidebar/views/InboxView.tsx:176
 #: src/components/inbox/Inbox.tsx:214
 msgid "For you"
 msgstr "For you"
@@ -6734,7 +6744,7 @@ msgstr "Force parameters"
 msgid "Force settings"
 msgstr "Force settings"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1585
+#: src/routes/admin/AdminSettingsRoute.tsx:1290
 msgid "Forecast"
 msgstr "Forecast"
 
@@ -6985,7 +6995,7 @@ msgid "get started."
 msgstr "get started."
 
 #. placeholder {0}: confirmTarget.requested_by_name
-#: src/components/workspace/SupportAccessSection.tsx:288
+#: src/components/workspace/SupportAccessSection.tsx:233
 msgid "Give {0} from dembrane admin access to this workspace for 24 hours? Access ends automatically."
 msgstr "Give {0} from dembrane admin access to this workspace for 24 hours? Access ends automatically."
 
@@ -7316,8 +7326,8 @@ msgstr "Host's feedback"
 msgid "Hosts can enable replies and customise their prompt in portal settings."
 msgstr "Hosts can enable replies and customise their prompt in portal settings."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1579
-#: src/routes/admin/AdminSettingsRoute.tsx:1692
+#: src/routes/admin/AdminSettingsRoute.tsx:1284
+#: src/routes/admin/AdminSettingsRoute.tsx:1397
 #: src/components/workspace/OrganisationUsageRollup.tsx:403
 #: src/components/workspace/OrganisationProjectsTable.tsx:220
 msgid "Hours"
@@ -7522,17 +7532,17 @@ msgstr "In which organisations"
 msgid "In your own words"
 msgstr "In your own words"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1518
-#: src/routes/admin/AdminSettingsRoute.tsx:1730
-#: src/routes/admin/AdminSettingsRoute.tsx:2041
+#: src/routes/admin/AdminSettingsRoute.tsx:1223
+#: src/routes/admin/AdminSettingsRoute.tsx:1435
+#: src/routes/admin/AdminSettingsRoute.tsx:1746
 #: src/components/workspace/OrganisationUsageRollup.tsx:427
 #: src/components/workspace/OrganisationUsageRollup.tsx:575
 msgid "Inactive"
 msgstr "Inactive"
 
-#: src/features/sidebar/views/InboxView.tsx:142
+#: src/features/sidebar/views/InboxView.tsx:158
 #: src/features/sidebar/blocks/InboxBlock.tsx:37
-#: src/components/layout/BaseLayout.tsx:83
+#: src/components/layout/BaseLayout.tsx:94
 #: src/components/inbox/Inbox.tsx:166
 #: src/components/inbox/Inbox.tsx:181
 msgid "Inbox"
@@ -7576,7 +7586,7 @@ msgstr "Inferred"
 msgid "inherited from organisation"
 msgstr "inherited from organisation"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2638
+#: src/routes/admin/AdminSettingsRoute.tsx:2343
 msgid "Initial"
 msgstr "Initial"
 
@@ -7755,15 +7765,15 @@ msgstr "invited by {0}"
 msgid "Invites expire after 7 days. Ask {inviterName} to send a new one."
 msgstr "Invites expire after 7 days. Ask {inviterName} to send a new one."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3092
+#: src/routes/admin/AdminSettingsRoute.tsx:2797
 msgid "Invoice amount, EUR"
 msgstr "Invoice amount, EUR"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2983
+#: src/routes/admin/AdminSettingsRoute.tsx:2688
 msgid "Invoice recorded as paid."
 msgstr "Invoice recorded as paid."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1405
+#: src/routes/admin/AdminSettingsRoute.tsx:1110
 msgid "Invoiced offline, no Mollie mandate."
 msgstr "Invoiced offline, no Mollie mandate."
 
@@ -7771,7 +7781,7 @@ msgstr "Invoiced offline, no Mollie mandate."
 msgid "Invoices"
 msgstr "Invoices"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3065
+#: src/routes/admin/AdminSettingsRoute.tsx:2770
 msgid "Invoicing"
 msgstr "Invoicing"
 
@@ -7793,11 +7803,11 @@ msgstr "Is this for your organisation's internal use, or for an external organis
 msgid "Is this workspace for your organisation's internal use, or for an external organisation that owns its data?"
 msgstr "Is this workspace for your organisation's internal use, or for an external organisation that owns its data?"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3117
+#: src/routes/admin/AdminSettingsRoute.tsx:2822
 msgid "Issue invoice"
 msgstr "Issue invoice"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3084
+#: src/routes/admin/AdminSettingsRoute.tsx:2789
 msgid "Issue payment link"
 msgstr "Issue payment link"
 
@@ -7914,11 +7924,11 @@ msgstr "Join as admin?"
 msgid "Join first"
 msgstr "Join first"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1074
+#: src/routes/admin/JoinSupportControl.tsx:56
 msgid "Join for support"
 msgstr "Join for support"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1103
+#: src/routes/admin/JoinSupportControl.tsx:85
 msgid "Join for support (24h)"
 msgstr "Join for support (24h)"
 
@@ -7937,7 +7947,7 @@ msgstr "Join this organisation to discover workspaces and collaborate with your 
 msgid "Join this portal session"
 msgstr "Join this portal session"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1085
+#: src/routes/admin/JoinSupportControl.tsx:67
 msgid "Join this workspace as an admin to help with support. The customer must have turned on staff support access. Your access ends automatically after 24 hours."
 msgstr "Join this workspace as an admin to help with support. The customer must have turned on staff support access. Your access ends automatically after 24 hours."
 
@@ -8026,7 +8036,7 @@ msgstr "Just you, plus workspace admins."
 msgid "Just you. Share with specific people."
 msgstr "Just you. Share with specific people."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:842
+#: src/routes/admin/AdminSettingsRoute.tsx:841
 msgid "Keep {tier} until a date"
 msgstr "Keep {tier} until a date"
 
@@ -8081,7 +8091,7 @@ msgstr "Keep this canvas fresh"
 msgid "Keep working while audio uploads in the background."
 msgstr "Keep working while audio uploads in the background."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:843
+#: src/routes/admin/AdminSettingsRoute.tsx:842
 msgid "Keeps the tier until the date below, then reverts to Free unless they subscribe."
 msgstr "Keeps the tier until the date below, then reverts to Free unless they subscribe."
 
@@ -8101,7 +8111,7 @@ msgstr "Key terms tell transcription how to spell the names and words that matte
 msgid "Key terms to add"
 msgstr "Key terms to add"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2277
+#: src/routes/admin/AdminSettingsRoute.tsx:1982
 msgid "Kickback %"
 msgstr "Kickback %"
 
@@ -8147,7 +8157,7 @@ msgid "Last day on this budget"
 msgstr "Last day on this budget"
 
 #: src/routes/admin/AiCostsPanel.tsx:622
-#: src/routes/admin/AdminSettingsRoute.tsx:258
+#: src/routes/admin/AdminSettingsRoute.tsx:257
 #: src/components/workspace/PeriodSelect.tsx:17
 msgid "Last month"
 msgstr "Last month"
@@ -8213,7 +8223,7 @@ msgstr "Leave empty to keep existing"
 msgid "Leave feedback"
 msgstr "Leave feedback"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1115
+#: src/routes/admin/JoinSupportControl.tsx:97
 msgid "Leave now"
 msgstr "Leave now"
 
@@ -8346,7 +8356,7 @@ msgstr "Licenses"
 msgid "Licenses granted"
 msgstr "Licenses granted"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2294
+#: src/routes/admin/AdminSettingsRoute.tsx:1999
 msgid "Lifetime cap"
 msgstr "Lifetime cap"
 
@@ -8796,16 +8806,16 @@ msgstr "Manage training"
 msgid "Manage workspace ownership, including internal and external data owners."
 msgstr "Manage workspace ownership, including internal and external data owners."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:770
-#: src/routes/admin/AdminSettingsRoute.tsx:1407
+#: src/routes/admin/AdminSettingsRoute.tsx:769
+#: src/routes/admin/AdminSettingsRoute.tsx:1112
 msgid "Managed"
 msgstr "Managed"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2998
+#: src/routes/admin/AdminSettingsRoute.tsx:2703
 msgid "Managed accounts pay by invoice, not by card. Setting an account managed keeps every feature on and turns off auto-charging, dunning, and expiry. Assign a dembrane account manager so the client knows who to contact."
 msgstr "Managed accounts pay by invoice, not by card. Setting an account managed keeps every feature on and turns off auto-charging, dunning, and expiry. Assign a dembrane account manager so the client knows who to contact."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2995
+#: src/routes/admin/AdminSettingsRoute.tsx:2700
 msgid "Managed billing"
 msgstr "Managed billing"
 
@@ -8877,7 +8887,7 @@ msgstr "Map results are not ready yet."
 #~ msgid "Maps per month"
 #~ msgstr "Maps per month"
 
-#: src/features/sidebar/views/InboxView.tsx:177
+#: src/features/sidebar/views/InboxView.tsx:193
 msgid "Mark all as read"
 msgstr "Mark all as read"
 
@@ -8889,14 +8899,14 @@ msgstr "Mark all read"
 msgid "Mark as attended"
 msgstr "Mark as attended"
 
-#: src/features/sidebar/views/InboxView.tsx:480
-#: src/features/sidebar/views/InboxView.tsx:571
+#: src/features/sidebar/views/InboxView.tsx:496
+#: src/features/sidebar/views/InboxView.tsx:587
 #: src/components/inbox/Inbox.tsx:397
 #: src/components/announcement/AnnouncementItem.tsx:148
 msgid "Mark as read"
 msgstr "Mark as read"
 
-#: src/features/sidebar/views/InboxView.tsx:571
+#: src/features/sidebar/views/InboxView.tsx:587
 #: src/components/announcement/AnnouncementItem.tsx:137
 msgid "Mark as unread"
 msgstr "Mark as unread"
@@ -8905,7 +8915,7 @@ msgstr "Mark as unread"
 msgid "Mark completed"
 msgstr "Mark completed"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3120
+#: src/routes/admin/AdminSettingsRoute.tsx:2825
 msgid "Mark invoice paid"
 msgstr "Mark invoice paid"
 
@@ -8913,7 +8923,7 @@ msgstr "Mark invoice paid"
 msgid "Mark training completed"
 msgstr "Mark training completed"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:532
+#: src/routes/admin/AdminSettingsRoute.tsx:531
 msgid "Marks {orgName} as a partner. Its workspaces self-identify internal vs external client use on creation."
 msgstr "Marks {orgName} as a partner. Its workspaces self-identify internal vs external client use on creation."
 
@@ -9089,7 +9099,7 @@ msgstr "mo"
 msgid "Mode"
 msgstr "Mode"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2752
+#: src/routes/admin/AdminSettingsRoute.tsx:2457
 msgid "Mollie is not configured in this environment, so no live transactions are shown. The dashboard link still points to the right Mollie environment."
 msgstr "Mollie is not configured in this environment, so no live transactions are shown. The dashboard link still points to the right Mollie environment."
 
@@ -9168,11 +9178,11 @@ msgstr "Move \"{0}\" to {targetWorkspaceName}? Members of the current workspace 
 
 #. placeholder {0}: row.workspace_name
 #. placeholder {1}: row.tier
-#: src/routes/admin/AdminSettingsRoute.tsx:664
+#: src/routes/admin/AdminSettingsRoute.tsx:663
 msgid "Move {0} from {1} to {tier}?"
 msgstr "Move {0} from {1} to {tier}?"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:825
+#: src/routes/admin/AdminSettingsRoute.tsx:824
 msgid "Move {name} off dembrane-managed billing. Choose what happens to their plan."
 msgstr "Move {name} off dembrane-managed billing. Choose what happens to their plan."
 
@@ -9427,7 +9437,7 @@ msgstr "New look, new features"
 #~ msgid "New methodology"
 #~ msgstr "New methodology"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2382
+#: src/routes/admin/AdminSettingsRoute.tsx:2087
 msgid "New organisation"
 msgstr "New organisation"
 
@@ -9456,7 +9466,7 @@ msgstr "New projects no longer add dembrane as a default transcription term."
 #~ msgid "New runs"
 #~ msgstr "New runs"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:642
+#: src/routes/admin/AdminSettingsRoute.tsx:641
 msgid "New tier"
 msgstr "New tier"
 
@@ -9520,7 +9530,7 @@ msgstr "No account was charged in {month}."
 msgid "No account was charged this month."
 msgstr "No account was charged this month."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3012
+#: src/routes/admin/AdminSettingsRoute.tsx:2717
 msgid "No accounts"
 msgstr "No accounts"
 
@@ -9569,7 +9579,7 @@ msgstr "No audit logs match the current filters."
 msgid "No billing account yet. Email <0>support@dembrane.com</0> and we'll set one up."
 msgstr "No billing account yet. Email <0>support@dembrane.com</0> and we'll set one up."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1561
+#: src/routes/admin/AdminSettingsRoute.tsx:1266
 msgid "No billing accounts match the current filters."
 msgstr "No billing accounts match the current filters."
 
@@ -9664,7 +9674,7 @@ msgstr "No end date"
 msgid "No evidenced connections."
 msgstr "No evidenced connections."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2306
+#: src/routes/admin/AdminSettingsRoute.tsx:2011
 msgid "no expiry"
 msgstr "no expiry"
 
@@ -9672,7 +9682,7 @@ msgstr "no expiry"
 msgid "No explicit shares. Workspace admins still have access."
 msgstr "No explicit shares. Workspace admins still have access."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2432
+#: src/routes/admin/AdminSettingsRoute.tsx:2137
 msgid "No external-led organisations yet."
 msgstr "No external-led organisations yet."
 
@@ -9781,7 +9791,7 @@ msgstr "No one else in this organisation yet"
 msgid "No one here yet."
 msgstr "No one here yet."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2731
+#: src/routes/admin/AdminSettingsRoute.tsx:2436
 msgid "No one is auto-blocked for non-payment. Watch failed charges here and follow up."
 msgstr "No one is auto-blocked for non-payment. Watch failed charges here and follow up."
 
@@ -9819,8 +9829,8 @@ msgstr "No one's on the workspace yet."
 msgid "No organisation role. Access via workspace invites."
 msgstr "No organisation role. Access via workspace invites."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2826
-#: src/routes/admin/AdminSettingsRoute.tsx:2847
+#: src/routes/admin/AdminSettingsRoute.tsx:2531
+#: src/routes/admin/AdminSettingsRoute.tsx:2552
 msgid "No payments match the filter."
 msgstr "No payments match the filter."
 
@@ -9891,7 +9901,7 @@ msgstr "No recent activity. Participants appear here when they scan the QR code,
 msgid "No recipe checks declared."
 msgstr "No recipe checks declared."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2352
+#: src/routes/admin/AdminSettingsRoute.tsx:2057
 msgid "No referral agreements yet."
 msgstr "No referral agreements yet."
 
@@ -10121,7 +10131,7 @@ msgstr "Not monthly"
 msgid "Not now"
 msgstr "Not now"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:795
+#: src/routes/admin/AdminSettingsRoute.tsx:794
 msgid "Not on managed billing. Set to managed to invoice this account at the {tier} tier, with no automatic Mollie charges."
 msgstr "Not on managed billing. Set to managed to invoice this account at the {tier} tier, with no automatic Mollie charges."
 
@@ -10183,7 +10193,7 @@ msgstr "Not using it enough"
 msgid "note"
 msgstr "note"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2317
+#: src/routes/admin/AdminSettingsRoute.tsx:2022
 #: src/components/training/StaffTrainingPanel.tsx:164
 msgid "Notes"
 msgstr "Notes"
@@ -10204,7 +10214,7 @@ msgstr "Notes the assistant saved about this project from chats. Everyone who ch
 msgid "Notes the assistant saved about this workspace from chats. Everyone in the workspace shares them."
 msgstr "Notes the assistant saved about this workspace from chats. Everyone in the workspace shares them."
 
-#: src/features/sidebar/views/InboxView.tsx:321
+#: src/features/sidebar/views/InboxView.tsx:337
 #: src/components/inbox/Inbox.tsx:259
 msgid "Nothing from dembrane right now."
 msgstr "Nothing from dembrane right now."
@@ -10324,7 +10334,7 @@ msgstr "on"
 msgid "On"
 msgstr "On"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:790
+#: src/routes/admin/AdminSettingsRoute.tsx:789
 msgid "On dembrane-managed billing. Switching to self-serve keeps the tier and shows the customer the checkout to set up card payment."
 msgstr "On dembrane-managed billing. Switching to self-serve keeps the tier and shows the customer the checkout to set up card payment."
 
@@ -10406,7 +10416,7 @@ msgstr "One symbol"
 msgid "One uppercase letter"
 msgstr "One uppercase letter"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2642
+#: src/routes/admin/AdminSettingsRoute.tsx:2347
 msgid "One-off"
 msgstr "One-off"
 
@@ -10442,7 +10452,7 @@ msgstr "Only the people you add can see it. The organisation owner can also find
 msgid "Only the people you add or invite can see it."
 msgstr "Only the people you add or invite can see it."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3107
+#: src/routes/admin/AdminSettingsRoute.tsx:2812
 msgid "Only when recording an invoice already paid out-of-band."
 msgstr "Only when recording an invoice already paid out-of-band."
 
@@ -10469,8 +10479,8 @@ msgid "participant.alert.microphone.access.failure"
 msgstr "Oops! It looks like microphone access was denied. No worries, though! We've got a handy troubleshooting guide for you. Feel free to check it out. Once you've resolved the issue, come back and visit this page again to check if your microphone is ready."
 
 #: src/routes/organisation/OrganisationExternalView.tsx:116
-#: src/routes/admin/AdminSettingsRoute.tsx:2673
-#: src/routes/admin/AdminSettingsRoute.tsx:2713
+#: src/routes/admin/AdminSettingsRoute.tsx:2378
+#: src/routes/admin/AdminSettingsRoute.tsx:2418
 #: src/components/results/ResultRow.tsx:432
 #: src/components/results/ResultRow.tsx:435
 #: src/components/popcorn/PopcornHistory.tsx:68
@@ -10482,7 +10492,7 @@ msgid "Open {label}"
 msgstr "Open {label}"
 
 #: src/routes/admin/AiCostsPanel.tsx:377
-#: src/routes/admin/AdminSettingsRoute.tsx:1664
+#: src/routes/admin/AdminSettingsRoute.tsx:1369
 msgid "Open account actions"
 msgstr "Open account actions"
 
@@ -10551,7 +10561,7 @@ msgstr "Open map"
 msgid "Open menu"
 msgstr "Open menu"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2745
+#: src/routes/admin/AdminSettingsRoute.tsx:2450
 msgid "Open Mollie dashboard"
 msgstr "Open Mollie dashboard"
 
@@ -10632,11 +10642,11 @@ msgstr "Open What's new from the sidebar and watch the organisation, workspace a
 #~ msgid "Open with"
 #~ msgstr "Open with"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1123
+#: src/routes/admin/JoinSupportControl.tsx:105
 msgid "Open workspace"
 msgstr "Open workspace"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1752
+#: src/routes/admin/AdminSettingsRoute.tsx:1457
 msgid "Open workspace actions"
 msgstr "Open workspace actions"
 
@@ -10735,8 +10745,8 @@ msgstr "Organisation"
 msgid "Organisation | dembrane"
 msgstr "Organisation | dembrane"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:480
-#: src/routes/admin/AdminSettingsRoute.tsx:1359
+#: src/routes/admin/AdminSettingsRoute.tsx:479
+#: src/routes/admin/AdminSettingsRoute.tsx:1064
 msgid "Organisation account"
 msgstr "Organisation account"
 
@@ -10786,7 +10796,7 @@ msgstr "Organisations"
 msgid "Organisations | dembrane"
 msgstr "Organisations | dembrane"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2422
+#: src/routes/admin/AdminSettingsRoute.tsx:2127
 msgid "Organisations created by people who are external collaborators of a partner. A signal they may want their own plan."
 msgstr "Organisations created by people who are external collaborators of a partner. A signal they may want their own plan."
 
@@ -10905,8 +10915,8 @@ msgstr "Page not found"
 #~ msgid "Page Title"
 #~ msgstr "Page Title"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2710
-#: src/routes/admin/AdminSettingsRoute.tsx:2765
+#: src/routes/admin/AdminSettingsRoute.tsx:2415
+#: src/routes/admin/AdminSettingsRoute.tsx:2470
 #: src/components/billing/BillingManager.tsx:223
 msgid "Paid"
 msgstr "Paid"
@@ -11049,13 +11059,13 @@ msgstr "Participants will be able to select tags when creating conversations"
 msgid "partner"
 msgstr "partner"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:543
+#: src/routes/admin/AdminSettingsRoute.tsx:542
 #: src/components/invite/InviteModal.tsx:726
 msgid "Partner"
 msgstr "Partner"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:529
-#: src/routes/admin/AdminSettingsRoute.tsx:2249
+#: src/routes/admin/AdminSettingsRoute.tsx:528
+#: src/routes/admin/AdminSettingsRoute.tsx:1954
 msgid "Partner organisation"
 msgstr "Partner organisation"
 
@@ -11122,11 +11132,11 @@ msgstr "Paused. Updated {updatedAgo}."
 msgid "Pay now"
 msgstr "Pay now"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1774
+#: src/routes/admin/AdminSettingsRoute.tsx:1479
 msgid "Paying revenue"
 msgstr "Paying revenue"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1999
+#: src/routes/admin/AdminSettingsRoute.tsx:1704
 msgid "Paying revenue this month"
 msgstr "Paying revenue this month"
 
@@ -11134,11 +11144,11 @@ msgstr "Paying revenue this month"
 msgid "Payment failed"
 msgstr "Payment failed"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3076
+#: src/routes/admin/AdminSettingsRoute.tsx:2781
 msgid "Payment link amount, EUR"
 msgstr "Payment link amount, EUR"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2957
+#: src/routes/admin/AdminSettingsRoute.tsx:2662
 msgid "Payment link issued."
 msgstr "Payment link issued."
 
@@ -11146,7 +11156,7 @@ msgstr "Payment link issued."
 msgid "Payment method"
 msgstr "Payment method"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3106
+#: src/routes/admin/AdminSettingsRoute.tsx:2811
 msgid "Payment reference"
 msgstr "Payment reference"
 
@@ -11158,8 +11168,8 @@ msgstr "Payment went through. Your plan is up to date."
 msgid "pending"
 msgstr "pending"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2712
-#: src/routes/admin/AdminSettingsRoute.tsx:2783
+#: src/routes/admin/AdminSettingsRoute.tsx:2417
+#: src/routes/admin/AdminSettingsRoute.tsx:2488
 #: src/components/workspace/AccessRequestsList.tsx:170
 #: src/components/report/ConversationStatusTable.tsx:86
 #: src/components/project/ProjectUsageAndSharing.tsx:354
@@ -11169,11 +11179,11 @@ msgstr "pending"
 msgid "Pending"
 msgstr "Pending"
 
-#: src/components/workspace/SupportAccessSection.tsx:194
+#: src/components/workspace/SupportAccessSection.tsx:137
 msgid "Pending access requests"
 msgstr "Pending access requests"
 
-#: src/features/sidebar/views/InboxView.tsx:293
+#: src/features/sidebar/views/InboxView.tsx:309
 msgid "Pending action"
 msgstr "Pending action"
 
@@ -11211,7 +11221,7 @@ msgstr "Per-recipient results:"
 msgid "Per-workspace access"
 msgstr "Per-workspace access"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:447
+#: src/routes/admin/AdminSettingsRoute.tsx:446
 msgid "Percent"
 msgstr "Percent"
 
@@ -11236,7 +11246,7 @@ msgstr "Phone"
 #~ msgid "phrases"
 #~ msgstr "phrases"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:850
+#: src/routes/admin/AdminSettingsRoute.tsx:849
 #: src/components/training/TrainingRowActions.tsx:184
 #: src/components/report/ScheduleDateTimePicker.tsx:86
 msgid "Pick a date"
@@ -11252,7 +11262,7 @@ msgstr "Pick a time"
 #~ msgid "Pick a time with {host}."
 #~ msgstr "Pick a time with {host}."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3007
+#: src/routes/admin/AdminSettingsRoute.tsx:2712
 msgid "Pick an account"
 msgstr "Pick an account"
 
@@ -12012,7 +12022,7 @@ msgstr "Published"
 msgid "Pull out the most impactful quotes from this session"
 msgstr "Pull out the most impactful quotes from this session"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:882
+#: src/routes/admin/AdminSettingsRoute.tsx:881
 msgid "Put {name} on dembrane-managed billing at the {tier} tier? No automatic Mollie charges or auto-expiry."
 msgstr "Put {name} on dembrane-managed billing at the {tier} tier? No automatic Mollie charges or auto-expiry."
 
@@ -12241,7 +12251,7 @@ msgstr "Reason"
 msgid "reason: {0}"
 msgstr "reason: {0}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2722
+#: src/routes/admin/AdminSettingsRoute.tsx:2427
 msgid "Recent payments across all accounts"
 msgstr "Recent payments across all accounts"
 
@@ -12525,13 +12535,13 @@ msgid "participant.button.reload"
 msgstr "Reload page"
 
 #: src/features/sidebar/AppSidebar.tsx:122
-#: src/components/layout/BaseLayout.tsx:39
+#: src/components/layout/BaseLayout.tsx:43
 #: src/components/error/ErrorPageContent.tsx:53
 #: src/components/error/ErrorBoundary.tsx:54
 msgid "Reload page"
 msgstr "Reload page"
 
-#: src/components/workspace/SupportAccessSection.tsx:62
+#: src/components/workspace/SupportAccessSection.tsx:51
 msgid "Reminder sent: support access still on"
 msgstr "Reminder sent: support access still on"
 
@@ -12660,7 +12670,7 @@ msgstr "Rename chat"
 msgid "Rename project"
 msgstr "Rename project"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2640
+#: src/routes/admin/AdminSettingsRoute.tsx:2345
 msgid "Renewal"
 msgstr "Renewal"
 
@@ -12833,7 +12843,7 @@ msgstr "Request a plan through the needs form and book a follow-up call."
 msgid "Request a training"
 msgstr "Request a training"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1146
+#: src/routes/admin/JoinSupportControl.tsx:130
 #: src/components/workspace/DiscoverableWorkspaces.tsx:340
 msgid "Request access"
 msgstr "Request access"
@@ -12846,7 +12856,7 @@ msgstr "Request approved"
 msgid "Request declined"
 msgstr "Request declined"
 
-#: src/components/workspace/SupportAccessSection.tsx:157
+#: src/components/workspace/supportRequests.ts:223
 msgid "Request declined."
 msgstr "Request declined."
 
@@ -12875,19 +12885,19 @@ msgstr "Request password reset | dembrane"
 msgid "Request sent"
 msgstr "Request sent"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:967
+#: src/components/workspace/supportVisit.ts:78
 msgid "Request sent. The workspace admins were notified."
 msgstr "Request sent. The workspace admins were notified."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1130
+#: src/routes/admin/JoinSupportControl.tsx:114
 msgid "Request sent. Waiting for the workspace admins."
 msgstr "Request sent. Waiting for the workspace admins."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1154
+#: src/components/workspace/SupportRequestNoteModal.tsx:28
 msgid "Request support access"
 msgstr "Request support access"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:986
+#: src/components/workspace/supportVisit.ts:88
 msgid "Request withdrawn."
 msgstr "Request withdrawn."
 
@@ -13295,7 +13305,7 @@ msgstr "Running"
 msgid "Runs"
 msgstr "Runs"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2970
+#: src/routes/admin/AdminSettingsRoute.tsx:2675
 msgid "Sales invoice issued."
 msgstr "Sales invoice issued."
 
@@ -13368,7 +13378,7 @@ msgstr "Save changes"
 #~ msgid "Save Changes"
 #~ msgstr "Save Changes"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:467
+#: src/routes/admin/AdminSettingsRoute.tsx:466
 msgid "Save discount"
 msgstr "Save discount"
 
@@ -13384,7 +13394,7 @@ msgstr "Save template"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1473
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1493
 #: src/routes/organisation/OrganisationRoute.tsx:1130
-#: src/routes/admin/AdminSettingsRoute.tsx:458
+#: src/routes/admin/AdminSettingsRoute.tsx:457
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:108
 #: src/components/conversation/ConversationDrilldownModal.tsx:144
 msgid "Saved"
@@ -13490,7 +13500,7 @@ msgstr "Scheduled"
 msgid "Scheduled reports and custom templates"
 msgstr "Scheduled reports and custom templates"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:435
+#: src/routes/admin/AdminSettingsRoute.tsx:434
 msgid "Scholarship"
 msgstr "Scholarship"
 
@@ -13533,11 +13543,11 @@ msgstr "Search"
 msgid "select.all.modal.loading.search"
 msgstr "Search"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2816
+#: src/routes/admin/AdminSettingsRoute.tsx:2521
 msgid "Search account, status, description"
 msgstr "Search account, status, description"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2017
+#: src/routes/admin/AdminSettingsRoute.tsx:1722
 msgid "Search account, workspace, organisation, email, tier"
 msgstr "Search account, workspace, organisation, email, tier"
 
@@ -13570,7 +13580,7 @@ msgstr "Search matches your words in any order."
 msgid "Search name or email"
 msgstr "Search name or email"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2340
+#: src/routes/admin/AdminSettingsRoute.tsx:2045
 msgid "Search partner, client, workspace"
 msgstr "Search partner, client, workspace"
 
@@ -13673,8 +13683,8 @@ msgstr "Searching…"
 msgid "seats"
 msgstr "seats"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1582
-#: src/routes/admin/AdminSettingsRoute.tsx:1697
+#: src/routes/admin/AdminSettingsRoute.tsx:1287
+#: src/routes/admin/AdminSettingsRoute.tsx:1402
 #: src/components/workspace/UsageCard.tsx:196
 #: src/components/workspace/OrganisationUsageRollup.tsx:415
 #: src/components/billing/BillingManager.tsx:341
@@ -13903,7 +13913,7 @@ msgstr "Selection too large"
 msgid "select.all.modal.context.limit.reached"
 msgstr "Selection too large. Some conversations weren't added."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:770
+#: src/routes/admin/AdminSettingsRoute.tsx:769
 msgid "Self-serve"
 msgstr "Self-serve"
 
@@ -13952,7 +13962,7 @@ msgstr "Send note"
 #~ msgid "Send report"
 #~ msgstr "Send report"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1178
+#: src/components/workspace/SupportRequestNoteModal.tsx:61
 #: src/components/training/RequestTrainingModal.tsx:101
 msgid "Send request"
 msgstr "Send request"
@@ -14025,7 +14035,7 @@ msgstr "Set goal"
 msgid "Set key terms"
 msgstr "Set key terms"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3036
+#: src/routes/admin/AdminSettingsRoute.tsx:2741
 msgid "Set managed"
 msgstr "Set managed"
 
@@ -14033,12 +14043,12 @@ msgstr "Set managed"
 msgid "Set project context"
 msgstr "Set project context"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:880
+#: src/routes/admin/AdminSettingsRoute.tsx:879
 msgid "Set to managed"
 msgstr "Set to managed"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:811
-#: src/routes/admin/AdminSettingsRoute.tsx:878
+#: src/routes/admin/AdminSettingsRoute.tsx:810
+#: src/routes/admin/AdminSettingsRoute.tsx:877
 msgid "Set to managed billing"
 msgstr "Set to managed billing"
 
@@ -14316,7 +14326,7 @@ msgstr "Show introduction"
 msgid "Show IP addresses"
 msgstr "Show IP addresses"
 
-#: src/features/sidebar/views/InboxView.tsx:565
+#: src/features/sidebar/views/InboxView.tsx:581
 #: src/components/chat/CanvasSuggestionCard.tsx:298
 #: src/components/announcement/AnnouncementItem.tsx:119
 msgid "Show less"
@@ -14325,8 +14335,8 @@ msgstr "Show less"
 #~ msgid "Show live preview text"
 #~ msgstr "Show live preview text"
 
-#: src/features/sidebar/views/InboxView.tsx:565
-#: src/components/workspace/SupportAccessSection.tsx:262
+#: src/features/sidebar/views/InboxView.tsx:581
+#: src/components/workspace/SupportAccessSection.tsx:206
 #: src/components/feedback/AdminResponseFeedbackPanel.tsx:237
 #: src/components/chat/CanvasSuggestionCard.tsx:298
 #: src/components/announcement/AnnouncementItem.tsx:121
@@ -14470,7 +14480,7 @@ msgstr "Shown in the organisation header and in email subject lines."
 msgid "Side by side"
 msgstr "Side by side"
 
-#: src/components/layout/BaseLayout.tsx:31
+#: src/components/layout/BaseLayout.tsx:35
 msgid "Sidebar couldn't load."
 msgstr "Sidebar couldn't load."
 
@@ -14734,7 +14744,7 @@ msgstr "Spotlight"
 #~ msgid "Spread out"
 #~ msgstr "Spread out"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3223
+#: src/routes/admin/AdminSettingsRoute.tsx:2928
 #: src/features/sidebar/shell/UserMenu.tsx:172
 msgid "Staff"
 msgstr "Staff"
@@ -14746,11 +14756,11 @@ msgstr "Staff demos and voice outside projects"
 #~ msgid "Staff demos, voice outside projects, dev tools"
 #~ msgstr "Staff demos, voice outside projects, dev tools"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:437
+#: src/routes/admin/AdminSettingsRoute.tsx:436
 msgid "Staff discount"
 msgstr "Staff discount"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3198
+#: src/routes/admin/AdminSettingsRoute.tsx:2903
 msgid "Staff only"
 msgstr "Staff only"
 
@@ -14848,7 +14858,7 @@ msgstr "Started recording"
 msgid "Starting from: {templateLabel}"
 msgstr "Starting from: {templateLabel}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2301
+#: src/routes/admin/AdminSettingsRoute.tsx:2006
 msgid "Starts"
 msgstr "Starts"
 
@@ -14871,8 +14881,8 @@ msgstr "Starts now"
 msgid "Statement"
 msgstr "Statement"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1687
-#: src/routes/admin/AdminSettingsRoute.tsx:2629
+#: src/routes/admin/AdminSettingsRoute.tsx:1392
+#: src/routes/admin/AdminSettingsRoute.tsx:2334
 #: src/components/workspace/OrganisationUsageRollup.tsx:430
 #: src/components/training/StaffTrainingPanel.tsx:167
 #: src/components/results/ResultsList.tsx:283
@@ -15134,27 +15144,31 @@ msgstr "Summary will be available once the conversation is transcribed"
 msgid "Superseded"
 msgstr "Superseded"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1044
+#: src/components/workspace/supportVisit.ts:126
 msgid "Support access ended."
 msgstr "Support access ended."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1015
+#: src/components/workspace/supportVisit.ts:107
 msgid "Support access extended for another 24 hours."
 msgstr "Support access extended for another 24 hours."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1018
+#: src/components/workspace/supportVisit.ts:110
 msgid "Support access granted. It ends automatically in 24 hours."
 msgstr "Support access granted. It ends automatically in 24 hours."
 
-#: src/components/workspace/SupportAccessSection.tsx:40
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:96
+msgid "Support access request"
+msgstr "Support access request"
+
+#: src/components/workspace/SupportAccessSection.tsx:29
 msgid "Support access turned off"
 msgstr "Support access turned off"
 
-#: src/components/workspace/SupportAccessSection.tsx:42
+#: src/components/workspace/SupportAccessSection.tsx:31
 msgid "Support access turned off after the session ended"
 msgstr "Support access turned off after the session ended"
 
-#: src/components/workspace/SupportAccessSection.tsx:38
+#: src/components/workspace/SupportAccessSection.tsx:27
 msgid "Support access turned on"
 msgstr "Support access turned on"
 
@@ -15189,12 +15203,12 @@ msgstr "Supports pole B"
 msgid "Switch to audio"
 msgstr "Switch to audio"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:864
+#: src/routes/admin/AdminSettingsRoute.tsx:863
 msgid "Switch to self-serve"
 msgstr "Switch to self-serve"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:809
-#: src/routes/admin/AdminSettingsRoute.tsx:820
+#: src/routes/admin/AdminSettingsRoute.tsx:808
+#: src/routes/admin/AdminSettingsRoute.tsx:819
 msgid "Switch to self-serve billing"
 msgstr "Switch to self-serve billing"
 
@@ -15304,9 +15318,13 @@ msgstr "Tasks"
 #~ msgid "Technical lineage"
 #~ msgstr "Technical lineage"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1159
-msgid "Tell the workspace admins what you need access for. This note is optional."
-msgstr "Tell the workspace admins what you need access for. This note is optional."
+#: src/components/workspace/SupportRequestNoteModal.tsx:34
+msgid "Tell the admins of {workspaceName} what you need access for. This note is optional."
+msgstr "Tell the admins of {workspaceName} what you need access for. This note is optional."
+
+#: src/components/workspace/SupportRequestNoteModal.tsx:31
+#~ msgid "Tell the workspace admins what you need access for. This note is optional."
+#~ msgstr "Tell the workspace admins what you need access for. This note is optional."
 
 #: src/components/workspace/FreeAllowanceCard.tsx:174
 #: src/components/workspace/FeatureGatePopover.tsx:115
@@ -15380,7 +15398,7 @@ msgstr "Test and select your microphone before recording."
 msgid "Test Explore and Verify on a sample conversation before participants use them."
 msgstr "Test Explore and Verify on a sample conversation before participants use them."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2726
+#: src/routes/admin/AdminSettingsRoute.tsx:2431
 msgid "test mode"
 msgstr "test mode"
 
@@ -15933,6 +15951,14 @@ msgstr "The words of this finding"
 msgid "The workspace this invite was for has been deleted. There's nothing to join."
 msgstr "The workspace this invite was for has been deleted. There's nothing to join."
 
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:109
+msgid "Their note: “{note}”"
+msgstr "Their note: “{note}”"
+
+#: src/components/workspace/SupportAccessRequestPrompt.tsx:106
+#~ msgid "Their note: {note}"
+#~ msgstr "Their note: {note}"
+
 #: src/components/workspace/WorkspaceDataOwnershipSection.tsx:165
 msgid "Their representative who owns this data. They are added as a free observer and become the handoff contact."
 msgstr "Their representative who owns this data. They are added as a free observer and become the handoff contact."
@@ -16019,11 +16045,11 @@ msgstr "Things like: A call with your DPO or CISO, a security review or custom D
 msgid "Thinking..."
 msgstr "Thinking..."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:766
+#: src/routes/admin/AdminSettingsRoute.tsx:765
 msgid "This account has a live Mollie subscription. Cancel it first."
 msgstr "This account has a live Mollie subscription. Cancel it first."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:629
+#: src/routes/admin/AdminSettingsRoute.tsx:628
 msgid "This account has an active subscription. Ask the customer to cancel it from their billing page before you change the tier."
 msgstr "This account has an active subscription. Ask the customer to cancel it from their billing page before you change the tier."
 
@@ -16033,7 +16059,7 @@ msgstr "This account has an active subscription. Ask the customer to cancel it f
 #~ msgid "This account is logged in somewhere else"
 #~ msgstr "This account is logged in somewhere else"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3201
+#: src/routes/admin/AdminSettingsRoute.tsx:2906
 msgid "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 msgstr "This area is for dembrane staff. If you think you should have access, email support@dembrane.com."
 
@@ -16241,7 +16267,7 @@ msgid "This marks the training cancelled. You can reopen it later from the same 
 msgstr "This marks the training cancelled. You can reopen it later from the same menu."
 
 #: src/routes/admin/AiCostsPanel.tsx:621
-#: src/routes/admin/AdminSettingsRoute.tsx:257
+#: src/routes/admin/AdminSettingsRoute.tsx:256
 #: src/components/workspace/PeriodSelect.tsx:16
 msgid "This month"
 msgstr "This month"
@@ -16383,11 +16409,11 @@ msgstr "This project isn't taking responses right now."
 msgid "This project will follow the inherited setting instead: {0} ({1})."
 msgstr "This project will follow the inherited setting instead: {0} ({1})."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:673
+#: src/routes/admin/AdminSettingsRoute.tsx:672
 msgid "This puts the account on dembrane-managed billing: no automatic Mollie charges or auto-expiry."
 msgstr "This puts the account on dembrane-managed billing: no automatic Mollie charges or auto-expiry."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:764
+#: src/routes/admin/AdminSettingsRoute.tsx:763
 msgid "This record has no billing account."
 msgstr "This record has no billing account."
 
@@ -16431,7 +16457,7 @@ msgstr "This request was stopped before it reached dembrane. Try another network
 #~ msgid "This result changed while you were reviewing it."
 #~ msgstr "This result changed while you were reviewing it."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:678
+#: src/routes/admin/AdminSettingsRoute.tsx:677
 msgid "This returns the account to standard free billing."
 msgstr "This returns the account to standard free billing."
 
@@ -16527,7 +16553,7 @@ msgstr "This workspace is on a tier that doesn't allow more seats. Upgrade the w
 msgid "This workspace no longer exists"
 msgstr "This workspace no longer exists"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1254
+#: src/routes/admin/AdminSettingsRoute.tsx:956
 msgid "This workspace shares its organisation's billing. Change the tier from the organisation account, where it applies to every internal workspace in the org."
 msgstr "This workspace shares its organisation's billing. Change the tier from the organisation account, where it applies to every internal workspace in the org."
 
@@ -16564,14 +16590,14 @@ msgid "Tick the ones you want. The rest stay as the template sets them."
 msgstr "Tick the ones you want. The rest stay as the template sets them."
 
 #: src/routes/project/CreateProjectRoute.tsx:720
-#: src/routes/admin/AdminSettingsRoute.tsx:1576
-#: src/routes/admin/AdminSettingsRoute.tsx:2603
-#: src/routes/admin/AdminSettingsRoute.tsx:3025
+#: src/routes/admin/AdminSettingsRoute.tsx:1281
+#: src/routes/admin/AdminSettingsRoute.tsx:2308
+#: src/routes/admin/AdminSettingsRoute.tsx:2730
 #: src/components/workspace/OrganisationUsageRollup.tsx:388
 msgid "Tier"
 msgstr "Tier"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:590
+#: src/routes/admin/AdminSettingsRoute.tsx:589
 msgid "Tier changed"
 msgstr "Tier changed"
 
@@ -16964,11 +16990,11 @@ msgstr "Tree"
 msgid "Tree repulsion factor: {0}"
 msgstr "Tree repulsion factor: {0}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1400
+#: src/routes/admin/AdminSettingsRoute.tsx:1105
 msgid "Trial"
 msgstr "Trial"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2004
+#: src/routes/admin/AdminSettingsRoute.tsx:1709
 msgid "Trial and comped accounts, excluded from the paying total."
 msgstr "Trial and comped accounts, excluded from the paying total."
 
@@ -17087,8 +17113,8 @@ msgstr "Two-factor authentication disabled"
 msgid "Two-factor authentication enabled"
 msgstr "Two-factor authentication enabled"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:433
-#: src/routes/admin/AdminSettingsRoute.tsx:2650
+#: src/routes/admin/AdminSettingsRoute.tsx:432
+#: src/routes/admin/AdminSettingsRoute.tsx:2355
 #: src/components/training/StaffTrainingPanel.tsx:155
 #: src/components/settings/AuditLogsCard.tsx:190
 #: src/components/map/attributes.ts:332
@@ -17164,7 +17190,7 @@ msgstr "Undo withdrawal"
 msgid "Unknown"
 msgstr "Unknown"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:2526
+#: src/routes/admin/AdminSettingsRoute.tsx:2231
 #: src/components/conversation/useConversationList.ts:45
 msgid "Unknown date"
 msgstr "Unknown date"
@@ -17345,7 +17371,7 @@ msgstr "Updated colours, fonts, icons and logo give dembrane a fresh look."
 msgid "Updated."
 msgstr "Updated."
 
-#: src/features/sidebar/views/InboxView.tsx:166
+#: src/features/sidebar/views/InboxView.tsx:182
 msgid "Updates"
 msgstr "Updates"
 
@@ -17546,11 +17572,11 @@ msgstr "Usage · {0}"
 msgid "Usage and billing"
 msgstr "Usage and billing"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1985
+#: src/routes/admin/AdminSettingsRoute.tsx:1690
 msgid "Usage and billing, {cycleLabel}"
 msgstr "Usage and billing, {cycleLabel}"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:3227
+#: src/routes/admin/AdminSettingsRoute.tsx:2932
 msgid "Usage and billing, payments, partner ledger. Any Directus admin has access."
 msgstr "Usage and billing, payments, partner ledger. Any Directus admin has access."
 
@@ -18504,8 +18530,8 @@ msgstr "Working on your answer..."
 #~ msgstr "workspace"
 
 #: src/routes/project/CreateProjectRoute.tsx:699
-#: src/routes/admin/AdminSettingsRoute.tsx:1682
-#: src/routes/admin/AdminSettingsRoute.tsx:2230
+#: src/routes/admin/AdminSettingsRoute.tsx:1387
+#: src/routes/admin/AdminSettingsRoute.tsx:1935
 #: src/features/sidebar/hooks/useSearchHits.ts:166
 #: src/components/workspace/OrganisationUsageRollup.tsx:382
 #: src/components/workspace/OrganisationProjectsTable.tsx:215
@@ -18526,12 +18552,12 @@ msgstr "Workspace / Project"
 msgid "Workspace access options explain which settings need a paid plan."
 msgstr "Workspace access options explain which settings need a paid plan."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:481
-#: src/routes/admin/AdminSettingsRoute.tsx:1360
+#: src/routes/admin/AdminSettingsRoute.tsx:480
+#: src/routes/admin/AdminSettingsRoute.tsx:1065
 msgid "Workspace account"
 msgstr "Workspace account"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1529
+#: src/routes/admin/AdminSettingsRoute.tsx:1234
 msgid "Workspace actions"
 msgstr "Workspace actions"
 
@@ -18589,7 +18615,7 @@ msgstr "Workspace-only guest. Not added to the organisation."
 #~ msgstr "workspaces"
 
 #: src/routes/organisation/OrganisationRoute.tsx:1476
-#: src/routes/admin/AdminSettingsRoute.tsx:1675
+#: src/routes/admin/AdminSettingsRoute.tsx:1380
 #: src/features/sidebar/views/org/OrgHomeView.tsx:175
 msgid "Workspaces"
 msgstr "Workspaces"
@@ -18598,7 +18624,7 @@ msgstr "Workspaces"
 msgid "Workspaces billed separately"
 msgstr "Workspaces billed separately"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1508
+#: src/routes/admin/AdminSettingsRoute.tsx:1213
 msgid "Workspaces in this account"
 msgstr "Workspaces in this account"
 
@@ -18660,7 +18686,7 @@ msgstr "Yes"
 msgid "You"
 msgstr "You"
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1013
+#: src/components/workspace/supportVisit.ts:105
 msgid "You already have access to this workspace."
 msgstr "You already have access to this workspace."
 
@@ -18845,7 +18871,7 @@ msgstr "You have no recording left this month."
 msgid "You have successfully unsubscribed."
 msgstr "You have successfully unsubscribed."
 
-#: src/routes/admin/AdminSettingsRoute.tsx:1078
+#: src/routes/admin/JoinSupportControl.tsx:60
 msgid "You have support access to this workspace. It ends automatically on {endsAt}."
 msgstr "You have support access to this workspace. It ends automatically on {endsAt}."
 
@@ -18960,7 +18986,7 @@ msgstr "You'll verify your new payment method on the next screen. You won't be c
 msgid "You're about to change your own role to <0>{0}</0>. You'll immediately lose access to workspace settings, invites, and member management."
 msgstr "You're about to change your own role to <0>{0}</0>. You'll immediately lose access to workspace settings, invites, and member management."
 
-#: src/features/sidebar/views/InboxView.tsx:246
+#: src/features/sidebar/views/InboxView.tsx:262
 #: src/components/inbox/Inbox.tsx:236
 msgid "You're all caught up."
 msgstr "You're all caught up."

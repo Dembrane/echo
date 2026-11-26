@@ -1,12 +1,20 @@
+import { staffGuestTakesNoSeat } from "@dembrane/access";
 import { reconcileAccountSeats } from "@dembrane/billing";
 import { UnavailableError } from "@dembrane/core";
 import type { Db } from "@dembrane/db";
 import { schema } from "@dembrane/db";
 import type { Logger } from "@dembrane/observability";
-import { and, eq, gt, inArray, isNull, ne } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull, ne, sql } from "drizzle-orm";
 import type { Jobs } from "./deps";
 
-const { billing_account, workspace, workspace_membership, workspace_invite, app_user } = schema;
+const {
+  billing_account,
+  workspace,
+  workspace_membership,
+  workspace_invite,
+  app_user,
+  org_membership,
+} = schema;
 
 /**
  * The seat side of billing that membership changes touch. Seats are pooled per billing
@@ -47,11 +55,21 @@ async function accountWorkspaceIds(db: Db, accountId: string) {
   return rows.map((r) => r.id);
 }
 
+/**
+ * Direct seat rows of the workspaces, with whether the person is a live member of that
+ * workspace's organisation. A dembrane person outside it takes no seat there
+ * (staffGuestTakesNoSeat in @dembrane/access, the rule billing and the staff rollup read).
+ */
 async function seatHolders(db: Db, workspaceIds: readonly string[]) {
   if (!workspaceIds.length) return [];
-  return db
-    .selectDistinct({ userId: workspace_membership.user_id, email: app_user.email })
+  const rows = await db
+    .selectDistinct({
+      userId: workspace_membership.user_id,
+      email: app_user.email,
+      inOrganisation: sql<boolean>`exists (select 1 from ${org_membership} where ${org_membership.org_id} = ${workspace.org_id} and ${org_membership.user_id} = ${workspace_membership.user_id} and ${org_membership.deleted_at} is null)`,
+    })
     .from(workspace_membership)
+    .innerJoin(workspace, eq(workspace.id, workspace_membership.workspace_id))
     .leftJoin(app_user, eq(app_user.id, workspace_membership.user_id))
     .where(
       and(
@@ -61,6 +79,22 @@ async function seatHolders(db: Db, workspaceIds: readonly string[]) {
         inArray(workspace_membership.role, SEAT_ROLES),
       ),
     );
+  return rows.filter((r) => !staffGuestTakesNoSeat(r.email, r.inOrganisation));
+}
+
+/** The live members' addresses of the organisations whose workspaces are given. */
+async function organisationEmails(db: Db, workspaceIds: readonly string[]) {
+  if (!workspaceIds.length) return new Set<string>();
+  const rows = await db
+    .selectDistinct({ email: app_user.email })
+    .from(workspace)
+    .innerJoin(
+      org_membership,
+      and(eq(org_membership.org_id, workspace.org_id), isNull(org_membership.deleted_at)),
+    )
+    .innerJoin(app_user, eq(app_user.id, org_membership.user_id))
+    .where(inArray(workspace.id, [...workspaceIds]));
+  return new Set(rows.flatMap((r) => (r.email ? [r.email.trim().toLowerCase()] : [])));
 }
 
 export async function countAccountSeats(db: Db, accountId: string): Promise<number> {
@@ -99,7 +133,10 @@ export async function countNetNewSeats(
       );
     for (const p of pending) already.add(p.email.trim().toLowerCase());
   }
-  return [...cleaned].filter((e) => !already.has(e)).length;
+  // A dembrane person outside the organisation would take no seat, so inviting one adds none.
+  const members = await organisationEmails(db, wsIds);
+  return [...cleaned].filter((e) => !already.has(e) && !staffGuestTakesNoSeat(e, members.has(e)))
+    .length;
 }
 
 /**
