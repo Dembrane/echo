@@ -282,10 +282,17 @@ run("staff ask to make changes while support access is on", () => {
     const settings = () =>
       call(people.staff, "PATCH", `${W}/settings`, { description: "Changed by staff" });
     const create = (name: string) => call(people.staff, "POST", `${W}/projects`, { name });
+    /** What the dashboard is told the caller may do: it offers only that. */
+    const policies = async () =>
+      (await call(people.staff, "GET", `${W}/settings`)).data.my_policies as string[];
     // Still the approved visit from the test above: projects yes, settings no.
     expect((await visit()).data).toMatchObject({ active: true, can_change: true });
     expect((await settings()).status).toBe(403);
     expect((await create("Made by approved staff")).status).toBe(200);
+    const approved = await policies();
+    expect(approved).toContain("project:create");
+    expect(approved).not.toContain("settings:manage");
+    expect(approved).not.toContain("member:manage");
 
     // Leave (which turns the switch off), the customer turns it on, staff come back: read only.
     expect(
@@ -304,6 +311,12 @@ run("staff ask to make changes while support access is on", () => {
     expect((await settings()).status).toBe(403);
     expect((await create("Made by read-only staff")).status).toBe(403);
     expect((await call(people.staff, "GET", `${W}/projects`)).status).toBe(200);
+    expect((await policies()).sort()).toEqual([
+      "conversation:read",
+      "project:read",
+      "report:view",
+      "workspace:view_usage",
+    ]);
     const [row] = await db
       .select({ description: schema.workspace.description })
       .from(schema.workspace)
