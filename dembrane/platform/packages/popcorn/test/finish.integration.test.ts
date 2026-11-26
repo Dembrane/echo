@@ -164,7 +164,7 @@ run("popcorn read when a conversation finishes", () => {
   test("the hook books nothing with popcorn switched off, and a failure leaves the claim standing", async () => {
     await clear();
     const off = finishReads({ flags: { present: false, canvas: false }, logger: quiet });
-    await client(database.db).begin((tx) => off(tx, ids.project, newId()));
+    await client(database.db).begin((tx) => off(tx, ids.project, newId(), database.db));
     expect((await pending()).length).toBe(0);
 
     const warned: string[] = [];
@@ -175,7 +175,7 @@ run("popcorn read when a conversation finishes", () => {
       now: () => new Date(Number.NaN),
     });
     const after = await client(database.db).begin(async (tx) => {
-      await on(tx, ids.project, newId());
+      await on(tx, ids.project, newId(), database.db);
       const [r] = await tx`select 1 as ok`;
       return r?.ok;
     });
