@@ -183,7 +183,7 @@ msgstr "La invitación de {first} se retira y el enlace que enviamos deja de fun
 msgid "{inviter} from {org} invited you to sign"
 msgstr "{inviter} de {org} te ha invitado a firmar"
 
-#: src/features/accounts/signing/SignGate.tsx:719
+#: src/features/accounts/signing/SignGate.tsx:715
 msgid "{inviter} invited you to {org}"
 msgstr "{inviter} te ha invitado a {org}"
 
@@ -549,7 +549,7 @@ msgstr "Hacer una pregunta"
 msgid "Ask a workspace's admins to let you in. If they approve your request, you can edit for 24 hours. If they have turned support access on themselves, you can join to read, and still ask to edit."
 msgstr "Pide a los administradores de un espacio de trabajo que te dejen entrar. Si aprueban tu solicitud, puedes editar durante 24 horas. Si ellos mismos activaron el acceso de soporte, puedes unirte para leer, y aun así pedir editar."
 
-#: src/features/accounts/signing/SignGate.tsx:777
+#: src/features/accounts/signing/SignGate.tsx:773
 msgid "Ask the person who invited you to send a new one."
 msgstr "Pide a la persona que te invitó que te envíe una nueva."
 
@@ -1564,7 +1564,7 @@ msgstr "Cómo"
 msgid "How do you want to get invoices?"
 msgstr "¿Cómo quieres recibir las facturas?"
 
-#: src/features/accounts/signing/SignGate.tsx:558
+#: src/features/accounts/signing/SignGate.tsx:554
 msgid "How we handle your details"
 msgstr "Cómo tratamos tus datos"
 
@@ -1656,7 +1656,7 @@ msgstr "Los campos de iniciales usarán esta firma salvo que dibujes tus inicial
 msgid "Intro"
 msgstr "Introducción"
 
-#: src/features/accounts/signing/SignGate.tsx:692
+#: src/features/accounts/signing/SignGate.tsx:688
 msgid "Invitation | dembrane"
 msgstr "Invitación | dembrane"
 
@@ -1875,7 +1875,7 @@ msgstr "Bloqueado"
 
 #: src/features/accounts/signing/signInLink.tsx:29
 #: src/features/accounts/signing/SignGate.tsx:507
-#: src/features/accounts/signing/SignGate.tsx:789
+#: src/features/accounts/signing/SignGate.tsx:785
 msgid "Log in"
 msgstr "Iniciar sesión"
 
@@ -1883,7 +1883,7 @@ msgstr "Iniciar sesión"
 msgid "Log in to download the signed copy."
 msgstr "Inicia sesión para descargar la copia firmada."
 
-#: src/features/accounts/signing/SignGate.tsx:705
+#: src/features/accounts/signing/SignGate.tsx:701
 msgid "Log in to read the offer and the DPA."
 msgstr "Inicia sesión para leer la oferta y el DPA."
 
@@ -2037,7 +2037,7 @@ msgstr "Sin cuenta"
 msgid "No charge"
 msgstr "Sin coste"
 
-#: src/features/accounts/signing/SignGate.tsx:534
+#: src/features/accounts/signing/SignGate.tsx:530
 msgid "No code after a minute? Check your spam folder, or ask the person who shared this with you to add you."
 msgstr "¿Ningún código después de un minuto? Mira en tu carpeta de spam, o pide a la persona que compartió esto contigo que te añada."
 
@@ -2735,7 +2735,7 @@ msgstr "Solo lectura"
 #~ msgid "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link."
 #~ msgstr "Lee la oferta y fírmala aquí. ¿Firma otra persona por tu organización? Indícala en la oferta y recibirá su propio enlace."
 
-#: src/features/accounts/signing/SignGate.tsx:729
+#: src/features/accounts/signing/SignGate.tsx:725
 msgid "Read the offer and the DPA with your team"
 msgstr "Lee la oferta y el DPA con tu equipo"
 
@@ -2989,12 +2989,12 @@ msgstr "Selecciona un campo para definir su tipo, etiqueta y si es obligatorio. 
 msgid "Send"
 msgstr "Enviar"
 
-#: src/features/accounts/signing/SignGate.tsx:523
+#: src/features/accounts/signing/SignGate.tsx:520
 msgid "Send a new code"
 msgstr "Enviar un código nuevo"
 
 #. placeholder {0}: resendCooldown.wait
-#: src/features/accounts/signing/SignGate.tsx:521
+#: src/features/accounts/signing/SignGate.tsx:518
 msgid "Send a new code in {0}s"
 msgstr "Enviar un nuevo código en {0} s"
 
@@ -3602,7 +3602,7 @@ msgstr "La invitación se envió a"
 #~ msgid "The invitation was sent to this address."
 #~ msgstr ""
 
-#: src/features/accounts/signing/SignGate.tsx:758
+#: src/features/accounts/signing/SignGate.tsx:754
 msgid "The invitation was withdrawn, or a newer one replaced it. Ask the person who invited you to send it again."
 msgstr "La invitación se retiró o una más reciente la sustituyó. Pide a la persona que te invitó que la vuelva a enviar."
 
@@ -3776,7 +3776,7 @@ msgstr "Este documento ya se envió. Sus campos no se pueden cambiar; envía una
 msgid "This invitation could not be loaded"
 msgstr "No se ha podido cargar esta invitación"
 
-#: src/features/accounts/signing/SignGate.tsx:774
+#: src/features/accounts/signing/SignGate.tsx:770
 msgid "This invitation has closed"
 msgstr "Esta invitación ha caducado"
 
@@ -3789,7 +3789,7 @@ msgid "This is not an email address."
 msgstr "Esto no es un correo electrónico."
 
 #: src/features/accounts/signing/SignGate.tsx:191
-#: src/features/accounts/signing/SignGate.tsx:755
+#: src/features/accounts/signing/SignGate.tsx:751
 msgid "This link no longer works"
 msgstr "Este enlace ya no funciona"
 
@@ -4354,7 +4354,7 @@ msgstr "tú"
 msgid "You"
 msgstr "Tú"
 
-#: src/features/accounts/signing/SignGate.tsx:702
+#: src/features/accounts/signing/SignGate.tsx:698
 msgid "You accepted this invitation"
 msgstr "Has aceptado esta invitación"
 
@@ -4373,7 +4373,7 @@ msgstr "Ya tienes una cuenta de dembrane con {email}. Te enviaremos por correo u
 #~ msgid "You are all set. Nothing needs you right now."
 #~ msgstr "Todo listo. Ahora no tienes nada pendiente."
 
-#: src/features/accounts/signing/SignGate.tsx:723
+#: src/features/accounts/signing/SignGate.tsx:719
 msgid "You are invited to {org}"
 msgstr "Estás invitado a {org}"
 
@@ -4425,7 +4425,7 @@ msgstr "Te invitaron. ¿Qué haces tú en esta decisión?"
 msgid "You will not sign it. {newName} gets a link to sign instead."
 msgstr "No firmarás tú. {newName} recibe un enlace para firmar en tu lugar."
 
-#: src/features/accounts/signing/SignGate.tsx:546
+#: src/features/accounts/signing/SignGate.tsx:542
 msgid "You'll sign electronically. Your electronic signature is as binding as one made by hand."
 msgstr "Firmarás de forma electrónica. Tu firma electrónica es tan vinculante como una manuscrita."
 
