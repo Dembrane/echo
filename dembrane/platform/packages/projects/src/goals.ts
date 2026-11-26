@@ -80,10 +80,14 @@ export async function listMethodologies(d: ProjectDeps, who: Signed, workspaceId
   await workspaceFor(d.access, who, workspaceId, "project:read", wsExists(d));
   const rows = await d.store.visibleMethodologies(workspaceId, who.directusUserId);
   // editMethodology's rule: one's own, or this workspace's with settings:manage.
+  // A refusal means no; anything else (the database, say) is an error, not a quiet no.
   const manages = await d.access
     .workspace(who, workspaceId, "settings:manage")
     .then(() => true)
-    .catch(() => false);
+    .catch((err) => {
+      if (err instanceof ForbiddenError || err instanceof NotFoundError) return false;
+      throw err;
+    });
   const out = [];
   for (const r of rows) {
     const canEdit =

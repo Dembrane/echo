@@ -350,5 +350,39 @@ run("staff ask to make changes while support access is on", () => {
       { name: "Changed by staff" },
     );
     expect(edit.status).toBe(403);
+
+    // Approved: project:create without settings:manage. Their own yes, the customer's no.
+    const asked = await call(
+      people.staff,
+      "POST",
+      `/api/v2/admin/workspaces/${ws.workspace}/support-access/request`,
+      {},
+    );
+    expect(asked.status).toBe(200);
+    expect(
+      (
+        await call(
+          people.customer,
+          "POST",
+          `/api/v2/workspaces/${ws.workspace}/support-access/requests/${asked.data.id}/approve`,
+        )
+      ).status,
+    ).toBe(200);
+    expect((await visit()).data).toMatchObject({ can_change: true });
+    expect(await theirs(people.staff)).toBe(false);
+    const own = await call(people.staff, "POST", "/api/v2/bff/methodologies", {
+      workspace_id: ws.workspace,
+      name: "Staff's own way",
+      description: "Made during support",
+      framing: "A way staff set up",
+      content: {},
+    });
+    expect(own.status).toBe(200);
+    const mine = (await list(people.staff)).find((m) => m.name === "Staff's own way");
+    expect(mine?.can_edit).toBe(true);
+    // The customer, who runs the workspace, may edit it too.
+    expect((await list(people.customer)).find((m) => m.name === "Staff's own way")?.can_edit).toBe(
+      true,
+    );
   });
 });
