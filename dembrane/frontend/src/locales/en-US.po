@@ -4664,7 +4664,7 @@ msgid "Create account"
 msgstr "Create account"
 
 #: src/routes/auth/Register.tsx:151
-#: src/routes/auth/Login.tsx:762
+#: src/routes/auth/Login.tsx:779
 msgid "Create an account"
 msgstr "Create an account"
 
@@ -5770,7 +5770,7 @@ msgstr "Email address"
 msgid "Email me a code"
 msgstr "Email me a code"
 
-#: src/routes/auth/Login.tsx:737
+#: src/routes/auth/Login.tsx:754
 #: src/components/auth/LoginBlockedNotice.tsx:37
 msgid "Email me a sign-in code instead"
 msgstr "Email me a sign-in code instead"
@@ -6752,7 +6752,7 @@ msgstr "Forecast"
 msgid "Forgetting a saved memory"
 msgstr "Forgetting a saved memory"
 
-#: src/routes/auth/Login.tsx:747
+#: src/routes/auth/Login.tsx:764
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
 
@@ -9612,6 +9612,10 @@ msgstr "No chats match your search."
 msgid "No chats yet."
 msgstr "No chats yet."
 
+#: src/routes/auth/Login.tsx:724
+msgid "No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you."
+msgstr "No code after a minute? Check your spam folder. If someone shared a dembrane page with you, ask them to add you."
+
 #: src/components/settings/AuditLogsCard.tsx:444
 msgid "No collections found"
 msgstr "No collections found"
@@ -10701,7 +10705,7 @@ msgid "Options"
 msgstr "Options"
 
 #: src/routes/auth/Register.tsx:367
-#: src/routes/auth/Login.tsx:753
+#: src/routes/auth/Login.tsx:770
 msgid "or"
 msgstr "or"
 
@@ -13931,12 +13935,12 @@ msgstr "Send"
 msgid "Send {0} invites"
 msgstr "Send {0} invites"
 
-#: src/routes/auth/Login.tsx:710
+#: src/routes/auth/Login.tsx:711
 msgid "Send a new code"
 msgstr "Send a new code"
 
 #. placeholder {0}: resendCooldown.wait
-#: src/routes/auth/Login.tsx:708
+#: src/routes/auth/Login.tsx:709
 msgid "Send a new code in {0}s"
 msgstr "Send a new code in {0}s"
 
@@ -17611,7 +17615,7 @@ msgstr "Use Italian for chat, reports, transcription and participant onboarding 
 msgid "Use latest results"
 msgstr "Use latest results"
 
-#: src/routes/auth/Login.tsx:722
+#: src/routes/auth/Login.tsx:739
 msgid "Use my password instead"
 msgstr "Use my password instead"
 

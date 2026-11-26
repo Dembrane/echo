@@ -183,7 +183,7 @@ msgstr "De uitnodiging van {first} wordt ingetrokken en de link die we stuurden 
 msgid "{inviter} from {org} invited you to sign"
 msgstr "{inviter} van {org} vraagt je om te ondertekenen"
 
-#: src/features/accounts/signing/SignGate.tsx:702
+#: src/features/accounts/signing/SignGate.tsx:719
 msgid "{inviter} invited you to {org}"
 msgstr "{inviter} heeft je uitgenodigd voor {org}"
 
@@ -549,7 +549,7 @@ msgstr "Stel een vraag"
 msgid "Ask a workspace's admins to let you in. If they approve your request, you can edit for 24 hours. If they have turned support access on themselves, you can join to read, and still ask to edit."
 msgstr "Vraag de beheerders van een werkruimte om je toe te laten. Keuren ze je verzoek goed, dan kun je 24 uur lang bewerken. Hebben ze supporttoegang zelf aangezet, dan kun je meelezen en alsnog vragen om te bewerken."
 
-#: src/features/accounts/signing/SignGate.tsx:760
+#: src/features/accounts/signing/SignGate.tsx:777
 msgid "Ask the person who invited you to send a new one."
 msgstr "Vraag wie je heeft uitgenodigd om een nieuwe te sturen."
 
@@ -1564,7 +1564,7 @@ msgstr "Hoe"
 msgid "How do you want to get invoices?"
 msgstr "Hoe wil je facturen ontvangen?"
 
-#: src/features/accounts/signing/SignGate.tsx:541
+#: src/features/accounts/signing/SignGate.tsx:558
 msgid "How we handle your details"
 msgstr "Hoe we met je gegevens omgaan"
 
@@ -1656,7 +1656,7 @@ msgstr "Paraafvelden gebruiken deze handtekening, tenzij je een paraaf tekent."
 msgid "Intro"
 msgstr "Inleiding"
 
-#: src/features/accounts/signing/SignGate.tsx:675
+#: src/features/accounts/signing/SignGate.tsx:692
 msgid "Invitation | dembrane"
 msgstr "Uitnodiging | dembrane"
 
@@ -1875,7 +1875,7 @@ msgstr "Vergrendeld"
 
 #: src/features/accounts/signing/signInLink.tsx:29
 #: src/features/accounts/signing/SignGate.tsx:507
-#: src/features/accounts/signing/SignGate.tsx:772
+#: src/features/accounts/signing/SignGate.tsx:789
 msgid "Log in"
 msgstr "Inloggen"
 
@@ -1883,7 +1883,7 @@ msgstr "Inloggen"
 msgid "Log in to download the signed copy."
 msgstr "Log in om het ondertekende exemplaar te downloaden."
 
-#: src/features/accounts/signing/SignGate.tsx:688
+#: src/features/accounts/signing/SignGate.tsx:705
 msgid "Log in to read the offer and the DPA."
 msgstr "Log in om de offerte en de DPA te lezen."
 
@@ -2036,6 +2036,10 @@ msgstr "Geen account"
 #: src/features/accounts/staff/InvoicePlanFields.tsx:132
 msgid "No charge"
 msgstr "Kosteloos"
+
+#: src/features/accounts/signing/SignGate.tsx:534
+msgid "No code after a minute? Check your spam folder, or ask the person who shared this with you to add you."
+msgstr "Geen code na een minuut? Kijk in je spam, of vraag degene die dit met je deelde om je toe te voegen."
 
 #: src/features/accounts/customer/BillingForm.tsx:370
 msgid "No country found"
@@ -2731,7 +2735,7 @@ msgstr "Alleen lezen"
 #~ msgid "Read the offer and sign it here. Someone else signs for your organisation? Name them on the offer; they get their own link."
 #~ msgstr "Lees de offerte en onderteken hem hier. Tekent iemand anders voor je organisatie? Wijs diegene aan op de offerte; die krijgt een eigen link."
 
-#: src/features/accounts/signing/SignGate.tsx:712
+#: src/features/accounts/signing/SignGate.tsx:729
 msgid "Read the offer and the DPA with your team"
 msgstr "Lees de offerte en de DPA met je team"
 
@@ -2985,12 +2989,12 @@ msgstr "Kies een veld om soort, label en verplicht in te stellen. Sleep om te ve
 msgid "Send"
 msgstr "Versturen"
 
-#: src/features/accounts/signing/SignGate.tsx:519
+#: src/features/accounts/signing/SignGate.tsx:523
 msgid "Send a new code"
 msgstr "Stuur een nieuwe code"
 
 #. placeholder {0}: resendCooldown.wait
-#: src/features/accounts/signing/SignGate.tsx:517
+#: src/features/accounts/signing/SignGate.tsx:521
 msgid "Send a new code in {0}s"
 msgstr "Stuur een nieuwe code over {0}s"
 
@@ -3590,7 +3594,7 @@ msgstr "De uitnodiging is verstuurd naar"
 #~ msgid "The invitation was sent to this address."
 #~ msgstr "De uitnodiging is naar dit adres gestuurd."
 
-#: src/features/accounts/signing/SignGate.tsx:741
+#: src/features/accounts/signing/SignGate.tsx:758
 msgid "The invitation was withdrawn, or a newer one replaced it. Ask the person who invited you to send it again."
 msgstr "De uitnodiging is ingetrokken, of een nieuwere heeft hem vervangen. Vraag wie je heeft uitgenodigd om hem opnieuw te sturen."
 
@@ -3764,7 +3768,7 @@ msgstr "Dit document is verstuurd. De velden liggen vast; stuur een nieuwe versi
 msgid "This invitation could not be loaded"
 msgstr "Deze uitnodiging kon niet worden geladen"
 
-#: src/features/accounts/signing/SignGate.tsx:757
+#: src/features/accounts/signing/SignGate.tsx:774
 msgid "This invitation has closed"
 msgstr "Deze uitnodiging werkt niet meer"
 
@@ -3777,7 +3781,7 @@ msgid "This is not an email address."
 msgstr "Dit is geen e-mailadres."
 
 #: src/features/accounts/signing/SignGate.tsx:191
-#: src/features/accounts/signing/SignGate.tsx:738
+#: src/features/accounts/signing/SignGate.tsx:755
 msgid "This link no longer works"
 msgstr "Deze link werkt niet meer"
 
@@ -4342,7 +4346,7 @@ msgstr "jij"
 msgid "You"
 msgstr "Jij"
 
-#: src/features/accounts/signing/SignGate.tsx:685
+#: src/features/accounts/signing/SignGate.tsx:702
 msgid "You accepted this invitation"
 msgstr "Je hebt deze uitnodiging aangenomen"
 
@@ -4361,7 +4365,7 @@ msgstr "Je hebt al een dembrane-account met {email}. We mailen je een code om he
 #~ msgid "You are all set. Nothing needs you right now."
 #~ msgstr "Alles is geregeld. Er is nu niets voor jou."
 
-#: src/features/accounts/signing/SignGate.tsx:706
+#: src/features/accounts/signing/SignGate.tsx:723
 msgid "You are invited to {org}"
 msgstr "Je bent uitgenodigd voor {org}"
 
@@ -4413,7 +4417,7 @@ msgstr "Je bent uitgenodigd. Wat doe je bij dit besluit?"
 msgid "You will not sign it. {newName} gets a link to sign instead."
 msgstr "Dan onderteken jij niet. {newName} krijgt een link om te ondertekenen."
 
-#: src/features/accounts/signing/SignGate.tsx:529
+#: src/features/accounts/signing/SignGate.tsx:546
 msgid "You'll sign electronically. Your electronic signature is as binding as one made by hand."
 msgstr "Je ondertekent elektronisch. Je elektronische handtekening is net zo bindend als een handgeschreven handtekening."
 
