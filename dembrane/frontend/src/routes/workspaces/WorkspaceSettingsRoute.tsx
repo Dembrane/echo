@@ -789,11 +789,6 @@ export const WorkspaceSettingsRoute = () => {
 										canCreate={
 											settings.my_policies?.includes("project:create") ?? false
 										}
-										canEdit={
-											(settings.my_policies?.includes("project:create") ||
-												canEditSettings) ??
-											false
-										}
 									/>
 								</Stack>
 							</Tabs.Panel>

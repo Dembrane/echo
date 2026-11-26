@@ -323,4 +323,32 @@ run("staff ask to make changes while support access is on", () => {
       .where(eq(schema.workspace.id, ws.workspace));
     expect(row?.description).not.toBe("Changed by staff");
   });
+  test("each methodology says whether the caller may edit it, as editing decides", async () => {
+    const list = async (who: Signed) =>
+      (await call(who, "GET", `/api/v2/bff/methodologies?workspace_id=${ws.workspace}`))
+        .data as unknown as {
+        name: string;
+        can_edit: boolean;
+      }[];
+    const made = await call(people.customer, "POST", "/api/v2/bff/methodologies", {
+      workspace_id: ws.workspace,
+      name: "Customer's own way",
+      description: "Our evenings",
+      framing: "How we run evenings",
+      content: {},
+    });
+    expect(made.status).toBe(200);
+    const theirs = (who: Signed) =>
+      list(who).then((l) => l.find((m) => m.name === "Customer's own way")?.can_edit);
+    expect(await theirs(people.customer)).toBe(true);
+    // Still the read-only visit from the test above: not theirs, no settings:manage.
+    expect(await theirs(people.staff)).toBe(false);
+    const edit = await call(
+      people.staff,
+      "POST",
+      `/api/v2/bff/methodologies/${made.data.id}/versions`,
+      { name: "Changed by staff" },
+    );
+    expect(edit.status).toBe(403);
+  });
 });

@@ -70,13 +70,10 @@ const textToContent = (value: string): unknown => {
 export const WorkspaceMethodologiesSection = ({
 	workspaceId,
 	canCreate = true,
-	canEdit = true,
 }: {
 	workspaceId: string;
 	/** project:create, as the server asks to make one. */
 	canCreate?: boolean;
-	/** Their own, or settings:manage for anyone's. */
-	canEdit?: boolean;
 }) => {
 	const methodologiesQuery = useMethodologies(workspaceId);
 	const createMutation = useCreateMethodologyMutation(workspaceId);
@@ -234,7 +231,7 @@ export const WorkspaceMethodologiesSection = ({
 									<Text size="xs">
 										<Trans>Read-only</Trans>
 									</Text>
-								) : canEdit ? (
+								) : methodology.can_edit ? (
 									<Button
 										size="xs"
 										onClick={() => setEditing(methodology)}

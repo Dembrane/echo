@@ -25,6 +25,8 @@ export type MethodologyListItem = {
 	is_seeded: boolean;
 	latest_version: MethodologyVersionSummary | null;
 	versions_count?: number;
+	/** The server's answer to whether the caller may edit it (their own, or settings:manage). */
+	can_edit?: boolean;
 	isDevFixture?: boolean;
 };
 

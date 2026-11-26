@@ -79,8 +79,19 @@ const wsExists = (d: ProjectDeps) => (id: string) => d.store.workspaceExists(id)
 export async function listMethodologies(d: ProjectDeps, who: Signed, workspaceId: string) {
   await workspaceFor(d.access, who, workspaceId, "project:read", wsExists(d));
   const rows = await d.store.visibleMethodologies(workspaceId, who.directusUserId);
+  // editMethodology's rule: one's own, or this workspace's with settings:manage.
+  const manages = await d.access
+    .workspace(who, workspaceId, "settings:manage")
+    .then(() => true)
+    .catch(() => false);
   const out = [];
-  for (const r of rows) out.push(card(r, await d.store.methodologyVersions(r.id)));
+  for (const r of rows) {
+    const canEdit =
+      !r.is_seeded &&
+      (r.owner_directus_user_id === who.directusUserId ||
+        (manages && r.visibility === "workspace" && r.workspace_id === workspaceId));
+    out.push({ ...card(r, await d.store.methodologyVersions(r.id)), can_edit: canEdit });
+  }
   return out;
 }
 
