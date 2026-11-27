@@ -171,7 +171,7 @@ characters. Each chat also gets the project's context and goal.
 
 ## Checking and rating replies
 
-Under the box the product says: "dembrane can make mistakes. Please double-check responses."
+Under the box the product says: "dembrane uses AI and can make mistakes. Please double-check responses with participants."
 A language model writes every reply, so treat it as a draft and read the source.
 
 Every reply has "Good response" and "Poor response". "Poor response" asks "What went

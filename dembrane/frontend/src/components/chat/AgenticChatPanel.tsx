@@ -2391,7 +2391,8 @@ export const AgenticChatPanel = ({
 							)}
 							<Text size="xs" className="italic">
 								<Trans>
-									dembrane can make mistakes. Please double-check responses.
+									dembrane uses AI and can make mistakes. Please double-check
+									responses with participants.
 								</Trans>
 							</Text>
 						</Group>
