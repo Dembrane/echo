@@ -837,8 +837,8 @@ function scanSource(rel) {
 			if (customIcons.size && /^Icons\./.test(tag))
 				report("icon.library", rel, line, `<${tag}>: use the Phosphor icon`);
 
-			// Actions pushed to the right. A row of steps (data-steps) is the exception: Back
-			// left, the pill right (rules.css).
+			// Actions pushed to the right. A pill with a Back beside it (data-steps) is the
+			// exception: Back in the left corner, the pill in the right corner (rules.css).
 			if (
 				ts.isJsxOpeningElement(node) &&
 				/^(Group|Flex)$/.test(tag) &&
@@ -887,7 +887,7 @@ function scanSource(rel) {
 						"action.right-aligned",
 						rel,
 						line,
-						`<${tag} justify="${val("justify")}"> of buttons: actions sit at the left, primary first (a row of steps takes data-steps)`,
+						`<${tag} justify="${val("justify")}"> of buttons: actions sit at the left, primary first (a pill with a Back beside it takes data-steps)`,
 					);
 			}
 
@@ -930,6 +930,99 @@ function scanSource(rel) {
 							rel,
 							at(b),
 							`<Button${variant ? ` variant="${variant}"` : ""}> in a row of steps: Back is the tertiary button (variant="subtle"), the pill stays filled`,
+						);
+				}
+			}
+
+			// A pill with a Back beside it: Back in the left corner, the pill in the right
+			// corner (rules.css, the order note; Jor, 26 Nov 2026). The row takes data-steps,
+			// which is what puts the two in their corners, and Back comes first in it. Back is
+			// read from the button's own words; a way back under another name is marked by
+			// hand and held by the rendered check.
+			if (ts.isJsxOpeningElement(node) && /^(Group|Flex)$/.test(tag)) {
+				// Buttons are read one wrapper deep as well (a Tooltip, a Box, a Group
+				// that holds Back and Cancel together): the row is still that row. An
+				// inner row that holds both Back and the pill is its own row and is
+				// judged there.
+				const buttons = [];
+				const walk = (k, depth, into) => {
+					const el = ts.isJsxElement(k)
+						? k.openingElement
+						: ts.isJsxSelfClosingElement(k)
+							? k
+							: null;
+					if (el) {
+						const name = tagName(el);
+						if (name === "Button") into.push(el);
+						else if (depth === 0 && ts.isJsxElement(k)) {
+							const inner = [];
+							for (const c of k.children) walk(c, 1, inner);
+							const own =
+								/^(Group|Flex)$/.test(name) &&
+								inner.some(isBack) &&
+								inner.some(isPill);
+							if (!own) into.push(...inner);
+						}
+					} else if (ts.isJsxExpression(k) && k.expression)
+						walk(k.expression, depth, into);
+					else if (ts.isParenthesizedExpression(k))
+						walk(k.expression, depth, into);
+					else if (ts.isBinaryExpression(k)) walk(k.right, depth, into);
+					else if (ts.isConditionalExpression(k)) {
+						walk(k.whenTrue, depth, into);
+						walk(k.whenFalse, depth, into);
+					} else if (ts.isJsxFragment(k))
+						for (const c of k.children) walk(c, depth, into);
+				};
+				// Every piece of text a button can show, one per branch.
+				const words = (b) => {
+					const out = [];
+					const read = (k) => {
+						if (ts.isJsxText(k)) out.push(k.text);
+						else if (ts.isJsxElement(k)) for (const c of k.children) read(c);
+						else if (ts.isJsxFragment(k)) for (const c of k.children) read(c);
+						else if (ts.isJsxExpression(k) && k.expression) read(k.expression);
+						else if (ts.isParenthesizedExpression(k)) read(k.expression);
+						else if (ts.isConditionalExpression(k)) {
+							read(k.whenTrue);
+							read(k.whenFalse);
+						} else if (ts.isBinaryExpression(k)) read(k.right);
+						else if (
+							ts.isTaggedTemplateExpression(k) &&
+							ts.isNoSubstitutionTemplateLiteral(k.template)
+						)
+							out.push(k.template.text);
+						else if (ts.isStringLiteral(k)) out.push(k.text);
+					};
+					if (ts.isJsxOpeningElement(b))
+						for (const c of b.parent.children) read(c);
+					return out.map((w) => w.replace(/\s+/g, " ").trim()).filter(Boolean);
+				};
+				const variantOf = (b) => {
+					for (const a of b.attributes.properties)
+						if (!ts.isJsxSpreadAttribute(a) && a.name.getText(sf) === "variant")
+							return attrValue(a);
+					return undefined;
+				};
+				const isBack = (b) => words(b).some((w) => /^(Back|Go back)$/.test(w));
+				const isPill = (b) => variantOf(b) === "filled";
+				for (const k of node.parent.children) walk(k, 0, buttons);
+				const back = buttons.findIndex(isBack);
+				const pill = buttons.findIndex(isPill);
+				if (back !== -1 && pill !== -1) {
+					if (!attrs.has("data-steps"))
+						report(
+							"flow.back-corner",
+							rel,
+							line,
+							`<${tag}> with Back beside the pill: Back in the left corner, the pill in the right corner (the row takes data-steps)`,
+						);
+					else if (pill < back)
+						report(
+							"flow.back-corner",
+							rel,
+							at(buttons[back]),
+							"Back after the pill in a row of steps: Back comes first, in the left corner",
 						);
 				}
 			}

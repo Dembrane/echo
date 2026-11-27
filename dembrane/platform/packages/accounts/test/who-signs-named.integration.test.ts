@@ -206,7 +206,10 @@ run("who signs, with a signer named already", () => {
       (e) => e.subjectId === offerId && e.type === "document.signer_removed",
     );
     expect(removed.map((e) => [e.actorKind, e.detail])).toEqual([
-      ["customer", { previous_email: A.email, previous_name: A.name }],
+      [
+        "customer",
+        { previous_email: A.email, previous_name: A.name, withdrawn_invite_ids: expect.any(Array) },
+      ],
     ]);
     // A can no longer sign it; the admin can.
     expect(

@@ -100,7 +100,7 @@ msgid "{0} signed on {1}. The signed copy is in your documents."
 msgstr "{0} firmó el {1}. La copia firmada está en tus documentos."
 
 #. placeholder {0}: personLine(before)
-#: src/features/accounts/staff/CustomerSigner.tsx:311
+#: src/features/accounts/staff/CustomerSigner.tsx:312
 msgid "{0} signs it now."
 msgstr "Ahora firma {0}."
 
@@ -576,7 +576,7 @@ msgstr "De una vez"
 msgid "At signing, they tick"
 msgstr "Al firmar, marcan"
 
-#: src/features/accounts/staff/CustomerSigner.tsx:301
+#: src/features/accounts/staff/CustomerSigner.tsx:294
 #: src/features/accounts/signing/SignatureCapture.tsx:233
 #: src/features/accounts/signing/SignRoute.tsx:1113
 #: src/features/accounts/customer/WhoSigns.tsx:519
@@ -697,7 +697,7 @@ msgstr "Puede editar"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:83
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
-#: src/features/accounts/staff/CustomerSigner.tsx:331
+#: src/features/accounts/staff/CustomerSigner.tsx:332
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:266
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:329
 #: src/features/accounts/customer/WhoSigns.tsx:517
@@ -736,7 +736,7 @@ msgstr "Cambiar el borrador"
 msgid "Change what {first} does"
 msgstr "Cambiar lo que hace {first}"
 
-#: src/features/accounts/staff/CustomerSigner.tsx:294
+#: src/features/accounts/staff/CustomerSigner.tsx:302
 msgid "Change who signs"
 msgstr "Cambiar quién firma"
 
@@ -1944,7 +1944,7 @@ msgstr "Nombre en el saludo"
 #~ msgstr "Nombre o enlace del portal"
 
 #: src/features/accounts/staff/CustomerSigner.tsx:173
-#: src/features/accounts/staff/CustomerSigner.tsx:328
+#: src/features/accounts/staff/CustomerSigner.tsx:329
 msgid "Name the signer"
 msgstr "Asignar firmante"
 
@@ -3710,7 +3710,7 @@ msgstr "Esta persona puede firmar la oferta"
 msgid "They chose"
 msgstr "Eligieron"
 
-#: src/features/accounts/staff/CustomerSigner.tsx:319
+#: src/features/accounts/staff/CustomerSigner.tsx:320
 msgid "They get an email with a link to sign, and log in with a code sent to that address."
 msgstr "Esa persona recibe un correo con un enlace para firmar, e inicia sesión con un código enviado a esa dirección."
 

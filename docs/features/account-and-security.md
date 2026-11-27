@@ -18,7 +18,8 @@ address. Your personal settings are under "User settings" in the account menu.
 2. Choose a password. It needs at least 8 characters, one uppercase letter, one lowercase
    letter, one number and one symbol.
 3. Open the email dembrane sends you and click the link. You then read "Your email is
-   verified. Log in to continue."
+   verified. Log in to continue." If someone else is signed in to dembrane in that browser,
+   the link still verifies your address, and they stay signed in to their own account.
 
 Until you verify your address you cannot sign in with your password. No email? Use "Resend
 verification email". You can ask for a new one every 60 seconds.

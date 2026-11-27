@@ -8,16 +8,17 @@ interface FetchErrorPanelProps {
 	message: ReactNode;
 	/** Server-provided string that overrides `message` when truthy. */
 	detail?: string | null;
-	secondaryAction?: { label: ReactNode; onClick: () => void };
+	/** The way back, when the page has one: Back in the left corner, Try again in the right. */
+	onBack?: () => void;
 	testId?: string;
 }
 
-// Counterpart to AccessDeniedPanel — for 401/403/404 use that instead.
+// Counterpart to AccessDeniedPanel: for 401/403/404 use that instead.
 export function FetchErrorPanel({
 	onRetry,
 	message,
 	detail,
-	secondaryAction,
+	onBack,
 	testId = "fetch-error-panel",
 }: FetchErrorPanelProps) {
 	return (
@@ -26,24 +27,32 @@ export function FetchErrorPanel({
 				<Alert color="red" icon={<WarningCircleIcon size={20} />} w="100%">
 					{detail ?? message}
 				</Alert>
-				<Group gap="sm">
-					<Button
-						variant="filled"
-						onClick={onRetry}
-						data-testid={`${testId}-retry-button`}
-					>
-						<Trans>Try again</Trans>
-					</Button>
-					{secondaryAction && (
-						<Button
-							variant="subtle"
-							color="gray"
-							onClick={secondaryAction.onClick}
-						>
-							{secondaryAction.label}
+				{/* Alone, Try again sits at the left. With a Back beside it the two take
+				    the corners (rules.css). */}
+				{onBack ? (
+					<Group data-steps justify="space-between" gap="sm">
+						<Button variant="subtle" color="gray" onClick={onBack}>
+							<Trans>Back</Trans>
 						</Button>
-					)}
-				</Group>
+						<Button
+							variant="filled"
+							onClick={onRetry}
+							data-testid={`${testId}-retry-button`}
+						>
+							<Trans>Try again</Trans>
+						</Button>
+					</Group>
+				) : (
+					<Group gap="sm">
+						<Button
+							variant="filled"
+							onClick={onRetry}
+							data-testid={`${testId}-retry-button`}
+						>
+							<Trans>Try again</Trans>
+						</Button>
+					</Group>
+				)}
 			</Stack>
 		</Container>
 	);
