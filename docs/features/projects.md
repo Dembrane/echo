@@ -31,19 +31,24 @@ Choose "Create" above the search box on the workspace home, then "Quick project"
 would you like to do?", has the same "Create" button; if you can create projects in more
 than one workspace, it first asks "Which workspace?".
 
-1. Choose how to start. Under "Start from a template", the first card, "Quick start", makes
-   a plain project: nothing is set up for you, and you can change every setting later. The
-   cards after it are templates, such as "Table conversations" or "Focus group", that set the
-   project up for that kind of session. "See all templates" shows every template with filters.
-   Under the cards you can drop an agenda, invitation or run sheet instead. "Quick project"
-   skips this step and starts from "Quick start".
+Creating a project is one page, the same for your first project and every one after it.
+
+1. Choose what to start from. Under "Start from a template", a bar of small cards scrolls
+   sideways. The first card, "Quick start", makes a plain project: nothing is set up for
+   you, and you can change every setting later. It is chosen when the page opens, so you
+   can skip this step. The cards after it are templates, such as "Table conversations" or
+   "Focus group", that set the project up for that kind of session. Press one to choose it.
+   "See all templates" shows every template with what it is for and filters; there, under
+   the list, you can drop an agenda, invitation or run sheet and dembrane proposes the whole
+   setup. "Project from a template" and "Quick project" open the same page.
 2. Fill in "Project name" and, if you like, "Project context". The context says what the
    project is about and what you want to learn. dembrane uses it when it writes summaries,
-   answers in chat and replies to participants.
-3. Choose "Create project". "More options" holds the key terms, who can see the project
-   ("Open to the workspace" or "Private", which needs Innovator or higher), "Set up with the
-   assistant after creating" where it is offered, and a summary to check. You can skip all
-   of it.
+   answers in chat and replies to participants. "Add from a file" under it reads a document
+   into the context and suggests key terms.
+3. Choose "Create project", or press Enter in the name. "More options" holds the key terms,
+   who can see the project ("Open to the workspace" or "Private", which needs Innovator or
+   higher), "Set up with the assistant after creating" where it is offered, and a summary to
+   check. You can skip all of it.
 
 You land on the project's "Overview", or in a chat with the assistant if you switched that
 on.

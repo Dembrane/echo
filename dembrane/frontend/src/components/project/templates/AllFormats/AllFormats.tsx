@@ -7,6 +7,7 @@ import {
 	offeredCards,
 	type TemplateChoiceContext,
 	type TemplateFilter,
+	type TemplateKey,
 	type TemplateSummary,
 	visibleCards,
 } from "../projectTemplates";
@@ -18,6 +19,8 @@ interface AllFormatsProps {
 	/** From GET /v2/project-templates; undefined while it loads. */
 	templates: readonly TemplateSummary[] | undefined;
 	failed?: boolean;
+	/** The template the project starts from now, drawn chosen. */
+	selected?: TemplateKey;
 	/** A card was pressed: the flow moves on with it. */
 	onChoose: (key: ChoiceKey, context: TemplateChoiceContext) => void;
 	onFilterChange?: (filter: "verb" | "setup", value: string) => void;
@@ -30,8 +33,8 @@ const activeFilters = (f: TemplateFilter): string[] => [
 ];
 
 /**
- * "All formats" (ECHO-1058), for a host who skipped the upload and the row: the filters
- * first, then Quick start and every template as a card. A filter shows only the formats
+ * "All formats" (ECHO-1058), for a host who wants more than the bar on the create page: the
+ * filters first, then Quick start and every template as a card. A filter shows only the formats
  * that match, or Quick start alone when none do (offeredCards). Pressing a card chooses it
  * and moves on. Under the grid, the quiet way out: upload recordings. Props in, callbacks
  * out.
@@ -39,6 +42,7 @@ const activeFilters = (f: TemplateFilter): string[] => [
 export const AllFormats = ({
 	templates,
 	failed = false,
+	selected,
 	onChoose,
 	onFilterChange,
 	onUpload,
@@ -72,7 +76,7 @@ export const AllFormats = ({
 			testId="all-formats"
 		>
 			<SimpleGrid
-				cols={{ base: 1, md: 3, sm: 2 }}
+				cols={{ base: 1, lg: 4, md: 3, sm: 2 }}
 				spacing="sm"
 				data-testid="all-formats-grid"
 			>
@@ -80,6 +84,7 @@ export const AllFormats = ({
 					<TemplateCardButton
 						key={tpl.key}
 						template={tpl}
+						selected={tpl.key === selected}
 						onChoose={() =>
 							onChoose(tpl.key, {
 								...cardFacts(tpl),

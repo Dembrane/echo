@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { ActionIcon, Button, Group, Skeleton, Text } from "@mantine/core";
+import { ActionIcon, Anchor, Group, Skeleton, Text } from "@mantine/core";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import {
 	type KeyboardEvent,
@@ -15,6 +15,7 @@ import {
 	cardFacts,
 	rowCards,
 	type TemplateChoiceContext,
+	type TemplateKey,
 	type TemplateSummary,
 	withQuickStart,
 } from "../projectTemplates";
@@ -26,9 +27,14 @@ interface TemplateRowProps {
 	templates: readonly TemplateSummary[] | undefined;
 	/** The list could not load: Quick start alone, and the way to all formats. */
 	failed?: boolean;
-	/** A card was pressed: the flow moves on with it. */
+	/**
+	 * The template the project starts from now, drawn chosen and kept in view. One the bar
+	 * has no card for ("Upload recordings", an old link's key) leaves no card chosen.
+	 */
+	selected: TemplateKey;
+	/** A card was pressed: it becomes the chosen one. The page stays where it is. */
 	onChoose: (key: ChoiceKey, context: TemplateChoiceContext) => void;
-	/** "See all templates": skip the row for the full list with its filters. */
+	/** "See all templates": the full list with its filters and what each is for. */
 	onSeeAll: () => void;
 }
 
@@ -38,27 +44,31 @@ const reducedMotion = () =>
 	);
 
 /**
- * "Start from a template" (ECHO-1058), first on the start screen: Quick start first, then
- * every template in one horizontal row, the most used first. Pressing a card chooses it
- * and moves on. One tab stop; the arrow keys, Home and End move between cards and bring
- * them into view. Props in, callbacks out.
+ * "Start from a template" (ECHO-1058), a bar above the project name on the create page:
+ * Quick start first, then every template in one horizontal row of small cards, the most
+ * used first. Pressing a card chooses it in place; nothing else on the page moves. One tab
+ * stop; the arrow keys, Home and End move between cards and bring them into view. Props
+ * in, callbacks out.
  */
 export const TemplateRow = ({
 	templates,
 	failed = false,
+	selected,
 	onChoose,
 	onSeeAll,
 }: TemplateRowProps) => {
 	const headingId = useId();
 	const listRef = useRef<HTMLUListElement>(null);
 	const cardRefs = useRef<(HTMLButtonElement | null)[]>([]);
-	const [focus, setFocus] = useState(0);
+	// The tab stop: the card the arrow keys last reached, else the chosen one.
+	const [focus, setFocus] = useState<number | null>(null);
 	const [ends, setEnds] = useState({ end: false, start: true });
 	const loading = !templates && !failed;
 	const cards = withQuickStart(failed ? [] : rowCards(templates ?? []));
+	const chosenAt = cards.findIndex((c) => c.key === selected);
 	// The list can shrink under the focus (a refetch that fails leaves Quick start alone):
 	// one card always keeps the tab stop.
-	const tabStop = Math.min(focus, cards.length - 1);
+	const tabStop = Math.min(focus ?? Math.max(0, chosenAt), cards.length - 1);
 
 	const measure = useCallback(() => {
 		const el = listRef.current;
@@ -74,6 +84,22 @@ export const TemplateRow = ({
 		window.addEventListener("resize", measure);
 		return () => window.removeEventListener("resize", measure);
 	}, [measure, cards.length]);
+
+	// A template chosen elsewhere (a link, all templates) can sit past the bar's edge: the
+	// bar alone scrolls to it, never the page. A card pressed in the bar is in view already.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: again once the cards are in
+	useEffect(() => {
+		const el = listRef.current;
+		const card = cardRefs.current[chosenAt];
+		if (!el || !card) return;
+		// The bar is the cards' offset parent (TemplateRow.module.css).
+		const left = card.offsetLeft;
+		const inView =
+			left >= el.scrollLeft &&
+			left + card.offsetWidth <= el.scrollLeft + el.clientWidth;
+		if (!inView) el.scrollLeft = Math.max(0, left - 4);
+		measure();
+	}, [chosenAt, cards.length, measure]);
 
 	const page = (dir: 1 | -1) => {
 		const el = listRef.current;
@@ -114,37 +140,56 @@ export const TemplateRow = ({
 
 	return (
 		<section aria-labelledby={headingId} data-testid="template-row">
-			<Group justify="space-between" align="center" mb="xs" wrap="nowrap">
+			<Group
+				className="app-stack-narrow"
+				justify="space-between"
+				align="center"
+				mb="xs"
+				wrap="nowrap"
+			>
 				<Text component="h3" size="lg" m={0} id={headingId}>
 					<Trans>Start from a template</Trans>
 				</Text>
-				<Group
-					gap={4}
-					wrap="nowrap"
-					display={!loading && cards.length > 1 ? undefined : "none"}
-				>
-					<ActionIcon
-						variant="subtle"
-						color="gray"
-						size="lg"
-						onClick={() => page(-1)}
-						disabled={ends.start}
-						aria-label={t`Earlier templates`}
-						data-testid="template-row-prev"
+				<Group gap="sm" wrap="nowrap" justify="space-between">
+					{/* A quiet link, as "Upload recordings" is in all templates: no box, so it
+					    lines up with the heading when the row stacks on a phone. */}
+					<Anchor
+						component="button"
+						type="button"
+						size="sm"
+						onClick={onSeeAll}
+						data-testid="template-row-see-all"
 					>
-						<CaretLeftIcon size={20} aria-hidden />
-					</ActionIcon>
-					<ActionIcon
-						variant="subtle"
-						color="gray"
-						size="lg"
-						onClick={() => page(1)}
-						disabled={ends.end}
-						aria-label={t`More templates`}
-						data-testid="template-row-next"
+						<Trans>See all templates</Trans>
+					</Anchor>
+					<Group
+						gap={4}
+						wrap="nowrap"
+						display={!loading && cards.length > 1 ? undefined : "none"}
 					>
-						<CaretRightIcon size={20} aria-hidden />
-					</ActionIcon>
+						<ActionIcon
+							variant="subtle"
+							color="gray"
+							size="lg"
+							onClick={() => page(-1)}
+							disabled={ends.start}
+							aria-label={t`Earlier templates`}
+							data-testid="template-row-prev"
+						>
+							<CaretLeftIcon size={20} aria-hidden />
+						</ActionIcon>
+						<ActionIcon
+							variant="subtle"
+							color="gray"
+							size="lg"
+							onClick={() => page(1)}
+							disabled={ends.end}
+							aria-label={t`More templates`}
+							data-testid="template-row-next"
+						>
+							<CaretRightIcon size={20} aria-hidden />
+						</ActionIcon>
+					</Group>
 				</Group>
 			</Group>
 			{loading ? (
@@ -154,8 +199,8 @@ export const TemplateRow = ({
 					aria-busy="true"
 					style={{ overflow: "hidden" }}
 				>
-					{[0, 1, 2].map((i) => (
-						<Skeleton key={i} height={280} w={264} style={{ flexShrink: 0 }} />
+					{[0, 1, 2, 3, 4].map((i) => (
+						<Skeleton key={i} height={124} w={160} style={{ flexShrink: 0 }} />
 					))}
 				</Group>
 			) : (
@@ -172,6 +217,8 @@ export const TemplateRow = ({
 									cardRefs.current[i] = el;
 								}}
 								template={tpl}
+								compact
+								selected={tpl.key === selected}
 								tabIndex={i === tabStop ? 0 : -1}
 								onKeyDown={onKeyDown(i)}
 								onChoose={() =>
@@ -186,15 +233,6 @@ export const TemplateRow = ({
 					))}
 				</ul>
 			)}
-			<Button
-				variant="outline"
-				size="sm"
-				mt="md"
-				onClick={onSeeAll}
-				data-testid="template-row-see-all"
-			>
-				<Trans>See all templates</Trans>
-			</Button>
 		</section>
 	);
 };

@@ -67,12 +67,12 @@ msgid "(direct workspace access)"
 msgstr "(direct workspace access)"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:701
-#: src/routes/project/CreateProjectRoute.tsx:688
+#: src/routes/project/CreateProjectRoute.tsx:678
 msgid "(missing)"
 msgstr "(missing)"
 
-#: src/routes/project/CreateProjectRoute.tsx:694
-#: src/routes/project/CreateProjectRoute.tsx:697
+#: src/routes/project/CreateProjectRoute.tsx:684
+#: src/routes/project/CreateProjectRoute.tsx:687
 msgid "(none)"
 msgstr "(none)"
 
@@ -1348,7 +1348,7 @@ msgstr "Podmínky přijaty"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1900
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:592
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:725
-#: src/routes/project/CreateProjectRoute.tsx:702
+#: src/routes/project/CreateProjectRoute.tsx:692
 #: src/features/sidebar/views/project/ProjectSettingsView.tsx:26
 #: src/components/project/ProjectUsageAndSharing.tsx:217
 msgid "Access"
@@ -2527,7 +2527,7 @@ msgstr "Zeptejte se na rozhovory v tomto projektu nebo si nechte pomoct s nastav
 msgid "Ask a workspace admin for an invite, or pick a different workspace from your list."
 msgstr "Ask a workspace admin for an invite, or pick a different workspace from your list."
 
-#: src/routes/project/CreateProjectRoute.tsx:418
+#: src/routes/project/CreateProjectRoute.tsx:421
 msgid "Ask a workspace admin to create the project for you."
 msgstr "Požádejte správce pracovního prostoru, aby projekt vytvořil za vás."
 
@@ -2802,8 +2802,7 @@ msgstr "Pryč"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:370
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:760
-#: src/routes/project/CreateProjectRoute.tsx:521
-#: src/routes/project/CreateProjectRoute.tsx:740
+#: src/routes/project/CreateProjectRoute.tsx:501
 #: src/routes/project/report/ProjectReportRoute.tsx:500
 #: src/routes/organisation/OrganisationRoute.tsx:716
 #: src/routes/onboarding/OnboardingRoute.tsx:502
@@ -2859,7 +2858,7 @@ msgstr "Zpět na přihlášení"
 msgid "Back to my workspaces"
 msgstr "Back to my workspaces"
 
-#: src/routes/project/CreateProjectRoute.tsx:421
+#: src/routes/project/CreateProjectRoute.tsx:424
 msgid "Back to projects"
 msgstr "Zpět na projekty"
 
@@ -3112,7 +3111,7 @@ msgstr "Volání, ke kterým nebyl přiřazen žádný účet"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1984
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:760
 #: src/routes/project/ProjectsHome.tsx:454
-#: src/routes/project/CreateProjectRoute.tsx:492
+#: src/routes/project/CreateProjectRoute.tsx:731
 #: src/routes/project/report/ProjectReportRoute.tsx:281
 #: src/routes/organisation/OrganisationRoute.tsx:1837
 #: src/routes/organisation/OrganisationRoute.tsx:1860
@@ -4714,15 +4713,15 @@ msgstr "Vytvořit organizaci"
 msgid "Create password"
 msgstr "Create password"
 
-#: src/routes/project/CreateProjectRoute.tsx:445
-#: src/routes/project/CreateProjectRoute.tsx:750
+#: src/routes/project/CreateProjectRoute.tsx:446
+#: src/routes/project/CreateProjectRoute.tsx:741
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:78
 #: src/features/sidebar/views/workspace/WorkspaceHomeView.tsx:82
 #: src/features/sidebar/breadcrumbs/AppBreadcrumbs.tsx:209
 msgid "Create project"
 msgstr "Create project"
 
-#: src/routes/project/CreateProjectRoute.tsx:161
+#: src/routes/project/CreateProjectRoute.tsx:158
 msgid "Create project | dembrane"
 msgstr "Vytvořit projekt | dembrane"
 
@@ -4783,7 +4782,7 @@ msgid "Created on"
 msgstr "Created on"
 
 #. placeholder {0}: workspace.name
-#: src/routes/project/CreateProjectRoute.tsx:448
+#: src/routes/project/CreateProjectRoute.tsx:449
 msgid "Creating in <0>{0}</0>"
 msgstr "Creating in <0>{0}</0>"
 
@@ -5308,11 +5307,11 @@ msgid "Disabled"
 msgstr "Disabled"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:334
-#: src/routes/project/CreateProjectRoute.tsx:391
+#: src/routes/project/CreateProjectRoute.tsx:394
 msgid "Discard"
 msgstr "Discard"
 
-#: src/routes/project/CreateProjectRoute.tsx:393
+#: src/routes/project/CreateProjectRoute.tsx:396
 msgid "Discard this project?"
 msgstr "Discard this project?"
 
@@ -5559,7 +5558,7 @@ msgstr "e.g. Client Alpha, Q1 Research"
 msgid "e.g. Client onboarding interviews, Q1 product research"
 msgstr "e.g. Client onboarding interviews, Q1 product research"
 
-#: src/routes/project/CreateProjectRoute.tsx:536
+#: src/routes/project/CreateProjectRoute.tsx:526
 msgid "e.g. Climate Listening, Q1 Research"
 msgstr "e.g. Climate Listening, Q1 Research"
 
@@ -6060,7 +6059,7 @@ msgid "Everyone can find it. Admins join directly; members can ask."
 msgstr "Najít ho může kdokoli. Správci se připojí přímo, členové mohou požádat."
 
 #. placeholder {0}: workspace.name
-#: src/routes/project/CreateProjectRoute.tsx:636
+#: src/routes/project/CreateProjectRoute.tsx:626
 msgid "Everyone in {0} can find and open this project."
 msgstr "Everyone in {0} can find and open this project."
 
@@ -7099,7 +7098,7 @@ msgstr "Přejít do editoru portálu"
 #~ msgid "Go to previous release notes"
 #~ msgstr "Přejít na předchozí poznámky k vydání"
 
-#: src/routes/project/CreateProjectRoute.tsx:716
+#: src/routes/project/CreateProjectRoute.tsx:706
 msgid "Go to project home"
 msgstr "Přejít na domovskou stránku projektu"
 
@@ -7111,7 +7110,7 @@ msgstr "Přejít na zprávu"
 msgid "Go to settings"
 msgstr "Přejít do nastavení"
 
-#: src/routes/project/CreateProjectRoute.tsx:714
+#: src/routes/project/CreateProjectRoute.tsx:704
 msgid "Go to the upload page"
 msgstr "Přejít na stránku nahrávání souborů"
 
@@ -7604,7 +7603,7 @@ msgstr "inherited from organisation"
 msgid "Initial"
 msgstr "Výchozí"
 
-#: src/routes/project/CreateProjectRoute.tsx:657
+#: src/routes/project/CreateProjectRoute.tsx:647
 msgid "Innovator or higher"
 msgstr "Innovator or higher"
 
@@ -8067,7 +8066,7 @@ msgid "keep analysing with popcorn"
 msgstr "pokračovat v analýze pomocí popcornu"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:334
-#: src/routes/project/CreateProjectRoute.tsx:391
+#: src/routes/project/CreateProjectRoute.tsx:394
 msgid "Keep editing"
 msgstr "Keep editing"
 
@@ -8113,8 +8112,8 @@ msgstr "Pokračujte v práci, zatímco se zvuk nahrává na pozadí."
 msgid "Keeps the tier until the date below, then reverts to Free unless they subscribe."
 msgstr "Ponechá úroveň do data níže, poté se vrátí na Free, pokud si nepředplatí."
 
-#: src/routes/project/CreateProjectRoute.tsx:612
-#: src/routes/project/CreateProjectRoute.tsx:696
+#: src/routes/project/CreateProjectRoute.tsx:602
+#: src/routes/project/CreateProjectRoute.tsx:686
 #: src/components/project/KeyTermsInput.tsx:89
 #: src/components/common/settingChange.tsx:26
 msgid "Key terms"
@@ -9151,7 +9150,7 @@ msgstr "More actions"
 msgid "More dependable anonymisation and recording"
 msgstr "Spolehlivější anonymizace a nahrávání"
 
-#: src/routes/project/CreateProjectRoute.tsx:602
+#: src/routes/project/CreateProjectRoute.tsx:592
 msgid "More options"
 msgstr "Další možnosti"
 
@@ -9284,7 +9283,7 @@ msgstr "My templates"
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1559
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:453
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:699
-#: src/routes/project/CreateProjectRoute.tsx:687
+#: src/routes/project/CreateProjectRoute.tsx:677
 #: src/components/results/curate/StakeholdersTab.tsx:45
 #: src/components/project/ProjectBasicEdit.tsx:124
 #: src/components/project/webhooks/WebhookSettingsCard.tsx:372
@@ -9310,7 +9309,7 @@ msgstr "Name is required"
 msgid "Name it after the client, engagement, or purpose."
 msgstr "Name it after the client, engagement, or purpose."
 
-#: src/routes/project/CreateProjectRoute.tsx:535
+#: src/routes/project/CreateProjectRoute.tsx:525
 msgid "Name it after the topic, engagement, or question you're exploring."
 msgstr "Name it after the topic, engagement, or question you're exploring."
 
@@ -10486,7 +10485,7 @@ msgstr "Uvidí ho pouze lidé, které přidáte nebo pozvete."
 msgid "Only when recording an invoice already paid out-of-band."
 msgstr "Pouze při evidenci faktury již uhrazené mimo systém."
 
-#: src/routes/project/CreateProjectRoute.tsx:662
+#: src/routes/project/CreateProjectRoute.tsx:652
 msgid "Only workspace admins and the people you invite can open this project."
 msgstr "Only workspace admins and the people you invite can open this project."
 
@@ -10650,8 +10649,8 @@ msgstr "Otevřete tuto stránku v prohlížeči {browserName} přes nabídku apl
 msgid "Open this page in your browser from the app's menu, or copy the link."
 msgstr "Otevřete tuto stránku ve svém prohlížeči přes nabídku aplikace, nebo zkopírujte odkaz."
 
-#: src/routes/project/CreateProjectRoute.tsx:633
-#: src/routes/project/CreateProjectRoute.tsx:704
+#: src/routes/project/CreateProjectRoute.tsx:623
+#: src/routes/project/CreateProjectRoute.tsx:694
 msgid "Open to the workspace"
 msgstr "Open to the workspace"
 
@@ -11758,8 +11757,8 @@ msgstr "URL zásad ochrany osobních údajů"
 
 #: src/routes/workspaces/WorkspaceSettingsRoute.tsx:1955
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:399
-#: src/routes/project/CreateProjectRoute.tsx:653
-#: src/routes/project/CreateProjectRoute.tsx:706
+#: src/routes/project/CreateProjectRoute.tsx:643
+#: src/routes/project/CreateProjectRoute.tsx:696
 #: src/components/workspace/OrganisationProjectsTable.tsx:246
 #: src/components/workspace/DiscoverableWorkspaces.tsx:275
 #: src/components/sharing/StatusLine.tsx:93
@@ -11853,15 +11852,15 @@ msgstr "Karty projektů zobrazují jazyk projektu."
 msgid "project chats"
 msgstr "chaty projektu"
 
-#: src/routes/project/CreateProjectRoute.tsx:691
+#: src/routes/project/CreateProjectRoute.tsx:681
 #: src/components/project/ProjectContextInput.tsx:35
 #: src/components/project/ProjectBasicEdit.tsx:144
 #: src/components/common/settingChange.tsx:15
 msgid "Project context"
 msgstr "Kontext projektu"
 
-#: src/routes/project/CreateProjectRoute.tsx:306
-#: src/routes/project/CreateProjectRoute.tsx:360
+#: src/routes/project/CreateProjectRoute.tsx:309
+#: src/routes/project/CreateProjectRoute.tsx:363
 #: src/components/report/ReportTimeline.tsx:277
 #: src/components/report/ReportTimeline.tsx:313
 msgid "Project created"
@@ -11912,7 +11911,7 @@ msgid "Project moved"
 msgstr "Projekt byl přesunut"
 
 #: src/routes/project/ProjectHomeRoute.tsx:270
-#: src/routes/project/CreateProjectRoute.tsx:534
+#: src/routes/project/CreateProjectRoute.tsx:524
 #: src/components/project/ProjectListItem.tsx:403
 #: src/components/project/ProjectDangerZone.tsx:146
 #: src/components/common/settingChange.tsx:42
@@ -14094,7 +14093,7 @@ msgstr "Nastavit na spravovanou fakturaci"
 msgid "Set up a new webhook from scratch"
 msgstr "Nastavit nový webhook od začátku"
 
-#: src/routes/project/CreateProjectRoute.tsx:679
+#: src/routes/project/CreateProjectRoute.tsx:669
 msgid "Set up with the assistant after creating"
 msgstr "Nastavit po vytvoření s asistentem"
 
@@ -14167,7 +14166,7 @@ msgstr "Nastavení ke změně"
 msgid "Settings updated"
 msgstr "Nastavení byla aktualizována"
 
-#: src/routes/project/CreateProjectRoute.tsx:710
+#: src/routes/project/CreateProjectRoute.tsx:700
 #: src/features/sidebar/views/user/UserHomeView.tsx:76
 msgid "Setup"
 msgstr "Setup"
@@ -14862,7 +14861,7 @@ msgstr "Start fresh"
 msgid "Start from a template, like a focus group or citizens' assembly, already set up for you."
 msgstr "Začni šablonou, třeba fokusní skupinou nebo občanským shromážděním, už nastavenou za tebe."
 
-#: src/routes/project/CreateProjectRoute.tsx:712
+#: src/routes/project/CreateProjectRoute.tsx:702
 msgid "Start in assistant chat"
 msgstr "Začít v chatu s asistentem"
 
@@ -14892,7 +14891,7 @@ msgstr "Používej dembrane zdarma, s hodinami nahrávání zahrnutými každý 
 msgid "Started recording"
 msgstr "Nahrávání zahájeno"
 
-#: src/routes/project/CreateProjectRoute.tsx:530
+#: src/routes/project/CreateProjectRoute.tsx:519
 msgid "Starting from: {templateLabel}"
 msgstr "Výchozí bod: {templateLabel}"
 
@@ -15370,7 +15369,7 @@ msgstr "Sdělte správcům {workspaceName}, k čemu přístup potřebujete. Tato
 msgid "Tell us what you need"
 msgstr "Dejte nám vědět, co potřebujete"
 
-#: src/routes/project/CreateProjectRoute.tsx:686
+#: src/routes/project/CreateProjectRoute.tsx:676
 msgid "Template"
 msgstr "Šablona"
 
@@ -16631,7 +16630,7 @@ msgstr "Zaškrtněte vše relevantní"
 msgid "Tick the ones you want. The rest stay as the template sets them."
 msgstr "Zaškrtněte, co chcete. Ostatní zůstane tak, jak to nastavuje šablona."
 
-#: src/routes/project/CreateProjectRoute.tsx:720
+#: src/routes/project/CreateProjectRoute.tsx:710
 #: src/routes/admin/AdminSettingsRoute.tsx:1281
 #: src/routes/admin/AdminSettingsRoute.tsx:2308
 #: src/routes/admin/AdminSettingsRoute.tsx:2730
@@ -18468,7 +18467,7 @@ msgstr "Zatímco lidé mluví, text se objevuje postupně."
 msgid "Who can see and collaborate on this project."
 msgstr "Kdo může tento projekt vidět a spolupracovat na něm."
 
-#: src/routes/project/CreateProjectRoute.tsx:622
+#: src/routes/project/CreateProjectRoute.tsx:612
 #: src/components/project/ProjectSharingModal.tsx:283
 msgid "Who can see this project?"
 msgstr "Who can see this project?"
@@ -18576,7 +18575,7 @@ msgstr "Pracujeme na vaší odpovědi..."
 #~ msgid "workspace"
 #~ msgstr "workspace"
 
-#: src/routes/project/CreateProjectRoute.tsx:699
+#: src/routes/project/CreateProjectRoute.tsx:689
 #: src/routes/admin/AdminSettingsRoute.tsx:1387
 #: src/routes/admin/AdminSettingsRoute.tsx:1935
 #: src/features/sidebar/hooks/useSearchHits.ts:166
@@ -18772,7 +18771,7 @@ msgstr "Jste vlastníkem dat"
 msgid "You can change this anytime in settings."
 msgstr "You can change this anytime in settings."
 
-#: src/routes/project/CreateProjectRoute.tsx:623
+#: src/routes/project/CreateProjectRoute.tsx:613
 msgid "You can change this later in project settings."
 msgstr "You can change this later in project settings."
 
@@ -18832,7 +18831,7 @@ msgstr "Teď to můžete zkusit znovu."
 msgid "You can't create a workspace yet"
 msgstr "You can't create a workspace yet"
 
-#: src/routes/project/CreateProjectRoute.tsx:415
+#: src/routes/project/CreateProjectRoute.tsx:418
 msgid "You can't create projects in this workspace."
 msgstr "V tomto pracovním prostoru nemůžete vytvářet projekty."
 
@@ -19007,7 +19006,7 @@ msgstr "Budete přidáni jako správce do {singleName}. Hned poté se objeví ve
 msgid "You'll find all your projects waiting for you."
 msgstr "You'll find all your projects waiting for you."
 
-#: src/routes/project/CreateProjectRoute.tsx:680
+#: src/routes/project/CreateProjectRoute.tsx:670
 msgid "You'll land in a chat where dembrane helps shape the project before you collect conversations."
 msgstr "Ocitnete se v chatu, kde vám dembrane pomůže vyladit projekt ještě před sběrem rozhovorů."
 
@@ -19199,7 +19198,7 @@ msgid "Your details"
 msgstr "Your details"
 
 #: src/routes/workspaces/CreateWorkspaceRoute.tsx:330
-#: src/routes/project/CreateProjectRoute.tsx:387
+#: src/routes/project/CreateProjectRoute.tsx:390
 msgid "Your draft won't be saved."
 msgstr "Your draft won't be saved."
 

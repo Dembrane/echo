@@ -13,19 +13,23 @@ interface TemplateCardProps {
 	greatFor: string;
 	/** Small tags: a named method, the verbs, the setup. */
 	tags?: readonly string[];
+	/** In the bar on the create page: the room and its name alone. */
+	compact?: boolean;
 	testId?: string;
 }
 
 /**
  * The face of one template (ECHO-1058), read in two seconds: the room seen from above, its
- * name, who it is for, and small tags last. Holds no state and no button; the row, the grid
- * and the review put it in one.
+ * name, who it is for, and small tags last. Compact, in the bar on the create page, it is
+ * the room and its name; who it is for is one press away, in all templates. Holds no state
+ * and no button; the bar, the grid and the review put it in one.
  */
 export const TemplateCard = ({
 	template,
 	name,
 	greatFor,
 	tags = [],
+	compact = false,
 	testId,
 }: TemplateCardProps) => {
 	// Long compound names (Keukentafelgesprek) break at a syllable, in the UI's language.
@@ -34,16 +38,16 @@ export const TemplateCard = ({
 		<Stack gap="xs" {...(testId ? { "data-testid": testId } : {})}>
 			<TemplateIllustration template={template} />
 			<Text
-				size="lg"
+				size={compact ? "sm" : "lg"}
 				lh={1.25}
-				mt="xs"
+				mt={compact ? 0 : "xs"}
 				lang={i18n.locale}
 				style={{ hyphens: "auto", overflowWrap: "break-word" }}
 			>
 				{name}
 			</Text>
-			<Text size="sm">{greatFor}</Text>
-			{tags.length > 0 && (
+			{!compact && <Text size="sm">{greatFor}</Text>}
+			{!compact && tags.length > 0 && (
 				<Group gap={4} wrap="wrap" data-testid="template-card-tags">
 					{tags.map((tag) => (
 						<Badge key={tag} size="sm">

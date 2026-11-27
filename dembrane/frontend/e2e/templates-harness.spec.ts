@@ -3,9 +3,10 @@ import { expect, type Page, test } from "@playwright/test";
 import { RESIDENT_EVENING_GUIDE } from "../src/components/project/templates/hostGuide.fixture";
 import { grammarAudit } from "./grammar-checks";
 
-// ECHO-1042, ECHO-1053, ECHO-1058: the start screen's row of formats (Quick start first)
-// above the upload, all formats with each verb filter and the setup filter, the name step
-// with "What this sets up" open and from Quick start, the portal editor's name box label,
+// ECHO-1042, ECHO-1053, ECHO-1058: the create page (the bar of templates, Quick start first
+// and chosen, above the name), all formats with each verb filter and the setup filter and
+// the upload under them, the page with a template chosen and "What this sets up" open, the
+// portal editor's name box label,
 // a host guide a template filled in, workspace home's Create menu (and the workspace with
 // no project at all), and Home's Create menu with its "Which workspace?" question, at
 // desktop and phone width; on a phone Create is a plus alone. E2E_SHOTS=<dir> also saves
@@ -156,6 +157,12 @@ for (const size of sizes)
 					);
 				}
 			};
+			// Off the button and past its 120ms colour transition, so a closed shot shows it at
+			// rest rather than hovered or halfway back.
+			const atRest = async () => {
+				await page.mouse.move(0, 0);
+				await page.waitForTimeout(250);
+			};
 			const noSideScroll = async () =>
 				expect(
 					await page.evaluate(
@@ -166,37 +173,64 @@ for (const size of sizes)
 			await page.goto(
 				`/e2e/templates-harness.html?path=/${lang}/w/w1/projects/new`,
 			);
-			// Start (ECHO-1058): every format in one row first, the upload under it.
-			await expect(page.getByTestId("project-digest-entry")).toBeVisible();
+			// The create page (ECHO-1058): every template in one bar above the name, Quick
+			// start chosen, and the form's own small drop area. One page, no steps.
 			const row = page.getByTestId("template-row-list");
 			await expect(row).toBeVisible();
+			await expect(
+				page.getByTestId("project-digest-entry-compact"),
+			).toBeVisible();
+			await expect(page.getByTestId("project-digest-entry")).toHaveCount(0);
 			const rowBox = await page.getByTestId("template-row").boundingBox();
-			const dropBox = await page
-				.getByTestId("project-digest-entry")
+			const nameBox = await page
+				.getByLabel(nl ? "Projectnaam" : "Project name")
 				.boundingBox();
-			expect(rowBox && dropBox && rowBox.y < dropBox.y).toBe(true);
+			expect(rowBox && nameBox && rowBox.y < nameBox.y).toBe(true);
+			// The name is in view without scrolling, on a phone too.
+			expect(nameBox && nameBox.y + nameBox.height < size.height).toBe(true);
 			await expect(row.locator("button")).toHaveCount(17);
 			await expect(row.locator("button").first()).toHaveAttribute(
 				"data-testid",
 				"template-card-blank",
 			);
-			await expect(page.getByTestId("template-card-blank")).toContainText(
+			await expect(page.getByTestId("template-card-blank")).toHaveText(
 				nl ? "Snelstart" : "Quick start",
+			);
+			await expect(page.getByTestId("template-card-blank")).toHaveAttribute(
+				"aria-pressed",
+				"true",
 			);
 			await expect(
 				page.getByTestId("template-card-resident_evening"),
-			).toContainText(nl ? "Tafelgesprekken" : "Table conversations");
+			).toHaveText(nl ? "Tafelgesprekken" : "Table conversations");
 			await expect(page.getByText(nl ? "Doorgaan" : "Continue")).toHaveCount(0);
-			await shot("01-start");
+			await expect(page.getByRole("progressbar")).toHaveCount(0);
+			await atRest();
+			await shot("01-page");
 			await noSideScroll();
-			// The row scrolls with its buttons; nothing moves by itself.
+			// The bar scrolls with its buttons; nothing moves by itself.
 			const before = await row.evaluate((el) => el.scrollLeft);
 			await page.waitForTimeout(600);
 			expect(await row.evaluate((el) => el.scrollLeft)).toBe(before);
 			await page.getByTestId("template-row-next").click();
 			await page.waitForTimeout(600);
 			expect(await row.evaluate((el) => el.scrollLeft)).toBeGreaterThan(before);
-			await shot("01b-start-row-scrolled");
+			await shot("01b-page-bar-scrolled");
+			// A press chooses in place: the page does not scroll and stays the page.
+			await page.goto(
+				`/e2e/templates-harness.html?path=/${lang}/w/w1/projects/new`,
+			);
+			await page.getByTestId("template-card-focus_group").click();
+			await expect(
+				page.getByTestId("template-card-focus_group"),
+			).toHaveAttribute("aria-pressed", "true");
+			await expect(page.getByTestId("template-card-blank")).toHaveAttribute(
+				"aria-pressed",
+				"false",
+			);
+			expect(await page.evaluate(() => window.scrollY)).toBe(0);
+			await atRest();
+			await shot("01c-page-template-chosen");
 
 			// All formats: the filters first, then the grid.
 			await page.getByTestId("template-row-see-all").click();
@@ -207,6 +241,12 @@ for (const size of sizes)
 				"data-testid",
 				"template-card-blank",
 			);
+			// The offer to set up from an agenda sits under the list.
+			const gridBox = await page.getByTestId("all-formats-grid").boundingBox();
+			const dropBox = await page
+				.getByTestId("project-digest-entry")
+				.boundingBox();
+			expect(gridBox && dropBox && gridBox.y < dropBox.y).toBe(true);
 			await shot("02-all-formats");
 			await noSideScroll();
 			for (const verb of VERBS) {
@@ -228,16 +268,23 @@ for (const size of sizes)
 			await shot("03-many-groups");
 			await noSideScroll();
 
-			// One press chooses and moves on to the name.
+			// One press chooses and returns to the page, the card chosen in the bar.
 			await page.getByTestId("template-card-resident_evening").click();
+			await expect(page.getByTestId("create-project-form")).toBeVisible();
 			await expect(
-				page.getByTestId("create-project-chosen-template"),
-			).toBeVisible();
-			await expect(page.getByTestId("create-project-progress")).toHaveAttribute(
-				"aria-valuenow",
-				"2",
+				page.getByTestId("template-card-resident_evening"),
+			).toHaveAttribute("aria-pressed", "true");
+			await atRest();
+			await shot("04-page-from-all-formats");
+			// A template past the bar's edge is brought into view in the bar.
+			await page.getByTestId("template-row-see-all").click();
+			await page.getByTestId("template-card-conference").click();
+			await expect(page.getByTestId("template-card-conference")).toBeInViewport(
+				{ ratio: 1 },
 			);
-			await shot("04-name");
+			await atRest();
+			await shot("04b-page-last-template-chosen");
+			await page.getByTestId("template-card-resident_evening").click();
 			await page.getByTestId("template-setup-summary-toggle").click();
 			await expect(
 				page.getByTestId("template-setup-summary-script"),
@@ -250,21 +297,29 @@ for (const size of sizes)
 			await shot("05-name-what-this-sets-up");
 			await noSideScroll();
 
-			// Quick start: one press, then the name, with nothing set up to show.
+			// Quick start, as the page opens: nothing set up to show, a name and Create.
 			await page.goto(
 				`/e2e/templates-harness.html?path=/${lang}/w/w1/projects/new`,
 			);
-			await page.getByTestId("template-card-blank").click();
-			await expect(
-				page.getByTestId("create-project-chosen-template"),
-			).toHaveText(
-				nl ? "Vertrekpunt: Snelstart" : "Starting from: Quick start",
-			);
+			await expect(page.getByTestId("template-row-list")).toBeVisible();
 			await expect(
 				page.getByTestId("template-setup-summary-toggle"),
 			).toHaveCount(0);
-			await shot("05b-quick-start-name");
+			await page
+				.getByLabel(nl ? "Projectnaam" : "Project name")
+				.fill(nl ? "Bewonersavond Lindenwijk" : "Lindenwijk resident evening");
+			await expect(page.getByTestId("create-project-submit")).toBeEnabled();
+			await atRest();
+			await shot("05b-quick-start-named");
 			await noSideScroll();
+			// "Upload recordings" has no card in the bar: a line names it.
+			await page.getByTestId("template-row-see-all").click();
+			await page.getByTestId("template-picker-upload").click();
+			await expect(
+				page.getByTestId("create-project-chosen-template"),
+			).toBeVisible();
+			await atRest();
+			await shot("05c-upload-chosen");
 
 			await page.goto(`/e2e/templates-harness.html?path=/${lang}/editor`);
 			await expect(
@@ -322,12 +377,6 @@ for (const size of sizes)
 				await shot(name);
 			}
 
-			// Off the button and past its 120ms colour transition, so a closed shot shows it at
-			// rest rather than hovered or halfway back.
-			const atRest = async () => {
-				await page.mouse.move(0, 0);
-				await page.waitForTimeout(250);
-			};
 			// Create, a plus alone on a phone and the labelled pill from 48em.
 			const createLabel = page
 				.getByTestId("create-menu-button")
@@ -440,10 +489,9 @@ for (const size of sizes)
 			await shot("11c-home-which-workspace");
 			await noSideScroll();
 			await page.getByTestId("which-workspace-w2").click();
-			await expect(
-				page.getByTestId("create-project-chosen-template"),
-			).toHaveText(
-				nl ? "Vertrekpunt: Snelstart" : "Starting from: Quick start",
+			await expect(page.getByTestId("template-card-blank")).toHaveAttribute(
+				"aria-pressed",
+				"true",
 			);
 			expect(errors).toEqual([]);
 		});

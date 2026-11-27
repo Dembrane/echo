@@ -19,6 +19,7 @@ const renderRow = (props: Partial<ComponentProps<typeof TemplateRow>> = {}) => {
 		<Providers>
 			<TemplateRow
 				templates={TEMPLATE_SUMMARIES}
+				selected="blank"
 				onChoose={onChoose}
 				onSeeAll={onSeeAll}
 				{...props}
@@ -34,7 +35,7 @@ const cards = () =>
 		.querySelectorAll<HTMLButtonElement>("button[data-testid^=template-card-]");
 
 describe("TemplateRow", () => {
-	it("holds Quick start, then all sixteen formats in one row, the most used first", () => {
+	it("holds Quick start, then all sixteen formats in one bar, the most used first", () => {
 		renderRow();
 		const list = [...cards()].map((c) => c.dataset.testid);
 		expect(list).toHaveLength(17);
@@ -42,14 +43,39 @@ describe("TemplateRow", () => {
 		expect(list[1]).toBe("template-card-resident_evening");
 		expect(list[7]).toBe("template-card-round_table");
 		const quick = screen.getByTestId("template-card-blank");
-		expect(quick.textContent).toContain("Quick start");
-		expect(quick.textContent).toContain(
+		// A small card: the room and its name. What it is for is its description.
+		expect(quick.textContent).toBe("Quick start");
+		expect(quick.title).toBe(
 			"A plain project. Nothing is set up for you, and you can change every setting later.",
 		);
-		expect(quick.querySelector("[data-testid=template-card-tags]")).toBeNull();
+		expect(
+			screen
+				.getByTestId("template-row-list")
+				.querySelector("[data-testid=template-card-tags]"),
+		).toBeNull();
 		expect(
 			screen.getByRole("region", { name: "Start from a template" }),
 		).toBeTruthy();
+	});
+
+	it("draws the chosen template pressed, and gives it the tab stop", () => {
+		renderRow({ selected: "world_cafe" });
+		const pressed = [...cards()].filter(
+			(c) => c.getAttribute("aria-pressed") === "true",
+		);
+		expect(pressed.map((c) => c.dataset.testid)).toEqual([
+			"template-card-world_cafe",
+		]);
+		expect(pressed[0]?.hasAttribute("data-selected")).toBe(true);
+		expect(pressed[0]?.tabIndex).toBe(0);
+	});
+
+	it("leaves no card chosen for a template it has no card for", () => {
+		renderRow({ selected: "upload" });
+		expect(
+			[...cards()].filter((c) => c.getAttribute("aria-pressed") === "true"),
+		).toHaveLength(0);
+		expect([...cards()].filter((c) => c.tabIndex === 0)).toHaveLength(1);
 	});
 
 	it("chooses a card in one press, with what the row knew", () => {
@@ -93,7 +119,11 @@ describe("TemplateRow", () => {
 	});
 
 	it("keeps one tab stop when the row shrinks under the focus", () => {
-		const props = { onChoose: vi.fn(), onSeeAll: vi.fn() };
+		const props = {
+			onChoose: vi.fn(),
+			onSeeAll: vi.fn(),
+			selected: "blank" as const,
+		};
 		const view = render(
 			<Providers>
 				<TemplateRow templates={TEMPLATE_SUMMARIES} {...props} />

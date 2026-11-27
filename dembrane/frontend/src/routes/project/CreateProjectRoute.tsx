@@ -19,7 +19,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
-import { FlowProgress } from "@/components/common/FlowProgress/FlowProgress";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import type { DigestFallback } from "@/components/project/digest/DigestConnected";
@@ -44,7 +43,9 @@ import {
 	LazyTemplateRow,
 } from "@/components/project/templates/lazy";
 import {
+	isCardKey,
 	isTemplateKey,
+	QUICK_START,
 	type TemplateChoiceContext,
 	type TemplateKey,
 	templateName,
@@ -72,14 +73,13 @@ type Access = "workspace" | "private";
 
 const SETUP_INITIAL_MESSAGE = "Help me set up this project.";
 
-// The screens (flow 4, ECHO-1058): start (the upload and the row of formats), all formats
-// when the host skips both, then the name. Analytics names them "template", "formats" and
-// "name"; "More options" is not a screen: opening it is counted as "more_options".
-type Screen = "start" | "formats" | "name";
+// The screens (flow 4, ECHO-1058): the create page (the bar of templates above the name),
+// and all templates when the host asks for the full list. Analytics names them "name" and
+// "formats"; "More options" is not a screen: opening it is counted as "more_options".
+type Screen = "name" | "formats";
 const CREATE_STEPS: Record<Screen, ProjectCreateStep> = {
 	formats: "formats",
 	name: "name",
-	start: "template",
 };
 
 const setVisibility = (projectId: string, visibility: Access) =>
@@ -89,24 +89,28 @@ const setVisibility = (projectId: string, visibility: Access) =>
 	});
 
 /**
- * Creating a project, one thing at a time (ECHO-1058). The template's preset is applied by
- * the server in the creating transaction.
+ * Creating a project (ECHO-1058): one page, the same for a host's first project and every
+ * one after it, in the container every page uses. The template's preset is applied by the
+ * server in the creating transaction.
  *
- * Start: "Start from a template", Quick start (a plain project) and every format in one
- * row of drawn cards: pressing one chooses it and goes to the name. "See all templates" leads
- * to the full list with its filters (verbs and setup), Quick start first again, and the
- * quiet "Upload recordings". Under the row, the offer to set up from what the host already
+ * The page: "Start from a template", a bar of small drawn cards that scrolls sideways,
+ * Quick start (a plain project) first and chosen until the host presses another. Pressing a
+ * card marks it chosen in place: the page does not move, and the name is right under the
+ * bar. A ?template=<key> link (the Create menu on Home and on workspace home) arrives with
+ * that one chosen. Then the name and the optional project context, with "Suggest key
+ * terms" under it (setup suggestions from the context: key terms and settings to accept)
+ * and "Add from a file", "What this sets up", collapsed, then Cancel in the left corner and
+ * Create in the right. Key terms, access, the assistant switch and the review sit behind
+ * "More options", with the defaults they always had: no key terms, open to the workspace,
+ * assistant off.
+ *
+ * "See all templates" leads to the full list with its filters (verbs and setup), Quick
+ * start first again, and the quiet "Upload recordings": pressing a card there chooses it
+ * and returns to the page. Under the list, the offer to set up from what the host already
  * has (the context digest, ECHO-1055: drop an agenda, invitation or run sheet, paste text
  * or add a link). dembrane reads it and proposes the setup, reviewed one part per screen;
- * Create there makes the project with what they kept. If the digest fails, the row above
- * takes over with the material's text in the project context. A ?template=<key> link (the
- * Create menu on Home and on workspace home) arrives on the name with it chosen.
- *
- * Step 2 "Name": name and the optional project context, with "Suggest key terms" under it
- * (setup suggestions from the context: key terms and settings to accept), and "What this
- * sets up", collapsed, then Create. Key terms, access,
- * the assistant switch and the review sit behind "More options", with the defaults they
- * always had: no key terms, open to the workspace, assistant off.
+ * Create there makes the project with what they kept. If the digest fails, the list above
+ * takes over with the material's text in the project context.
  *
  * After creating: project home, the upload page for a template that lands there, or the
  * assistant chat when its switch is on.
@@ -120,17 +124,10 @@ export const CreateProjectRoute = () => {
 	const linked = searchParams.get("template");
 	const linkedTemplate = isTemplateKey(linked) ? linked : null;
 
-	const [screen, setScreen] = useState<Screen>(
-		linkedTemplate ? "name" : "start",
-	);
-	// Where the page opened: a ?template= link opens on the name with it chosen.
-	const openedOn = useRef({
-		screen: linkedTemplate ? "name" : "start",
-		template: linkedTemplate,
-	});
-	// Where Back on the name goes: the screen the card was pressed on.
-	const [chosenOn, setChosenOn] = useState<Screen>("start");
-	const [template, setTemplate] = useState<TemplateKey | null>(linkedTemplate);
+	const [screen, setScreen] = useState<Screen>("name");
+	// What the page opened with: Quick start, or the template a ?template= link names.
+	const openedWith = useRef<TemplateKey>(linkedTemplate ?? "blank");
+	const [template, setTemplate] = useState<TemplateKey>(openedWith.current);
 	const [name, setName] = useState("");
 	const [context, setContext] = useState("");
 	const [keyTerms, setKeyTerms] = useState("");
@@ -168,6 +165,14 @@ export const CreateProjectRoute = () => {
 		lastStepRef.current = createStep;
 		track("project_create_step_viewed", { step: createStep });
 	}, [createStep]);
+	// All templates is a long list: the page and the list each open at their top, not where
+	// the other was scrolled to.
+	const shownScreen = useRef(screen);
+	useEffect(() => {
+		if (shownScreen.current === screen) return;
+		shownScreen.current = screen;
+		window.scrollTo?.({ top: 0 });
+	}, [screen]);
 	// Leaving counts once: by navigating away (unmount) or by closing the tab.
 	useEffect(() => {
 		let left = false;
@@ -185,14 +190,12 @@ export const CreateProjectRoute = () => {
 
 	const tier = workspace?.tier ?? "pilot";
 	// Deep-link fallback, decided once per visit; the create buttons open the wall in place.
-	// Started means moved on from where the page opened, so a ?template= link at the cap
+	// Started means changed from how the page opened, so a ?template= link at the cap
 	// meets the wall at once, as a plain visit does.
 	const cap = useProjectCapStatus(workspace);
 	const capDecided = useRef(false);
 	const wizardStarted =
-		screen !== openedOn.current.screen ||
-		template !== openedOn.current.template ||
-		name.trim() !== "";
+		screen !== "name" || template !== openedWith.current || name.trim() !== "";
 	const [atProjectCap, setAtProjectCap] = useState(false);
 	// Opened after mount: the configurator mounted already open closes itself under StrictMode.
 	useEffect(() => {
@@ -233,7 +236,7 @@ export const CreateProjectRoute = () => {
 			template_key: key,
 			verbs: ctx?.verbs ?? tpl?.card.verbs ?? [],
 		});
-		setChosenOn(screen === "formats" ? "formats" : "start");
+		// In the bar the card is chosen in place; from all templates, back to the page.
 		setScreen("name");
 	};
 
@@ -250,7 +253,7 @@ export const CreateProjectRoute = () => {
 			const project = await createProject.mutateAsync({
 				language: projectLanguage,
 				name: name.trim(),
-				templateKey: template ?? "blank",
+				templateKey: template,
 				...(Object.keys(overrides).length > 0 && { overrides }),
 			});
 
@@ -283,7 +286,7 @@ export const CreateProjectRoute = () => {
 			track("project_created", {
 				project_id: project.id,
 				started_from: "picker",
-				template_key: template ?? "blank",
+				template_key: template,
 			});
 			const suggested = suggestedRef.current;
 			if (suggested) {
@@ -426,19 +429,17 @@ export const CreateProjectRoute = () => {
 	}
 
 	const canCreate = name.trim().length > 0;
-	const templateLabel = templateName(template ?? "blank");
+	const templateLabel = templateName(template);
+	// The bar draws the chosen card. A template it has no card for ("Upload recordings", an
+	// old link's key, any template when the list did not load) is named in a line instead.
+	const chosenInBar =
+		template === QUICK_START || (isCardKey(template) && !templates.isError);
 
 	return (
-		<Container size="md" py="xl" px="lg">
-			<Stack gap="xl">
-				{/* The review after an upload shows its own progress, one part per screen. */}
-				{!digestActive && (
-					<FlowProgress
-						step={screen === "name" ? 2 : 1}
-						total={2}
-						testId="create-project-progress"
-					/>
-				)}
+		// The container every page uses (workspace home, Create workspace).
+		<Container size="xl" py="xl" px="lg">
+			<Stack gap="lg">
+				{/* The review after an upload has the page to itself, one part per screen. */}
 				{!digestActive && (
 					<Stack gap="xs">
 						<Title order={2}>
@@ -452,16 +453,23 @@ export const CreateProjectRoute = () => {
 					</Stack>
 				)}
 
-				{screen === "start" && (
-					<Stack gap="xl" data-testid="create-project-start">
-						{/* A template first, the drop area under it: most hosts start from a
-						    format. While a drop is read the drop area has the page to itself. */}
+				{screen === "formats" && (
+					<Stack gap="xl" data-testid="create-project-formats">
+						{/* The list first, the drop area under it: most hosts start from a
+						    template. While a drop is read the drop area has the page to itself. */}
 						{!digestActive && (
-							<LazyTemplateRow
+							<LazyAllFormats
 								templates={templates.data}
 								failed={templates.isError}
+								selected={template}
 								onChoose={chooseTemplate}
-								onSeeAll={() => setScreen("formats")}
+								onFilterChange={(filter, value) =>
+									track("project_template_filter_changed", {
+										filter,
+										value,
+									})
+								}
+								onUpload={() => chooseTemplate("upload")}
 							/>
 						)}
 						<LazyDigest
@@ -487,48 +495,30 @@ export const CreateProjectRoute = () => {
 									variant="subtle"
 									color="gray"
 									size="sm"
-									onClick={handleCancel}
+									onClick={() => setScreen("name")}
+									data-testid="create-project-formats-back"
 								>
-									<Trans>Cancel</Trans>
+									<Trans>Back</Trans>
 								</Button>
 							</Group>
 						)}
 					</Stack>
 				)}
 
-				{screen === "formats" && (
-					<Stack gap="lg">
-						<LazyAllFormats
+				{screen === "name" && (
+					<Stack gap="md" data-testid="create-project-form">
+						<LazyTemplateRow
 							templates={templates.data}
 							failed={templates.isError}
+							selected={template}
 							onChoose={chooseTemplate}
-							onFilterChange={(filter, value) =>
-								track("project_template_filter_changed", {
-									filter,
-									value,
-								})
-							}
-							onUpload={() => chooseTemplate("upload")}
+							onSeeAll={() => setScreen("formats")}
 						/>
-						<Group gap="sm">
-							<Button
-								variant="subtle"
-								color="gray"
-								size="sm"
-								onClick={() => setScreen("start")}
-								data-testid="create-project-formats-back"
-							>
-								<Trans>Back</Trans>
-							</Button>
-						</Group>
-					</Stack>
-				)}
-
-				{screen === "name" && (
-					<Stack gap="md">
-						<Text size="sm" data-testid="create-project-chosen-template">
-							<Trans>Starting from: {templateLabel}</Trans>
-						</Text>
+						{!chosenInBar && (
+							<Text size="sm" data-testid="create-project-chosen-template">
+								<Trans>Starting from: {templateLabel}</Trans>
+							</Text>
+						)}
 						<TextInput
 							autoFocus
 							label={t`Project name`}
@@ -555,7 +545,7 @@ export const CreateProjectRoute = () => {
 							/>
 							<LazySessionBrief
 								workspaceId={workspaceId ?? null}
-								templateKey={template ?? "blank"}
+								templateKey={template}
 								name={name}
 								description={context}
 								language={projectLanguage}
@@ -728,16 +718,17 @@ export const CreateProjectRoute = () => {
 							</Collapse>
 						</Stack>
 
-						{/* A row of steps: Back on the left, the pill on the right (rules.css). */}
+						{/* A row of steps: Cancel in the left corner, the pill in the right
+						    (rules.css), as on Create workspace. */}
 						<Group data-steps justify="space-between" gap="sm" mt="sm">
 							<Button
 								variant="subtle"
 								color="gray"
 								size="sm"
-								onClick={() => setScreen(chosenOn)}
-								data-testid="create-project-name-back"
+								onClick={handleCancel}
+								data-testid="create-project-cancel"
 							>
-								<Trans>Back</Trans>
+								<Trans>Cancel</Trans>
 							</Button>
 							<Button
 								variant="filled"
