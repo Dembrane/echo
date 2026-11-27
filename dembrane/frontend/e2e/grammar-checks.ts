@@ -435,10 +435,11 @@ export function grammarAudit(opts: AuditOptions): AuditResult {
 				// onto two lines has no corners to hold.
 				const row = box.getBoundingClientRect();
 				const first = kids.reduce((a, k) => (pos(k) < pos(a) ? k : a));
-				// A text-only Back has no box: its text holds the corner, and its padding
-				// sits outside the row (rules.css, "A text-only button has no box").
+				// A text-only Back that carries app-flush has no box: its text holds the
+				// corner, and its padding sits outside the row (rules.css, "A text-only
+				// button has no box").
 				const firstLeft = (
-					first.matches('.mantine-Button-root[data-variant="subtle"]')
+					first.matches(".app-flush")
 						? (first.querySelector(".mantine-Button-inner") ?? first)
 						: first
 				).getBoundingClientRect().left;

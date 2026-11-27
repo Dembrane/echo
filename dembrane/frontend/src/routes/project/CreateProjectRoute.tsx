@@ -760,6 +760,7 @@ export const CreateProjectRoute = () => {
 								variant="subtle"
 								color="gray"
 								size="sm"
+								className="app-flush"
 								onClick={() => setScreen(chosenOn)}
 								data-testid="create-project-name-back"
 							>
