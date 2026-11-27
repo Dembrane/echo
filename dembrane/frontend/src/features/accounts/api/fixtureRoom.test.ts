@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { i18n } from "@lingui/core";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import type { RoomLabelT } from "../contract/contract.gen";
 import * as fx from "../contract/fixtures.gen";
 
 i18n.load("en-US", {});
@@ -103,14 +104,15 @@ describe("the fixture backend's room", () => {
 			expect(await may("noor@example-town.example")).toEqual([true, true]);
 			expect(await may("sam@example-town.example")).toEqual([true, true]);
 			expect(await may("billing@example-town.example")).toEqual([false, true]);
-			expect(await may("robin@example-town.example")).toEqual([false, false]);
+			// Their own labels, never themselves out.
+			expect(await may("robin@example-town.example")).toEqual([false, true]);
 			expect(await may("kim@example-town.example")).toEqual([false, false]);
 			as("colleague");
 			for (const p of (await room()).people)
 				expect([p.email, p.may_remove, p.may_relabel]).toEqual([
 					p.email,
 					false,
-					false,
+					p.email === "sam@example-town.example",
 				]);
 		});
 
@@ -334,29 +336,34 @@ describe("the fixture backend's room", () => {
 	});
 
 	describe("the labels question and the hints", () => {
-		it("takes a room member's answer once", async () => {
+		it("asks a room member once, and lets them change their labels after", async () => {
 			as("colleague");
-			const answer = () =>
+			const answer = (labels: RoomLabelT[]) =>
 				client.call("answerRoomLabels", {
-					body: { labels: ["it_security", "privacy_ai"], other: null },
+					body: { labels, other: null },
 					params,
 				});
-			const me = await answer();
+			const me = await answer(["it_security", "privacy_ai"]);
 			expect(me.labels).toEqual(["it_security", "privacy_ai"]);
 			expect(me.labels_answered_at).not.toBeNull();
 			expect((await room()).me?.labels_question).toBe(false);
-			await expect(answer()).rejects.toMatchObject(
-				refused(409, "room.labels_already_answered"),
-			);
+			const later = await answer(["rollout"]);
+			expect([later.labels, later.may_relabel]).toEqual([["rollout"], true]);
+			expect((await room()).me?.labels_question).toBe(false);
 		});
 
-		it("has no question for someone nobody else brought in", async () => {
-			await expect(
-				client.call("answerRoomLabels", {
-					body: { labels: [], other: null },
-					params,
-				}),
-			).rejects.toMatchObject(refused(409, "room.no_labels_question"));
+		it("lets someone nobody else brought in set their own labels, without asking", async () => {
+			as("billing");
+			const mine = await client.call("answerRoomLabels", {
+				body: { labels: ["contract_purchasing"], other: null },
+				params,
+			});
+			expect([mine.labels, mine.room, mine.may_relabel]).toEqual([
+				["contract_purchasing"],
+				"by_role",
+				true,
+			]);
+			expect((await room()).me?.labels_question).toBe(false);
 		});
 
 		it("lets those who run the account dismiss a hint, and nobody else", async () => {
@@ -493,6 +500,45 @@ describe("the fixture backend's room", () => {
 			});
 			expect(doc.access).toBe("signer");
 			expect(doc.fields.length).toBeGreaterThan(0);
+		});
+	});
+
+	describe("who may name a signer, as the server says", () => {
+		const docId = fx.offerDetail.id;
+		it("is owners and admins on the customer side, and nobody else anywhere", async () => {
+			const named = async () => [
+				(await client.call("readDocument", { params: { docId, orgId } }))
+					.may_name_signer,
+				(await page()).documents.every((d) => d.may_name_signer),
+			];
+			expect(await named()).toEqual([true, true]);
+			as("billing");
+			expect(await named()).toEqual([false, false]);
+			as("colleague");
+			const roomDoc = await client.call("readDocument", {
+				params: { docId, orgId },
+			});
+			expect(roomDoc.may_name_signer).toBe(false);
+			// The staff side, and the signer's own list, never name anyone.
+			as("admin");
+			const staff = await client.call("staffReadDocument", {
+				params: { docId, orgId },
+			});
+			expect(staff.may_name_signer).toBe(false);
+			const card = await client.call("accountCard", { params: { orgId } });
+			expect(card.documents.some((d) => d.may_name_signer)).toBe(false);
+			const requests = await client.call("signingRequests", {});
+			expect(requests.some((r) => r.document.may_name_signer)).toBe(false);
+		});
+
+		it("is what the static fixtures say too", () => {
+			expect(fx.accountCard.documents.some((d) => d.may_name_signer)).toBe(
+				false,
+			);
+			expect(fx.signingRequests.some((r) => r.document.may_name_signer)).toBe(
+				false,
+			);
+			expect(fx.pushOfferResponse.document.may_name_signer).toBe(false);
 		});
 	});
 });

@@ -394,12 +394,12 @@ msgid "error.member.owner_removes_owner"
 msgstr "Seul un propriétaire peut supprimer un autre propriétaire."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:20
+#: src/lib/errors/messages/room.ts:16
 msgid "error.room.name_signer_admins_only"
 msgstr "Seul un propriétaire ou un administrateur peut choisir qui signe. Tu peux signer toi-même ou relancer la personne déjà désignée."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:25
+#: src/lib/errors/messages/room.ts:21
 msgid "error.room.new_person_admins_only"
 msgstr "Seul un propriétaire ou un administrateur peut inviter quelqu’un qui n’est pas encore membre. Tu peux ajouter un collègue qui est déjà membre."
 
@@ -434,12 +434,12 @@ msgid "error.project.not_owner"
 msgstr "Seul le propriétaire de ce projet peut effectuer cette action."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:15
+#: src/lib/errors/messages/room.ts:11
 msgid "error.room.manage_forbidden"
 msgstr "Seuls la personne qui l’a invité, un administrateur ou la Facturation peuvent modifier ce qu’il fait."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:38
+#: src/lib/errors/messages/room.ts:30
 msgid "error.room.remove_forbidden"
 msgstr "Seuls la personne qui l’a invité, un administrateur ou la Facturation peuvent le retirer."
 
@@ -789,11 +789,6 @@ msgid "error.billing.no_payment_profile"
 msgstr "Aucun moyen de paiement à mettre à jour pour l'instant. Choisissez d'abord un forfait."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:30
-msgid "error.room.no_labels_question"
-msgstr "Il n’y a rien à répondre ici."
-
-#. js-lingui-explicit-id
 #: src/lib/errors/messages/demo.ts:7
 msgid "error.demo.contact_not_in_organisation"
 msgstr "Cette personne ne fait plus partie de cette organisation, la démo n'a donc pas été publiée. Ajoutez-la de nouveau ou publiez sans envoyer l'e-mail."
@@ -1059,7 +1054,7 @@ msgid "error.organisation.external_cannot_manage"
 msgstr "Cette personne a un statut externe sur l'un de vos espaces de travail. Retirez d'abord ce rôle, puis désignez-la comme administrateur ou propriétaire."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:34
+#: src/lib/errors/messages/room.ts:26
 msgid "error.room.person_not_found"
 msgstr "Cette personne n’est plus là."
 
@@ -1672,11 +1667,6 @@ msgstr "Écrivez quelque chose pour cet aperçu."
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
 msgstr "Écrivez quelque chose à conserver en mémoire."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:11
-msgid "error.room.labels_already_answered"
-msgstr "Tu as déjà dit ce que tu fais ici."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

@@ -15,8 +15,9 @@ import { KindIcon, kindOf, TaskLine } from "../TaskLine";
 /**
  * The tasks a room member reads: those on the offer and the DPA, with where each stands,
  * the answer given, the name of a file sent and dembrane's review note. Nothing to
- * answer, upload, sign or send: those who run the account do that. A file is its name
- * only, as no customer route serves a task's file.
+ * answer, upload, sign or send: those who run the account do that, so each task is
+ * titled by what it is, not as a request (taskText "reads"). A file is its name only, as
+ * no customer route serves a task's file.
  */
 export function ReadOnlyTasks({
 	tasks,
@@ -45,7 +46,7 @@ export function ReadOnlyTasks({
 				) : (
 					<Rows>
 						{tasks.map((task) => {
-							const { title, body } = taskText(task);
+							const { title, body } = taskText(task, "reads");
 							const answer = task.response_text;
 							const note = task.review_note;
 							const doc = documents.find((d) => d.id === task.document_id);

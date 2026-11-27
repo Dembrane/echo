@@ -6,7 +6,7 @@ const NS_NEW = "orgs" as const;
 const NS_OLD = "organisation" as const;
 
 export const orgQueryKeys = {
-	// Members list (org People tab + workspace settings members table)
+	// Members list (org Members tab + workspace settings members table)
 	members: (orgId: string) => ["v2", NS_NEW, orgId, "members"] as const,
 	// Pending invites (org-wide + per-workspace via key suffix)
 	pendingInvites: (orgId: string) =>

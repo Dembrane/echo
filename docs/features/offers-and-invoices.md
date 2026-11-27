@@ -10,8 +10,11 @@ A paid plan starts with an offer, not with a checkout. dembrane sends the offer 
 organisation in the dashboard. You sign it there, fill in your billing details, and the
 invoice follows.
 
-Organisation admins and people with the organisation Billing role see all of this. Other
-members read: "Only the organisation's admins and billing contacts see this page."
+Organisation owners, admins and people with the organisation Billing role see all of
+this. Other members read: "Only the organisation's admins and billing contacts see this
+page." Colleagues you bring in under "Involved in procurement" read the offer and the DPA,
+and the tasks about them. The "DPA" label shows its full name when you hover or tap it:
+"DPA: data processing agreement".
 
 To read the offer with colleagues and say who signs, see
 [Sharing an offer with your team](./sharing-offers-with-your-team.md).
@@ -25,11 +28,12 @@ gets two more entries: "Tasks" and "Documents".
 |---|---|
 | "Overview" | What is open now: "To do", "Get started" (marked "optional"), "Coming up", and "Talk to us" at the foot |
 | "Tasks" | Every task, the finished ones folded under "Show finished ({n})", and the billing details form |
-| "Documents" | Every offer, agreement and invoice, each with its PDF and a status such as "To sign", "Signed" or "Withdrawn". Until there is one: "Offers, agreements and invoices appear here once we send them." |
+| "Documents" | Every offer, agreement and invoice, with a status such as "To sign", "Signed" or "Withdrawn", and its tools as icons: "Open to sign", "Read", "Download PDF", and "Share with a colleague" on the offer and the DPA. Until there is one: "Offers, agreements and invoices appear here once we send them." |
 
 If you belong to more than one organisation, a "Tasks" page shows one card for each: "What
 each of your organisations still has to do for dembrane." A prompt points you to open
-tasks: "You have {n} thing(s) to do in {name}", with "Go to your tasks" and "Later".
+tasks: "You have 1 thing to do in {name}" or "You have {n} things to do in {name}", with
+"Go to your tasks" and a close button.
 
 ## How an offer reaches you
 
@@ -42,23 +46,28 @@ offer from dembrane is ready to sign".
   to measure.
 - It is written in English or Dutch.
 - It is valid for 14 days from its date. After that it cannot be signed.
-- It fixes the versions of the terms, the service level agreement and the data processing
-  agreement that were in force when it was sent. An event offer has no service level
-  agreement.
+- It fixes the versions of the terms, the service level agreement and the DPA that were in
+  force when it was sent. An event offer has no service level agreement.
+- dembrane can name who signs when it sends the offer. That person gets the signing email
+  straight away, and "Tell us who signs the offer" starts from them.
 - A sent offer is never edited. If something has to change, dembrane sends a new offer and
   the old one shows as "Withdrawn".
 
 ## The tasks that come with an offer
 
-1. "Tell us who signs the offer" ("3 questions"). Who signs the offer, who signs the data
-   processing agreement ("The same person who signs the offer", "I do" or "Someone else"),
-   and "Do you need your own data protection impact assessment (DPIA)?" The form adds: "To
-   change these answers later, ask us a question."
-2. "Review and sign the offer".
+1. "Tell us who signs the offer" ("2 questions"). First who signs the offer and who signs
+   the DPA: on each line, "Choose someone" (or "Change") picks you or, for owners and
+   admins, a colleague or "Someone new". Whoever signs the offer signs the DPA too, unless you
+   choose someone else for it. Then "Do you need your own data protection impact
+   assessment (DPIA)?" The form adds: "To change these answers later, ask us a question."
+   When dembrane already named someone, the line under the task says "{signerName} is
+   named to sign the offer." instead.
+2. "Review and sign the offer". It waits until you said who signs: "Opens after you tell
+   us who signs".
 3. "Sign the DPA". This is its own document, sent with the offer.
 4. "Fill in billing details". This one stays locked until an offer is signed: "Opens after
-   you sign {title}". If your organisation already gave complete details, you are not asked
-   again.
+   you sign {until}". If your organisation already gave complete details, you are not
+   asked again.
 
 dembrane can also give you a task to reply to ("Reply") or to send a file ("Upload", at
 most 20 MB). A task is "Open", "Sent back", "Locked", "Waiting on dembrane", "Done" or
@@ -66,8 +75,8 @@ most 20 MB). A task is "Open", "Sent back", "Locked", "Waiting on dembrane", "Do
 
 ## Sign a document
 
-Any organisation admin or Billing member can sign, unless one person is named to sign. Then
-only that person can.
+Any organisation owner, admin or Billing member can sign, unless one person is named to
+sign. Then only that person can.
 
 1. Open the document from "To do" or "Tasks".
 2. Fill in the fields on the PDF. The screen counts them: "{done} of {total} filled". Every
@@ -88,16 +97,21 @@ When an offer is signed, the tasks that were locked open.
 
 ### Let someone else sign
 
-Choose "Send to someone else" and give their email address, their name and, if you like,
-their job title.
+Owners and admins choose "Send to someone else" and give their email address, their name
+and, if you like, their job title. Billing signs themselves, or reminds the person already
+named.
 
 - They get the email "{inviter_name} asked you to sign {document_title}" with a link.
 - They sign in with a six-digit code sent to that address. They need no password, and they
   reach that one document and nothing else. Their screen says "{inviter} from {org} invited
-  you to sign".
+  you to sign". If the code does not come, it says: "No code after a minute? Check your
+  spam folder, or ask the person who shared this with you to add you."
 - "Remind {name}" sends the link again, once a day at most.
-- If you name a different person, the first person's link stops working.
-- When they sign, they join your organisation with the Billing role.
+- If you name a different person, the first person's link stops working, and the
+  invitation to your organisation that came with it is withdrawn. An invitation an owner
+  or admin sent them from the "Members" page stays.
+- When they sign, they join your organisation with the Billing role, or with the role an
+  owner or admin chose when inviting them from the "Members" page.
 
 ## Billing details
 
@@ -184,7 +198,8 @@ added.
 | "Your dembrane account for {org_name}" | dembrane publishes a demo for you with sign-in |
 | "Your demo is ready: {demo_name}" | dembrane publishes a demo for you in an organisation you already work in |
 | "Your offer from dembrane is ready to sign" | An offer is sent. One to each organisation admin and Billing member |
-| "{inviter_name} asked you to sign {document_title}" | A colleague names you to sign, or reminds you |
+| "{inviter_name} asked you to sign {document_title}" | A colleague names you to sign, or reminds you, or dembrane names you when it sends the offer |
+| "{inviter_name} invited you to the offer for {org_name}" | A colleague adds you under "Involved in procurement" |
 | "{document_title} has been withdrawn" | Your account manager at dembrane tells you a document was withdrawn |
 | "Still open for {org_name}: {task_title}" | Your account manager at dembrane reminds you of a task |
 
@@ -195,6 +210,6 @@ accounting system, not from the dashboard.
 
 - [Tiers & billing](./tiers-and-billing.md): plans, seats and how you get a paid plan.
 - [Roles & permissions](./roles-and-permissions.md): who can see offers and invoices.
-- [Data ownership & compliance](./data-ownership-and-compliance.md): the data processing agreement in context.
+- [Data ownership & compliance](./data-ownership-and-compliance.md): the DPA in context.
 - [Notifications](./notifications.md): the other emails dembrane sends.
 - [Tiers, billing and usage for hosts](../users/host/tiers-billing-and-usage.md): the same, as a host.

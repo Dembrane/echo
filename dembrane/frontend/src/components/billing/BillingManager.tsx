@@ -1289,7 +1289,7 @@ export function BillingManager({
 						) : (
 							<Trans>
 								A seat is one member. Add or remove members in each workspace's
-								People tab; your next charge follows automatically.
+								Members tab; your next charge follows automatically.
 							</Trans>
 						)}
 					</Text>

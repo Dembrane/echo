@@ -150,7 +150,7 @@ What sending does:
 - Each owner, admin and billing member of the organisation gets the email "Your offer from
   dembrane is ready to sign".
 - The customer gets their tasks: "Tell us who signs the offer", "Review and sign the offer",
-  "Sign the data processing agreement" and "Fill in billing details". The last one opens after
+  "Sign the DPA" and "Fill in billing details". The last one opens after
   they sign.
 - "Get started" steps the prospect has not done yet are withdrawn.
 

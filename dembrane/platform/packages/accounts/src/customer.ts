@@ -1,4 +1,4 @@
-import { sendEmail } from "@dembrane/account";
+import { sendEmail, subjectOf } from "@dembrane/account";
 import {
   ConflictError,
   ForbiddenError,
@@ -473,7 +473,8 @@ export async function setSigner(
  * made another way (the Members page, the room) were never on a naming's event, so they
  * stay, and one already taken up stays a membership. Returns the ids withdrawn, for the
  * event that records the change. The one place that decides it: setSigner, unsetSigner and
- * removeRoomPerson call it.
+ * removeRoomPerson call it. invitationHeld says which invitations it and the room may
+ * withdraw, so the Members page can replace them with its own.
  */
 export async function releaseSignerInvite(
   tx: Conn,
@@ -487,6 +488,23 @@ export async function releaseSignerInvite(
   for (const id of await store.signerInviteIds(tx, orgId, email))
     if (await store.withdrawOrgInvite(tx, id, now)) withdrawn.push(id);
   return withdrawn;
+}
+
+/**
+ * Whether a pending invitation is one this package made and may withdraw later: a naming's
+ * (releaseSignerInvite reads the same ids) or the room's (removeRoomPerson withdraws the
+ * row's). The Members page asks it before answering "already invited": an owner or admin
+ * inviting such an address replaces the invitation with one of their own, which neither a
+ * change of signer nor a removal from the room withdraws.
+ */
+export async function invitationHeld(
+  c: Conn,
+  orgId: string,
+  email: string,
+  inviteId: string,
+): Promise<boolean> {
+  if ((await store.signerInviteIds(c, orgId, email)).includes(inviteId)) return true;
+  return (await store.roomPersonByEmail(c, orgId, email))?.orgInviteId === inviteId;
 }
 
 /**
@@ -604,20 +622,22 @@ async function emailSigner(
   // The signer's own language when they have an account, else the document's.
   const language =
     (await localeOfEmail(tx, email).catch(() => null)) ?? resolveLocale(doc.language);
+  const data = {
+    inviter_name: me?.name || me?.email || org.name,
+    org_name: org.name,
+    document_title: doc.title,
+    // Opens the invitation page for this person, not a bare sign-in.
+    sign_url: signerInviteUrl(d.settings.dashboardUrl, d.settings.inviteSecret, doc),
+  };
   await d.jobs.enqueue(
     sendEmail,
     {
       language,
       to: email,
-      subject: `Please sign ${doc.title}`,
+      // The catalog's subject, as the email itself words it (subjectOf).
+      subject: subjectOf({ template: "account_signer_invite", data }, language) ?? "",
       template: "account_signer_invite",
-      data: {
-        inviter_name: me?.name || me?.email || org.name,
-        org_name: org.name,
-        document_title: doc.title,
-        // Opens the invitation page for this person, not a bare sign-in.
-        sign_url: signerInviteUrl(d.settings.dashboardUrl, d.settings.inviteSecret, doc),
-      },
+      data,
       context: `account signer invite ${doc.id}`,
     },
     { tx },
@@ -717,9 +737,7 @@ export async function answerWhoSigns(
 
   const summary = [
     `Offer: signed by ${person(input.offer_signer)}${offerWas}.`,
-    `Data processing agreement: signed by ${
-      input.dpa_same ? "the same person" : person(input.dpa_signer)
-    }${dpaWas}.`,
+    `DPA: signed by ${input.dpa_same ? "the same person" : person(input.dpa_signer)}${dpaWas}.`,
     input.dpia
       ? "They want their own data protection impact assessment (DPIA)."
       : "No DPIA of their own.",

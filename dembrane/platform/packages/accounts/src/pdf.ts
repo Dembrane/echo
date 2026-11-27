@@ -789,7 +789,7 @@ export const OUTSIDE_VIA = {
   order_letter: "by order letter",
   email: "by email",
   paper: "by signature on paper",
-  own_document: "by signing their own data processing agreement",
+  own_document: "by signing their own DPA",
 } as const;
 export type OutsideVia = keyof typeof OUTSIDE_VIA;
 

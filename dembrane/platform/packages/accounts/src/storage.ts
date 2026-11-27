@@ -289,19 +289,6 @@ export const store = {
   },
 
   /**
-   * Someone named to sign shows among the organisation's members as invited, with the
-   * billing role (signing and paying is what it is for). Their invitation email is the
-   * signing email, so none goes out here. Nothing changes when they are a member already
-   * or have an invitation waiting; true when an invitation was made.
-   */
-  async inviteSigner(
-    c: Conn,
-    row: { id: string; orgId: string; email: string; invitedBy: string | null; now: Date },
-  ): Promise<boolean> {
-    return (await store.inviteToOrg(c, { ...row, role: "billing" })) !== null;
-  },
-
-  /**
    * A pending invitation to the organisation, valid as long as an offer stays open to sign
    * (30 days). One per address: nothing is made for a member or for an address with an
    * invitation waiting. Returns the id of the invitation made, else null.
@@ -392,7 +379,8 @@ export const store = {
 
   /**
    * Withdraws an invitation (soft delete): its link and the code sign-in it allowed stop.
-   * One already taken up or withdrawn stays as it is. True when this withdrew it.
+   * One already taken up or withdrawn stays as it is. True when this withdrew it. The same
+   * query as withdrawOrgInvite in packages/tenancy/src/storage/invites.ts: change both together.
    */
   async withdrawOrgInvite(c: Conn, id: string, now: Date): Promise<boolean> {
     const rows = await c

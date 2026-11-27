@@ -25,17 +25,6 @@ export const room = {
     description:
       "Taking someone out of the room who is there by their organisation role; changing the role is the way.",
   },
-  "room.labels_already_answered": {
-    action: "none",
-    detail: "You already said what you do here",
-    description: "The once-asked question about one's own labels was answered before.",
-  },
-  "room.no_labels_question": {
-    action: "none",
-    detail: "There is no question about your labels",
-    description:
-      "Someone answered the labels question who was not brought into the room by someone else.",
-  },
   "room.new_person_admins_only": {
     action: "contact_admin",
     detail: "Only an owner or admin can bring in someone who is not a member yet",

@@ -586,6 +586,9 @@ function withUrls(
 		file_url: `${base}/documents/${doc.id}/file`,
 		// The fixtures' person runs the account (or is staff), so may always save the PDF.
 		may_download: true,
+		// Naming who signs is an owner's or admin's, on the customer side (asActor): never
+		// staff, the named signer or a room member, as the server's documentSummary.
+		may_name_signer: false,
 		signed_pdf_url:
 			doc.status === "signed" ? `${base}/documents/${doc.id}/signed.pdf` : null,
 		staff_url:
@@ -987,8 +990,8 @@ function confirmationFor(
 	const base = `I, {name}${role}, confirm that I may sign on behalf of ${org}, and I sign "${title}" (${reference}) as shown to me, SHA-256 ${sha}.`;
 	return withDpa
 		? {
-				dpa_authorised: `${base} I am also authorised to enter into data processing arrangements on behalf of this organisation.`,
-				dpa_not_authorised: `${base} I am not authorised to enter into data processing arrangements on behalf of this organisation; the data processing agreement is signed separately.`,
+				dpa_authorised: `${base} I am also authorised to agree to data processing on behalf of this organisation.`,
+				dpa_not_authorised: `${base} I am not authorised to agree to data processing on behalf of this organisation; the data processing agreement will be signed separately.`,
 			}
 		: { dpa_authorised: base, dpa_not_authorised: null };
 }
@@ -1143,11 +1146,9 @@ function separateDpaFor(s: Store, d: DocumentDetailT, signedAt: string) {
 	const t = signTaskFor(
 		s,
 		dpa,
+		d.language === "nl" ? "De DPA laten tekenen" : "Have the DPA signed",
 		d.language === "nl"
-			? "Verwerkersovereenkomst laten tekenen"
-			: "Have the DPA signed",
-		d.language === "nl"
-			? "Iemand die namens jullie verwerkingsafspraken mag aangaan, tekent de verwerkersovereenkomst. Wijs diegene aan op het document."
+			? "Iemand die namens jullie verwerkingsafspraken mag aangaan, tekent de DPA. Wijs diegene aan op het document."
 			: "Someone who may agree to data processing for your organisation signs the DPA. Name them on the document.",
 	);
 	t.params = { ...(t.params ?? {}), offer_id: d.id };
@@ -1678,7 +1679,7 @@ export async function handle(
 				return via === "room"
 					? asRoom(withUrls(doc(), cBase, "member"))
 					: via === "signer"
-						? { ...withUrls(doc(), cBase, "signer"), may_name_signer: false }
+						? withUrls(doc(), cBase, "signer")
 						: asActor(withUrls(doc(), cBase, "member"), s);
 			case "staffReadDocument":
 				return withUrls(doc(), sBase, "staff");
@@ -2257,8 +2258,8 @@ export async function handle(
 					signer: draftSigner(body.customer_signer as Named | null | undefined),
 					signing_note:
 						language === "nl"
-							? "Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en verwerkersovereenkomst gelden."
-							: "Your signature completes the agreement: we can invoice, and the terms, SLA and data processing agreement apply.",
+							? "Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en DPA gelden."
+							: "Signing makes the agreement complete, so we can invoice and your terms, SLA and data processing are in force.",
 					status: body.send === false ? "draft" : "sent",
 					subtotal_cents: subtotal,
 					title,

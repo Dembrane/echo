@@ -73,3 +73,19 @@ export async function pendingOrgInvites(db: Conn, orgId: string, nowIso: string,
 export async function insertOrgInvite(db: Conn, row: typeof org_invite.$inferInsert) {
   await db.insert(org_invite).values(row);
 }
+
+/**
+ * Withdraws a pending org invitation (soft delete); one taken up or withdrawn stays as it is.
+ * True when this withdrew it. The same query as store.withdrawOrgInvite in
+ * packages/accounts/src/storage.ts: change both together.
+ */
+export async function withdrawOrgInvite(db: Conn, id: string, nowIso: string) {
+  const rows = await db
+    .update(org_invite)
+    .set({ deleted_at: nowIso })
+    .where(
+      and(eq(org_invite.id, id), isNull(org_invite.accepted_at), isNull(org_invite.deleted_at)),
+    )
+    .returning({ id: org_invite.id });
+  return rows.length > 0;
+}

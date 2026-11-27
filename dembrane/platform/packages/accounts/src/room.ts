@@ -45,8 +45,8 @@ import { iso } from "./views";
  * The data room: the colleagues an organisation brings in to decide on an offer with it.
  * Who runs the account (owner, admin, Billing) is in by their role; a member brought in
  * reads the offer and the DPA (access.ts); someone new is invited as a plain member, by an
- * owner or admin only. Each
- * person carries labels saying what they do in the decision. Nobody takes a seat: seats
+ * owner or admin only. Each person carries labels saying what they do in the decision,
+ * which they may change themselves. Nobody takes a seat: seats
  * come from direct workspace rows, and the room makes none.
  */
 
@@ -90,6 +90,60 @@ async function track(
   await d.capture?.(hostDistinctId(actor.email, actor.directusUserId), event, properties);
 }
 
+/** What a change of labels adds and removes, and whether the own words changed. */
+function labelChange(
+  before: { labels: readonly string[]; other: string | null } | null,
+  labels: RoomLabelT[],
+  other: string | null,
+) {
+  const was = inOrder(before?.labels ?? []);
+  const added = labels.filter((l) => !was.includes(l));
+  const removed = was.filter((l) => !labels.includes(l));
+  const otherChanged = (before?.other ?? null) !== other;
+  return {
+    detail: { labels, added, removed, other_changed: otherChanged },
+    changed: added.length > 0 || removed.length > 0 || otherChanged,
+  };
+}
+
+/**
+ * A change of what someone in the room does, after the first-visit answer: on the timeline
+ * (room.labels_changed) in the caller's transaction, and in PostHog once it commits, as
+ * `server_room_labels_changed`. `own`: they changed their own.
+ */
+async function emitLabelsChanged(
+  d: AccountsDeps,
+  tx: Tx,
+  orgId: string,
+  who: Signed,
+  personId: string,
+  change: ReturnType<typeof labelChange>,
+  own: boolean,
+) {
+  await emit(d, tx, {
+    orgId,
+    actor: { kind: "customer", userId: who.directusUserId },
+    type: "room.labels_changed",
+    subject: { type: "room_person", id: personId },
+    detail: { ...change.detail, own },
+  });
+}
+
+const trackLabelsChanged = (
+  d: AccountsDeps,
+  actor: { email: string | null | undefined; directusUserId: string },
+  orgId: string,
+  personId: string,
+  change: ReturnType<typeof labelChange>,
+  own: boolean,
+) =>
+  track(d, actor, "server_room_labels_changed", {
+    org_id: orgId,
+    person_id: personId,
+    ...change.detail,
+    own,
+  });
+
 // ── who signs ───────────────────────────────────────────────────────────
 
 type Signers = RoomPageT["signers"];
@@ -122,9 +176,9 @@ type Viewer = { who: Signed; access: RoomAccess } | null;
  * Everyone the room knows, as those who run the account see them: every member (by role,
  * by invitation or not in the room) and everyone invited who has not accepted yet. A row
  * whose person left the organisation, or whose invitation lapsed, shows nobody. Each says
- * whether the viewer may take them out (only someone in by invitation: removeRoomPerson)
- * or change what they do (anyone in the room but the viewer: addRoomPerson), by
- * managesPerson; both false on the staff side.
+ * whether the viewer may take them out (only someone in by invitation, never themselves:
+ * removeRoomPerson) or change what they do (anyone in the room: addRoomPerson, by
+ * managesPerson; their own labels, answerRoomLabels); both false on the staff side.
  */
 async function roomPeople(
   d: AccountsDeps,
@@ -166,8 +220,8 @@ async function roomPeople(
         : null,
       invited_at: iso(r?.row.accessGrantedAt),
       signs: (["offer", "dpa"] as const).filter((k) => signers[k]?.email === who.email),
-      may_remove: manages && who.room === "by_invite",
-      may_relabel: manages && who.room !== "none" && !self,
+      may_remove: manages && who.room === "by_invite" && !self,
+      may_relabel: who.room !== "none" && (manages || self),
     };
   };
   const people: RoomPersonT[] = [];
@@ -358,20 +412,37 @@ export async function addRoomPerson(
   const inRoomAlready = row?.accessGrantedAt && (member || pending);
   if (inByRole || inRoomAlready) {
     if (!managesPerson(access, row, who)) throw new ForbiddenError("room.manage_forbidden");
-    if (row) await store.updateRoomPerson(d.db, row.id, { labels, other, updatedAt: now });
-    else
-      await store.insertRoomPerson(d.db, {
-        id: newId(),
-        orgId: org.id,
-        email,
-        appUserId: member?.appUserId ?? null,
-        name: input.name,
-        labels,
-        other,
-        invitedBy: who.appUserId ?? null,
-        createdAt: now,
-        updatedAt: now,
-      });
+    const change = labelChange(row, labels, other);
+    const personId = row?.id ?? newId();
+    const wrote = await d.db.transaction(async (tx) => {
+      if (row) await store.updateRoomPerson(tx, row.id, { labels, other, updatedAt: now });
+      else if (
+        !(await store.insertRoomPerson(tx, {
+          id: personId,
+          orgId: org.id,
+          email,
+          appUserId: member?.appUserId ?? null,
+          name: input.name,
+          labels,
+          other,
+          invitedBy: who.appUserId ?? null,
+          createdAt: now,
+          updatedAt: now,
+        }))
+      )
+        return false;
+      if (change.changed) await emitLabelsChanged(d, tx, org.id, who, personId, change, false);
+      return change.changed;
+    });
+    if (wrote)
+      await trackLabelsChanged(
+        d,
+        { email: me?.email, directusUserId: who.directusUserId },
+        org.id,
+        personId,
+        change,
+        false,
+      );
     return done("updated", false);
   }
 
@@ -543,8 +614,12 @@ export async function removeRoomPerson(
 // ── their own labels ────────────────────────────────────────────────────
 
 /**
- * The person's own answer to "is this what you do?", asked once of someone brought in by
- * someone else. Confirming the labels as they are is an answer and no correction.
+ * Anyone in the room says what they do themselves, at any time: the answer to "is this
+ * what you do?", asked once of someone brought in by someone else (room.labels_answered;
+ * confirming the labels as they are is an answer and no correction), or a change later,
+ * recorded as any change of labels (room.labels_changed). Either answers the question.
+ * Someone in by their role with no labels yet gets their row here. Taking yourself out is
+ * not done here: that is for whoever runs the account or invited you.
  */
 export async function answerRoomLabels(
   d: AccountsDeps,
@@ -555,48 +630,61 @@ export async function answerRoomLabels(
   const access = await roomOrg(d, who, orgId);
   const { org } = access;
   const row = await myRoomRow(d, who, access);
-  if (!row || !asksLabels(row, who.appUserId)) {
-    if (row?.labelsAnsweredAt) throw new ConflictError("room.labels_already_answered");
-    throw new ConflictError("room.no_labels_question");
-  }
+  const me = await store.identity(d.db, who.directusUserId);
+  // Without a row, one is made under the caller's verified address (the one their row is
+  // found by); with none there is no row to make or find.
+  const email = (row?.email ?? (me?.verified ? me.email : "")).toLowerCase();
+  if (!email) throw new NotFoundError("room.person_not_found");
+  const asked = asksLabels(row, who.appUserId);
   const labels = inOrder(input.labels);
-  const before = inOrder(row.labels);
-  const added = labels.filter((l) => !before.includes(l));
-  const removed = before.filter((l) => !labels.includes(l));
-  const otherChanged = (row.other ?? null) !== input.other;
+  const change = labelChange(row, labels, input.other);
   const now = d.now();
-  await d.db.transaction(async (tx) => {
-    await store.updateRoomPerson(tx, row.id, {
+  const personId = await d.db.transaction(async (tx) => {
+    let target = row?.id ?? null;
+    if (!target) {
+      const id = newId();
+      const made = await store.insertRoomPerson(tx, {
+        id,
+        orgId: org.id,
+        email,
+        appUserId: who.appUserId ?? null,
+        name: me?.name || email,
+        labels,
+        other: input.other,
+        invitedBy: null,
+        createdAt: now,
+        updatedAt: now,
+      });
+      // Made at the same moment by someone setting their labels: that row.
+      target = made ? id : ((await store.roomPersonByEmail(tx, org.id, email))?.id ?? null);
+    }
+    if (!target) throw new NotFoundError("room.person_not_found");
+    await store.updateRoomPerson(tx, target, {
       labels,
       other: input.other,
-      labelsAnsweredAt: now,
+      labelsAnsweredAt: row?.labelsAnsweredAt ?? now,
       updatedAt: now,
     });
-    await emit(d, tx, {
-      orgId: org.id,
-      actor: { kind: "customer", userId: who.directusUserId },
-      type: "room.labels_answered",
-      subject: { type: "room_person", id: row.id },
-      detail: { labels, added, removed, other_changed: otherChanged },
-    });
+    if (asked)
+      await emit(d, tx, {
+        orgId: org.id,
+        actor: { kind: "customer", userId: who.directusUserId },
+        type: "room.labels_answered",
+        subject: { type: "room_person", id: target },
+        detail: change.detail,
+      });
+    else if (change.changed) await emitLabelsChanged(d, tx, org.id, who, target, change, true);
+    return target;
   });
-  if (added.length || removed.length || otherChanged) {
-    const me = await store.identity(d.db, who.directusUserId);
-    await track(
-      d,
-      { email: me?.email, directusUserId: who.directusUserId },
-      "server_room_labels_corrected",
-      {
-        org_id: org.id,
-        person_id: row.id,
-        labels,
-        added,
-        removed,
-        other_changed: otherChanged,
-      },
-    );
-  }
-  return personOf(d, org.id, row.email, { who, access });
+  const actor = { email: me?.email, directusUserId: who.directusUserId };
+  if (asked && change.changed)
+    await track(d, actor, "server_room_labels_corrected", {
+      org_id: org.id,
+      person_id: personId,
+      ...change.detail,
+    });
+  else if (change.changed) await trackLabelsChanged(d, actor, org.id, personId, change, true);
+  return personOf(d, org.id, email, { who, access });
 }
 
 // ── hints ───────────────────────────────────────────────────────────────

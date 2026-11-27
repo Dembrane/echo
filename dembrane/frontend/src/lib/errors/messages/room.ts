@@ -8,10 +8,6 @@ export const room = {
 		message:
 			"Owners, admins and Billing are in the room by their role. Change their role on the Members page instead.",
 	}),
-	"room.labels_already_answered": msg({
-		id: "error.room.labels_already_answered",
-		message: "You already said what you do here.",
-	}),
 	"room.manage_forbidden": msg({
 		id: "error.room.manage_forbidden",
 		message:
@@ -26,10 +22,6 @@ export const room = {
 		id: "error.room.new_person_admins_only",
 		message:
 			"Only an owner or admin can invite someone who is not a member yet. You can add a colleague who is already a member.",
-	}),
-	"room.no_labels_question": msg({
-		id: "error.room.no_labels_question",
-		message: "There is nothing to answer here.",
 	}),
 	"room.person_not_found": msg({
 		id: "error.room.person_not_found",

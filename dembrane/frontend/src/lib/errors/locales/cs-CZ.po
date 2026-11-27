@@ -394,12 +394,12 @@ msgid "error.member.owner_removes_owner"
 msgstr "Odebrat jiného vlastníka může pouze vlastník."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:20
+#: src/lib/errors/messages/room.ts:16
 msgid "error.room.name_signer_admins_only"
 msgstr "Kdo podepisuje, může vybrat jen vlastník nebo admin. Můžeš podepsat sám, nebo připomenout už vybrané osobě."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:25
+#: src/lib/errors/messages/room.ts:21
 msgid "error.room.new_person_admins_only"
 msgstr "Někoho, kdo ještě není členem, může pozvat jen vlastník nebo admin. Můžeš přidat kolegu, který už členem je."
 
@@ -434,12 +434,12 @@ msgid "error.project.not_owner"
 msgstr "Toto může provést pouze vlastník tohoto projektu."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:15
+#: src/lib/errors/messages/room.ts:11
 msgid "error.room.manage_forbidden"
 msgstr "Změnit, co dělá, může jen ten, kdo ho pozval, admin nebo Billing."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:38
+#: src/lib/errors/messages/room.ts:30
 msgid "error.room.remove_forbidden"
 msgstr "Odebrat ho může jen ten, kdo ho pozval, admin nebo Billing."
 
@@ -789,11 +789,6 @@ msgid "error.billing.no_payment_profile"
 msgstr "Zatím nelze aktualizovat žádnou platební metodu. Nejprve si vyberte tarif."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:30
-msgid "error.room.no_labels_question"
-msgstr "Tady není na co odpovídat."
-
-#. js-lingui-explicit-id
 #: src/lib/errors/messages/demo.ts:7
 msgid "error.demo.contact_not_in_organisation"
 msgstr "Tato osoba už v této organizaci není, takže demo nebylo zveřejněno. Přidejte ji znovu, nebo zveřejněte s vypnutým e-mailem."
@@ -1059,7 +1054,7 @@ msgid "error.organisation.external_cannot_manage"
 msgstr "Tato osoba je externistou v jednom z vašich pracovních prostorů. Nejprve tuto roli odeberte a pak ji nastavte jako správce nebo vlastníka."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:34
+#: src/lib/errors/messages/room.ts:26
 msgid "error.room.person_not_found"
 msgstr "Tato osoba už tu není."
 
@@ -1672,11 +1667,6 @@ msgstr "Napište k postřehu nějaký text."
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
 msgstr "Napište, co si má paměť uchovat."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:11
-msgid "error.room.labels_already_answered"
-msgstr "Už jsi řekl, co tu děláš."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

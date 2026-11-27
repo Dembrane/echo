@@ -7,6 +7,7 @@ import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { TaskT } from "../../contract/contract.gen";
 import * as fx from "../../contract/fixtures.gen";
+import { taskText } from "../../format";
 
 // What a room member sees of the tasks on the offer and the DPA: every one with its answer
 // and review note, and nothing to press: ReadOnlyTasks({ tasks, documents }).
@@ -81,5 +82,33 @@ describe("the tasks, read only", () => {
 		expect(list.querySelector("textarea")).toBeNull();
 		expect(list.querySelector('[data-testid^="action-"]')).toBeNull();
 		expect(within(list).queryAllByRole("button")).toHaveLength(0);
+	});
+
+	it("titles each known task by what it is, not as a request to those who run the account", async () => {
+		const dpa = {
+			...fx.signTask,
+			code: "sign_dpa" as const,
+			id: "0199a1b9-0000-7000-8000-0000000000ab",
+		};
+		await show([fx.whoSignsTask, fx.signTask, dpa, answered]);
+		// The title is the line's first text; the fact follows under it.
+		const titles = screen
+			.getAllByTestId("room-task")
+			.map((r) => r.querySelector("p")?.textContent);
+		expect(titles).toEqual([
+			"Who signs the offer and the DPA",
+			"Signing the offer",
+			"Signing the DPA",
+			// No code: the task's own title.
+			"Stuur ons het collegebesluit",
+		]);
+		const list = screen.getByTestId("room-tasks");
+		expect(list.textContent).not.toContain("Tell us who signs");
+		expect(list.textContent).not.toContain("Review and sign");
+	});
+
+	it("falls back to the task's own title for a code with no read-only form", () => {
+		const billing = { ...fx.billingTask };
+		expect(taskText(billing, "reads").title).toBe(taskText(billing).title);
 	});
 });

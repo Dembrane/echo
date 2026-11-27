@@ -1267,8 +1267,8 @@ msgid "A screen that explains, step by step, what happens to the recordings. Its
 msgstr "Obrazovka, která krok za krokem vysvětluje, co se děje se záznamy. Text vychází z anonymizace a právního základu tohoto projektu."
 
 #: src/components/billing/BillingManager.tsx:1290
-msgid "A seat is one member. Add or remove members in each workspace's People tab; your next charge follows automatically."
-msgstr "Místo představuje jednoho člena. Členy můžete přidávat či odebírat na záložce Lidé v každém pracovním prostoru; příští platba se automaticky upraví."
+msgid "A seat is one member. Add or remove members in each workspace's Members tab; your next charge follows automatically."
+msgstr "Místo představuje jednoho člena. Členy můžete přidávat či odebírat na záložce Členové v každém pracovním prostoru; příští platba se automaticky upraví."
 
 #: src/components/billing/BillingManager.tsx:1285
 msgid "A seat is one member. Seats stay available until the plan ends; changes won't be charged."
@@ -5119,11 +5119,8 @@ msgstr "Deleted · {0}"
 msgid "Deleted successfully"
 msgstr "Deleted successfully"
 
-#~ msgid "Deleting a organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
-#~ msgstr "Deleting a organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
-
 #: src/routes/organisation/OrganisationRoute.tsx:1193
-msgid "Deleting an organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
+msgid "Deleting an organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you. All workspaces must be empty and deleted first."
 msgstr "Smazání organizace probíhá s pomocí podpory. Napište na <0>support@dembrane.com</0> a projdeme to s vámi. Všechny pracovní prostory musí být nejprve vyprázdněny a smazány."
 
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:219
@@ -9030,7 +9027,7 @@ msgstr "members"
 #: src/components/project/ProjectUsageAndSharing.tsx:233
 #: src/components/project/ProjectUsageAndSharing.tsx:263
 msgid "Members"
-msgstr "Members"
+msgstr "Členové"
 
 #. placeholder {0}: org.name
 #: src/components/agent-access/OrgAgentAccessSwitch.tsx:61

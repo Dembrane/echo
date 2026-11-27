@@ -453,15 +453,15 @@ export function workspaceService(deps: TenancyDeps) {
           });
         }
         const creator = await appUser(tx, member.appUserId);
-        const creatorName = creator?.display_name || "A organisation admin";
+        const creatorName = creator?.display_name || "An organisation admin";
         await emitToAll(tx, now, await orgAdmins(tx, orgId), {
           actor: member.appUserId,
           event: "WORKSPACE_CREATED",
           title: `${creatorName} created ${name}`,
           message:
             body.visibility === "open_to_organisation"
-              ? "The new workspace is open to the organisation — discover it from your organisation page."
-              : "The new workspace is restricted — organisation admins can join it; members can't see it.",
+              ? "The new workspace is open to the organisation. Find it on your organisation page."
+              : "The new workspace is restricted: organisation admins can join it; members can't see it.",
           action: "NAVIGATE_WS",
           workspaceId: wsId,
           orgId,

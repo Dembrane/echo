@@ -40,6 +40,7 @@ import {
   insertOrgInvite,
   pendingOrgInvites,
   pendingWorkspaceInvites,
+  withdrawOrgInvite,
 } from "../storage/invites";
 import {
   conversationDurationsBetween,
@@ -504,6 +505,8 @@ export function orgService(deps: TenancyDeps) {
     /**
      * Invites to the org without any workspace. Everyone not already a member, with or
      * without an account, gets an invite link valid for seven days to accept or decline.
+     * Someone with an invitation waiting is "already invited", unless customer accounts
+     * holds it (invitationHeld): then this one replaces it.
      */
     async invite(who: Signed, orgId: string, body: { email: string; role: string }) {
       const member = requireOnboarded(who);
@@ -542,7 +545,12 @@ export function orgService(deps: TenancyDeps) {
           email,
         });
       const [pending] = await pendingOrgInvites(db, orgId, iso(now), email);
-      if (pending)
+      // One a naming or the data room holds is theirs to withdraw when that ends: this
+      // invitation replaces it, so the admin's stands whatever happens to the signer or the
+      // room. It lasts at least as long, so a signer's 30 days are not cut short.
+      const replaces =
+        pending && (await deps.invitationHeld?.(orgId, email, pending.id)) ? pending : null;
+      if (pending && !replaces)
         return {
           status: "already_invited",
           email,
@@ -551,8 +559,18 @@ export function orgService(deps: TenancyDeps) {
         };
       const inviteId = newId();
       const url = link(inviteId);
-      const expiresAt = iso(new Date(now.getTime() + 7 * 86_400_000));
-      await db.transaction(async (tx) => {
+      // A replacement keeps the expiry of the one it replaces when that is later (a signer's
+      // or the room's, up to 30 days), so a room link the person already holds keeps working.
+      // The Members email still says "expires in 7 days": it understates, on purpose.
+      const expiresAt = iso(
+        new Date(
+          Math.max(now.getTime() + 7 * 86_400_000, replaces ? Date.parse(replaces.expires_at) : 0),
+        ),
+      );
+      const replaced = await db.transaction(async (tx) => {
+        // Taken up or withdrawn since it was read: nothing is replaced, so nothing is made
+        // or sent, and the answer below says where they stand now.
+        if (replaces && !(await withdrawOrgInvite(tx, replaces.id, iso(now)))) return false;
         await insertOrgInvite(tx, {
           id: inviteId,
           org_id: orgId,
@@ -578,7 +596,22 @@ export function orgService(deps: TenancyDeps) {
             orgId,
             expiresAt,
           });
+        return true;
       });
+      if (!replaced) {
+        const joined = await directusUserByEmail(db, email);
+        const user = joined ? await appUserByDirectusId(db, joined.id) : null;
+        const membership = user ? await anyOrgMembership(db, orgId, user.id) : null;
+        if (membership && membership.deleted_at === null)
+          return { status: "already_member", email, email_sent: false, invite_url: null };
+        const [still] = await pendingOrgInvites(db, orgId, iso(now), email);
+        return {
+          status: "already_invited",
+          email,
+          email_sent: false,
+          invite_url: still ? link(still.id) : null,
+        };
+      }
       return {
         status: "invited",
         email,

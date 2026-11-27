@@ -13,7 +13,8 @@ import { AccountsApiError } from "./client";
 /**
  * The data room in fixture mode, by the server's rules (platform/packages/accounts/src/
  * room.ts and access.ts): who is in the room by role, by invitation or not at all, who may
- * bring whom in, take whom out and change what they do, and the once-asked labels question.
+ * bring whom in, take whom out and change what they do (their own labels included), and
+ * the once-asked labels question.
  * The person asking is the fixture actor: Robin (admin), Bo (Billing), Sam (a member Robin
  * brought in), Kim (a member outside the room) or Noor (invited, not joined yet). The
  * harness picks one with `?as=`.
@@ -347,8 +348,8 @@ function people(r: RoomState, viewer = true): RoomPersonT[] {
 			invited_by: row?.invited_by ?? null,
 			labels: inOrder(row?.labels ?? []),
 			labels_answered_at: row?.labels_answered_at ?? null,
-			may_relabel: may && who.room !== "none" && !self,
-			may_remove: may && who.room === "by_invite",
+			may_relabel: who.room !== "none" && (may || (viewer && self)),
+			may_remove: may && who.room === "by_invite" && !self,
 			name: who.name,
 			org_role: who.role,
 			other: row?.other ?? null,
@@ -505,20 +506,33 @@ export function removeRoomPerson(r: RoomState, personId: string) {
 	};
 }
 
+/**
+ * Anyone in the room says what they do, at any time: the answer to the once-asked question
+ * or a change later; either answers it. Someone in by role gets their row here.
+ */
 export function answerRoomLabels(
 	r: RoomState,
 	body: { labels: RoomLabelT[]; other: string | null },
 ) {
 	requireRoom(r);
-	const row = rowOf(r, me().email);
-	if (!row || !asksLabels(row)) {
-		if (row?.labels_answered_at)
-			throw refuse(409, "room.labels_already_answered");
-		throw refuse(409, "room.no_labels_question");
+	const email = me().email;
+	let row = rowOf(r, email);
+	if (!row) {
+		row = {
+			access_granted_at: null,
+			email,
+			id: crypto.randomUUID(),
+			invited_by: null,
+			labels: [],
+			labels_answered_at: null,
+			name: memberByEmail(r, email)?.name ?? email,
+			other: null,
+		};
+		r.rows.push(row);
 	}
 	Object.assign(row, {
 		labels: inOrder(body.labels),
-		labels_answered_at: now(),
+		labels_answered_at: row.labels_answered_at ?? now(),
 		other: body.other,
 	});
 	return personOf(r, row.email);

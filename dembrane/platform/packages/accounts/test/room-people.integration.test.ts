@@ -19,7 +19,7 @@ import { admin, call, dropDatabase, type World, world } from "./helpers";
 // Who does what in the data room: adding a colleague in each case (someone new, a member
 // already, an owner, admin or Billing member, the same address twice, a mistyped address),
 // the invitation page and its acceptance, taking someone out before and after they accepted,
-// the once-asked question about their own labels, the hints admins and Billing wave away,
+// the once-asked question about their own labels and changing them later, the hints admins and Billing wave away,
 // who signs as the signer model says, the PostHog events, and that nobody takes a seat.
 // Needs a scratch Postgres (TEST_DATABASE_ADMIN_URL).
 const run = admin ? describe : describe.skip;
@@ -312,22 +312,89 @@ run("who does what in the data room", () => {
       removed: ["privacy_ai"],
       other_changed: true,
     });
-    // Once: the answer is recorded and not asked again.
+    expect(await store.events(w.db, w.orgId)).toContainEqual(
+      expect.objectContaining({ type: "room.labels_answered", subjectId: mine.id }),
+    );
+  });
+
+  test("anyone in the room changes their own labels at any time, recorded like any label change", async () => {
+    const noor = "noor" as Who;
+    // Asked once: after the answer, changing them is no second answer.
     const again = await call(w, "POST", `${C()}/room/me/labels`, noor, {
       labels: ["rollout"],
-      other: null,
+      other: "Projectleider",
     });
-    expect([again.status, codeOf(again)]).toEqual([409, "room.labels_already_answered"]);
-    expect((await personIn("admin", "noor@example.test"))?.labels).toEqual([
-      "go_ahead",
-      "it_security",
+    expect(again.status).toBe(200);
+    const mine = K.RoomPerson.parse(again.data);
+    expect([mine.labels, mine.other, mine.may_relabel]).toEqual([
+      ["rollout"],
+      "Projectleider",
+      true,
     ]);
-    // Only someone brought in by someone else is asked.
-    const byRole = await call(w, "POST", `${C()}/room/me/labels`, "admin", {
+    expect((await room(noor)).me?.labels_question).toBe(false);
+    expect((await personIn("admin", "noor@example.test"))?.labels).toEqual(["rollout"]);
+    const changed = (await store.events(w.db, w.orgId)).filter(
+      (e) => e.type === "room.labels_changed" && e.subjectId === mine.id,
+    );
+    expect(changed.map((e) => e.detail)).toEqual([
+      {
+        labels: ["rollout"],
+        added: ["rollout"],
+        removed: ["go_ahead", "it_security"],
+        other_changed: true,
+        own: true,
+      },
+    ]);
+    const ev = events("server_room_labels_changed").at(-1);
+    expect(ev?.distinctId).toBe("noor@example.test");
+    expect(ev?.properties).toMatchObject({
+      org_id: w.orgId,
+      person_id: mine.id,
+      added: ["rollout"],
+      removed: ["go_ahead", "it_security"],
+      own: true,
+    });
+    // The same labels again change nothing and record nothing.
+    const same = await call(w, "POST", `${C()}/room/me/labels`, noor, {
+      labels: ["rollout"],
+      other: "Projectleider",
+    });
+    expect(same.status).toBe(200);
+    expect(
+      (await store.events(w.db, w.orgId)).filter(
+        (e) => e.type === "room.labels_changed" && e.subjectId === mine.id,
+      ),
+    ).toHaveLength(1);
+
+    // Someone in by their role, with no labels yet: their own row, and they are not asked.
+    const own = await call(w, "POST", `${C()}/room/me/labels`, "admin", {
       labels: ["go_ahead"],
       other: null,
     });
-    expect([byRole.status, codeOf(byRole)]).toEqual([409, "room.no_labels_question"]);
+    expect(own.status).toBe(200);
+    expect(K.RoomPerson.parse(own.data)).toMatchObject({
+      labels: ["go_ahead"],
+      room: "by_role",
+      may_relabel: true,
+      may_remove: false,
+    });
+    expect((await room("admin")).me?.labels_question).toBe(false);
+    expect(events("server_room_labels_changed").at(-1)?.distinctId).toBe("admin@example.test");
+  });
+
+  test("someone who runs the account with no room row and no verified address: not found, and no row is made", async () => {
+    const who = await person("unverified", "unverified@example.test", { role: "admin" });
+    await w.db
+      .update(schema.auth_user)
+      .set({ emailVerified: false })
+      .where(eq(schema.auth_user.id, w.people[who].directusUserId));
+    const before = (await w.db.select().from(schema.account_room_person)).length;
+    const r = await call(w, "POST", `${C()}/room/me/labels`, who, {
+      labels: ["go_ahead"],
+      other: null,
+    });
+    expect([r.status, codeOf(r)]).toEqual([404, "room.person_not_found"]);
+    expect(await w.db.select().from(schema.account_room_person)).toHaveLength(before);
   });
 
   test("a member already: room access and labels at once, an email in their own language, no invitation", async () => {
@@ -385,8 +452,20 @@ run("who does what in the data room", () => {
     });
     expect(w.jobs.jobs).toEqual([]);
     expect(await orgInvites("billing@example.test")).toEqual([]);
-    // Nobody was invited, so no invitation event.
+    // Nobody was invited, so no invitation event; the change of labels is recorded.
     expect(events("server_room_person_invited")).toHaveLength(invitedBefore);
+    const changed = (await store.events(w.db, w.orgId)).find(
+      (e) => e.type === "room.labels_changed" && e.subjectId === res.person.id,
+    );
+    expect(changed?.detail).toEqual({
+      labels: ["contract_purchasing"],
+      added: ["contract_purchasing"],
+      removed: [],
+      other_changed: false,
+      own: false,
+    });
+    const ev = events("server_room_labels_changed").at(-1);
+    expect([ev?.distinctId, ev?.properties.own]).toEqual(["admin@example.test", false]);
   });
 
   test("the same address twice keeps one invitation and sends nothing new", async () => {
@@ -645,17 +724,17 @@ run("who does what in the data room", () => {
       const p = await personIn(as, email);
       return [p?.may_remove, p?.may_relabel];
     };
-    // Who runs the account: anyone in by invitation, both; in by role, labels only; not
-    // themselves, and nothing on a member outside the room.
+    // Who runs the account: anyone in by invitation, both; in by role, labels only; their
+    // own labels, never themselves out; nothing on a member outside the room.
     expect(await mayOf("admin", "ines@example.test")).toEqual([true, true]);
     expect(await mayOf("admin", "kees@example.test")).toEqual([true, true]);
     expect(await mayOf("admin", "billing@example.test")).toEqual([false, true]);
-    expect(await mayOf("admin", "admin@example.test")).toEqual([false, false]);
+    expect(await mayOf("admin", "admin@example.test")).toEqual([false, true]);
     expect(await mayOf("admin", "pim@example.test")).toEqual([false, false]);
     expect(await mayOf("billing", "admin@example.test")).toEqual([false, true]);
-    // A room member: only the people they brought in, never themselves.
+    // A room member: the people they brought in, and their own labels.
     expect(await mayOf(asKees, "ines@example.test")).toEqual([true, true]);
-    expect(await mayOf(asKees, "kees@example.test")).toEqual([false, false]);
+    expect(await mayOf(asKees, "kees@example.test")).toEqual([false, true]);
     expect(await mayOf(asKees, "admin@example.test")).toEqual([false, false]);
     // The staff side: nothing.
     const staff = K.RoomPage.parse((await call(w, "GET", `${S()}/room`, "staff")).data);

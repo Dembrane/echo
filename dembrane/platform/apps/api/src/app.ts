@@ -5,6 +5,7 @@ import {
   demoDeckHook,
   demoProspectHook,
   httpFetchText,
+  invitationHeld,
   onboardingSignals,
   queueJobs,
 } from "@dembrane/accounts";
@@ -263,6 +264,7 @@ export function buildApp(deps: Deps) {
       inviteSecret: deps.config.account.inviteHashSecret,
       logos: { objects: deps.files, location: deps.config.files.directusLocation },
       onProjectCreated: onboarding.projectCreated,
+      invitationHeld: (orgId, email, id) => invitationHeld(deps.db, orgId, email, id),
     }),
   );
   app.route("/", billingRoutes(deps));

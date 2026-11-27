@@ -225,7 +225,7 @@ export const offerDetail: Out<typeof DocumentDetail> = {
     },
   ],
   signing_note:
-    "Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en verwerkersovereenkomst gelden.",
+    "Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en DPA gelden.",
   confirmation: {
     dpa_authorised:
       'Ik, {name}, {role}, bevestig dat ik namens {organisation} mag tekenen, en ik onderteken "Offerte jaarlicentie DMB-DEMO-1" (DMB-DEMO-1) zoals aan mij getoond, SHA-256 9b4f3c1e2a7d8e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f. Ik ben ook bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan.',
@@ -362,8 +362,7 @@ export const signedDpaDetail: Out<typeof DocumentDetail> = {
       sha256: "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
     },
   ],
-  signing_note:
-    "Met je handtekening geldt de verwerkersovereenkomst, en is de overeenkomst compleet.",
+  signing_note: "Met je handtekening geldt de DPA, en is de overeenkomst compleet.",
   confirmation: {
     dpa_authorised:
       'Ik, {name}, {role}, bevestig dat ik namens {organisation} mag tekenen, en ik onderteken "Data Processing Agreement (DPA) 3.0.1" (DMB-DEMO-0-DPA) zoals aan mij getoond, SHA-256 c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4.',
@@ -649,7 +648,8 @@ const roomRobin: Out<typeof RoomPerson> = {
   invited_at: null,
   signs: [],
   may_remove: false,
-  may_relabel: false,
+  // Their own labels: Robin changes them from their own row.
+  may_relabel: true,
 };
 /** A member Robin brought in, who has not said yet whether the labels are right. */
 const roomSam: Out<typeof RoomPerson> = {
@@ -726,11 +726,11 @@ export const roomPage: Out<typeof RoomPage> = {
 
 /** GET .../room as Sam, brought in by Robin: the room's people only, asked about the labels. */
 export const roomPageAsColleague: Out<typeof RoomPage> = {
-  // Sam manages nobody here: Robin brought Noor in, and nobody changes their own labels.
+  // Sam manages nobody here (Robin brought Noor in); he changes only his own labels.
   people: [roomRobin, roomSam, roomNoor].map((p) => ({
     ...p,
     may_remove: false,
-    may_relabel: false,
+    may_relabel: p.app_user_id === COLLEAGUE_APP_USER,
   })),
   signers: roomSigners,
   dismissed_hints: ["privacy_ai"],
@@ -762,8 +762,12 @@ export const roomInvite: Out<typeof RoomInvite> = {
   has_account: false,
 };
 
+/** The signer's own list: naming someone else is not theirs (mySigningRequests). */
 export const signingRequests: Out<typeof SigningRequests> = [
-  { organisation: { id: ORG, name: "Example Town Council (sample)" }, document: offerSummary },
+  {
+    organisation: { id: ORG, name: "Example Town Council (sample)" },
+    document: { ...offerSummary, may_name_signer: false },
+  },
 ];
 
 /** GET /api/v2/admin/accounts */
@@ -836,8 +840,10 @@ export const accountCard: Out<typeof AccountCard> = {
   ],
   pending_invites: [],
   usage: { workspaces: 1, projects: 2 },
+  // Staff read them as staff: naming who signs goes through the staff route instead.
   documents: [offerSummary, invoiceSummary, dpaSummary].map((x) => ({
     ...x,
+    may_name_signer: false,
     file_url: x.file_url?.replace(C, `/api/v2/admin/accounts/${ORG}`) ?? null,
     signed_pdf_url: x.signed_pdf_url?.replace(C, `/api/v2/admin/accounts/${ORG}`) ?? null,
   })),
