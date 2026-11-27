@@ -1267,8 +1267,8 @@ msgid "A screen that explains, step by step, what happens to the recordings. Its
 msgstr "Una pantalla que explica, paso a paso, qué ocurre con las grabaciones. El texto sigue la anonimización y la base legal de este proyecto."
 
 #: src/components/billing/BillingManager.tsx:1290
-msgid "A seat is one member. Add or remove members in each workspace's People tab; your next charge follows automatically."
-msgstr "Un asiento equivale a un miembro. Añade o elimina miembros en la pestaña Personas de cada espacio de trabajo; tu próximo cobro se ajustará automáticamente."
+msgid "A seat is one member. Add or remove members in each workspace's Members tab; your next charge follows automatically."
+msgstr "Un asiento equivale a un miembro. Añade o elimina miembros en la pestaña Miembros de cada espacio de trabajo; tu próximo cobro se ajustará automáticamente."
 
 #: src/components/billing/BillingManager.tsx:1285
 msgid "A seat is one member. Seats stay available until the plan ends; changes won't be charged."
@@ -5119,12 +5119,9 @@ msgstr "Eliminado · {0}"
 msgid "Deleted successfully"
 msgstr "Eliminado con éxito"
 
-#~ msgid "Deleting a organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
-#~ msgstr "Eliminar una organización requiere la ayuda de soporte. Escribe a <0>support@dembrane.com</0> y te guiaremos en el proceso: todos los espacios de trabajo deben estar vacíos y eliminarse primero."
-
 #: src/routes/organisation/OrganisationRoute.tsx:1193
-msgid "Deleting an organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
-msgstr "Eliminar una organización requiere la ayuda de soporte. Escribe a <0>support@dembrane.com</0> y te guiaremos en el proceso: todos los espacios de trabajo deben estar vacíos y eliminarse primero."
+msgid "Deleting an organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you. All workspaces must be empty and deleted first."
+msgstr "Eliminar una organización requiere la ayuda de soporte. Escribe a <0>support@dembrane.com</0> y te guiaremos en el proceso. Todos los espacios de trabajo deben estar vacíos y eliminarse primero."
 
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:219
 #: src/components/methodology/ProjectMethodologySection.tsx:131

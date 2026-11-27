@@ -1031,10 +1031,6 @@ msgstr "Статус клієнта"
 #~ msgid "Customers"
 #~ msgstr "Клієнти"
 
-#: src/features/accounts/signing/SignRoute.tsx:1494
-#~ msgid "Data processing agreement"
-#~ msgstr "Угода про обробку даних"
-
 #: src/features/accounts/staff/InvoicePlanFields.tsx:188
 #: src/features/accounts/staff/FieldEditorRoute.tsx:64
 msgid "Date"
@@ -1535,20 +1531,12 @@ msgstr "Буде в рахунку"
 #~ msgstr ""
 
 #: src/features/accounts/customer/room/copy.ts:29
-#~ msgid "handle contract and purchasing"
-#~ msgstr "вести договір і закупівлю"
-
-#: src/features/accounts/customer/room/copy.ts:29
 msgid "handle the contract"
 msgstr "вести договір"
 
 #: src/features/accounts/customer/room/copy.ts:15
 msgid "Handles contract"
 msgstr "Веде договір"
-
-#: src/features/accounts/customer/room/copy.ts:15
-#~ msgid "Handles contract and purchasing"
-#~ msgstr "Веде договір і закупівлю"
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:289
 msgid "Have {first} sign"
@@ -1584,10 +1572,6 @@ msgstr "Як ми виставляємо рахунки"
 #: src/features/accounts/customer/WhoSigns.tsx:318
 #~ msgid "I do"
 #~ msgstr "Я"
-
-#: src/features/accounts/signing/SignRoute.tsx:1408
-#~ msgid "If not, the data processing agreement becomes a separate document for someone who may."
-#~ msgstr "Якщо ні, договір про обробку даних стане окремим документом для того, хто має право підпису."
 
 #: src/features/accounts/signing/SignRoute.tsx:1435
 msgid "If not, the DPA becomes a separate document for someone who may."
@@ -1639,12 +1623,6 @@ msgstr "зокрема ПДВ {vat}"
 #: src/features/accounts/staff/LinesEditor.tsx:353
 msgid "Included"
 msgstr "Включено"
-
-#: src/features/accounts/customer/NextSteps.tsx:269
-#: src/features/accounts/customer/NextSteps.tsx:399
-#: src/features/accounts/customer/NextSteps.tsx:492
-#~ msgid "Includes the data processing agreement"
-#~ msgstr "Разом з угодою про обробку даних"
 
 #: src/features/accounts/customer/NextSteps.tsx:270
 #: src/features/accounts/customer/NextSteps.tsx:408
@@ -2120,10 +2098,6 @@ msgstr "Поки нікого більше. Додай колег, які раз
 #: src/features/accounts/customer/room/copy.ts:41
 msgid "Nobody gives the go-ahead yet."
 msgstr "Ще ніхто не дає згоди."
-
-#: src/features/accounts/customer/room/copy.ts:40
-#~ msgid "Nobody handles contract and purchasing yet."
-#~ msgstr "Ще ніхто не веде договір і закупівлю."
 
 #: src/features/accounts/customer/room/copy.ts:40
 msgid "Nobody handles the contract yet."
@@ -3205,10 +3179,6 @@ msgstr "Підписати від dembrane"
 msgid "Sign out and continue"
 msgstr "Вийти і продовжити"
 
-#: src/features/accounts/format.ts:167
-#~ msgid "Sign the data processing agreement"
-#~ msgstr "Підписати договір про обробку даних"
-
 #: src/features/accounts/format.ts:185
 msgid "Sign the DPA"
 msgstr "Підписати DPA"
@@ -4147,21 +4117,11 @@ msgstr "Ми надішлемо {name} на {email} посилання, щоб �
 msgid "We email {name} at {email} a link to read the offer and the DPA."
 msgstr "Ми надішлемо {name} на {email} посилання, щоб прочитати пропозицію та DPA."
 
-#~ msgid "We emailed {0} at {1} a link to sign the data processing agreement."
-#~ msgstr ""
-
-#~ msgid "We emailed {0} at {1} a link to sign the offer and the data processing agreement."
-#~ msgstr ""
-
 #~ msgid "We emailed {0} at {1} a link to sign the offer."
 #~ msgstr ""
 
 #~ msgid "We emailed {0} at {1} with a link to sign. The task now waits on {first}, and their signature completes it."
 #~ msgstr ""
-
-#: src/features/accounts/customer/WhoSigns.tsx:213
-#~ msgid "We emailed {dpaName} at {dpaEmail} a link to sign the data processing agreement."
-#~ msgstr "Ми надіслали {dpaName} на {dpaEmail} посилання для підписання угоди про обробку даних."
 
 #: src/features/accounts/customer/WhoSigns.tsx:324
 msgid "We emailed {dpaName} at {dpaEmail} a link to sign the DPA."
@@ -4194,10 +4154,6 @@ msgstr "Ми надіслали лист {name} на {email}."
 #: src/features/accounts/customer/RemindSigner.tsx:47
 msgid "We emailed {name} the link again."
 msgstr "Ми знову надіслали посилання: {name}."
-
-#: src/features/accounts/customer/WhoSigns.tsx:198
-#~ msgid "We emailed {offerName} at {offerEmail} a link to sign the offer and the data processing agreement."
-#~ msgstr "Ми надіслали {offerName} на {offerEmail} посилання для підписання пропозиції та угоди про обробку даних."
 
 #: src/features/accounts/customer/WhoSigns.tsx:309
 msgid "We emailed {offerName} at {offerEmail} a link to sign the offer and the DPA."
@@ -4315,10 +4271,6 @@ msgstr "Коли надішлете лист, напишіть \"sent\" у гі�
 msgid "Where the demo goes"
 msgstr "Куди потрапить демо"
 
-#: src/features/accounts/customer/room/PeopleList.tsx:126
-#~ msgid "Who is involved"
-#~ msgstr "Хто залучений"
-
 #: src/features/accounts/customer/room/PeopleList.tsx:138
 msgid "Who reads what"
 msgstr "Хто що читає"
@@ -4327,17 +4279,9 @@ msgstr "Хто що читає"
 msgid "Who signs for the customer?"
 msgstr "Хто підписує від імені клієнта?"
 
-#: src/features/accounts/customer/WhoSigns.tsx:304
-#~ msgid "Who signs the data processing agreement?"
-#~ msgstr "Хто підписує угоду про обробку даних?"
-
 #: src/features/accounts/staff/CustomerSigner.tsx:210
 msgid "Who signs the DPA?"
 msgstr "Хто підписує DPA?"
-
-#: src/features/accounts/format.ts:160
-#~ msgid "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
-#~ msgstr "Хто підписує пропозицію та угоду про обробку даних і чи потрібна вам власна DPIA."
 
 #: src/features/accounts/format.ts:165
 msgid "Who signs the offer and the DPA"

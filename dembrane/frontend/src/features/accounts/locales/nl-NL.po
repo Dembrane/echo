@@ -1031,10 +1031,6 @@ msgstr "Klantstatus"
 #~ msgid "Customers"
 #~ msgstr "Klanten"
 
-#: src/features/accounts/signing/SignRoute.tsx:1494
-#~ msgid "Data processing agreement"
-#~ msgstr "Verwerkersovereenkomst"
-
 #: src/features/accounts/staff/InvoicePlanFields.tsx:188
 #: src/features/accounts/staff/FieldEditorRoute.tsx:64
 msgid "Date"
@@ -1535,20 +1531,12 @@ msgstr "Komt op de factuur"
 #~ msgstr "Aanhef richt zich tot"
 
 #: src/features/accounts/customer/room/copy.ts:29
-#~ msgid "handle contract and purchasing"
-#~ msgstr "contract en inkoop te regelen"
-
-#: src/features/accounts/customer/room/copy.ts:29
 msgid "handle the contract"
 msgstr "het contract te regelen"
 
 #: src/features/accounts/customer/room/copy.ts:15
 msgid "Handles contract"
 msgstr "Regelt contract"
-
-#: src/features/accounts/customer/room/copy.ts:15
-#~ msgid "Handles contract and purchasing"
-#~ msgstr "Regelt contract en inkoop"
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:289
 msgid "Have {first} sign"
@@ -1584,10 +1572,6 @@ msgstr "Zo factureren we"
 #: src/features/accounts/customer/WhoSigns.tsx:318
 #~ msgid "I do"
 #~ msgstr "Ik"
-
-#: src/features/accounts/signing/SignRoute.tsx:1408
-#~ msgid "If not, the data processing agreement becomes a separate document for someone who may."
-#~ msgstr "Zo niet, dan wordt de verwerkersovereenkomst een apart document voor iemand die dat wel mag."
 
 #: src/features/accounts/signing/SignRoute.tsx:1435
 msgid "If not, the DPA becomes a separate document for someone who may."
@@ -1639,12 +1623,6 @@ msgstr "incl. {vat} btw"
 #: src/features/accounts/staff/LinesEditor.tsx:353
 msgid "Included"
 msgstr "Inbegrepen"
-
-#: src/features/accounts/customer/NextSteps.tsx:269
-#: src/features/accounts/customer/NextSteps.tsx:399
-#: src/features/accounts/customer/NextSteps.tsx:492
-#~ msgid "Includes the data processing agreement"
-#~ msgstr "Inclusief de verwerkersovereenkomst"
 
 #: src/features/accounts/customer/NextSteps.tsx:270
 #: src/features/accounts/customer/NextSteps.tsx:408
@@ -2120,10 +2098,6 @@ msgstr "Nog niemand anders. Voeg de collega's toe die met je over deze offerte b
 #: src/features/accounts/customer/room/copy.ts:41
 msgid "Nobody gives the go-ahead yet."
 msgstr "Nog niemand geeft akkoord."
-
-#: src/features/accounts/customer/room/copy.ts:40
-#~ msgid "Nobody handles contract and purchasing yet."
-#~ msgstr "Nog niemand regelt contract en inkoop."
 
 #: src/features/accounts/customer/room/copy.ts:40
 msgid "Nobody handles the contract yet."
@@ -3197,10 +3171,6 @@ msgstr "Ondertekenen voor dembrane"
 msgid "Sign out and continue"
 msgstr "Uitloggen en doorgaan"
 
-#: src/features/accounts/format.ts:167
-#~ msgid "Sign the data processing agreement"
-#~ msgstr "Verwerkersovereenkomst ondertekenen"
-
 #: src/features/accounts/format.ts:185
 msgid "Sign the DPA"
 msgstr "De DPA ondertekenen"
@@ -4139,21 +4109,11 @@ msgstr "We mailen {name} op {email} een link om lid te worden van je organisatie
 msgid "We email {name} at {email} a link to read the offer and the DPA."
 msgstr "We mailen {name} op {email} een link om de offerte en de DPA te lezen."
 
-#~ msgid "We emailed {0} at {1} a link to sign the data processing agreement."
-#~ msgstr ""
-
-#~ msgid "We emailed {0} at {1} a link to sign the offer and the data processing agreement."
-#~ msgstr ""
-
 #~ msgid "We emailed {0} at {1} a link to sign the offer."
 #~ msgstr ""
 
 #~ msgid "We emailed {0} at {1} with a link to sign. The task now waits on {first}, and their signature completes it."
 #~ msgstr ""
-
-#: src/features/accounts/customer/WhoSigns.tsx:213
-#~ msgid "We emailed {dpaName} at {dpaEmail} a link to sign the data processing agreement."
-#~ msgstr "We hebben {dpaName} op {dpaEmail} een link gemaild om de verwerkersovereenkomst te tekenen."
 
 #: src/features/accounts/customer/WhoSigns.tsx:324
 msgid "We emailed {dpaName} at {dpaEmail} a link to sign the DPA."
@@ -4186,10 +4146,6 @@ msgstr "We hebben {name} op {email} gemaild."
 #: src/features/accounts/customer/RemindSigner.tsx:47
 msgid "We emailed {name} the link again."
 msgstr "We hebben {name} de link opnieuw gemaild."
-
-#: src/features/accounts/customer/WhoSigns.tsx:198
-#~ msgid "We emailed {offerName} at {offerEmail} a link to sign the offer and the data processing agreement."
-#~ msgstr "We hebben {offerName} op {offerEmail} een link gemaild om de offerte en de verwerkersovereenkomst te tekenen."
 
 #: src/features/accounts/customer/WhoSigns.tsx:309
 msgid "We emailed {offerName} at {offerEmail} a link to sign the offer and the DPA."
@@ -4307,10 +4263,6 @@ msgstr "Als je de e-mail hebt verstuurd, antwoord dan \"sent\" in de thread van 
 msgid "Where the demo goes"
 msgstr "Waar de demo komt te staan"
 
-#: src/features/accounts/customer/room/PeopleList.tsx:126
-#~ msgid "Who is involved"
-#~ msgstr "Wie zijn betrokken"
-
 #: src/features/accounts/customer/room/PeopleList.tsx:138
 msgid "Who reads what"
 msgstr "Wie wat leest"
@@ -4319,17 +4271,9 @@ msgstr "Wie wat leest"
 msgid "Who signs for the customer?"
 msgstr "Wie ondertekent namens de klant?"
 
-#: src/features/accounts/customer/WhoSigns.tsx:304
-#~ msgid "Who signs the data processing agreement?"
-#~ msgstr "Wie tekent de verwerkersovereenkomst?"
-
 #: src/features/accounts/staff/CustomerSigner.tsx:210
 msgid "Who signs the DPA?"
 msgstr "Wie tekent de DPA?"
-
-#: src/features/accounts/format.ts:160
-#~ msgid "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
-#~ msgstr "Wie de offerte en de verwerkersovereenkomst tekent, en of jullie een eigen DPIA nodig hebben."
 
 #: src/features/accounts/format.ts:165
 msgid "Who signs the offer and the DPA"

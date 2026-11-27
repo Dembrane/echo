@@ -402,7 +402,7 @@ function generateReportRun(d: GenerateDeps) {
           audienceUserId: user.id,
           eventCode: "REPORT_READY",
           title: "Your report is ready",
-          message: `**${(project?.name as string | null) || "your project"}** — open to review.`,
+          message: `**${(project?.name as string | null) || "your project"}**: open it to review.`,
           action: "NAVIGATE_REPORT",
           refProjectId: p.projectId,
           refReportId: String(p.reportId),

@@ -90,9 +90,9 @@ const ENGLISH: Record<string, string> = {
 	"Hierbij ons logo.": "Here is our logo.",
 	"Inclusief voorbereiding": "Preparation included",
 	"Kunnen we per kwartaal betalen?": "Can we pay quarterly?",
-	"Met je handtekening geldt de verwerkersovereenkomst, en is de overeenkomst compleet.":
+	"Met je handtekening geldt de DPA, en is de overeenkomst compleet.":
 		"Signing puts the DPA in force, which completes the agreement.",
-	"Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en verwerkersovereenkomst gelden.":
+	"Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en DPA gelden.":
 		"Signing makes the agreement complete, so we can invoice and your terms, SLA and DPA are in force.",
 	Naam: "Name",
 	"Offerte jaarlicentie DMB-DEMO-1": "Yearly license offer DMB-DEMO-1",

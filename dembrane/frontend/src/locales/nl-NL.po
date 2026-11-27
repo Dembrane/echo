@@ -1267,8 +1267,8 @@ msgid "A screen that explains, step by step, what happens to the recordings. Its
 msgstr "Een scherm dat stap voor stap uitlegt wat er met de opnames gebeurt. De tekst volgt de anonimisering en rechtsgrond van dit project."
 
 #: src/components/billing/BillingManager.tsx:1290
-msgid "A seat is one member. Add or remove members in each workspace's People tab; your next charge follows automatically."
-msgstr "Een zetel is één lid. Voeg leden toe of verwijder ze in het tabblad Mensen van elke werkruimte; je volgende afschrijving past zich automatisch aan."
+msgid "A seat is one member. Add or remove members in each workspace's Members tab; your next charge follows automatically."
+msgstr "Een zetel is één lid. Voeg leden toe of verwijder ze in het tabblad Leden van elke werkruimte; je volgende afschrijving past zich automatisch aan."
 
 #: src/components/billing/BillingManager.tsx:1285
 msgid "A seat is one member. Seats stay available until the plan ends; changes won't be charged."
@@ -5116,11 +5116,8 @@ msgstr "Verwijderd · {0}"
 msgid "Deleted successfully"
 msgstr "Verwijderd succesvol"
 
-#~ msgid "Deleting a organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
-#~ msgstr "Een organisatie verwijderen doen we samen met support. Mail <0>support@dembrane.com</0> en we lopen het met je door. Alle werkruimtes moeten eerst leeg zijn en verwijderd."
-
 #: src/routes/organisation/OrganisationRoute.tsx:1193
-msgid "Deleting an organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
+msgid "Deleting an organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you. All workspaces must be empty and deleted first."
 msgstr "Een organisatie verwijderen doen we samen met support. Mail <0>support@dembrane.com</0> en we lopen het met je door. Alle werkruimtes moeten eerst leeg zijn en verwijderd."
 
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:219

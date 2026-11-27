@@ -114,7 +114,7 @@ interface OrganisationDetail {
 	external_count: number;
 }
 
-/** Everyone with access, as the People section lists them: members and externals. */
+/** Everyone with access, as the Members section lists them: members and externals. */
 export const orgPeopleCount = (
 	org: Pick<OrganisationDetail, "member_count" | "external_count">,
 ) => org.member_count + (org.external_count ?? 0);
@@ -491,7 +491,7 @@ export const OrganisationRoute = () => {
 		},
 	});
 
-	// Per-workspace role change triggered from the organisation People tab's
+	// Per-workspace role change triggered from the organisation Members tab's
 	// expanded card. Works on direct memberships (backend returns the
 	// membership id alongside the role). Invalidates both the organisation
 	// members query and the target workspace's settings query so any
@@ -1177,7 +1177,7 @@ function OverviewPanel({
 
 			{/* Count tiles dropped 2026-04-23: the organisation header subtitle
 			    already says "N workspaces · M people", and the Usage /
-			    People tabs hold the detailed views. Repeating the same
+			    Members tabs hold the detailed views. Repeating the same
 			    numbers on Overview was just noise. */}
 
 			{/* Danger section — not wired to a self-serve delete yet
@@ -1195,7 +1195,7 @@ function OverviewPanel({
 							<Anchor href="mailto:support@dembrane.com">
 								support@dembrane.com
 							</Anchor>{" "}
-							and we'll walk through it with you — all workspaces must be empty
+							and we'll walk through it with you. All workspaces must be empty
 							and deleted first.
 						</Trans>
 					</Text>
@@ -1708,7 +1708,7 @@ function OrganisationWorkspaceCard({
 export default OrganisationRoute;
 
 /**
- * One row on the organisation People tab. Summarizes a person's organisation role +
+ * One row on the organisation Members tab. Summarizes a person's organisation role +
  * their per-workspace access, expands to let an admin change
  * per-workspace roles or remove the person from the organisation.
  *

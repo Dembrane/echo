@@ -225,7 +225,7 @@ export const offerDetail: Out<typeof DocumentDetail> = {
     },
   ],
   signing_note:
-    "Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en verwerkersovereenkomst gelden.",
+    "Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en DPA gelden.",
   confirmation: {
     dpa_authorised:
       'Ik, {name}, {role}, bevestig dat ik namens {organisation} mag tekenen, en ik onderteken "Offerte jaarlicentie DMB-DEMO-1" (DMB-DEMO-1) zoals aan mij getoond, SHA-256 9b4f3c1e2a7d8e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f. Ik ben ook bevoegd om namens deze organisatie verwerkingsafspraken aan te gaan.',
@@ -362,8 +362,7 @@ export const signedDpaDetail: Out<typeof DocumentDetail> = {
       sha256: "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
     },
   ],
-  signing_note:
-    "Met je handtekening geldt de verwerkersovereenkomst, en is de overeenkomst compleet.",
+  signing_note: "Met je handtekening geldt de DPA, en is de overeenkomst compleet.",
   confirmation: {
     dpa_authorised:
       'Ik, {name}, {role}, bevestig dat ik namens {organisation} mag tekenen, en ik onderteken "Data Processing Agreement (DPA) 3.0.1" (DMB-DEMO-0-DPA) zoals aan mij getoond, SHA-256 c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4.',

@@ -5,8 +5,9 @@ import { describe, expect, it } from "vitest";
 
 // The wording of the account area: "DPA", never the
 // words spelled out in its place, in every language (they appear only where a tooltip
-// says what "DPA" stands for); "dembrane" lowercase; no em dashes; and the
-// room's own code never speaks of viewers or of who has seen what.
+// says what "DPA" stands for); the section and the label as they shipped ("Involved in
+// procurement", "Handles contract"); "dembrane" lowercase; no em dashes; and the room's
+// own code never speaks of viewers or of who has seen what.
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const locales = path.join(here, "locales");
@@ -39,7 +40,7 @@ const translations = (file: string): string[] => {
 
 /** The spelled-out name of the agreement, per catalog: it is "DPA" everywhere. */
 const SPELLED_OUT: Record<string, RegExp> = {
-	"cs-CZ.po": /o zpracování osobních údajů/i,
+	"cs-CZ.po": /smlouv\w* o zpracování/i,
 	"de-DE.po": /Auftragsverarbeitungs(vertrag|vereinbarung)/i,
 	"en-US.po": /data processing agreement/i,
 	"es-ES.po": /acuerdo de (tratamiento|procesamiento) de datos/i,
@@ -68,6 +69,18 @@ describe("the account area's words, in all eight languages", () => {
 			expect(all.some((s) => /^DPA ?: /.test(s) && spelled.test(s))).toBe(true);
 		},
 	);
+
+	it("names the section and the label as shipped, in English and Dutch", () => {
+		const old = {
+			"en-US.po": /who is involved|contract and purchasing/i,
+			"nl-NL.po": /wie is betrokken|contract en inkoop/i,
+		};
+		for (const [file, words] of Object.entries(old))
+			expect([file, translations(file).filter((s) => words.test(s))]).toEqual([
+				file,
+				[],
+			]);
+	});
 
 	it.each(Object.keys(SPELLED_OUT))(
 		"%s has no em dash and writes dembrane lowercase",

@@ -1031,10 +1031,6 @@ msgstr "Customer status"
 #~ msgid "Customers"
 #~ msgstr "Customers"
 
-#: src/features/accounts/signing/SignRoute.tsx:1494
-#~ msgid "Data processing agreement"
-#~ msgstr "Data processing agreement"
-
 #: src/features/accounts/staff/InvoicePlanFields.tsx:188
 #: src/features/accounts/staff/FieldEditorRoute.tsx:64
 msgid "Date"
@@ -1535,20 +1531,12 @@ msgstr "Goes on the invoice"
 #~ msgstr "Greeting names"
 
 #: src/features/accounts/customer/room/copy.ts:29
-#~ msgid "handle contract and purchasing"
-#~ msgstr "handle contract and purchasing"
-
-#: src/features/accounts/customer/room/copy.ts:29
 msgid "handle the contract"
 msgstr "handle the contract"
 
 #: src/features/accounts/customer/room/copy.ts:15
 msgid "Handles contract"
 msgstr "Handles contract"
-
-#: src/features/accounts/customer/room/copy.ts:15
-#~ msgid "Handles contract and purchasing"
-#~ msgstr "Handles contract and purchasing"
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:289
 msgid "Have {first} sign"
@@ -1584,10 +1572,6 @@ msgstr "How we invoice"
 #: src/features/accounts/customer/WhoSigns.tsx:318
 #~ msgid "I do"
 #~ msgstr "I do"
-
-#: src/features/accounts/signing/SignRoute.tsx:1408
-#~ msgid "If not, the data processing agreement becomes a separate document for someone who may."
-#~ msgstr "If not, the data processing agreement becomes a separate document for someone who may."
 
 #: src/features/accounts/signing/SignRoute.tsx:1435
 msgid "If not, the DPA becomes a separate document for someone who may."
@@ -1639,12 +1623,6 @@ msgstr "incl. {vat} VAT"
 #: src/features/accounts/staff/LinesEditor.tsx:353
 msgid "Included"
 msgstr "Included"
-
-#: src/features/accounts/customer/NextSteps.tsx:269
-#: src/features/accounts/customer/NextSteps.tsx:399
-#: src/features/accounts/customer/NextSteps.tsx:492
-#~ msgid "Includes the data processing agreement"
-#~ msgstr "Includes the data processing agreement"
 
 #: src/features/accounts/customer/NextSteps.tsx:270
 #: src/features/accounts/customer/NextSteps.tsx:408
@@ -2120,10 +2098,6 @@ msgstr "Nobody else yet. Add the colleagues who decide on this offer with you."
 #: src/features/accounts/customer/room/copy.ts:41
 msgid "Nobody gives the go-ahead yet."
 msgstr "Nobody gives the go-ahead yet."
-
-#: src/features/accounts/customer/room/copy.ts:40
-#~ msgid "Nobody handles contract and purchasing yet."
-#~ msgstr "Nobody handles contract and purchasing yet."
 
 #: src/features/accounts/customer/room/copy.ts:40
 msgid "Nobody handles the contract yet."
@@ -3205,10 +3179,6 @@ msgstr "Sign for dembrane"
 msgid "Sign out and continue"
 msgstr "Sign out and continue"
 
-#: src/features/accounts/format.ts:167
-#~ msgid "Sign the data processing agreement"
-#~ msgstr "Sign the data processing agreement"
-
 #: src/features/accounts/format.ts:185
 msgid "Sign the DPA"
 msgstr "Sign the DPA"
@@ -4147,21 +4117,11 @@ msgstr "We email {name} at {email} a link to join your organisation and read the
 msgid "We email {name} at {email} a link to read the offer and the DPA."
 msgstr "We email {name} at {email} a link to read the offer and the DPA."
 
-#~ msgid "We emailed {0} at {1} a link to sign the data processing agreement."
-#~ msgstr "We emailed {0} at {1} a link to sign the data processing agreement."
-
-#~ msgid "We emailed {0} at {1} a link to sign the offer and the data processing agreement."
-#~ msgstr "We emailed {0} at {1} a link to sign the offer and the data processing agreement."
-
 #~ msgid "We emailed {0} at {1} a link to sign the offer."
 #~ msgstr "We emailed {0} at {1} a link to sign the offer."
 
 #~ msgid "We emailed {0} at {1} with a link to sign. The task now waits on {first}, and their signature completes it."
 #~ msgstr "We emailed {0} at {1} with a link to sign. The task now waits on {first}, and their signature completes it."
-
-#: src/features/accounts/customer/WhoSigns.tsx:213
-#~ msgid "We emailed {dpaName} at {dpaEmail} a link to sign the data processing agreement."
-#~ msgstr "We emailed {dpaName} at {dpaEmail} a link to sign the data processing agreement."
 
 #: src/features/accounts/customer/WhoSigns.tsx:324
 msgid "We emailed {dpaName} at {dpaEmail} a link to sign the DPA."
@@ -4194,10 +4154,6 @@ msgstr "We emailed {name} at {email}."
 #: src/features/accounts/customer/RemindSigner.tsx:47
 msgid "We emailed {name} the link again."
 msgstr "We emailed {name} the link again."
-
-#: src/features/accounts/customer/WhoSigns.tsx:198
-#~ msgid "We emailed {offerName} at {offerEmail} a link to sign the offer and the data processing agreement."
-#~ msgstr "We emailed {offerName} at {offerEmail} a link to sign the offer and the data processing agreement."
 
 #: src/features/accounts/customer/WhoSigns.tsx:309
 msgid "We emailed {offerName} at {offerEmail} a link to sign the offer and the DPA."
@@ -4315,10 +4271,6 @@ msgstr "When you have sent it, reply sent in the offer's thread in Slack so sam 
 msgid "Where the demo goes"
 msgstr "Where the demo goes"
 
-#: src/features/accounts/customer/room/PeopleList.tsx:126
-#~ msgid "Who is involved"
-#~ msgstr "Who is involved"
-
 #: src/features/accounts/customer/room/PeopleList.tsx:138
 msgid "Who reads what"
 msgstr "Who reads what"
@@ -4327,17 +4279,9 @@ msgstr "Who reads what"
 msgid "Who signs for the customer?"
 msgstr "Who signs for the customer?"
 
-#: src/features/accounts/customer/WhoSigns.tsx:304
-#~ msgid "Who signs the data processing agreement?"
-#~ msgstr "Who signs the data processing agreement?"
-
 #: src/features/accounts/staff/CustomerSigner.tsx:210
 msgid "Who signs the DPA?"
 msgstr "Who signs the DPA?"
-
-#: src/features/accounts/format.ts:160
-#~ msgid "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
-#~ msgstr "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
 
 #: src/features/accounts/format.ts:165
 msgid "Who signs the offer and the DPA"

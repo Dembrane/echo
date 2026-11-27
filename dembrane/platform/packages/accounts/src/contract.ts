@@ -1584,8 +1584,8 @@ export const EventName = z.enum([
 
 /**
  * What someone does in the decision, as their colleagues say: gives the go-ahead, rolls it
- * out, checks IT and security, checks privacy and AI rules, handles contract and
- * purchasing, represents staff or stakeholders. No label is "kept informed"; `other` is
+ * out, checks IT and security, checks privacy and AI rules, handles the contract,
+ * represents staff or stakeholders. No label is "kept informed"; `other` is
  * anything else, in their own words.
  */
 export const RoomLabel = z.enum([

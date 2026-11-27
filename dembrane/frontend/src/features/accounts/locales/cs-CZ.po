@@ -1031,10 +1031,6 @@ msgstr "Stav zákazníka"
 #~ msgid "Customers"
 #~ msgstr "Zákazníci"
 
-#: src/features/accounts/signing/SignRoute.tsx:1494
-#~ msgid "Data processing agreement"
-#~ msgstr "Smlouva o zpracování údajů"
-
 #: src/features/accounts/staff/InvoicePlanFields.tsx:188
 #: src/features/accounts/staff/FieldEditorRoute.tsx:64
 msgid "Date"
@@ -1535,20 +1531,12 @@ msgstr "Bude na faktuře"
 #~ msgstr ""
 
 #: src/features/accounts/customer/room/copy.ts:29
-#~ msgid "handle contract and purchasing"
-#~ msgstr "řešil smlouvu a nákup"
-
-#: src/features/accounts/customer/room/copy.ts:29
 msgid "handle the contract"
 msgstr "řešil smlouvu"
 
 #: src/features/accounts/customer/room/copy.ts:15
 msgid "Handles contract"
 msgstr "Řeší smlouvu"
-
-#: src/features/accounts/customer/room/copy.ts:15
-#~ msgid "Handles contract and purchasing"
-#~ msgstr "Řeší smlouvu a nákup"
 
 #: src/features/accounts/customer/room/AddPersonSteps.tsx:289
 msgid "Have {first} sign"
@@ -1584,10 +1572,6 @@ msgstr "Jak fakturujeme"
 #: src/features/accounts/customer/WhoSigns.tsx:318
 #~ msgid "I do"
 #~ msgstr "Já"
-
-#: src/features/accounts/signing/SignRoute.tsx:1408
-#~ msgid "If not, the data processing agreement becomes a separate document for someone who may."
-#~ msgstr "Pokud ne, smlouva o zpracování osobních údajů se stane samostatným dokumentem pro oprávněnou osobu."
 
 #: src/features/accounts/signing/SignRoute.tsx:1435
 msgid "If not, the DPA becomes a separate document for someone who may."
@@ -1639,12 +1623,6 @@ msgstr "vč. DPH {vat}"
 #: src/features/accounts/staff/LinesEditor.tsx:353
 msgid "Included"
 msgstr "V ceně"
-
-#: src/features/accounts/customer/NextSteps.tsx:269
-#: src/features/accounts/customer/NextSteps.tsx:399
-#: src/features/accounts/customer/NextSteps.tsx:492
-#~ msgid "Includes the data processing agreement"
-#~ msgstr "Včetně smlouvy o zpracování osobních údajů"
 
 #: src/features/accounts/customer/NextSteps.tsx:270
 #: src/features/accounts/customer/NextSteps.tsx:408
@@ -2122,10 +2100,6 @@ msgid "Nobody gives the go-ahead yet."
 msgstr "Zatím nikdo nedává souhlas."
 
 #: src/features/accounts/customer/room/copy.ts:40
-#~ msgid "Nobody handles contract and purchasing yet."
-#~ msgstr "Zatím nikdo neřeší smlouvu a nákup."
-
-#: src/features/accounts/customer/room/copy.ts:40
 msgid "Nobody handles the contract yet."
 msgstr "Zatím nikdo neřeší smlouvu."
 
@@ -2444,7 +2418,7 @@ msgstr "Nepovinné"
 
 #: src/features/accounts/staff/PushOfferModal.tsx:612
 msgid "Optional, replaces our DPA"
-msgstr "Volitelné, nahrazuje naši smlouvu o zpracování"
+msgstr "Volitelné, nahrazuje naši DPA"
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:296
 msgid "Optional. A past event or customer to model the demo on."
@@ -3204,10 +3178,6 @@ msgstr "Podepsat za dembrane"
 #: src/features/accounts/signing/SignGate.tsx:158
 msgid "Sign out and continue"
 msgstr "Odhlásit se a pokračovat"
-
-#: src/features/accounts/format.ts:167
-#~ msgid "Sign the data processing agreement"
-#~ msgstr "Podepsat smlouvu o zpracování osobních údajů"
 
 #: src/features/accounts/format.ts:185
 msgid "Sign the DPA"
@@ -4147,21 +4117,11 @@ msgstr "Pošleme {name} na {email} odkaz pro připojení k tvé organizaci a ke 
 msgid "We email {name} at {email} a link to read the offer and the DPA."
 msgstr "Pošleme {name} na {email} odkaz ke čtení nabídky a DPA."
 
-#~ msgid "We emailed {0} at {1} a link to sign the data processing agreement."
-#~ msgstr ""
-
-#~ msgid "We emailed {0} at {1} a link to sign the offer and the data processing agreement."
-#~ msgstr ""
-
 #~ msgid "We emailed {0} at {1} a link to sign the offer."
 #~ msgstr ""
 
 #~ msgid "We emailed {0} at {1} with a link to sign. The task now waits on {first}, and their signature completes it."
 #~ msgstr ""
-
-#: src/features/accounts/customer/WhoSigns.tsx:213
-#~ msgid "We emailed {dpaName} at {dpaEmail} a link to sign the data processing agreement."
-#~ msgstr "Poslali jsme {dpaName} na {dpaEmail} odkaz k podpisu smlouvy o zpracování osobních údajů."
 
 #: src/features/accounts/customer/WhoSigns.tsx:324
 msgid "We emailed {dpaName} at {dpaEmail} a link to sign the DPA."
@@ -4194,10 +4154,6 @@ msgstr "Poslali jsme e-mail {name} na {email}."
 #: src/features/accounts/customer/RemindSigner.tsx:47
 msgid "We emailed {name} the link again."
 msgstr "Odkaz jsme znovu poslali: {name}."
-
-#: src/features/accounts/customer/WhoSigns.tsx:198
-#~ msgid "We emailed {offerName} at {offerEmail} a link to sign the offer and the data processing agreement."
-#~ msgstr "Poslali jsme {offerName} na {offerEmail} odkaz k podpisu nabídky a smlouvy o zpracování osobních údajů."
 
 #: src/features/accounts/customer/WhoSigns.tsx:309
 msgid "We emailed {offerName} at {offerEmail} a link to sign the offer and the DPA."
@@ -4315,10 +4271,6 @@ msgstr "Až e-mail odešlete, odpovězte \"sent\" ve vlákně nabídky na Slacku
 msgid "Where the demo goes"
 msgstr "Kam ukázka patří"
 
-#: src/features/accounts/customer/room/PeopleList.tsx:126
-#~ msgid "Who is involved"
-#~ msgstr "Kdo je zapojený"
-
 #: src/features/accounts/customer/room/PeopleList.tsx:138
 msgid "Who reads what"
 msgstr "Kdo co čte"
@@ -4327,17 +4279,9 @@ msgstr "Kdo co čte"
 msgid "Who signs for the customer?"
 msgstr "Kdo podepisuje za zákazníka?"
 
-#: src/features/accounts/customer/WhoSigns.tsx:304
-#~ msgid "Who signs the data processing agreement?"
-#~ msgstr "Kdo podepisuje smlouvu o zpracování osobních údajů?"
-
 #: src/features/accounts/staff/CustomerSigner.tsx:210
 msgid "Who signs the DPA?"
 msgstr "Kdo podepisuje DPA?"
-
-#: src/features/accounts/format.ts:160
-#~ msgid "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
-#~ msgstr "Kdo podepisuje nabídku a smlouvu o zpracování osobních údajů a zda potřebujete vlastní DPIA."
 
 #: src/features/accounts/format.ts:165
 msgid "Who signs the offer and the DPA"

@@ -114,13 +114,13 @@ const NOTE: Record<Language, { offer: string; dpa: string; other: string }> = {
   en: {
     offer:
       "Signing makes the agreement complete, so we can invoice and your terms, SLA and data processing are in force.",
-    dpa: "Signing puts the data processing agreement in force, which completes the agreement.",
+    dpa: "Signing puts the DPA in force, which completes the agreement.",
     other: "Signing records that you agree to this document.",
   },
   nl: {
     offer:
-      "Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en verwerkersovereenkomst gelden.",
-    dpa: "Met je handtekening geldt de verwerkersovereenkomst, en is de overeenkomst compleet.",
+      "Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en DPA gelden.",
+    dpa: "Met je handtekening geldt de DPA, en is de overeenkomst compleet.",
     other: "Met je handtekening leg je vast dat je akkoord gaat met dit document.",
   },
 };

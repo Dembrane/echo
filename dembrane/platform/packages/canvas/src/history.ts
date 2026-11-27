@@ -80,7 +80,7 @@ export async function buildCanvasHistory(
         runChat,
       ),
       heard: noChange ? [] : items,
-      changes: noChange ? ["no change — nothing new heard"] : items,
+      changes: noChange ? ["no change: nothing new heard"] : items,
       kept_out: keptOut(items),
     });
   }

@@ -70,7 +70,7 @@ export function AccountOverviewWork({ orgId }: { orgId: string }) {
 	);
 }
 
-/** Who is involved, under what is open on the organisation overview. */
+/** Involved in procurement, under what is open on the organisation overview. */
 export function AccountOverviewRoom({ orgId }: { orgId: string }) {
 	const ready = useAccountsCatalog();
 	if (!ready) return null;

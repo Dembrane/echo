@@ -1267,7 +1267,7 @@ msgid "A screen that explains, step by step, what happens to the recordings. Its
 msgstr "Un écran qui explique, étape par étape, ce qu'il advient des enregistrements. Ses termes respectent l'anonymisation et la base juridique de ce projet."
 
 #: src/components/billing/BillingManager.tsx:1290
-msgid "A seat is one member. Add or remove members in each workspace's People tab; your next charge follows automatically."
+msgid "A seat is one member. Add or remove members in each workspace's Members tab; your next charge follows automatically."
 msgstr "Un siège correspond à un membre. Ajoutez ou supprimez des membres dans l'onglet Membres de chaque espace de travail ; votre prochaine facture s'ajustera automatiquement."
 
 #: src/components/billing/BillingManager.tsx:1285
@@ -5119,12 +5119,9 @@ msgstr "Supprimé · {0}"
 msgid "Deleted successfully"
 msgstr "Supprimé avec succès"
 
-#~ msgid "Deleting a organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
-#~ msgstr "La suppression d'une organisation nécessite l'aide de l'assistance. Écrivez à <0>support@dembrane.com</0> et nous vous guiderons — tous les espaces de travail doivent d'abord être vidés et supprimés."
-
 #: src/routes/organisation/OrganisationRoute.tsx:1193
-msgid "Deleting an organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you — all workspaces must be empty and deleted first."
-msgstr "La suppression d'une organisation se fait avec l'aide de l'assistance. Écrivez à <0>support@dembrane.com</0> et nous vous guiderons — tous les espaces de travail doivent d'abord être vidés et supprimés."
+msgid "Deleting an organisation is a support-assisted operation. Email <0>support@dembrane.com</0> and we'll walk through it with you. All workspaces must be empty and deleted first."
+msgstr "La suppression d'une organisation se fait avec l'aide de l'assistance. Écrivez à <0>support@dembrane.com</0> et nous vous guiderons. Tous les espaces de travail doivent d'abord être vidés et supprimés."
 
 #: src/components/methodology/WorkspaceMethodologiesSection.tsx:219
 #: src/components/methodology/ProjectMethodologySection.tsx:131

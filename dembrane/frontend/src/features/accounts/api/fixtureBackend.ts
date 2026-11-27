@@ -990,8 +990,8 @@ function confirmationFor(
 	const base = `I, {name}${role}, confirm that I may sign on behalf of ${org}, and I sign "${title}" (${reference}) as shown to me, SHA-256 ${sha}.`;
 	return withDpa
 		? {
-				dpa_authorised: `${base} I am also authorised to enter into data processing arrangements on behalf of this organisation.`,
-				dpa_not_authorised: `${base} I am not authorised to enter into data processing arrangements on behalf of this organisation; the data processing agreement is signed separately.`,
+				dpa_authorised: `${base} I am also authorised to agree to data processing on behalf of this organisation.`,
+				dpa_not_authorised: `${base} I am not authorised to agree to data processing on behalf of this organisation; the data processing agreement will be signed separately.`,
 			}
 		: { dpa_authorised: base, dpa_not_authorised: null };
 }
@@ -1146,11 +1146,9 @@ function separateDpaFor(s: Store, d: DocumentDetailT, signedAt: string) {
 	const t = signTaskFor(
 		s,
 		dpa,
+		d.language === "nl" ? "De DPA laten tekenen" : "Have the DPA signed",
 		d.language === "nl"
-			? "Verwerkersovereenkomst laten tekenen"
-			: "Have the DPA signed",
-		d.language === "nl"
-			? "Iemand die namens jullie verwerkingsafspraken mag aangaan, tekent de verwerkersovereenkomst. Wijs diegene aan op het document."
+			? "Iemand die namens jullie verwerkingsafspraken mag aangaan, tekent de DPA. Wijs diegene aan op het document."
 			: "Someone who may agree to data processing for your organisation signs the DPA. Name them on the document.",
 	);
 	t.params = { ...(t.params ?? {}), offer_id: d.id };
@@ -2260,8 +2258,8 @@ export async function handle(
 					signer: draftSigner(body.customer_signer as Named | null | undefined),
 					signing_note:
 						language === "nl"
-							? "Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en verwerkersovereenkomst gelden."
-							: "Your signature completes the agreement: we can invoice, and the terms, SLA and data processing agreement apply.",
+							? "Met je handtekening is de overeenkomst compleet: wij kunnen factureren, en je voorwaarden, SLA en DPA gelden."
+							: "Signing makes the agreement complete, so we can invoice and your terms, SLA and data processing are in force.",
 					status: body.send === false ? "draft" : "sent",
 					subtotal_cents: subtotal,
 					title,

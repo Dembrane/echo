@@ -735,9 +735,7 @@ export async function answerWhoSigns(
 
   const summary = [
     `Offer: signed by ${person(input.offer_signer)}${offerWas}.`,
-    `Data processing agreement: signed by ${
-      input.dpa_same ? "the same person" : person(input.dpa_signer)
-    }${dpaWas}.`,
+    `DPA: signed by ${input.dpa_same ? "the same person" : person(input.dpa_signer)}${dpaWas}.`,
     input.dpia
       ? "They want their own data protection impact assessment (DPIA)."
       : "No DPIA of their own.",
