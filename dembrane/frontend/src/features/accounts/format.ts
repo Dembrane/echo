@@ -125,16 +125,29 @@ export const stageLabel = (stage: string | null): string =>
 				: t`No account`;
 
 /**
+ * Who reads a task: someone who `acts` on it (runs the account) or someone who only
+ * `reads` it (a room member). A title asks the first to do something; for the second it
+ * says what the task is about.
+ */
+export type TaskReader = "acts" | "reads";
+
+/**
  * The words for a task echo made itself, from its code, in the viewer's language. Such
  * tasks carry a code and params and no text; `params.document_title` names the document.
+ * For a reader who cannot act, the codes asking something of those who run the account
+ * have a descriptive title; every other code reads the same to both.
  */
 export const codedTaskText = (
 	code: NonNullable<TaskT["code"]>,
 	params: Record<string, string> | null,
+	reader: TaskReader = "acts",
 ): { title: string; body: string } => {
 	const doc = params?.document_title ?? "";
+	const reads = reader === "reads";
 	switch (code) {
 		case "sign_offer": {
+			// Which offer is in the line under it.
+			if (reads) return { body: "", title: t`Signing the offer` };
 			// Named by what it is for and its number, which is what people pass on.
 			const number = params?.offer_reference ?? "";
 			const title =
@@ -149,6 +162,7 @@ export const codedTaskText = (
 			return { body: "", title };
 		}
 		case "who_signs": {
+			if (reads) return { body: "", title: t`Who signs the offer and the DPA` };
 			const number = params?.offer_reference ?? "";
 			const title =
 				number && params?.offer_template === "event"
@@ -164,7 +178,11 @@ export const codedTaskText = (
 		case "sign_dpa":
 			return {
 				body: t`Someone who may agree to data processing for your organisation signs it.`,
-				title: doc ? t`Sign ${doc}` : t`Sign the DPA`,
+				title: reads
+					? t`Signing the DPA`
+					: doc
+						? t`Sign ${doc}`
+						: t`Sign the DPA`,
 			};
 		case "billing_details":
 			return {
@@ -194,12 +212,16 @@ export const codedTaskText = (
 	}
 };
 
-/** A task's title and body: worded from its code when echo made it, else as staff wrote it. */
+/**
+ * A task's title and body: worded from its code when echo made it, else as staff wrote it.
+ * `reader`: who reads it (TaskReader).
+ */
 export const taskText = (
 	task: TaskT,
+	reader: TaskReader = "acts",
 ): { title: string; body: string | null } =>
 	task.code
-		? codedTaskText(task.code, task.params)
+		? codedTaskText(task.code, task.params, reader)
 		: { body: task.body, title: task.title ?? "" };
 
 /** The next task line of a tasks-summary row, worded the same way. */

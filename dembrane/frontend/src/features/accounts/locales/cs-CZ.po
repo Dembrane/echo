@@ -520,7 +520,7 @@ msgstr "Odpovězte na otázku"
 #~ msgid "Answer: {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:80
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:81
 msgid "Answer: {answer}"
 msgstr "Odpověď: {answer}"
 
@@ -613,7 +613,7 @@ msgstr "Do {due}"
 #~ msgid "Billing"
 #~ msgstr "Billing"
 
-#: src/features/accounts/format.ts:172
+#: src/features/accounts/format.ts:190
 #: src/features/accounts/staff/AccountsPanel.tsx:164
 #: src/features/accounts/staff/AccountCardRoute.tsx:644
 #: src/features/accounts/staff/AccountCardRoute.tsx:880
@@ -640,7 +640,7 @@ msgstr "Text"
 msgid "Book a call"
 msgstr "Rezervovat hovor"
 
-#: src/features/accounts/format.ts:192
+#: src/features/accounts/format.ts:210
 msgid "Book a call with us"
 msgstr "Rezervujte si s námi hovor"
 
@@ -768,7 +768,7 @@ msgstr "Účtováno"
 msgid "check IT and security"
 msgstr "kontroloval IT a bezpečnost"
 
-#: src/features/accounts/format.ts:177
+#: src/features/accounts/format.ts:195
 msgid "Check out the demo we made for you"
 msgstr "Prohlédněte si ukázku, kterou jsme pro vás připravili"
 
@@ -981,7 +981,7 @@ msgstr "Země"
 msgid "Counts as their signature."
 msgstr "Platí jako jejich podpis."
 
-#: src/features/accounts/format.ts:187
+#: src/features/accounts/format.ts:205
 msgid "Create a project"
 msgstr "Vytvořte projekt"
 
@@ -1385,7 +1385,7 @@ msgstr "Pole | dembrane"
 msgid "Fields saved"
 msgstr "Pole uložena"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:85
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:86
 msgid "File:"
 msgstr "Soubor:"
 
@@ -1489,7 +1489,7 @@ msgstr "K rukám"
 #~ msgid "From dembrane: {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:91
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:92
 msgid "From dembrane: {note}"
 msgstr "Od dembrane: {note}"
 
@@ -1687,7 +1687,7 @@ msgid "Invoice"
 msgstr "Faktura"
 
 #. placeholder {0}: doc.invoice.number
-#: src/features/accounts/format.ts:218
+#: src/features/accounts/format.ts:240
 msgid "Invoice {0}"
 msgstr "Faktura {0}"
 
@@ -2190,7 +2190,7 @@ msgstr "Zatím není zákazník"
 msgid "Note"
 msgstr "Poznámka"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:43
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:44
 msgid "Nothing here yet."
 msgstr "Zatím tu nic není."
 
@@ -2263,7 +2263,7 @@ msgstr "K datu"
 msgid "On signing"
 msgstr "Při podpisu"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:34
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:35
 msgid "On the offer and the DPA"
 msgstr "K nabídce a DPA"
 
@@ -2905,19 +2905,19 @@ msgstr "Zkontrolovat a odeslat"
 msgid "Review and sign"
 msgstr "Zkontrolovat a podepsat"
 
-#: src/features/accounts/format.ts:146
+#: src/features/accounts/format.ts:159
 msgid "Review and sign {doc}"
 msgstr "Zkontrolovat a podepsat: {doc}"
 
-#: src/features/accounts/format.ts:142
+#: src/features/accounts/format.ts:155
 msgid "Review and sign event offer {number}"
 msgstr "Zkontrolovat a podepsat nabídku akce {number}"
 
-#: src/features/accounts/format.ts:147
+#: src/features/accounts/format.ts:160
 msgid "Review and sign the offer"
 msgstr "Zkontrolovat a podepsat nabídku"
 
-#: src/features/accounts/format.ts:144
+#: src/features/accounts/format.ts:157
 msgid "Review and sign yearly license offer {number}"
 msgstr "Zkontrolovat a podepsat nabídku roční licence {number}"
 
@@ -2985,11 +2985,11 @@ msgstr "Druhý podpis"
 msgid "Section"
 msgstr "Oddíl"
 
-#: src/features/accounts/format.ts:181
+#: src/features/accounts/format.ts:199
 msgid "See how dembrane works, from setting up a project to reading what people said."
 msgstr "Podívejte se, jak dembrane funguje, od založení projektu po čtení toho, co lidé řekli."
 
-#: src/features/accounts/format.ts:176
+#: src/features/accounts/format.ts:194
 msgid "See popcorn, tensions and the map on sample conversations written for your organisation."
 msgstr "Podívejte se na popcorn, napětí a mapu u ukázkových rozhovorů připravených pro vaši organizaci."
 
@@ -3120,7 +3120,7 @@ msgstr "Odesláno. Zákazník má úkol k podpisu."
 msgid "Service level agreement"
 msgstr "Smlouva o úrovni služeb"
 
-#: src/features/accounts/format.ts:186
+#: src/features/accounts/format.ts:204
 msgid "Set up a project of your own for your first real session."
 msgstr "Založte si vlastní projekt pro své první skutečné setkání."
 
@@ -3179,7 +3179,7 @@ msgstr "Uvedeno v nabídce před podpisem"
 msgid "Sign"
 msgstr "Podepsat"
 
-#: src/features/accounts/format.ts:167
+#: src/features/accounts/format.ts:184
 msgid "Sign {doc}"
 msgstr "Podepsat {doc}"
 
@@ -3209,7 +3209,7 @@ msgstr "Odhlásit se a pokračovat"
 #~ msgid "Sign the data processing agreement"
 #~ msgstr "Podepsat smlouvu o zpracování osobních údajů"
 
-#: src/features/accounts/format.ts:167
+#: src/features/accounts/format.ts:185
 msgid "Sign the DPA"
 msgstr "Podepsat DPA"
 
@@ -3300,6 +3300,14 @@ msgstr "Podpis"
 #~ msgid "Signing failed. Try again."
 #~ msgstr ""
 
+#: src/features/accounts/format.ts:182
+msgid "Signing the DPA"
+msgstr "Podpis DPA"
+
+#: src/features/accounts/format.ts:150
+msgid "Signing the offer"
+msgstr "Podpis nabídky"
+
 #. placeholder {0}: doc.title
 #: src/features/accounts/staff/OfferExtras.tsx:188
 msgid "Signs {0} as shown."
@@ -3351,7 +3359,7 @@ msgstr "Někdo nový"
 msgid "Someone new involved in procurement"
 msgstr "Nový člověk zapojen do nákupu"
 
-#: src/features/accounts/format.ts:166
+#: src/features/accounts/format.ts:180
 msgid "Someone who may agree to data processing for your organisation signs it."
 msgstr "Podepisuje osoba oprávněná odsouhlasit zpracování údajů za vaši organizaci."
 
@@ -3498,15 +3506,15 @@ msgstr "Napište nám, jak vaše organizace přijímá faktury"
 msgid "Tell us what works and what does not."
 msgstr "Řekněte nám, co funguje a co ne."
 
-#: src/features/accounts/format.ts:155
+#: src/features/accounts/format.ts:169
 msgid "Tell us who signs event offer {number}"
 msgstr "Řekněte nám, kdo podepíše nabídku akce {number}"
 
-#: src/features/accounts/format.ts:158
+#: src/features/accounts/format.ts:172
 msgid "Tell us who signs the offer"
 msgstr "Řekněte nám, kdo podepíše nabídku"
 
-#: src/features/accounts/format.ts:157
+#: src/features/accounts/format.ts:171
 msgid "Tell us who signs yearly license offer {number}"
 msgstr "Řekněte nám, kdo podepíše nabídku roční licence {number}"
 
@@ -4093,7 +4101,7 @@ msgstr "Čeká se na dembrane"
 msgid "was due {due}"
 msgstr "splatnost {due}"
 
-#: src/features/accounts/format.ts:182
+#: src/features/accounts/format.ts:200
 msgid "Watch the tutorial"
 msgstr "Podívejte se na návod"
 
@@ -4229,7 +4237,7 @@ msgstr "Odpověděli jsme"
 msgid "We sent a new code to {email}."
 msgstr "Poslali jsme nový kód na {email}."
 
-#: src/features/accounts/format.ts:191
+#: src/features/accounts/format.ts:209
 msgid "We walk through your demo with you and plan a first session."
 msgstr "Projdeme s vámi vaši ukázku a naplánujeme první setkání."
 
@@ -4331,7 +4339,11 @@ msgstr "Kdo podepisuje DPA?"
 #~ msgid "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
 #~ msgstr "Kdo podepisuje nabídku a smlouvu o zpracování osobních údajů a zda potřebujete vlastní DPIA."
 
-#: src/features/accounts/format.ts:160
+#: src/features/accounts/format.ts:165
+msgid "Who signs the offer and the DPA"
+msgstr "Kdo podepisuje nabídku a DPA"
+
+#: src/features/accounts/format.ts:174
 msgid "Who signs the offer and the DPA, and whether you need your own DPIA."
 msgstr "Kdo podepisuje nabídku a DPA a jestli potřebuješ vlastní DPIA."
 
@@ -4339,7 +4351,7 @@ msgstr "Kdo podepisuje nabídku a DPA a jestli potřebuješ vlastní DPIA."
 msgid "Who signs the offer?"
 msgstr "Kdo podepisuje nabídku?"
 
-#: src/features/accounts/format.ts:171
+#: src/features/accounts/format.ts:189
 msgid "Who we invoice: legal name, address, VAT or KvK number, invoice email and, if you use one, a PO number."
 msgstr "Fakturační údaje: obchodní název, adresa, DIČ (VAT) nebo číslo KvK, fakturační e-mail a případně číslo objednávky (PO)."
 

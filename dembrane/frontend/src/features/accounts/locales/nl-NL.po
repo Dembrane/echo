@@ -520,7 +520,7 @@ msgstr "Beantwoord de vraag"
 #~ msgid "Answer: {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:80
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:81
 msgid "Answer: {answer}"
 msgstr "Antwoord: {answer}"
 
@@ -613,7 +613,7 @@ msgstr "Vóór {due}"
 #~ msgid "Billing"
 #~ msgstr "Facturering"
 
-#: src/features/accounts/format.ts:172
+#: src/features/accounts/format.ts:190
 #: src/features/accounts/staff/AccountsPanel.tsx:164
 #: src/features/accounts/staff/AccountCardRoute.tsx:644
 #: src/features/accounts/staff/AccountCardRoute.tsx:880
@@ -640,7 +640,7 @@ msgstr "Tekst"
 msgid "Book a call"
 msgstr "Plan een gesprek"
 
-#: src/features/accounts/format.ts:192
+#: src/features/accounts/format.ts:210
 msgid "Book a call with us"
 msgstr "Plan een gesprek met ons"
 
@@ -768,7 +768,7 @@ msgstr "Berekend"
 msgid "check IT and security"
 msgstr "IT en beveiliging te checken"
 
-#: src/features/accounts/format.ts:177
+#: src/features/accounts/format.ts:195
 msgid "Check out the demo we made for you"
 msgstr "Bekijk de demo die we voor je hebben gemaakt"
 
@@ -981,7 +981,7 @@ msgstr "Land"
 msgid "Counts as their signature."
 msgstr "Telt als hun handtekening."
 
-#: src/features/accounts/format.ts:187
+#: src/features/accounts/format.ts:205
 msgid "Create a project"
 msgstr "Maak een project"
 
@@ -1385,7 +1385,7 @@ msgstr "Velden | dembrane"
 msgid "Fields saved"
 msgstr "Velden opgeslagen"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:85
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:86
 msgid "File:"
 msgstr "Bestand:"
 
@@ -1489,7 +1489,7 @@ msgstr "Ter attentie van"
 #~ msgid "From dembrane: {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:91
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:92
 msgid "From dembrane: {note}"
 msgstr "Van dembrane: {note}"
 
@@ -1687,7 +1687,7 @@ msgid "Invoice"
 msgstr "Factuur"
 
 #. placeholder {0}: doc.invoice.number
-#: src/features/accounts/format.ts:218
+#: src/features/accounts/format.ts:240
 msgid "Invoice {0}"
 msgstr "Factuur {0}"
 
@@ -2190,7 +2190,7 @@ msgstr "Nog geen klant"
 msgid "Note"
 msgstr "Toelichting"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:43
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:44
 msgid "Nothing here yet."
 msgstr "Hier staat nog niets."
 
@@ -2263,7 +2263,7 @@ msgstr "Op een datum"
 msgid "On signing"
 msgstr "Bij ondertekening"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:34
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:35
 msgid "On the offer and the DPA"
 msgstr "Over de offerte en de DPA"
 
@@ -2905,19 +2905,19 @@ msgstr "Bekijken en versturen"
 msgid "Review and sign"
 msgstr "Bekijken en ondertekenen"
 
-#: src/features/accounts/format.ts:146
+#: src/features/accounts/format.ts:159
 msgid "Review and sign {doc}"
 msgstr "{doc} bekijken en ondertekenen"
 
-#: src/features/accounts/format.ts:142
+#: src/features/accounts/format.ts:155
 msgid "Review and sign event offer {number}"
 msgstr "Offerte evenement {number} bekijken en ondertekenen"
 
-#: src/features/accounts/format.ts:147
+#: src/features/accounts/format.ts:160
 msgid "Review and sign the offer"
 msgstr "Offerte bekijken en ondertekenen"
 
-#: src/features/accounts/format.ts:144
+#: src/features/accounts/format.ts:157
 msgid "Review and sign yearly license offer {number}"
 msgstr "Offerte jaarlicentie {number} bekijken en ondertekenen"
 
@@ -2985,11 +2985,11 @@ msgstr "Tweede handtekening"
 msgid "Section"
 msgstr "Sectie"
 
-#: src/features/accounts/format.ts:181
+#: src/features/accounts/format.ts:199
 msgid "See how dembrane works, from setting up a project to reading what people said."
 msgstr "Zie hoe dembrane werkt, van een project opzetten tot teruglezen wat mensen zeiden."
 
-#: src/features/accounts/format.ts:176
+#: src/features/accounts/format.ts:194
 msgid "See popcorn, tensions and the map on sample conversations written for your organisation."
 msgstr "Bekijk popcorn, spanningen en de kaart bij voorbeeldgesprekken die voor jullie organisatie zijn geschreven."
 
@@ -3120,7 +3120,7 @@ msgstr "Verstuurd. De klant heeft een ondertekentaak."
 msgid "Service level agreement"
 msgstr "Service level agreement (SLA)"
 
-#: src/features/accounts/format.ts:186
+#: src/features/accounts/format.ts:204
 msgid "Set up a project of your own for your first real session."
 msgstr "Zet een eigen project op voor je eerste echte sessie."
 
@@ -3179,7 +3179,7 @@ msgstr "Staat op de offerte vóór ondertekening"
 msgid "Sign"
 msgstr "Ondertekenen"
 
-#: src/features/accounts/format.ts:167
+#: src/features/accounts/format.ts:184
 msgid "Sign {doc}"
 msgstr "{doc} ondertekenen"
 
@@ -3201,7 +3201,7 @@ msgstr "Uitloggen en doorgaan"
 #~ msgid "Sign the data processing agreement"
 #~ msgstr "Verwerkersovereenkomst ondertekenen"
 
-#: src/features/accounts/format.ts:167
+#: src/features/accounts/format.ts:185
 msgid "Sign the DPA"
 msgstr "De DPA ondertekenen"
 
@@ -3292,6 +3292,14 @@ msgstr "Ondertekenen"
 #~ msgid "Signing failed. Try again."
 #~ msgstr "Ondertekenen mislukt. Probeer het opnieuw."
 
+#: src/features/accounts/format.ts:182
+msgid "Signing the DPA"
+msgstr "Ondertekening van de DPA"
+
+#: src/features/accounts/format.ts:150
+msgid "Signing the offer"
+msgstr "Ondertekening van de offerte"
+
 #. placeholder {0}: doc.title
 #: src/features/accounts/staff/OfferExtras.tsx:188
 msgid "Signs {0} as shown."
@@ -3343,7 +3351,7 @@ msgstr "Iemand anders uitnodigen"
 msgid "Someone new involved in procurement"
 msgstr "Iemand nieuw betrokken bij inkoop"
 
-#: src/features/accounts/format.ts:166
+#: src/features/accounts/format.ts:180
 msgid "Someone who may agree to data processing for your organisation signs it."
 msgstr "Iemand die voor je organisatie verwerkingsafspraken mag maken, ondertekent hem."
 
@@ -3490,15 +3498,15 @@ msgstr "Laat ons weten hoe je organisatie facturen ontvangt"
 msgid "Tell us what works and what does not."
 msgstr "Vertel ons wat werkt en wat niet."
 
-#: src/features/accounts/format.ts:155
+#: src/features/accounts/format.ts:169
 msgid "Tell us who signs event offer {number}"
 msgstr "Laat ons weten wie de offerte evenement {number} ondertekent"
 
-#: src/features/accounts/format.ts:158
+#: src/features/accounts/format.ts:172
 msgid "Tell us who signs the offer"
 msgstr "Laat ons weten wie de offerte ondertekent"
 
-#: src/features/accounts/format.ts:157
+#: src/features/accounts/format.ts:171
 msgid "Tell us who signs yearly license offer {number}"
 msgstr "Laat ons weten wie de offerte jaarlicentie {number} ondertekent"
 
@@ -4085,7 +4093,7 @@ msgstr "Wacht op dembrane"
 msgid "was due {due}"
 msgstr "vervaldatum {due}"
 
-#: src/features/accounts/format.ts:182
+#: src/features/accounts/format.ts:200
 msgid "Watch the tutorial"
 msgstr "Bekijk de tutorial"
 
@@ -4221,7 +4229,7 @@ msgstr "We hebben gereageerd"
 msgid "We sent a new code to {email}."
 msgstr "We hebben een nieuwe code gestuurd naar {email}."
 
-#: src/features/accounts/format.ts:191
+#: src/features/accounts/format.ts:209
 msgid "We walk through your demo with you and plan a first session."
 msgstr "We lopen je demo samen door en plannen een eerste sessie."
 
@@ -4323,7 +4331,11 @@ msgstr "Wie tekent de DPA?"
 #~ msgid "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
 #~ msgstr "Wie de offerte en de verwerkersovereenkomst tekent, en of jullie een eigen DPIA nodig hebben."
 
-#: src/features/accounts/format.ts:160
+#: src/features/accounts/format.ts:165
+msgid "Who signs the offer and the DPA"
+msgstr "Wie de offerte en de DPA ondertekent"
+
+#: src/features/accounts/format.ts:174
 msgid "Who signs the offer and the DPA, and whether you need your own DPIA."
 msgstr "Wie de offerte en de DPA ondertekent, en of jullie een eigen DPIA nodig hebben."
 
@@ -4331,7 +4343,7 @@ msgstr "Wie de offerte en de DPA ondertekent, en of jullie een eigen DPIA nodig 
 msgid "Who signs the offer?"
 msgstr "Wie tekent de offerte?"
 
-#: src/features/accounts/format.ts:171
+#: src/features/accounts/format.ts:189
 msgid "Who we invoice: legal name, address, VAT or KvK number, invoice email and, if you use one, a PO number."
 msgstr "Aan wie we factureren: juridische naam, adres, btw- of KvK-nummer, factuur-e-mail en, als jullie die gebruiken, het PO-nummer."
 

@@ -520,7 +520,7 @@ msgstr "Rispondi alla domanda"
 #~ msgid "Answer: {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:80
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:81
 msgid "Answer: {answer}"
 msgstr "Risposta: {answer}"
 
@@ -613,7 +613,7 @@ msgstr "Entro il {due}"
 #~ msgid "Billing"
 #~ msgstr "Fatturazione"
 
-#: src/features/accounts/format.ts:172
+#: src/features/accounts/format.ts:190
 #: src/features/accounts/staff/AccountsPanel.tsx:164
 #: src/features/accounts/staff/AccountCardRoute.tsx:644
 #: src/features/accounts/staff/AccountCardRoute.tsx:880
@@ -640,7 +640,7 @@ msgstr "Messaggio"
 msgid "Book a call"
 msgstr "Prenota una chiamata"
 
-#: src/features/accounts/format.ts:192
+#: src/features/accounts/format.ts:210
 msgid "Book a call with us"
 msgstr "Prenota una chiamata con noi"
 
@@ -768,7 +768,7 @@ msgstr "Addebitato"
 msgid "check IT and security"
 msgstr "controllare IT e sicurezza"
 
-#: src/features/accounts/format.ts:177
+#: src/features/accounts/format.ts:195
 msgid "Check out the demo we made for you"
 msgstr "Dai un'occhiata alla demo che abbiamo preparato per te"
 
@@ -981,7 +981,7 @@ msgstr "Paese"
 msgid "Counts as their signature."
 msgstr "Vale come la loro firma."
 
-#: src/features/accounts/format.ts:187
+#: src/features/accounts/format.ts:205
 msgid "Create a project"
 msgstr "Crea un progetto"
 
@@ -1385,7 +1385,7 @@ msgstr "Campi | dembrane"
 msgid "Fields saved"
 msgstr "Campi salvati"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:85
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:86
 msgid "File:"
 msgstr "File:"
 
@@ -1489,7 +1489,7 @@ msgstr "All'attenzione di"
 #~ msgid "From dembrane: {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:91
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:92
 msgid "From dembrane: {note}"
 msgstr "Da dembrane: {note}"
 
@@ -1687,7 +1687,7 @@ msgid "Invoice"
 msgstr "Fattura"
 
 #. placeholder {0}: doc.invoice.number
-#: src/features/accounts/format.ts:218
+#: src/features/accounts/format.ts:240
 msgid "Invoice {0}"
 msgstr "Fattura {0}"
 
@@ -2190,7 +2190,7 @@ msgstr "Non ancora cliente"
 msgid "Note"
 msgstr "Nota"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:43
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:44
 msgid "Nothing here yet."
 msgstr "Qui non c’è ancora niente."
 
@@ -2263,7 +2263,7 @@ msgstr "A una data"
 msgid "On signing"
 msgstr "Alla firma"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:34
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:35
 msgid "On the offer and the DPA"
 msgstr "Sull’offerta e sul DPA"
 
@@ -2905,19 +2905,19 @@ msgstr "Rivedi e invia"
 msgid "Review and sign"
 msgstr "Rivedi e firma"
 
-#: src/features/accounts/format.ts:146
+#: src/features/accounts/format.ts:159
 msgid "Review and sign {doc}"
 msgstr "Rivedi e firma {doc}"
 
-#: src/features/accounts/format.ts:142
+#: src/features/accounts/format.ts:155
 msgid "Review and sign event offer {number}"
 msgstr "Esamina e firma l'offerta evento {number}"
 
-#: src/features/accounts/format.ts:147
+#: src/features/accounts/format.ts:160
 msgid "Review and sign the offer"
 msgstr "Rivedi e firma l'offerta"
 
-#: src/features/accounts/format.ts:144
+#: src/features/accounts/format.ts:157
 msgid "Review and sign yearly license offer {number}"
 msgstr "Esamina e firma l'offerta di licenza annuale {number}"
 
@@ -2985,11 +2985,11 @@ msgstr "Seconda firma"
 msgid "Section"
 msgstr "Sezione"
 
-#: src/features/accounts/format.ts:181
+#: src/features/accounts/format.ts:199
 msgid "See how dembrane works, from setting up a project to reading what people said."
 msgstr "Scopri come funziona dembrane, dalla creazione di un progetto alla lettura di ciò che le persone hanno detto."
 
-#: src/features/accounts/format.ts:176
+#: src/features/accounts/format.ts:194
 msgid "See popcorn, tensions and the map on sample conversations written for your organisation."
 msgstr "Guarda popcorn, le tensioni e la mappa su conversazioni di esempio scritte per la tua organizzazione."
 
@@ -3120,7 +3120,7 @@ msgstr "Inviato. Il cliente ha un'attività di firma."
 msgid "Service level agreement"
 msgstr "Accordo sul livello di servizio"
 
-#: src/features/accounts/format.ts:186
+#: src/features/accounts/format.ts:204
 msgid "Set up a project of your own for your first real session."
 msgstr "Imposta un progetto tutto tuo per la tua prima sessione reale."
 
@@ -3179,7 +3179,7 @@ msgstr "Compare nell'offerta prima della firma"
 msgid "Sign"
 msgstr "Firma"
 
-#: src/features/accounts/format.ts:167
+#: src/features/accounts/format.ts:184
 msgid "Sign {doc}"
 msgstr "Firma {doc}"
 
@@ -3209,7 +3209,7 @@ msgstr "Esci e continua"
 #~ msgid "Sign the data processing agreement"
 #~ msgstr "Firma l'accordo sul trattamento dei dati"
 
-#: src/features/accounts/format.ts:167
+#: src/features/accounts/format.ts:185
 msgid "Sign the DPA"
 msgstr "Firma il DPA"
 
@@ -3300,6 +3300,14 @@ msgstr "Firma"
 #~ msgid "Signing failed. Try again."
 #~ msgstr ""
 
+#: src/features/accounts/format.ts:182
+msgid "Signing the DPA"
+msgstr "Firma del DPA"
+
+#: src/features/accounts/format.ts:150
+msgid "Signing the offer"
+msgstr "Firma dell’offerta"
+
 #. placeholder {0}: doc.title
 #: src/features/accounts/staff/OfferExtras.tsx:188
 msgid "Signs {0} as shown."
@@ -3351,7 +3359,7 @@ msgstr "Qualcuno di nuovo"
 msgid "Someone new involved in procurement"
 msgstr "Persona nuova coinvolta nell’acquisto"
 
-#: src/features/accounts/format.ts:166
+#: src/features/accounts/format.ts:180
 msgid "Someone who may agree to data processing for your organisation signs it."
 msgstr "La firma deve essere di chi può autorizzare il trattamento dei dati per la tua organizzazione."
 
@@ -3498,15 +3506,15 @@ msgstr "Dicci come la tua organizzazione riceve le fatture"
 msgid "Tell us what works and what does not."
 msgstr "Dicci cosa funziona e cosa no."
 
-#: src/features/accounts/format.ts:155
+#: src/features/accounts/format.ts:169
 msgid "Tell us who signs event offer {number}"
 msgstr "Dicci chi firma l’offerta evento {number}"
 
-#: src/features/accounts/format.ts:158
+#: src/features/accounts/format.ts:172
 msgid "Tell us who signs the offer"
 msgstr "Dicci chi firma l’offerta"
 
-#: src/features/accounts/format.ts:157
+#: src/features/accounts/format.ts:171
 msgid "Tell us who signs yearly license offer {number}"
 msgstr "Dicci chi firma l’offerta di licenza annuale {number}"
 
@@ -4093,7 +4101,7 @@ msgstr "In attesa di dembrane"
 msgid "was due {due}"
 msgstr "scadeva il {due}"
 
-#: src/features/accounts/format.ts:182
+#: src/features/accounts/format.ts:200
 msgid "Watch the tutorial"
 msgstr "Guarda il tutorial"
 
@@ -4229,7 +4237,7 @@ msgstr "Abbiamo risposto"
 msgid "We sent a new code to {email}."
 msgstr "Abbiamo inviato un nuovo codice a {email}."
 
-#: src/features/accounts/format.ts:191
+#: src/features/accounts/format.ts:209
 msgid "We walk through your demo with you and plan a first session."
 msgstr "Rivediamo insieme la tua demo e pianifichiamo una prima sessione."
 
@@ -4331,7 +4339,11 @@ msgstr "Chi firma il DPA?"
 #~ msgid "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
 #~ msgstr "Chi firma l’offerta e l’accordo sul trattamento dei dati, e se vi serve una vostra DPIA."
 
-#: src/features/accounts/format.ts:160
+#: src/features/accounts/format.ts:165
+msgid "Who signs the offer and the DPA"
+msgstr "Chi firma l’offerta e il DPA"
+
+#: src/features/accounts/format.ts:174
 msgid "Who signs the offer and the DPA, and whether you need your own DPIA."
 msgstr "Chi firma l’offerta e il DPA, e se ti serve una DPIA tua."
 
@@ -4339,7 +4351,7 @@ msgstr "Chi firma l’offerta e il DPA, e se ti serve una DPIA tua."
 msgid "Who signs the offer?"
 msgstr "Chi firma l’offerta?"
 
-#: src/features/accounts/format.ts:171
+#: src/features/accounts/format.ts:189
 msgid "Who we invoice: legal name, address, VAT or KvK number, invoice email and, if you use one, a PO number."
 msgstr "A chi intestare la fattura: ragione sociale, indirizzo, partita IVA o numero KvK, email per le fatture e, se ne usi uno, numero d'ordine (PO)."
 

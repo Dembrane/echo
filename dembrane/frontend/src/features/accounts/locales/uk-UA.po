@@ -520,7 +520,7 @@ msgstr "Дайте відповідь на питання"
 #~ msgid "Answer: {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:80
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:81
 msgid "Answer: {answer}"
 msgstr "Відповідь: {answer}"
 
@@ -613,7 +613,7 @@ msgstr "До {due}"
 #~ msgid "Billing"
 #~ msgstr "Оплата"
 
-#: src/features/accounts/format.ts:172
+#: src/features/accounts/format.ts:190
 #: src/features/accounts/staff/AccountsPanel.tsx:164
 #: src/features/accounts/staff/AccountCardRoute.tsx:644
 #: src/features/accounts/staff/AccountCardRoute.tsx:880
@@ -640,7 +640,7 @@ msgstr "Текст"
 msgid "Book a call"
 msgstr "Запланувати дзвінок"
 
-#: src/features/accounts/format.ts:192
+#: src/features/accounts/format.ts:210
 msgid "Book a call with us"
 msgstr "Заплануйте дзвінок із нами"
 
@@ -768,7 +768,7 @@ msgstr "Нараховано"
 msgid "check IT and security"
 msgstr "перевіряти ІТ і безпеку"
 
-#: src/features/accounts/format.ts:177
+#: src/features/accounts/format.ts:195
 msgid "Check out the demo we made for you"
 msgstr "Перегляньте демо, яке ми підготували для Вас"
 
@@ -981,7 +981,7 @@ msgstr "Країна"
 msgid "Counts as their signature."
 msgstr "Зараховується як їхній підпис."
 
-#: src/features/accounts/format.ts:187
+#: src/features/accounts/format.ts:205
 msgid "Create a project"
 msgstr "Створіть проєкт"
 
@@ -1385,7 +1385,7 @@ msgstr "Поля | dembrane"
 msgid "Fields saved"
 msgstr "Поля збережено"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:85
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:86
 msgid "File:"
 msgstr "Файл:"
 
@@ -1489,7 +1489,7 @@ msgstr "До уваги"
 #~ msgid "From dembrane: {0}"
 #~ msgstr ""
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:91
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:92
 msgid "From dembrane: {note}"
 msgstr "Від dembrane: {note}"
 
@@ -1687,7 +1687,7 @@ msgid "Invoice"
 msgstr "Рахунок"
 
 #. placeholder {0}: doc.invoice.number
-#: src/features/accounts/format.ts:218
+#: src/features/accounts/format.ts:240
 msgid "Invoice {0}"
 msgstr "Рахунок {0}"
 
@@ -2190,7 +2190,7 @@ msgstr "Ще не клієнт"
 msgid "Note"
 msgstr "Примітка"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:43
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:44
 msgid "Nothing here yet."
 msgstr "Тут поки нічого немає."
 
@@ -2263,7 +2263,7 @@ msgstr "У певну дату"
 msgid "On signing"
 msgstr "Під час підписання"
 
-#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:34
+#: src/features/accounts/customer/room/ReadOnlyTasks.tsx:35
 msgid "On the offer and the DPA"
 msgstr "Щодо пропозиції і DPA"
 
@@ -2905,19 +2905,19 @@ msgstr "Переглянути й надіслати"
 msgid "Review and sign"
 msgstr "Переглянути та підписати"
 
-#: src/features/accounts/format.ts:146
+#: src/features/accounts/format.ts:159
 msgid "Review and sign {doc}"
 msgstr "Переглянути та підписати {doc}"
 
-#: src/features/accounts/format.ts:142
+#: src/features/accounts/format.ts:155
 msgid "Review and sign event offer {number}"
 msgstr "Переглянути й підписати пропозицію на захід {number}"
 
-#: src/features/accounts/format.ts:147
+#: src/features/accounts/format.ts:160
 msgid "Review and sign the offer"
 msgstr "Переглянути та підписати пропозицію"
 
-#: src/features/accounts/format.ts:144
+#: src/features/accounts/format.ts:157
 msgid "Review and sign yearly license offer {number}"
 msgstr "Переглянути й підписати пропозицію річної ліцензії {number}"
 
@@ -2985,11 +2985,11 @@ msgstr "Другий підпис"
 msgid "Section"
 msgstr "Розділ"
 
-#: src/features/accounts/format.ts:181
+#: src/features/accounts/format.ts:199
 msgid "See how dembrane works, from setting up a project to reading what people said."
 msgstr "Дізнайтеся, як працює dembrane: від створення проєкту до читання того, що сказали люди."
 
-#: src/features/accounts/format.ts:176
+#: src/features/accounts/format.ts:194
 msgid "See popcorn, tensions and the map on sample conversations written for your organisation."
 msgstr "Перегляньте popcorn, напруги та мапу на прикладах розмов, написаних для Вашої організації."
 
@@ -3120,7 +3120,7 @@ msgstr "Надіслано. Клієнт отримав завдання під�
 msgid "Service level agreement"
 msgstr "Угода про рівень обслуговування"
 
-#: src/features/accounts/format.ts:186
+#: src/features/accounts/format.ts:204
 msgid "Set up a project of your own for your first real session."
 msgstr "Налаштуйте власний проєкт для своєї першої справжньої сесії."
 
@@ -3179,7 +3179,7 @@ msgstr "Видно в пропозиції до підписання"
 msgid "Sign"
 msgstr "Підписати"
 
-#: src/features/accounts/format.ts:167
+#: src/features/accounts/format.ts:184
 msgid "Sign {doc}"
 msgstr "Підписати {doc}"
 
@@ -3209,7 +3209,7 @@ msgstr "Вийти і продовжити"
 #~ msgid "Sign the data processing agreement"
 #~ msgstr "Підписати договір про обробку даних"
 
-#: src/features/accounts/format.ts:167
+#: src/features/accounts/format.ts:185
 msgid "Sign the DPA"
 msgstr "Підписати DPA"
 
@@ -3300,6 +3300,14 @@ msgstr "Підписання"
 #~ msgid "Signing failed. Try again."
 #~ msgstr ""
 
+#: src/features/accounts/format.ts:182
+msgid "Signing the DPA"
+msgstr "Підписання DPA"
+
+#: src/features/accounts/format.ts:150
+msgid "Signing the offer"
+msgstr "Підписання пропозиції"
+
 #. placeholder {0}: doc.title
 #: src/features/accounts/staff/OfferExtras.tsx:188
 msgid "Signs {0} as shown."
@@ -3351,7 +3359,7 @@ msgstr "Хтось новий"
 msgid "Someone new involved in procurement"
 msgstr "Нову людину залучено до закупівлі"
 
-#: src/features/accounts/format.ts:166
+#: src/features/accounts/format.ts:180
 msgid "Someone who may agree to data processing for your organisation signs it."
 msgstr "Підписує особа, уповноважена погоджувати обробку даних для вашої організації."
 
@@ -3498,15 +3506,15 @@ msgstr "Розкажіть, як ваша організація отримує 
 msgid "Tell us what works and what does not."
 msgstr "Розкажіть, що працює, а що ні."
 
-#: src/features/accounts/format.ts:155
+#: src/features/accounts/format.ts:169
 msgid "Tell us who signs event offer {number}"
 msgstr "Повідомте, хто підписує пропозицію на захід {number}"
 
-#: src/features/accounts/format.ts:158
+#: src/features/accounts/format.ts:172
 msgid "Tell us who signs the offer"
 msgstr "Повідомте, хто підписує пропозицію"
 
-#: src/features/accounts/format.ts:157
+#: src/features/accounts/format.ts:171
 msgid "Tell us who signs yearly license offer {number}"
 msgstr "Повідомте, хто підписує пропозицію річної ліцензії {number}"
 
@@ -4093,7 +4101,7 @@ msgstr "Очікує на dembrane"
 msgid "was due {due}"
 msgstr "строк сплати {due}"
 
-#: src/features/accounts/format.ts:182
+#: src/features/accounts/format.ts:200
 msgid "Watch the tutorial"
 msgstr "Перегляньте посібник"
 
@@ -4229,7 +4237,7 @@ msgstr "Ми відповіли"
 msgid "We sent a new code to {email}."
 msgstr "Ми надіслали новий код на {email}."
 
-#: src/features/accounts/format.ts:191
+#: src/features/accounts/format.ts:209
 msgid "We walk through your demo with you and plan a first session."
 msgstr "Ми разом із Вами переглянемо демо й сплануємо першу сесію."
 
@@ -4331,7 +4339,11 @@ msgstr "Хто підписує DPA?"
 #~ msgid "Who signs the offer and the data processing agreement, and whether you need your own DPIA."
 #~ msgstr "Хто підписує пропозицію та угоду про обробку даних і чи потрібна вам власна DPIA."
 
-#: src/features/accounts/format.ts:160
+#: src/features/accounts/format.ts:165
+msgid "Who signs the offer and the DPA"
+msgstr "Хто підписує пропозицію і DPA"
+
+#: src/features/accounts/format.ts:174
 msgid "Who signs the offer and the DPA, and whether you need your own DPIA."
 msgstr "Хто підписує пропозицію і DPA, і чи потрібна тобі власна DPIA."
 
@@ -4339,7 +4351,7 @@ msgstr "Хто підписує пропозицію і DPA, і чи потрі�
 msgid "Who signs the offer?"
 msgstr "Хто підписує пропозицію?"
 
-#: src/features/accounts/format.ts:171
+#: src/features/accounts/format.ts:189
 msgid "Who we invoice: legal name, address, VAT or KvK number, invoice email and, if you use one, a PO number."
 msgstr "Кому виставляти рахунок: юридична назва, адреса, номер VAT або KvK, електронна пошта для рахунків і номер замовлення (PO), якщо ви його використовуєте."
 
