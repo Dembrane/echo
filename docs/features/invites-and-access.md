@@ -49,7 +49,11 @@ Each address gets a result line.
 | "Reactivate plan" | Your plan is cancelled or a payment is overdue. See [seats](#seats). |
 
 An invite to the organisation alone always waits for acceptance, unless the person is
-already a member.
+already a member. Someone whose only open invite came from naming them to sign an offer,
+or from bringing them in under "Involved in procurement", gets a new invite in the role
+you chose, with its own email. That one stays when someone else is chosen to sign or they
+are taken out of "Involved in procurement". See
+[sharing an offer with your team](./sharing-offers-with-your-team.md).
 
 The result is the same for an address that has a dembrane account and one that does not.
 Sending an invite never tells you whether someone has an account.

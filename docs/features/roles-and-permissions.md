@@ -111,6 +111,7 @@ An organisation has four roles. Most people only need a workspace role.
 | Request access to an open workspace | joins directly | joins directly | ✓ | ✓ |
 | Open "MCP access" in organisation settings | ✓ | ✓ | ✗ | ✗ |
 | Offers, billing details, tasks and invoices | ✓ | ✓ | ✓ | ✗ |
+| Name or change who signs an offer or the DPA | ✓ | ✓ | ✗ | ✗ |
 
 - The role picker on a person's card offers "Member" and "Admin". You give "Billing"
   through the invite screen.
@@ -118,6 +119,9 @@ An organisation has four roles. Most people only need a workspace role.
   without an invite depends on each workspace's access setting. See
   [visibility & discovery](./visibility-and-discovery.md).
 - The organisation Billing role never opens a workspace or its projects.
+- A member brought in under "Involved in procurement" reads the offer and the DPA, and the
+  tasks about them, without invoices or billing details. See
+  [sharing an offer with your team](./sharing-offers-with-your-team.md).
 - There is no external or observer role for an organisation. Those two exist only in a
   workspace.
 

@@ -176,8 +176,9 @@ There is no checkout, no plan picker and no upgrade request in the dashboard. Th
    end. What you fill in there is linked to your dashboard account without your email being
    put in the link.
 4. The offer arrives by email and under your organisation's "Documents" and "Tasks". It is
-   valid for 14 days. An organisation admin or billing member signs it on screen, or sends it
-   to someone else to sign. The data processing agreement comes with it as its own document.
+   valid for 14 days. An organisation owner, admin or billing member signs it on screen; an
+   owner or admin can send it to someone else to sign. The DPA comes with it as its own
+   document.
 5. Fill in your billing details. The invoice follows.
 
 Signing the offer does not switch your plan by itself. The dembrane team sets the plan on your

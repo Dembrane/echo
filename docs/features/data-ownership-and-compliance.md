@@ -79,9 +79,10 @@ step is listed for you under "Access history". See
 
 ## Agreements
 
-The data processing agreement is its own document. It comes with your offer and you sign it
-in the dashboard, next to the offer. An offer fixes the versions of the terms, the service
-level agreement and the data processing agreement that were in force when it was sent. With
+The DPA is its own document. The dashboard spells it out when you hover or tap the label:
+"DPA: data processing agreement". It comes with your offer and you sign it in the
+dashboard, next to the offer. An offer fixes the versions of the terms, the service level
+agreement and the DPA that were in force when it was sent. With
 the offer, dembrane also asks whether you need your own data protection impact assessment.
 See [offers & invoices](./offers-and-invoices.md).
 
@@ -109,5 +110,5 @@ To take the conversations of a project with you, see
 - [Staff support access](./staff-support-access.md): how you let dembrane staff in.
 - [Portal editor](./portal-editor.md): where legal basis and anonymisation are set.
 - [Transcription](./transcription.md): how audio becomes a transcript.
-- [Offers & invoices](./offers-and-invoices.md): signing the data processing agreement.
+- [Offers & invoices](./offers-and-invoices.md): signing the DPA.
 - [Your privacy and data](../users/participant/your-privacy-and-data.md): the same questions from a participant's side.
