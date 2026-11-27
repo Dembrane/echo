@@ -803,7 +803,9 @@ run("a demo placed in an organisation the contact already works in", () => {
       await w.db
         .update(schema.account_demo)
         .set({
-          status: "failed",
+          // As Retry leaves it: queued, on the attempt the run below is.
+          status: "queued",
+          attempt: 2,
           steps: {
             ...steps,
             seed: { ...steps.seed, status: "failed" },

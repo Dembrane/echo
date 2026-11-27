@@ -54,8 +54,11 @@ workspace and organisation. There is no upgrade request for you to approve.
 5. Select "Build the demo".
 
 The build runs through "Website", "Research", "Corpus", "Seeding", "Extraction" and "Draft ready".
-If a step fails, select "Retry". When the page says "The draft is ready. Check it, then publish.",
-select "Open the draft (EN)" to look through the demo, then select "Publish".
+If a step fails, select "Retry". A build that has made no progress for half an hour
+has stopped: the page then shows the step it stopped in as failed, with "The build stopped
+before this step finished. Retry to go on from this step.", and "Retry" goes on from there.
+When the page says "The draft is ready. Check it, then publish.", select "Open the draft
+(EN)" to look through the demo, then select "Publish".
 
 - The conversations in a demo are fictional.
 - "Open the draft" shows the deck as the public link will show it, under a bar that says it is a

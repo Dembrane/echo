@@ -270,7 +270,7 @@ In `dembrane/frontend/src`:
 | `billing.free-ai-out` | 5 minutes | The same for the AI budget: once per period (`notice:ai_out`), a `FREE_AI_OUT` notification and the email "{name} has used this month's AI budget". Skips no-limit accounts and the off switch. Same `BILLING_CUSTOMER_JOBS` guard. |
 | `metering.price-sync` | daily, 03:15 UTC | The price sync above. Also runs at startup when a configured model has no stored price. |
 | `metering.spend-rollup` | daily, 00:30 UTC | Rolls the last 3 complete UTC days of `model_call` into `ai_spend_daily` (calls, tokens and euros per day, account, payer, feature and model; replacing those days, so it is idempotent and a missed run heals). Also backfills any older day that has calls but no totals. Deletes `model_call` rows older than 90 days in batches. Sends an AI cost alert when yesterday's unattributed share passes 1%. |
-| `reports.backfill-scheduled` | 5 minutes | Also runs `failStuckReports`: free non-sample drafts older than 2.5 hours end in error (`GENERATION_DID_NOT_FINISH`). Nothing is given back. |
+| `reports.backfill-scheduled` | 5 minutes | Also runs `failStuckReports`: non-sample drafts on every plan older than 2.5 hours end in error (`GENERATION_DID_NOT_FINISH`). Nothing is given back. |
 | `popcorn.reconcile-ticks` | 1 minute | Also runs `settleStuckRuns`, which ends runs that a pre-budget free tick left `running` in error. |
 | `conversations.chunk` | per chunk | `prepare` counts unmetered live chunks with `meterLiveChunk`. |
 

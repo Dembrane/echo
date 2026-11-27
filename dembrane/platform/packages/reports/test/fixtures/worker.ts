@@ -1,5 +1,6 @@
 // A worker process for the report crash test: runs the generation workflow with a fake
-// model, and with HANG=1 stops inside the generate step so the test can kill it there.
+// model, and with HANG=1 stops inside the generate step so the test can kill it there;
+// THROW=1 throws there instead, past the step's own handler, as a DBOS step timeout does.
 import { appendFileSync } from "node:fs";
 import { Writable } from "node:stream";
 import { aiBudgetForProject } from "@dembrane/allowance";
@@ -68,6 +69,8 @@ await queue.workflow(
     pause: async (name) => {
       log(`step ${name}`);
       if (name === "generate" && process.env.HANG === "1") await Bun.sleep(600_000);
+      if (name === "generate" && process.env.THROW === "1")
+        throw new Error("Step generate timed out after 1200000ms");
     },
   }),
 );

@@ -4,7 +4,7 @@ import postgres from "postgres";
 import { failStuckReports, markError, STUCK_REPORT_MS } from "../src/jobs";
 import { reportsStorage } from "../src/storage";
 
-// A free draft whose generation ended without markError (a DBOS cancel or timeout) ends in error.
+// A draft whose generation ended without markError (a DBOS cancel or timeout) ends in error, on every plan.
 const admin = process.env.TEST_DATABASE_ADMIN_URL;
 const run = admin ? describe : describe.skip;
 const dbName = `reports_stuck_drafts_${process.pid}`;
@@ -58,7 +58,7 @@ run("stuck report drafts", () => {
   const old = ago(STUCK_REPORT_MS + 60_000);
   const fresh = ago(STUCK_REPORT_MS - 60_000);
 
-  test("old stamped drafts end in error; others are left alone", async () => {
+  test("old drafts end in error; others are left alone", async () => {
     const rows = await sql`insert into project_report
         (project_id, status, kind, content, date_created, date_updated, deleted_at, free_period_start)
       values
@@ -79,7 +79,7 @@ run("stuck report drafts", () => {
     };
     const ledger = async () => Number((await sql`select count(*) as n from free_usage`)[0]?.n);
     const usage = await ledger();
-    expect(await failStuckReports(d)).toBe(2);
+    expect(await failStuckReports(d)).toBe(3);
     const after = await sql`select id::int, status, error_code from project_report order by id`;
     const err = { status: "error", error_code: "GENERATION_DID_NOT_FINISH" };
     const left = (status: string) => ({ status, error_code: null });
@@ -88,7 +88,7 @@ run("stuck report drafts", () => {
         err,
         err,
         left("draft"),
-        left("draft"),
+        err,
         left("archived"),
         left("draft"),
         left("draft"),
@@ -99,7 +99,7 @@ run("stuck report drafts", () => {
     expect(await ledger()).toBe(usage);
   });
 
-  test("a stuck free draft ends in error; a stuck paid draft is left alone", async () => {
+  test("stuck free and paid drafts both end in error", async () => {
     const rows = await sql`insert into project_report
         (project_id, status, kind, content, date_created, date_updated)
       values (${FREE}, 'draft', 'report', '', ${old}, ${old}), (${PAID}, 'draft', 'report', '', ${old}, ${old})
@@ -110,12 +110,12 @@ run("stuck report drafts", () => {
       logger: { error: () => {}, warn: () => {}, info: () => {} } as never,
       now: () => NOW,
     };
-    expect(await failStuckReports(d)).toBe(1);
+    expect(await failStuckReports(d)).toBe(2);
     const after =
       await sql`select id::int, status from project_report where id in (${free}, ${paid}) order by id`;
     expect([...after]).toEqual([
       { id: free, status: "error" },
-      { id: paid, status: "draft" },
+      { id: paid, status: "error" },
     ]);
   });
 

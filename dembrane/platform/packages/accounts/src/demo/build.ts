@@ -5,7 +5,9 @@ import type { Signed } from "@dembrane/http";
 import type { Completer } from "@dembrane/llm";
 import { withPayer } from "@dembrane/observability";
 import { defaultSettings, demoIdentity, freshState, type Json, seedDemo } from "@dembrane/popcorn";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
+import type { z } from "zod";
+import type { DemoStatusName } from "../contract";
 import { type AccountsDeps, isStaffEmail } from "../deps";
 import { emit } from "../events";
 import type { Language, OfferItem, OfferTemplate } from "../offer";
@@ -144,16 +146,36 @@ async function load(d: AccountsDeps, id: string): Promise<Row> {
   return row;
 }
 
+/** A run's claim on the row: its attempt, and the statuses it may write from. */
+type Own = { attempt: number; from?: z.infer<typeof DemoStatusName>[] };
+
+/**
+ * Writes the demo's row and says whether it did. A run passes `own`: it only writes while
+ * the row is still on its attempt and, with `from`, in one of those statuses, so never once
+ * the build was marked as stopped (`settle` in service.ts).
+ */
 async function save(
   d: AccountsDeps,
   id: string,
   patch: Partial<typeof schema.account_demo.$inferInsert>,
-) {
-  await d.db
+  own?: Own,
+): Promise<boolean> {
+  const rows = await d.db
     .update(schema.account_demo)
     .set({ ...patch, updatedAt: d.now() })
-    .where(eq(schema.account_demo.id, id));
+    .where(
+      and(
+        eq(schema.account_demo.id, id),
+        own ? eq(schema.account_demo.attempt, own.attempt) : undefined,
+        own?.from ? inArray(schema.account_demo.status, own.from) : undefined,
+      ),
+    )
+    .returning({ id: schema.account_demo.id });
+  return rows.length > 0;
 }
+
+/** Stops a run whose row is no longer its own: retried since, or marked as stopped. */
+class Superseded extends Error {}
 
 /** A model answer that did not parse or arrive gets one more try before the step fails. */
 async function twice<T>(fn: () => Promise<T>): Promise<T> {
@@ -167,6 +189,20 @@ async function twice<T>(fn: () => Promise<T>): Promise<T> {
 /**
  * The workflow body. `runStep` is the queue's checkpointed step in the worker and a plain
  * call in tests; either way each step is skipped when the row says it is done.
+ *
+ * Every step goes through `runStep`, a finished one included, and the row is only read
+ * inside it. The queue replays a resumed run by position: the first step this body asks
+ * for must be the first one it recorded. A body that skipped the finished steps on its own
+ * asked for "extract" where "fetch" was recorded, the queue refused the run outside any
+ * step, and the demo stayed "running" for good (staging, 26 Nov 2026, a build cut off by a
+ * deploy). A retried attempt in flight when this change is deployed is refused that way
+ * one last time and shows as stopped, with its Retry; that is why WORKFLOW_VERSION, which
+ * would stop every kind of run in flight from resuming, stays as it is.
+ *
+ * A run only writes to the row of its own attempt: it starts from "queued" (or "running",
+ * resumed), and its steps write only while the build is still "running". A run that comes
+ * back late (resumed after a long wait, or one step that outlived the job's time limit)
+ * finds the build marked as stopped or retried, and stands down without touching it.
  */
 export async function buildDemo(
   d: DemoBuildDeps,
@@ -176,19 +212,26 @@ export async function buildDemo(
 ): Promise<void> {
   let row = await load(d, demoId);
   if (row.status === "published" || row.status === "draft") return;
+  if (row.attempt !== attempt) return;
   const input = row.input as DemoInput;
-  await save(d, demoId, { status: "running" });
+  const starting: Own = { attempt, from: ["queued", "running"] };
+  if (!(await save(d, demoId, { status: "running" }, starting))) return;
+  const mine: Own = { attempt, from: ["running"] };
+  const write = async (patch: Partial<typeof schema.account_demo.$inferInsert>) => {
+    if (!(await save(d, demoId, patch, mine))) throw new Superseded();
+  };
 
   const step = async (
     name: DemoStep,
     fn: (row: Row) => Promise<Partial<typeof schema.account_demo.$inferInsert>>,
   ) => {
-    row = await load(d, demoId);
-    const steps = row.steps as Steps;
-    if (steps[name].status === "done") return;
     await runStep(name, async () => {
+      row = await load(d, demoId);
+      const steps = row.steps as Steps;
+      // A retry is a new run: the steps an earlier run finished are kept.
+      if (steps[name].status === "done") return null;
       const started = d.now().toISOString();
-      await save(d, demoId, {
+      await write({
         steps: {
           ...steps,
           [name]: { status: "running", started_at: started, finished_at: null, error: null },
@@ -198,7 +241,7 @@ export async function buildDemo(
         // A demo is dembrane's own spend, whichever step makes the call.
         const out = await withPayer({ internal: "demo_build" }, () => fn(row));
         const latest = (await load(d, demoId)).steps as Steps;
-        await save(d, demoId, {
+        await write({
           ...out,
           steps: {
             ...latest,
@@ -211,20 +254,26 @@ export async function buildDemo(
           },
         });
       } catch (err) {
+        if (err instanceof Superseded) throw err;
         const message = (err instanceof Error ? err.message : String(err)).slice(0, 500);
         const latest = (await load(d, demoId)).steps as Steps;
-        await save(d, demoId, {
-          status: "failed",
-          steps: {
-            ...latest,
-            [name]: {
-              status: "failed",
-              started_at: started,
-              finished_at: d.now().toISOString(),
-              error: message,
+        await save(
+          d,
+          demoId,
+          {
+            status: "failed",
+            steps: {
+              ...latest,
+              [name]: {
+                status: "failed",
+                started_at: started,
+                finished_at: d.now().toISOString(),
+                error: message,
+              },
             },
           },
-        });
+          mine,
+        );
         d.logger.warn(
           { demo_id: demoId, step: name, err: { message }, signal: "accounts.demo_step_failed" },
           "demo step failed",
@@ -235,40 +284,52 @@ export async function buildDemo(
     });
   };
 
-  await step("fetch", async () => ({ pages: await fetchSite(input.website_url, d.get, d.now) }));
-  await step("research", async (r) => {
-    const pages = r.pages as FetchedPage[];
-    const found = await twice(() => research(d.completer, input, pages));
-    return {
-      research: found,
-      researchMarkdown: researchMarkdown(input, pages, found, d.now().toISOString().slice(0, 10)),
-    };
-  });
-  await step("author", async (r) => ({
-    corpus: await twice(() => author(d.completer, input, r.research as Research)),
-  }));
-  await step("seed", async (r) => seed(d, r, input));
-  await step("extract", async (r) => {
-    const out = r.seed as SeedOutput;
-    const statuses: string[] = [];
-    for (const p of out.projects) {
-      // The popcorn run's request id is a uuid column: derive a stable one per attempt and
-      // language, so a retry is its own run and the same attempt never reads twice.
-      const runId = demoIdentity(demoId, `${demoWorkflowId(demoId, attempt)}:${p.language}`);
-      const status = await d.extract(p.loop_id, runId);
-      if (status === "disabled") throw new Error("Popcorn is switched off for the demo project");
-      // A draft with an empty presentation looks finished and is not: fail the step so staff
-      // see it and retry instead of sending it.
-      if (status !== "ok") throw new Error(`The popcorn read ended with status ${status}`);
-      statuses.push(status);
-    }
-    // Read again: staff may have released the contact while the read ran.
-    const seeded = (await load(d, r.id)).seed as SeedOutput;
-    return { seed: { ...seeded, extraction: statuses } as never };
-  });
-  await step("review", async () => ({ status: "draft" }));
-  row = await load(d, demoId);
-  if (row.status === "running") await save(d, demoId, { status: "draft" });
+  try {
+    await steps();
+  } catch (err) {
+    if (!(err instanceof Superseded)) throw err;
+    d.logger.info(
+      { demo_id: demoId, attempt, signal: "accounts.demo_run_superseded" },
+      "demo run stood down: the build was retried or marked as stopped",
+    );
+  }
+
+  async function steps() {
+    await step("fetch", async () => ({ pages: await fetchSite(input.website_url, d.get, d.now) }));
+    await step("research", async (r) => {
+      const pages = r.pages as FetchedPage[];
+      const found = await twice(() => research(d.completer, input, pages));
+      return {
+        research: found,
+        researchMarkdown: researchMarkdown(input, pages, found, d.now().toISOString().slice(0, 10)),
+      };
+    });
+    await step("author", async (r) => ({
+      corpus: await twice(() => author(d.completer, input, r.research as Research)),
+    }));
+    await step("seed", async (r) => seed(d, r, input));
+    await step("extract", async (r) => {
+      const out = r.seed as SeedOutput;
+      const statuses: string[] = [];
+      for (const p of out.projects) {
+        // The popcorn run's request id is a uuid column: derive a stable one per attempt and
+        // language, so a retry is its own run and the same attempt never reads twice.
+        const runId = demoIdentity(demoId, `${demoWorkflowId(demoId, attempt)}:${p.language}`);
+        const status = await d.extract(p.loop_id, runId);
+        if (status === "disabled") throw new Error("Popcorn is switched off for the demo project");
+        // A draft with an empty presentation looks finished and is not: fail the step so staff
+        // see it and retry instead of sending it.
+        if (status !== "ok") throw new Error(`The popcorn read ended with status ${status}`);
+        statuses.push(status);
+      }
+      // Read again: staff may have released the contact while the read ran.
+      const seeded = (await load(d, r.id)).seed as SeedOutput;
+      return { seed: { ...seeded, extraction: statuses } as never };
+    });
+    await step("review", async () => ({ status: "draft" }));
+    row = await load(d, demoId);
+    if (row.status === "running") await save(d, demoId, { status: "draft" }, mine);
+  }
 }
 
 /**

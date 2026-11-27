@@ -422,13 +422,41 @@ export function grammarAudit(opts: AuditOptions): AuditResult {
 			const column = cs.flexDirection.startsWith("column");
 			const pos = (k: Element) =>
 				column ? k.getBoundingClientRect().top : k.getBoundingClientRect().left;
-			// A row of steps runs the way time does: Back left, the pill right (rules.css).
+			// A pill with a Back beside it runs the way time does: Back in the left corner,
+			// the pill in the right corner (rules.css).
 			if (box.hasAttribute("data-steps")) {
 				if (kids.some((k) => k !== mine && pos(k) > pos(mine) + 1))
 					fail(
 						"flow.steps-primary-last",
 						btn,
 						"in a row of steps the filled button is not rightmost",
+					);
+				// The corners are the row's own edges, inside its padding. A row that wrapped
+				// onto two lines has no corners to hold.
+				const row = box.getBoundingClientRect();
+				const first = kids.reduce((a, k) => (pos(k) < pos(a) ? k : a));
+				const oneLine = kids.every(
+					(k) =>
+						Math.abs(
+							k.getBoundingClientRect().top - mine.getBoundingClientRect().top,
+						) < mine.getBoundingClientRect().height,
+				);
+				if (
+					!column &&
+					oneLine &&
+					(Math.abs(
+						mine.getBoundingClientRect().right -
+							(row.right - Number.parseFloat(cs.paddingRight)),
+					) > 1 ||
+						Math.abs(
+							first.getBoundingClientRect().left -
+								(row.left + Number.parseFloat(cs.paddingLeft)),
+						) > 1)
+				)
+					fail(
+						"flow.steps-corners",
+						btn,
+						"in a row of steps, Back and the filled button are not in the row's two corners",
 					);
 				// Back, and anything else beside the pill, is the tertiary button.
 				for (const other of box.querySelectorAll(".mantine-Button-root"))

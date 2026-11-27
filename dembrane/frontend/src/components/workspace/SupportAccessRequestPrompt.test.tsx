@@ -307,8 +307,10 @@ describe("a workspace admin with a waiting support access request", () => {
 		const d = await findDialog();
 		expect(d.textContent).toContain("Sam Staff");
 		expect(d.textContent).toContain("Team");
-		expect(d.textContent).toContain(
-			"We would like to check why your report does not load.",
+		// Their note reads as a message from them: their picture (initials here), then their words.
+		const note = within(d).getByRole("group", { name: "Note from Sam Staff" });
+		expect(note.textContent).toBe(
+			"SSWe would like to check why your report does not load.",
 		);
 		expect(
 			within(d).getByRole("button", { name: "Approve for 24 hours" }),
@@ -322,7 +324,18 @@ describe("a workspace admin with a waiting support access request", () => {
 		renderPrompt();
 		const d = await findDialog();
 		expect(d.textContent).toContain("Sam Staff");
-		expect(within(d).queryByText(/Their note/)).toBeNull();
+		expect(within(d).queryByRole("group", { name: /Note from/ })).toBeNull();
+	});
+
+	it("sees the staff member's own picture beside the note when they have one", async () => {
+		server.pending["ws-1"] = [request({ id: "r-pic" })];
+		notices.set([notice("ws-1", "r-pic", { actor_avatar: "avatar-file-1" })]);
+		renderPrompt();
+		const d = await findDialog();
+		const note = within(d).getByRole("group", { name: "Note from Sam Staff" });
+		expect(note.querySelector("img")?.getAttribute("src")).toContain(
+			"avatar-file-1",
+		);
 	});
 
 	it("sees nothing once another admin answered the request", async () => {

@@ -38,10 +38,10 @@ admins get a notification and the email "dembrane staff requested access to
 
 While a request waits, workspace admins also see the dialog "Support access request" in
 dembrane: "{name} from dembrane asks for admin access to {workspace_name} for 24 hours, to
-help you with support. Access ends automatically.", with "Their note:" and the note when
-the staff member wrote one. It opens when you open dembrane, or within about a minute when
-you are already in it, one request at a time, oldest first. It does not open by itself in
-Present mode.
+help you with support. Access ends automatically." When the staff member wrote a note, it
+shows under that sentence as a message from them, beside their profile picture. The dialog
+opens when you open dembrane, or within about a minute when you are already in it, one
+request at a time, oldest first. It does not open by itself in Present mode.
 
 - "Approve for 24 hours" lets that staff member in ("Access granted for 24 hours.").
 - "Decline" lets nobody in ("Request declined.").

@@ -105,9 +105,9 @@ export const useVerifyMutation = (doRedirect = true) => {
 	const navigate = useI18nNavigate();
 
 	return useMutation({
-		// No toast here — the verify page shows the status inline, so a
-		// parallel toast is double-signalling. Errors surface via the
-		// verifyMutation.isError branch on the page.
+		// No toast here: the verify page shows the status inline, so a
+		// parallel toast is double-signalling. The page shows errors from
+		// mutateAsync's rejection.
 		meta: { errorToast: false },
 		mutationFn: async (data: { token: string }) => {
 			// 15s ceiling: a hung API or proxy must not leave the page spinning.

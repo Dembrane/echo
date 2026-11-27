@@ -10,7 +10,7 @@ import * as K from "../src/contract";
 import { buildDemo, type DemoBuildDeps, demoSlug } from "../src/demo/build";
 import type { HttpGet } from "../src/demo/fetch";
 import { SALES_PORTAL } from "../src/demo/sales-portal";
-import { createDemo } from "../src/demo/service";
+import { BUILD_STOPPED, createDemo } from "../src/demo/service";
 import { accountManagerPayload } from "../src/events";
 import { onboardingSignals } from "../src/onboarding";
 import { ensureUser, joinDemoWorkspace } from "../src/prospect";
@@ -530,7 +530,9 @@ run("demos made in echo", () => {
       await w.db
         .update(schema.account_demo)
         .set({
-          status: "failed",
+          // As Retry leaves it: queued, on the attempt the run below is.
+          status: "queued",
+          attempt: 2,
           steps: {
             ...steps,
             seed: { ...steps.seed, status: "failed" },
@@ -1377,6 +1379,185 @@ run("demos made in echo", () => {
     );
     expect(failed.status).toBe("failed");
     expect(failed.steps.find((s) => s.name === "extract")?.status).toBe("failed");
+  });
+
+  /** A build whose worker stops during the popcorn read: nothing after it runs, no failure is written. */
+  const cutOffInExtract = async (id: string, runStep?: Parameters<typeof buildDemo>[3]) => {
+    const reached = Promise.withResolvers<void>();
+    const stopping: DemoBuildDeps = {
+      ...deps,
+      extract: () => {
+        reached.resolve();
+        return new Promise<string>(() => {});
+      },
+    };
+    void buildDemo(stopping, id, 1, runStep);
+    await reached.promise;
+  };
+
+  test("a run cut off mid-step and resumed by the queue goes on from that step", async () => {
+    const status = K.DemoStatus.parse(
+      (await start({ contact_email: "hervat@voorbeeldstad.example" })).data,
+    );
+    // The queue's checkpointed step as it replays a resumed run: by position, and only
+    // under the name recorded there. A finished step returns its record and does not run.
+    const recorded: { name: string; out: unknown }[] = [];
+    const replaying = () => {
+      let at = 0;
+      return async <T>(name: string, fn: () => Promise<T>): Promise<T> => {
+        const i = at++;
+        const done = recorded[i];
+        if (done) {
+          if (done.name !== name)
+            throw new Error(`Unexpected step ${name}: ${done.name} was recorded at ${i}`);
+          return done.out as T;
+        }
+        const out = await fn();
+        recorded[i] = { name, out };
+        return out;
+      };
+    };
+    await cutOffInExtract(status.id, replaying());
+    expect(recorded.map((r) => r.name)).toEqual(["fetch", "research", "author", "seed"]);
+    expect((await load(status.id))?.status).toBe("running");
+
+    const fetchedBefore = fetched.length;
+    await buildDemo(deps, status.id, 1, replaying());
+    expect(fetched.length).toBe(fetchedBefore);
+    const resumed = K.DemoStatus.parse(
+      (await call(w, "GET", `/api/v2/admin/accounts/demos/${status.id}`, "staff")).data,
+    );
+    expect(resumed.status).toBe("draft");
+    expect(resumed.steps.every((s) => s.status === "done")).toBe(true);
+  });
+
+  test("a build still running past its time limit shows as stopped; a retry goes on from that step", async () => {
+    const status = K.DemoStatus.parse(
+      (await start({ contact_email: "gestopt@voorbeeldstad.example" })).data,
+    );
+    await cutOffInExtract(status.id);
+    const read = async () =>
+      K.DemoStatus.parse(
+        (await call(w, "GET", `/api/v2/admin/accounts/demos/${status.id}`, "staff")).data,
+      );
+    const started = w.clock.now;
+    try {
+      // Within the limit it may still be building: nothing is touched, and no retry yet.
+      w.clock.now = new Date(started.getTime() + 29 * 60_000);
+      expect((await read()).status).toBe("running");
+      expect(
+        (await call(w, "POST", `/api/v2/admin/accounts/demos/${status.id}/retry`, "staff")).status,
+      ).toBe(409);
+
+      w.clock.now = new Date(started.getTime() + 32 * 60_000);
+      const stopped = await read();
+      expect(stopped.status).toBe("failed");
+      expect(stopped.steps.find((s) => s.name === "extract")).toMatchObject({
+        status: "failed",
+        error: BUILD_STOPPED,
+      });
+      expect(stopped.steps.slice(0, 4).every((s) => s.status === "done")).toBe(true);
+      expect(stopped.steps.find((s) => s.name === "review")?.status).toBe("pending");
+      const list = K.DemoList.parse(
+        (await call(w, "GET", "/api/v2/admin/accounts/demos", "staff")).data,
+      );
+      expect(list.demos.find((x) => x.id === status.id)?.status).toBe("failed");
+
+      w.jobs.jobs.length = 0;
+      const retried = K.DemoStatus.parse(
+        (await call(w, "POST", `/api/v2/admin/accounts/demos/${status.id}/retry`, "staff")).data,
+      );
+      expect(retried.status).toBe("queued");
+      expect(w.jobs.jobs[0]?.workflowId).toBe(`accounts.demo:${status.id}:2`);
+      const fetchedBefore = fetched.length;
+      await buildDemo(deps, status.id, 2);
+      expect(fetched.length).toBe(fetchedBefore);
+      expect((await read()).status).toBe("draft");
+    } finally {
+      w.clock.now = started;
+    }
+  });
+
+  test("a run that comes back after the build was marked as stopped, or retried, leaves the row alone", async () => {
+    const status = K.DemoStatus.parse(
+      (await start({ contact_email: "laat@voorbeeldstad.example" })).data,
+    );
+    // The popcorn read outlives the job's time limit and answers afterwards.
+    const reached = Promise.withResolvers<void>();
+    const answer = Promise.withResolvers<string>();
+    const slow: DemoBuildDeps = {
+      ...deps,
+      extract: () => {
+        reached.resolve();
+        return answer.promise;
+      },
+    };
+    const run = buildDemo(slow, status.id, 1);
+    await reached.promise;
+    const read = async () =>
+      K.DemoStatus.parse(
+        (await call(w, "GET", `/api/v2/admin/accounts/demos/${status.id}`, "staff")).data,
+      );
+    const started = w.clock.now;
+    try {
+      w.clock.now = new Date(started.getTime() + 32 * 60_000);
+      expect((await read()).status).toBe("failed");
+
+      // The late answer does not turn the stopped step into a finished one, and the run ends.
+      answer.resolve("ok");
+      await run;
+      const after = await read();
+      expect(after.status).toBe("failed");
+      expect(after.steps.find((s) => s.name === "extract")).toMatchObject({
+        status: "failed",
+        error: BUILD_STOPPED,
+      });
+      expect(after.steps.find((s) => s.name === "review")?.status).toBe("pending");
+
+      // Retried: the first attempt, resumed late by the queue, stands down.
+      const retried = K.DemoStatus.parse(
+        (await call(w, "POST", `/api/v2/admin/accounts/demos/${status.id}/retry`, "staff")).data,
+      );
+      expect(retried.status).toBe("queued");
+      const reads = extracted.length;
+      await buildDemo(deps, status.id, 1);
+      expect(extracted.length).toBe(reads);
+      expect((await read()).status).toBe("queued");
+
+      await buildDemo(deps, status.id, 2);
+      expect((await read()).status).toBe("draft");
+    } finally {
+      w.clock.now = started;
+    }
+  });
+
+  test("a run the queue resumes after the build was marked as stopped stands down", async () => {
+    const status = K.DemoStatus.parse(
+      (await start({ contact_email: "laat-hervat@voorbeeldstad.example" })).data,
+    );
+    await cutOffInExtract(status.id);
+    const read = async () =>
+      K.DemoStatus.parse(
+        (await call(w, "GET", `/api/v2/admin/accounts/demos/${status.id}`, "staff")).data,
+      );
+    const started = w.clock.now;
+    try {
+      w.clock.now = new Date(started.getTime() + 32 * 60_000);
+      expect((await read()).status).toBe("failed");
+
+      // The same attempt, replayed from the top: it leaves the stopped build and its Retry.
+      const reads = extracted.length;
+      await buildDemo(deps, status.id, 1);
+      expect(extracted.length).toBe(reads);
+      const after = await read();
+      expect(after.status).toBe("failed");
+      expect(after.steps.find((s) => s.name === "extract")).toMatchObject({
+        status: "failed",
+        error: BUILD_STOPPED,
+      });
+    } finally {
+      w.clock.now = started;
+    }
   });
 
   test("the list, and unknown demos", async () => {

@@ -17,7 +17,7 @@ type ConfirmModalProps = {
 	onCancel?: () => void;
 	title: string;
 	message: ReactNode;
-	/** A second paragraph under the message, such as the note someone wrote. */
+	/** A block under the message, such as the note someone wrote. It brings its own text. */
 	detail?: ReactNode;
 	confirmLabel?: ReactNode;
 	cancelLabel?: ReactNode;
@@ -63,7 +63,7 @@ export const ConfirmModal = ({
 			})}
 		>
 			<Text size="sm">{message}</Text>
-			{detail && <Text size="sm">{detail}</Text>}
+			{detail}
 			<Group gap="sm">
 				<Button
 					variant="filled"
