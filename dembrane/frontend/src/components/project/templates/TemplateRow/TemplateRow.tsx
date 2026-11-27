@@ -97,7 +97,11 @@ export const TemplateRow = ({
 		const inView =
 			left >= el.scrollLeft &&
 			left + card.offsetWidth <= el.scrollLeft + el.clientWidth;
-		if (!inView) el.scrollLeft = Math.max(0, left - 4);
+		// Never past the far end: a target the bar cannot reach leaves the browser holding a
+		// snap point it cannot reach either, and the next re-layout (a resize, a fold opening)
+		// snaps back and cuts the chosen card.
+		const far = el.scrollWidth - el.clientWidth;
+		if (!inView) el.scrollLeft = Math.min(far, Math.max(0, left - 4));
 		measure();
 	}, [chosenAt, cards.length, measure]);
 

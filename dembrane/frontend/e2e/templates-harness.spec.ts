@@ -284,6 +284,10 @@ for (const size of sizes)
 			);
 			await atRest();
 			await shot("04b-page-last-template-chosen");
+			// It stays in view through a re-layout (the full-page shot above resizes the page).
+			await expect(page.getByTestId("template-card-conference")).toBeInViewport(
+				{ ratio: 1 },
+			);
 			await page.getByTestId("template-card-resident_evening").click();
 			await page.getByTestId("template-setup-summary-toggle").click();
 			await expect(
