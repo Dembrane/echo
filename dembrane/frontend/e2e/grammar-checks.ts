@@ -435,6 +435,13 @@ export function grammarAudit(opts: AuditOptions): AuditResult {
 				// onto two lines has no corners to hold.
 				const row = box.getBoundingClientRect();
 				const first = kids.reduce((a, k) => (pos(k) < pos(a) ? k : a));
+				// A text-only Back has no box: its text holds the corner, and its padding
+				// sits outside the row (rules.css, "A text-only button has no box").
+				const firstLeft = (
+					first.matches('.mantine-Button-root[data-variant="subtle"]')
+						? (first.querySelector(".mantine-Button-inner") ?? first)
+						: first
+				).getBoundingClientRect().left;
 				const oneLine = kids.every(
 					(k) =>
 						Math.abs(
@@ -449,8 +456,7 @@ export function grammarAudit(opts: AuditOptions): AuditResult {
 							(row.right - Number.parseFloat(cs.paddingRight)),
 					) > 1 ||
 						Math.abs(
-							first.getBoundingClientRect().left -
-								(row.left + Number.parseFloat(cs.paddingLeft)),
+							firstLeft - (row.left + Number.parseFloat(cs.paddingLeft)),
 						) > 1)
 				)
 					fail(

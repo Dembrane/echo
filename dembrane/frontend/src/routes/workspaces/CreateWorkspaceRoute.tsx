@@ -313,11 +313,13 @@ export const CreateWorkspaceRoute = () => {
 			]);
 			setWorkspace(ws.id);
 			// A separately-billed (client) workspace lands on its billing tab to
-			// subscribe; an org-billed one goes straight to the workspace.
+			// subscribe. An org-billed one has no projects yet, so it lands on Create
+			// project: the first thing to do there (Jor, 27 Nov 2026). Cancel on that
+			// page goes to the workspace's empty overview.
 			if (billFor === "client") {
 				navigate(`/w/${ws.id}/settings/billing`);
 			} else {
-				navigate(`/w/${ws.id}/home`);
+				navigate(`/w/${ws.id}/projects/new`);
 			}
 		},
 	});

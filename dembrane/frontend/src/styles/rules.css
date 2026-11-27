@@ -850,6 +850,30 @@
   margin-inline-start: auto;
 }
 
+/* A text-only button has no box, so its text is what lines up. One that opens
+ * a row at the column's edge (a fold's toggle, Back in its corner) starts where
+ * the text around it starts: its padding moves outside the column, where the
+ * hover tint still reaches (Jor, 27 Nov 2026: "boxes in boxes" without a
+ * border break the page's left line). The stroke is the button's own
+ * transparent border. Back or Cancel leading a data-steps row
+ * takes it by itself; a fold's toggle carries app-flush. */
+:root
+  :is(
+    .app-flush,
+    [data-steps] > .mantine-Button-root[data-variant="subtle"]:first-child
+  ) {
+  margin-inline-start: calc(-1 * var(--button-padding-x) - var(--app-stroke));
+}
+:root
+  :is(
+    .app-flush,
+    [data-steps] > .mantine-Button-root[data-variant="subtle"]:first-child
+  )[data-with-left-section] {
+  margin-inline-start: calc(
+    -1 * var(--button-padding-x) / 1.5 - var(--app-stroke)
+  );
+}
+
 /* Radio: the dot grows from the centre (Mantine's default rises from below). */
 :root .mantine-Radio-icon {
   --radio-icon-transform: scale(0);

@@ -61,6 +61,7 @@ export const TemplateSetupSummary = ({
 				variant="subtle"
 				size="sm"
 				w="fit-content"
+				className="app-flush"
 				leftSection={
 					opened ? <CaretDownIcon size={16} /> : <CaretRightIcon size={16} />
 				}
@@ -72,12 +73,7 @@ export const TemplateSetupSummary = ({
 				<Trans>What this sets up</Trans>
 			</Button>
 			<Collapse in={opened}>
-				<Stack
-					gap="xs"
-					id={panelId}
-					pl="md"
-					data-testid="template-setup-summary-panel"
-				>
+				<Stack gap="xs" id={panelId} data-testid="template-setup-summary-panel">
 					<Row label={t`Verify`}>
 						{s.verify ? (
 							<>

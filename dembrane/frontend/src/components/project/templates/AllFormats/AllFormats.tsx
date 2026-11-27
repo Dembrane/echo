@@ -72,7 +72,7 @@ export const AllFormats = ({
 			testId="all-formats"
 		>
 			<SimpleGrid
-				cols={{ base: 1, md: 3, sm: 2 }}
+				cols={{ base: 1, lg: 4, md: 3, sm: 2 }}
 				spacing="sm"
 				data-testid="all-formats-grid"
 			>

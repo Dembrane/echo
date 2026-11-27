@@ -142,6 +142,7 @@ export const DigestEntry = ({
 				<Button
 					variant="subtle"
 					size="xs"
+					className="app-flush"
 					leftSection={
 						pasteOpen ? (
 							<CaretDownIcon size={16} aria-hidden />

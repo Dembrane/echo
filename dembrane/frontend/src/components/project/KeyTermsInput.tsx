@@ -21,6 +21,30 @@ const parseTerms = (value: string) =>
 		.map((term) => term.trim())
 		.filter(Boolean);
 
+/** What key terms do, said once: above the input, or behind the "i" beside its heading. */
+export const KeyTermsExplanation = () => (
+	<Stack gap="xs">
+		<Text size="sm">
+			<Trans>
+				Key terms tell transcription how to spell the names and words that
+				matter in this project.
+			</Trans>
+		</Text>
+		<Text size="sm">
+			<Trans>
+				Without them, a name or word the transcription model does not know often
+				comes out misspelt. Adding them now improves everything built on the
+				transcripts: summaries, chats, reports and the library.
+			</Trans>
+		</Text>
+		<Text size="sm">
+			<Trans>
+				Add the people, places, organisations and jargon you expect to hear.
+			</Trans>
+		</Text>
+	</Stack>
+);
+
 /**
  * Key terms are stored on the project as one comma-separated string
  * (default_conversation_transcript_prompt) and sent to transcription as
@@ -38,6 +62,7 @@ export const KeyTermsInput = ({
 	onChange,
 	autoFocus = false,
 	inputTestId = "key-terms-input",
+	explained = true,
 }: {
 	value: string;
 	onChange: (value: string) => void;
@@ -45,6 +70,8 @@ export const KeyTermsInput = ({
 	isDirty?: boolean;
 	autoFocus?: boolean;
 	inputTestId?: string;
+	/** False where the explanation sits behind an "i" beside the heading (the create page). */
+	explained?: boolean;
 }) => {
 	const [draft, setDraft] = useState("");
 	const inputRef = useFocusOnHash<HTMLInputElement>(KEY_TERMS_HASH);
@@ -63,26 +90,7 @@ export const KeyTermsInput = ({
 
 	return (
 		<Stack gap="sm">
-			<Stack gap="xs">
-				<Text size="sm">
-					<Trans>
-						Key terms tell transcription how to spell the names and words that
-						matter in this project.
-					</Trans>
-				</Text>
-				<Text size="sm">
-					<Trans>
-						Without them, a name or word the transcription model does not know
-						often comes out misspelt. Adding them now improves everything built
-						on the transcripts: summaries, chats, reports and the library.
-					</Trans>
-				</Text>
-				<Text size="sm">
-					<Trans>
-						Add the people, places, organisations and jargon you expect to hear.
-					</Trans>
-				</Text>
-			</Stack>
+			{explained && <KeyTermsExplanation />}
 			<TextInput
 				ref={inputRef}
 				autoFocus={autoFocus}

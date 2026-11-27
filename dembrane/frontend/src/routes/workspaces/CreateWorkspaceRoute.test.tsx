@@ -44,8 +44,10 @@ vi.mock("@/hooks/useWorkspace", () => ({
 	useWorkspace: () => ({ setWorkspace: vi.fn(), workspace: undefined }),
 }));
 
+const navigate = vi.fn();
+
 vi.mock("@/hooks/useI18nNavigate", () => ({
-	useI18nNavigate: () => vi.fn(),
+	useI18nNavigate: () => navigate,
 }));
 
 vi.mock("@/components/auth/hooks", () => ({
@@ -81,14 +83,20 @@ beforeAll(() => {
 
 beforeEach(() => {
 	capture.mockClear();
+	navigate.mockClear();
 	sessionStorage.clear();
 	// The organisation is on the free plan, which is what closes the two
 	// non-open options.
 	vi.stubGlobal(
 		"fetch",
-		vi.fn(async (input: RequestInfo | URL) => {
+		vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
 			const url = String(input);
-			const body = url.includes("/billing") ? { tier: "free" } : [];
+			const body =
+				init?.method === "POST"
+					? { id: "ws-new" }
+					: url.includes("/billing")
+						? { tier: "free" }
+						: [];
 			return new Response(JSON.stringify(body), {
 				headers: { "Content-Type": "application/json" },
 				status: 200,
@@ -185,4 +193,15 @@ it("still selects an option that is not blocked", async () => {
 	fireEvent.click(open);
 	expect(open.getAttribute("aria-pressed")).toBe("true");
 	expect(screen.queryByTestId("feature-gate-popover")).toBeNull();
+});
+
+it("lands on Create project after creating: a new workspace has no projects yet", async () => {
+	await openAccessStep();
+	// On to the last step, where Continue gives way to Create workspace.
+	while (screen.queryByRole("button", { name: "Continue" }))
+		fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+	fireEvent.click(screen.getByRole("button", { name: "Create workspace" }));
+	await waitFor(() =>
+		expect(navigate).toHaveBeenCalledWith("/w/ws-new/projects/new"),
+	);
 });

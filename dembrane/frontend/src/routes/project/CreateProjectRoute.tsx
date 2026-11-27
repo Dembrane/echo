@@ -20,6 +20,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { BeautifulLoading } from "@/components/common/BeautifulLoading";
 import { FlowProgress } from "@/components/common/FlowProgress/FlowProgress";
+import { FieldWithInfo, InfoTip } from "@/components/common/InfoTip";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import type { DigestFallback } from "@/components/project/digest/DigestConnected";
@@ -29,7 +30,10 @@ import {
 } from "@/components/project/digest/lazy";
 import type { DigestCreateBody } from "@/components/project/digest/review";
 import { useUpdateProjectByIdMutation } from "@/components/project/hooks";
-import { KeyTermsInput } from "@/components/project/KeyTermsInput";
+import {
+	KeyTermsExplanation,
+	KeyTermsInput,
+} from "@/components/project/KeyTermsInput";
 import { ProjectContextInput } from "@/components/project/ProjectContextInput";
 import { projectLanguageForLocale } from "@/components/project/projectLanguage";
 import { LazySessionBrief } from "@/components/project/setup-suggestions/lazy";
@@ -429,7 +433,8 @@ export const CreateProjectRoute = () => {
 	const templateLabel = templateName(template ?? "blank");
 
 	return (
-		<Container size="md" py="xl" px="lg">
+		// The container every page uses (the projects home, settings): one width, one gutter.
+		<Container size="xl" py="xl" px="lg">
 			<Stack gap="xl">
 				{/* The review after an upload shows its own progress, one part per screen. */}
 				{!digestActive && (
@@ -487,6 +492,7 @@ export const CreateProjectRoute = () => {
 									variant="subtle"
 									color="gray"
 									size="sm"
+									className="app-flush"
 									onClick={handleCancel}
 								>
 									<Trans>Cancel</Trans>
@@ -515,6 +521,7 @@ export const CreateProjectRoute = () => {
 								variant="subtle"
 								color="gray"
 								size="sm"
+								className="app-flush"
 								onClick={() => setScreen("start")}
 								data-testid="create-project-formats-back"
 							>
@@ -529,20 +536,27 @@ export const CreateProjectRoute = () => {
 						<Text size="sm" data-testid="create-project-chosen-template">
 							<Trans>Starting from: {templateLabel}</Trans>
 						</Text>
-						<TextInput
-							autoFocus
-							label={t`Project name`}
-							description={t`Name it after the topic, engagement, or question you're exploring.`}
-							placeholder={t`e.g. Climate Listening, Q1 Research`}
-							value={name}
-							onChange={(e) => setName(e.currentTarget.value)}
-							onKeyDown={(e) => {
-								if (e.key === "Enter" && canCreate && !submit.isPending) {
-									e.preventDefault();
-									submit.mutate();
-								}
-							}}
-						/>
+						<FieldWithInfo
+							htmlFor="create-project-name"
+							title={t`Project name`}
+							about={t`About the project name`}
+							info={t`Name it after the topic, engagement, or question you're exploring.`}
+							testId="create-project-name-info"
+						>
+							<TextInput
+								autoFocus
+								id="create-project-name"
+								placeholder={t`e.g. Climate Listening, Q1 Research`}
+								value={name}
+								onChange={(e) => setName(e.currentTarget.value)}
+								onKeyDown={(e) => {
+									if (e.key === "Enter" && canCreate && !submit.isPending) {
+										e.preventDefault();
+										submit.mutate();
+									}
+								}}
+							/>
+						</FieldWithInfo>
 
 						{/* One field: the context is saved with the project and is what
 							    "Suggest key terms" reads. Optional and never in the way: Create
@@ -587,6 +601,7 @@ export const CreateProjectRoute = () => {
 								variant="subtle"
 								size="sm"
 								w="fit-content"
+								className="app-flush"
 								leftSection={
 									moreOpened ? (
 										<CaretDownIcon size={16} />
@@ -608,13 +623,22 @@ export const CreateProjectRoute = () => {
 									data-testid="create-project-more-options"
 								>
 									<Stack gap="xs">
-										<Text size="md" component="h3" m={0}>
-											<Trans>Key terms</Trans>
-										</Text>
+										<Group gap={4} wrap="nowrap">
+											<Text size="md" component="h3" m={0}>
+												<Trans>Key terms</Trans>
+											</Text>
+											<InfoTip
+												label={t`About key terms`}
+												testId="create-project-key-terms-info"
+											>
+												<KeyTermsExplanation />
+											</InfoTip>
+										</Group>
 										<KeyTermsInput
 											value={keyTerms}
 											onChange={setKeyTerms}
 											inputTestId="create-project-key-terms-input"
+											explained={false}
 										/>
 									</Stack>
 
@@ -681,7 +705,9 @@ export const CreateProjectRoute = () => {
 										/>
 									) : null}
 
-									<Paper withBorder p="md">
+									{/* The rule above and below, and no inset: its rows start on the
+									    page's left line, as the fields and "What this sets up" do. */}
+									<Paper px={0} py="md">
 										<Stack gap="sm" data-testid="create-project-review">
 											<ReviewRow label={t`Template`}>{templateLabel}</ReviewRow>
 											<ReviewRow label={t`Name`}>
@@ -777,7 +803,7 @@ const ReviewRow = ({
 	children: ReactNode;
 }) => (
 	<Group gap="md" align="flex-start" wrap="nowrap">
-		<Text size="xs" c="dimmed" w={100} style={{ flexShrink: 0 }}>
+		<Text size="xs" c="dimmed" w={96} style={{ flexShrink: 0 }}>
 			{label}
 		</Text>
 		<Text
