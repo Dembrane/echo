@@ -1,34 +1,19 @@
-/* One bar of small cards the host scrolls: swipe, trackpad, the arrow buttons or the
- * keyboard. Nothing moves by itself. The next card peeks in at the edge to say there is
- * more. */
+/* One row of cards the host scrolls: swipe, trackpad, the arrow buttons or the keyboard.
+ * Nothing moves by itself. The next card peeks in at the edge to say there is more. */
 .row {
 	display: flex;
 	gap: var(--mantine-spacing-sm);
 	list-style: none;
-	/* The padding keeps a card's focus ring and chosen box from being clipped; the margin
-	 * takes it back, so the first card lines up with the heading and the fields. */
-	margin: 0 -4px;
+	margin: 0;
 	overflow-x: auto;
 	overscroll-behavior-x: contain;
 	padding: 4px 4px var(--mantine-spacing-sm);
-	position: relative;
 	scroll-padding-inline: 4px;
 	scroll-snap-type: x proximity;
 	scrollbar-width: thin;
 }
 .item {
 	display: flex;
-	flex: 0 0 160px;
+	flex: 0 0 min(264px, 78%);
 	scroll-snap-align: start;
-}
-/* On a phone two cards and a clear part of the third fit, so the bar says there is more. */
-@media (max-width: 640px) {
-	.item {
-		flex-basis: 148px;
-	}
-}
-/* The far end is a resting place too: without it the bar snaps back to the last card's
- * neighbour on any re-layout and cuts the last card (the chosen one, perhaps) in half. */
-.item:last-child {
-	scroll-snap-align: end;
 }

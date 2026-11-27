@@ -30,8 +30,8 @@ const activeFilters = (f: TemplateFilter): string[] => [
 ];
 
 /**
- * "All formats" (ECHO-1058), for a host who wants more than the bar on the create page: the
- * filters first, then Quick start and every template as a card. A filter shows only the formats
+ * "All formats" (ECHO-1058), for a host who skipped the upload and the row: the filters
+ * first, then Quick start and every template as a card. A filter shows only the formats
  * that match, or Quick start alone when none do (offeredCards). Pressing a card chooses it
  * and moves on. Under the grid, the quiet way out: upload recordings. Props in, callbacks
  * out.
@@ -72,7 +72,7 @@ export const AllFormats = ({
 			testId="all-formats"
 		>
 			<SimpleGrid
-				cols={{ base: 1, lg: 4, md: 3, sm: 2 }}
+				cols={{ base: 1, md: 3, sm: 2 }}
 				spacing="sm"
 				data-testid="all-formats-grid"
 			>

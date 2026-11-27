@@ -178,7 +178,7 @@ const tree = (client = new QueryClient(), url = "/w/w1/projects/new") => (
 
 const renderCreate = (url?: string) => render(tree(new QueryClient(), url));
 
-/** The two choices: a card in the bar (or the quiet link in all formats), then a name. */
+/** The two choices: a card in the row (or the quiet link in all formats), then a name. */
 const chooseTemplate = async (key: string) => {
 	if (key === "upload") {
 		fireEvent.click(await screen.findByTestId("template-row-see-all"));
@@ -204,7 +204,7 @@ describe("CreateProjectRoute role gating", () => {
 	])("%s: wizard shown %s", async (r, canCreate) => {
 		role.current = r;
 		renderCreate();
-		expect(!!screen.queryByTestId("create-project-form")).toBe(canCreate);
+		expect(!!screen.queryByTestId("create-project-start")).toBe(canCreate);
 		expect(!!screen.queryByTestId("create-project-not-allowed")).toBe(
 			!canCreate,
 		);
@@ -224,7 +224,7 @@ describe("CreateProjectRoute free project cap", () => {
 		allowance.data = projectsMeter(0, 1);
 		renderCreate();
 		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
-		expect(screen.getByTestId("create-project-form")).toBeTruthy();
+		expect(screen.getByTestId("create-project-start")).toBeTruthy();
 	});
 
 	it("does not fetch the allowance on a paid workspace", async () => {
@@ -295,18 +295,14 @@ describe("CreateProjectRoute free project cap", () => {
 	});
 });
 
-describe("CreateProjectRoute: a template and a name on one page", () => {
+describe("CreateProjectRoute: a template, then a name", () => {
 	it("creates with two choices: the template goes to the server, nothing else is written", async () => {
 		createMutate.mockResolvedValue({ id: "p1" });
 		renderCreate();
 		await chooseTemplate("resident_evening");
-		// The bar draws the chosen card; no line repeats it.
 		expect(
-			screen
-				.getByTestId("template-card-resident_evening")
-				.getAttribute("aria-pressed"),
-		).toBe("true");
-		expect(screen.queryByTestId("create-project-chosen-template")).toBeNull();
+			screen.getByTestId("create-project-chosen-template").textContent,
+		).toBe("Starting from: Table conversations");
 		nameIt("Town hall evening");
 		create();
 		await waitFor(() =>
@@ -335,73 +331,28 @@ describe("CreateProjectRoute: a template and a name on one page", () => {
 		});
 	});
 
-	it("is one page: the bar above the name, Quick start chosen, no steps and no Continue", async () => {
+	it("moves on as soon as a card is pressed: no Continue, a thin progress line", async () => {
 		renderCreate();
-		expect(screen.queryByRole("progressbar")).toBeNull();
-		expect(screen.queryByText("Continue")).toBeNull();
-		const bar = await screen.findByTestId("template-row");
-		const name = screen.getByLabelText("Project name");
 		expect(
-			bar.compareDocumentPosition(name) & Node.DOCUMENT_POSITION_FOLLOWING,
+			screen.getByRole("progressbar", { name: "Step 1 of 2" }),
 		).toBeTruthy();
-		const pressed = () =>
-			[
-				...screen
-					.getByTestId("template-row-list")
-					.querySelectorAll("button[aria-pressed=true]"),
-			].map((b) => b.getAttribute("data-testid"));
-		expect(pressed()).toEqual(["template-card-blank"]);
-		// A press chooses in place: the same page, the name still there.
-		fireEvent.click(screen.getByTestId("template-card-focus_group"));
-		expect(pressed()).toEqual(["template-card-focus_group"]);
-		expect(screen.getByLabelText("Project name")).toBe(name);
+		expect(screen.queryByText("Continue")).toBeNull();
+		fireEvent.click(await screen.findByTestId("template-card-focus_group"));
+		expect(screen.getByLabelText("Project name")).toBeTruthy();
+		expect(
+			screen.getByRole("progressbar", { name: "Step 2 of 2" }),
+		).toBeTruthy();
 	});
 
-	it("creates a plain project from the name alone: no template has to be pressed", async () => {
-		createMutate.mockResolvedValue({ id: "p9" });
+	it("Back on the name returns to the screen the card was pressed on", async () => {
 		renderCreate();
-		nameIt("First project");
-		create();
-		await waitFor(() => expect(createMutate).toHaveBeenCalled());
-		expect(createMutate.mock.calls[0]?.[0].templateKey).toBe("blank");
-	});
-
-	it("a card pressed in all templates returns to the page with it chosen and the name kept", async () => {
-		renderCreate();
-		nameIt("Toekomst");
 		fireEvent.click(await screen.findByTestId("template-row-see-all"));
-		expect(await screen.findByTestId("all-formats")).toBeTruthy();
-		expect(screen.queryByLabelText("Project name")).toBeNull();
 		fireEvent.click(await screen.findByTestId("template-card-futures"));
-		expect(
-			(screen.getByLabelText("Project name") as HTMLInputElement).value,
-		).toBe("Toekomst");
-		expect(
-			(await screen.findByTestId("template-card-futures")).getAttribute(
-				"aria-pressed",
-			),
-		).toBe("true");
-	});
-
-	it("Back in all templates returns to the page, the choice as it was", async () => {
-		renderCreate();
-		fireEvent.click(await screen.findByTestId("template-row-see-all"));
-		fireEvent.click(await screen.findByTestId("create-project-formats-back"));
-		expect(
-			(await screen.findByTestId("template-card-blank")).getAttribute(
-				"aria-pressed",
-			),
-		).toBe("true");
-	});
-
-	it("Cancel sits with Create at the end of the page and leaves for the projects", async () => {
-		renderCreate();
-		const cancel = screen.getByTestId("create-project-cancel");
-		expect(cancel.closest("[data-steps]")).toBe(
-			screen.getByTestId("create-project-submit").closest("[data-steps]"),
-		);
-		fireEvent.click(cancel);
-		expect(navigate).toHaveBeenCalledWith("/w/w1/home");
+		nameIt("Toekomst");
+		fireEvent.click(screen.getByTestId("create-project-name-back"));
+		expect(await screen.findByTestId("all-formats")).toBeTruthy();
+		fireEvent.click(screen.getByTestId("create-project-formats-back"));
+		expect(await screen.findByTestId("template-row")).toBeTruthy();
 	});
 
 	it("sends the filters a host used in all formats, and each filter change, without free text", async () => {
@@ -453,7 +404,7 @@ describe("CreateProjectRoute: a template and a name on one page", () => {
 		const steps = tracked.mock.calls
 			.filter(([event]) => event === "project_create_step_viewed")
 			.map(([, props]) => props.step);
-		expect(steps).toEqual(["name", "more_options"]);
+		expect(steps).toEqual(["template", "name", "more_options"]);
 	});
 
 	it("counts all formats as a step of its own", async () => {
@@ -463,10 +414,10 @@ describe("CreateProjectRoute: a template and a name on one page", () => {
 		const steps = tracked.mock.calls
 			.filter(([event]) => event === "project_create_step_viewed")
 			.map(([, props]) => props.step);
-		expect(steps).toEqual(["name", "formats", "name"]);
+		expect(steps).toEqual(["template", "formats", "name"]);
 	});
 
-	it("offers Quick start as the first card in the bar and in all formats", async () => {
+	it("offers Quick start as the first card in the row and in all formats", async () => {
 		renderCreate();
 		const first = (id: string) =>
 			screen
@@ -482,13 +433,13 @@ describe("CreateProjectRoute: a template and a name on one page", () => {
 		expect(screen.queryByTestId("template-picker-start-blank")).toBeNull();
 	});
 
-	it("makes a plain project from Quick start, named the same on the card and the review", async () => {
+	it("makes a plain project from Quick start, named the same on the card, the name and the review", async () => {
 		createMutate.mockResolvedValue({ id: "p2" });
 		renderCreate();
 		await chooseTemplate("blank");
 		expect(
-			screen.getByTestId("template-card-blank").getAttribute("aria-pressed"),
-		).toBe("true");
+			screen.getByTestId("create-project-chosen-template").textContent,
+		).toBe("Starting from: Quick start");
 		expect(screen.queryByTestId("template-setup-summary-toggle")).toBeNull();
 		fireEvent.click(screen.getByTestId("create-project-more-options-toggle"));
 		expect(screen.getByTestId("create-project-review").textContent).toContain(
@@ -512,36 +463,20 @@ describe("CreateProjectRoute: a template and a name on one page", () => {
 		);
 	});
 
-	it("arrives from a Quick start link with it chosen, without the wall under the cap", async () => {
+	it("arrives on the name step from a Quick start link, without the wall under the cap", async () => {
 		allowance.data = projectsMeter(0, 1);
 		renderCreate("/w/w1/projects/new?template=blank");
 		expect(screen.getByLabelText("Project name")).toBeTruthy();
 		expect(
-			(await screen.findByTestId("template-card-blank")).getAttribute(
-				"aria-pressed",
-			),
-		).toBe("true");
+			screen.getByTestId("create-project-chosen-template").textContent,
+		).toBe("Starting from: Quick start");
 		expect(screen.queryByTestId("upgrade-modal")).toBeNull();
-	});
-
-	it("arrives from a template link with that card chosen in the bar", async () => {
-		renderCreate("/w/w1/projects/new?template=world_cafe");
-		expect(
-			(await screen.findByTestId("template-card-world_cafe")).getAttribute(
-				"aria-pressed",
-			),
-		).toBe("true");
-		expect(screen.queryByTestId("create-project-chosen-template")).toBeNull();
 	});
 
 	it("lands on the upload page for existing recordings", async () => {
 		createMutate.mockResolvedValue({ id: "p3" });
 		renderCreate();
 		await chooseTemplate("upload");
-		// The bar has no card for it, so a line names it.
-		expect(
-			screen.getByTestId("create-project-chosen-template").textContent,
-		).toBe("Starting from: Recordings you already have");
 		nameIt("Archive");
 		create();
 		await waitFor(() =>
@@ -549,7 +484,7 @@ describe("CreateProjectRoute: a template and a name on one page", () => {
 		);
 	});
 
-	it("names an old key from a link in a line, as the bar has no card for it", async () => {
+	it("arrives on the name step with an old key linked, which still works", async () => {
 		renderCreate("/w/w1/projects/new?template=series");
 		expect(screen.getByLabelText("Project name")).toBeTruthy();
 		expect(
@@ -557,14 +492,10 @@ describe("CreateProjectRoute: a template and a name on one page", () => {
 		).toBe("Starting from: A series of sessions");
 	});
 
-	it("ignores an unknown linked template and starts from Quick start", async () => {
+	it("ignores an unknown linked template and starts at the picker", async () => {
 		renderCreate("/w/w1/projects/new?template=festival");
-		expect(
-			(await screen.findByTestId("template-card-blank")).getAttribute(
-				"aria-pressed",
-			),
-		).toBe("true");
-		expect(screen.queryByTestId("create-project-chosen-template")).toBeNull();
+		expect(screen.queryByLabelText("Project name")).toBeNull();
+		expect(screen.getByTestId("create-project-start")).toBeTruthy();
 	});
 
 	it.each([
@@ -793,30 +724,23 @@ describe("CreateProjectRoute: setup suggestions", () => {
 	});
 
 	describe("the context digest (ECHO-1055)", () => {
-		it("is not on the create page, which has the form's own drop area alone", async () => {
+		it("sits under the row, which steps aside with the progress line and Cancel while it is active", async () => {
 			renderCreate();
-			await screen.findByTestId("template-row");
-			expect(screen.queryByTestId("digest-stub")).toBeNull();
-			expect(screen.getByTestId("name-step-digest-stub")).toBeTruthy();
-		});
-
-		it("sits under all templates, which step aside with the title and Back while it is active", async () => {
-			renderCreate();
-			fireEvent.click(await screen.findByTestId("template-row-see-all"));
-			const list = await screen.findByTestId("all-formats");
+			const row = await screen.findByTestId("template-row");
 			const digest = screen.getByTestId("digest-stub");
-			// Templates first, the drop area under them, Back last.
+			// Templates first, the drop area under them, Cancel last.
 			expect(
-				list.compareDocumentPosition(digest) & Node.DOCUMENT_POSITION_FOLLOWING,
+				row.compareDocumentPosition(digest) & Node.DOCUMENT_POSITION_FOLLOWING,
 			).toBeTruthy();
-			const back = screen.getByTestId("create-project-formats-back");
+			const cancel = screen.getByRole("button", { name: "Cancel" });
 			expect(
-				digest.compareDocumentPosition(back) & Node.DOCUMENT_POSITION_FOLLOWING,
+				digest.compareDocumentPosition(cancel) &
+					Node.DOCUMENT_POSITION_FOLLOWING,
 			).toBeTruthy();
 			fireEvent.click(screen.getByText("digest active"));
-			expect(screen.queryByTestId("all-formats")).toBeNull();
-			expect(screen.queryByText("Create project")).toBeNull();
-			expect(screen.queryByTestId("create-project-formats-back")).toBeNull();
+			expect(screen.queryByTestId("template-row")).toBeNull();
+			expect(screen.queryByTestId("create-project-progress")).toBeNull();
+			expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
 			expect(screen.getByTestId("digest-stub")).toBeTruthy();
 		});
 
@@ -827,8 +751,7 @@ describe("CreateProjectRoute: setup suggestions", () => {
 				workspace_id: "w1",
 			});
 			renderCreate();
-			fireEvent.click(await screen.findByTestId("template-row-see-all"));
-			fireEvent.click(await screen.findByText("digest create"));
+			fireEvent.click(screen.getByText("digest create"));
 			await waitFor(() =>
 				expect(navigate).toHaveBeenCalledWith("/w/w1/projects/p7/home"),
 			);
@@ -846,10 +769,9 @@ describe("CreateProjectRoute: setup suggestions", () => {
 			});
 		});
 
-		it("a failed digest puts the text in the project context on the create page", async () => {
+		it("a failed digest puts the text in the project context for the name step", async () => {
 			renderCreate();
-			fireEvent.click(await screen.findByTestId("template-row-see-all"));
-			fireEvent.click(await screen.findByText("digest fallback"));
+			fireEvent.click(screen.getByText("digest fallback"));
 			await chooseTemplate("interviews");
 			expect(
 				(screen.getByLabelText("Project context") as HTMLTextAreaElement).value,
