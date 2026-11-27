@@ -966,6 +966,8 @@ export const UploadConversationDropzone = (
 								<Group gap="sm">
 									{!uploader.isSuccess && !uploader.isPending && (
 										<Button
+											variant="subtle"
+											color="gray"
 											onClick={() => {
 												setUploadStarted(false);
 											}}

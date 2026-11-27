@@ -108,15 +108,8 @@ export const AgentNoticeModal = () => {
 						connection at any time.
 					</Trans>
 				</Text>
-				<Group>
-					<Button
-						variant="filled"
-						onClick={() => accept.mutate()}
-						loading={accept.isPending}
-						data-testid="agent-notice-accept"
-					>
-						<Trans>I understand</Trans>
-					</Button>
+				{/* Back in the left corner, the pill in the right corner (rules.css). */}
+				<Group data-steps justify="space-between">
 					<Button
 						variant="subtle"
 						color="gray"
@@ -125,6 +118,14 @@ export const AgentNoticeModal = () => {
 						data-testid="agent-notice-back"
 					>
 						<Trans>Go back</Trans>
+					</Button>
+					<Button
+						variant="filled"
+						onClick={() => accept.mutate()}
+						loading={accept.isPending}
+						data-testid="agent-notice-accept"
+					>
+						<Trans>I understand</Trans>
 					</Button>
 				</Group>
 			</Stack>

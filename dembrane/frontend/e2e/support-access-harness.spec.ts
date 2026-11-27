@@ -60,7 +60,7 @@ const noSideScroll = async (page: Page) =>
 /** The customer's side: Home, the inbox and the request, with the given note and name. */
 async function answerCustomerApi(
 	page: Page,
-	opts: { message: string | null; workspaceName: string },
+	opts: { message: string | null; workspaceName: string; picture?: boolean },
 ) {
 	const requests = [
 		{
@@ -96,9 +96,10 @@ async function answerCustomerApi(
 			json: [
 				{
 					action: "NAVIGATE_WORKSPACE_SETTINGS",
-					actor_avatar: null,
-					actor_name: null,
-					actor_user_id: null,
+					// The staff member who asked, as the server sends them.
+					actor_avatar: opts.picture ? "avatar-robin" : null,
+					actor_name: "Robin de Vries",
+					actor_user_id: "staff-robin",
 					created_at: hoursAgo(2),
 					event_code: "SUPPORT_ACCESS_REQUESTED",
 					expires_at: null,
@@ -120,6 +121,13 @@ async function answerCustomerApi(
 					title: `dembrane staff requested access to ${opts.workspaceName}`,
 				},
 			],
+		}),
+	);
+	// A stand-in for an uploaded profile picture.
+	await page.route("**/assets/avatar-robin", (route) =>
+		route.fulfill({
+			body: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#c9d6c2"/><circle cx="32" cy="25" r="12" fill="#5b4636"/><path d="M8 64c2-16 12-24 24-24s22 8 24 24z" fill="#2f4f6f"/></svg>',
+			contentType: "image/svg+xml",
 		}),
 	);
 	await page.route("**/v2/me/notifications/unread-count", (route) =>
@@ -182,6 +190,13 @@ for (const size of sizes)
 
 			const cases = [
 				{ message: NOTE, name: "Neighbourhood panels", state: "note" },
+				// The note beside the staff member's own picture, where they have one.
+				{
+					message: NOTE,
+					name: "Neighbourhood panels",
+					picture: true,
+					state: "note-picture",
+				},
 				{ message: null, name: "Neighbourhood panels", state: "no-note" },
 				{ message: LONG_NOTE, name: LONG_WORKSPACE, state: "long" },
 			];
@@ -189,13 +204,21 @@ for (const size of sizes)
 				await page.unrouteAll({ behavior: "ignoreErrors" });
 				await answerCustomerApi(page, {
 					message: c.message,
+					picture: "picture" in c,
 					workspaceName: c.name,
 				});
 				await page.goto(harness(lang, "/o", c.name));
 				await expect(dialog.getByRole("dialog")).toBeVisible();
 				await expect(dialog).toContainText("Robin de Vries");
 				await expect(dialog).toContainText(c.name);
-				if (c.message) await expect(dialog).toContainText(c.message);
+				if (c.message)
+					await expect(
+						dialog.getByRole("group", {
+							name: nl
+								? /^Notitie van Robin de Vries/
+								: /^Note from Robin de Vries/,
+						}),
+					).toContainText(c.message);
 				await expect(
 					dialog.getByRole("button", { name: approve }),
 				).toBeVisible();
