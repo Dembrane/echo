@@ -631,7 +631,7 @@ export const CreateProjectRoute = () => {
 												label={t`About key terms`}
 												testId="create-project-key-terms-info"
 											>
-												<KeyTermsExplanation />
+												<KeyTermsExplanation inTip />
 											</InfoTip>
 										</Group>
 										<KeyTermsInput

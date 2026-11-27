@@ -26,7 +26,7 @@ export const LONG_CONTEXT_CHARS = 4000;
 export const ProjectContextInput = forwardRef<
 	HTMLTextAreaElement,
 	TextareaProps
->((props, forwardedRef) => {
+>(({ label, ...props }, forwardedRef) => {
 	const hashRef = useFocusOnHash<HTMLTextAreaElement>(PROJECT_CONTEXT_HASH);
 	const ref = useMergedRef(hashRef, forwardedRef);
 	const length = typeof props.value === "string" ? props.value.length : 0;
@@ -37,7 +37,8 @@ export const ProjectContextInput = forwardRef<
 		<Stack gap={4}>
 			<FieldWithInfo
 				htmlFor={id}
-				title={t`Project context`}
+				// Project settings passes its own label, which also says "unsaved".
+				title={label ?? t`Project context`}
 				about={t`About the project context`}
 				info={t`Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms.`}
 				testId="project-context-info"

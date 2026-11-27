@@ -1318,7 +1318,7 @@ msgstr "Over"
 msgid "About key terms"
 msgstr "Over kernbegrippen"
 
-#: src/components/project/ProjectContextInput.tsx:41
+#: src/components/project/ProjectContextInput.tsx:42
 msgid "About the project context"
 msgstr "Over de projectcontext"
 
@@ -1653,7 +1653,7 @@ msgstr "Tags toevoegen"
 #~ msgid "Add Tags"
 #~ msgstr "Trefwoorden toevoegen"
 
-#: src/components/project/KeyTermsInput.tsx:41
+#: src/components/project/KeyTermsInput.tsx:46
 msgid "Add the people, places, organisations and jargon you expect to hear."
 msgstr "Voeg de mensen, plaatsen, organisaties en vaktermen toe die je verwacht te horen."
 
@@ -5181,7 +5181,7 @@ msgstr "dembrane-startpagina"
 msgid "dembrane is not responsible for what a third party does with that content."
 msgstr "dembrane is niet verantwoordelijk voor wat een derde partij met die inhoud doet."
 
-#: src/components/project/ProjectContextInput.tsx:60
+#: src/components/project/ProjectContextInput.tsx:61
 msgid "dembrane reads the first 4,000 characters on every answer, so keep the essentials near the top: the people, the places and the question."
 msgstr "dembrane leest bij elk antwoord de eerste 4.000 tekens, dus zet de kern bovenaan: de mensen, de plekken en de vraag."
 
@@ -5889,7 +5889,7 @@ msgstr "Eindigt op {endDate}, gaat daarna over naar Free"
 msgid "English fallback"
 msgstr "Engelse terugvaloptie"
 
-#: src/components/project/KeyTermsInput.tsx:103
+#: src/components/project/KeyTermsInput.tsx:109
 msgid "Enter a key term or proper noun"
 msgstr "Voer een kernbegrip of eigennaam in"
 
@@ -8124,12 +8124,12 @@ msgstr "Houdt het niveau tot de datum hieronder en gaat daarna terug naar Free, 
 
 #: src/routes/project/CreateProjectRoute.tsx:628
 #: src/routes/project/CreateProjectRoute.tsx:722
-#: src/components/project/KeyTermsInput.tsx:97
+#: src/components/project/KeyTermsInput.tsx:103
 #: src/components/common/settingChange.tsx:26
 msgid "Key terms"
 msgstr "Kernbegrippen"
 
-#: src/components/project/KeyTermsInput.tsx:28
+#: src/components/project/KeyTermsInput.tsx:33
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Key terms tell transcription how to spell the names and words that matter in this project."
 msgstr "Kernbegrippen vertellen de transcriptie hoe de namen en woorden die in dit project belangrijk zijn geschreven worden."
@@ -11716,7 +11716,7 @@ msgstr "Presentatie bijwerken mislukt"
 msgid "Presentation updated"
 msgstr "Presentatie bijgewerkt"
 
-#: src/components/project/KeyTermsInput.tsx:98
+#: src/components/project/KeyTermsInput.tsx:104
 msgid "Press Enter to add. Separate several with commas."
 msgstr "Druk op Enter om toe te voegen. Scheid meerdere begrippen met komma's."
 
@@ -11863,7 +11863,7 @@ msgid "project chats"
 msgstr "projectchats"
 
 #: src/routes/project/CreateProjectRoute.tsx:717
-#: src/components/project/ProjectContextInput.tsx:40
+#: src/components/project/ProjectContextInput.tsx:41
 #: src/components/project/ProjectBasicEdit.tsx:144
 #: src/components/common/settingChange.tsx:15
 msgid "Project context"
@@ -12626,7 +12626,7 @@ msgstr "{0} verwijderen uit deze werkruimte? Ze verliezen toegang tot alle proje
 msgid "Remove {label} from the suggestions"
 msgstr "{label} uit de suggesties halen"
 
-#: src/components/project/KeyTermsInput.tsx:128
+#: src/components/project/KeyTermsInput.tsx:134
 msgid "Remove {term}"
 msgstr "{term} verwijderen"
 
@@ -13479,7 +13479,7 @@ msgstr "Opslaan..."
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr "Zeg het in je eigen woorden. Typ, of druk op opnemen en praat."
 
-#: src/components/project/ProjectContextInput.tsx:42
+#: src/components/project/ProjectContextInput.tsx:43
 msgid "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 msgstr "Vertel waar de sessie over gaat, wie er meedoen en waar; je kunt een agenda of uitnodiging plakken. dembrane gebruikt dit om chatantwoorden, reacties aan deelnemers en Popcorn bij jouw vraag te houden, en om kernbegrippen voor te stellen."
 
@@ -18276,7 +18276,7 @@ msgstr "Wat er verstuurd wordt"
 msgid "What is at stake here"
 msgstr "Wat hier op het spel staat"
 
-#: src/components/project/ProjectContextInput.tsx:46
+#: src/components/project/ProjectContextInput.tsx:47
 msgid "What is it about, who takes part and where? You can also paste the agenda or the invitation."
 msgstr "Waar gaat het over, wie doet er mee en waar is het? Je kunt ook de agenda of de uitnodiging plakken."
 
@@ -18559,7 +18559,7 @@ msgstr "Teruggetrokken uit de analyse."
 msgid "Within my organisation"
 msgstr "Binnen mijn organisatie"
 
-#: src/components/project/KeyTermsInput.tsx:34
+#: src/components/project/KeyTermsInput.tsx:39
 msgid "Without them, a name or word the transcription model does not know often comes out misspelt. Adding them now improves everything built on the transcripts: summaries, chats, reports and the library."
 msgstr "Zonder kernbegrippen wordt een naam of woord dat het transcriptiemodel niet kent vaak verkeerd gespeld. Als je ze nu toevoegt, wordt alles beter wat op de transcripten voortbouwt: samenvattingen, chats, rapporten en de bibliotheek."
 

@@ -1318,7 +1318,7 @@ msgstr "Údaje"
 msgid "About key terms"
 msgstr "O klíčových výrazech"
 
-#: src/components/project/ProjectContextInput.tsx:41
+#: src/components/project/ProjectContextInput.tsx:42
 msgid "About the project context"
 msgstr "O kontextu projektu"
 
@@ -1653,7 +1653,7 @@ msgstr "Přidat štítky"
 #~ msgid "Add Tags"
 #~ msgstr "Add Tags"
 
-#: src/components/project/KeyTermsInput.tsx:41
+#: src/components/project/KeyTermsInput.tsx:46
 msgid "Add the people, places, organisations and jargon you expect to hear."
 msgstr "Přidejte lidi, místa, organizace a žargon, které očekáváte, že uslyšíte."
 
@@ -5184,7 +5184,7 @@ msgstr "Domů na dembrane"
 msgid "dembrane is not responsible for what a third party does with that content."
 msgstr "dembrane neodpovídá za to, jak s tímto obsahem naloží třetí strana."
 
-#: src/components/project/ProjectContextInput.tsx:60
+#: src/components/project/ProjectContextInput.tsx:61
 msgid "dembrane reads the first 4,000 characters on every answer, so keep the essentials near the top: the people, the places and the question."
 msgstr "dembrane při každé odpovědi čte prvních 4 000 znaků, takže dej to podstatné nahoru: lidi, místa a otázku."
 
@@ -5892,7 +5892,7 @@ msgstr "Končí {endDate}, poté přejde na Free"
 msgid "English fallback"
 msgstr "Záložní angličtina"
 
-#: src/components/project/KeyTermsInput.tsx:103
+#: src/components/project/KeyTermsInput.tsx:109
 msgid "Enter a key term or proper noun"
 msgstr "Enter a key term or proper noun"
 
@@ -8127,12 +8127,12 @@ msgstr "Ponechá úroveň do data níže, poté se vrátí na Free, pokud si nep
 
 #: src/routes/project/CreateProjectRoute.tsx:628
 #: src/routes/project/CreateProjectRoute.tsx:722
-#: src/components/project/KeyTermsInput.tsx:97
+#: src/components/project/KeyTermsInput.tsx:103
 #: src/components/common/settingChange.tsx:26
 msgid "Key terms"
 msgstr "Klíčové výrazy"
 
-#: src/components/project/KeyTermsInput.tsx:28
+#: src/components/project/KeyTermsInput.tsx:33
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Key terms tell transcription how to spell the names and words that matter in this project."
 msgstr "Klíčové výrazy pomáhají přepisu správně zachytit jména a slova důležitá pro tento projekt."
@@ -11719,7 +11719,7 @@ msgstr "Aktualizace prezentace se nezdařila"
 msgid "Presentation updated"
 msgstr "Prezentace aktualizována"
 
-#: src/components/project/KeyTermsInput.tsx:98
+#: src/components/project/KeyTermsInput.tsx:104
 msgid "Press Enter to add. Separate several with commas."
 msgstr "Stisknutím klávesy Enter položku přidáte. Více položek oddělte čárkami."
 
@@ -11866,7 +11866,7 @@ msgid "project chats"
 msgstr "chaty projektu"
 
 #: src/routes/project/CreateProjectRoute.tsx:717
-#: src/components/project/ProjectContextInput.tsx:40
+#: src/components/project/ProjectContextInput.tsx:41
 #: src/components/project/ProjectBasicEdit.tsx:144
 #: src/components/common/settingChange.tsx:15
 msgid "Project context"
@@ -12629,7 +12629,7 @@ msgstr "Remove {0} from this workspace? They'll lose access to all projects insi
 msgid "Remove {label} from the suggestions"
 msgstr "Odebrat {label} z návrhů"
 
-#: src/components/project/KeyTermsInput.tsx:128
+#: src/components/project/KeyTermsInput.tsx:134
 msgid "Remove {term}"
 msgstr "Odebrat {term}"
 
@@ -13482,7 +13482,7 @@ msgstr "Saving..."
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr "Řekněte to vlastními slovy. Napište to, nebo stiskněte nahrávání a mluvte."
 
-#: src/components/project/ProjectContextInput.tsx:42
+#: src/components/project/ProjectContextInput.tsx:43
 msgid "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 msgstr "Napište, o čem setkání je, kdo se účastní a kde; můžete vložit program nebo pozvánku. dembrane podle toho drží odpovědi v chatu, odpovědi účastníkům a Popcorn u vaší otázky a navrhuje klíčové výrazy."
 
@@ -18281,7 +18281,7 @@ msgstr "Co se odešle"
 msgid "What is at stake here"
 msgstr "Co je tu v sázce"
 
-#: src/components/project/ProjectContextInput.tsx:46
+#: src/components/project/ProjectContextInput.tsx:47
 msgid "What is it about, who takes part and where? You can also paste the agenda or the invitation."
 msgstr "O čem to je, kdo se účastní a kde? Můžete také vložit program nebo pozvánku."
 
@@ -18564,7 +18564,7 @@ msgstr "Staženo z analýzy."
 msgid "Within my organisation"
 msgstr "V rámci mé organizace"
 
-#: src/components/project/KeyTermsInput.tsx:34
+#: src/components/project/KeyTermsInput.tsx:39
 msgid "Without them, a name or word the transcription model does not know often comes out misspelt. Adding them now improves everything built on the transcripts: summaries, chats, reports and the library."
 msgstr "Bez nich je neznámé jméno nebo slovo v přepisu často zkomolené. Když je přidáte teď, zlepšíte tím vše, co z přepisů vychází: shrnutí, chaty, zprávy i knihovnu."
 

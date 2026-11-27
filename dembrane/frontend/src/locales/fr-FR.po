@@ -1318,7 +1318,7 @@ msgstr "À propos"
 msgid "About key terms"
 msgstr "À propos des termes clés"
 
-#: src/components/project/ProjectContextInput.tsx:41
+#: src/components/project/ProjectContextInput.tsx:42
 msgid "About the project context"
 msgstr "À propos du contexte du projet"
 
@@ -1653,7 +1653,7 @@ msgstr "Ajouter des étiquettes"
 #~ msgid "Add Tags"
 #~ msgstr "Ajouter des étiquettes"
 
-#: src/components/project/KeyTermsInput.tsx:41
+#: src/components/project/KeyTermsInput.tsx:46
 msgid "Add the people, places, organisations and jargon you expect to hear."
 msgstr "Ajoutez les personnes, lieux, organisations et termes techniques que vous vous attendez à entendre."
 
@@ -5184,7 +5184,7 @@ msgstr "Accueil dembrane"
 msgid "dembrane is not responsible for what a third party does with that content."
 msgstr "dembrane n'est pas responsable de ce qu'un tiers fait de ce contenu."
 
-#: src/components/project/ProjectContextInput.tsx:60
+#: src/components/project/ProjectContextInput.tsx:61
 msgid "dembrane reads the first 4,000 characters on every answer, so keep the essentials near the top: the people, the places and the question."
 msgstr "dembrane lit les 4 000 premiers caractères à chaque réponse : mets l'essentiel en haut, les personnes, les lieux et la question."
 
@@ -5892,7 +5892,7 @@ msgstr "Prend fin le {endDate}, puis passe au forfait Free"
 msgid "English fallback"
 msgstr "Langue de secours : anglais"
 
-#: src/components/project/KeyTermsInput.tsx:103
+#: src/components/project/KeyTermsInput.tsx:109
 msgid "Enter a key term or proper noun"
 msgstr "Entrez un terme clé ou un nom propre"
 
@@ -8127,12 +8127,12 @@ msgstr "Conserve le forfait jusqu'à la date ci-dessous, puis repasse au forfait
 
 #: src/routes/project/CreateProjectRoute.tsx:628
 #: src/routes/project/CreateProjectRoute.tsx:722
-#: src/components/project/KeyTermsInput.tsx:97
+#: src/components/project/KeyTermsInput.tsx:103
 #: src/components/common/settingChange.tsx:26
 msgid "Key terms"
 msgstr "Termes clés"
 
-#: src/components/project/KeyTermsInput.tsx:28
+#: src/components/project/KeyTermsInput.tsx:33
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Key terms tell transcription how to spell the names and words that matter in this project."
 msgstr "Les termes clés indiquent à la transcription comment orthographier les noms et les mots importants de ce projet."
@@ -11719,7 +11719,7 @@ msgstr "Échec de la mise à jour de la présentation"
 msgid "Presentation updated"
 msgstr "Présentation mise à jour"
 
-#: src/components/project/KeyTermsInput.tsx:98
+#: src/components/project/KeyTermsInput.tsx:104
 msgid "Press Enter to add. Separate several with commas."
 msgstr "Appuyez sur Entrée pour ajouter. Séparez-en plusieurs par des virgules."
 
@@ -11866,7 +11866,7 @@ msgid "project chats"
 msgstr "discussions du projet"
 
 #: src/routes/project/CreateProjectRoute.tsx:717
-#: src/components/project/ProjectContextInput.tsx:40
+#: src/components/project/ProjectContextInput.tsx:41
 #: src/components/project/ProjectBasicEdit.tsx:144
 #: src/components/common/settingChange.tsx:15
 msgid "Project context"
@@ -12629,7 +12629,7 @@ msgstr "Retirer {0} de cet espace de travail ? Cette personne perdra l'accès à
 msgid "Remove {label} from the suggestions"
 msgstr "Retirer {label} des suggestions"
 
-#: src/components/project/KeyTermsInput.tsx:128
+#: src/components/project/KeyTermsInput.tsx:134
 msgid "Remove {term}"
 msgstr "Retirer {term}"
 
@@ -13482,7 +13482,7 @@ msgstr "Enregistrement..."
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr "Dites-le avec vos propres mots. Écrivez, ou appuyez sur enregistrer et parlez."
 
-#: src/components/project/ProjectContextInput.tsx:42
+#: src/components/project/ProjectContextInput.tsx:43
 msgid "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 msgstr "Dites de quoi parle la session, qui y participe et où ; vous pouvez coller un ordre du jour ou une invitation. dembrane s'en sert pour garder les réponses du chat, les réponses aux participants et Popcorn sur votre question, et pour suggérer des termes clés."
 
@@ -18280,7 +18280,7 @@ msgstr "Ce qui est envoyé"
 msgid "What is at stake here"
 msgstr "Ce qui est en jeu ici"
 
-#: src/components/project/ProjectContextInput.tsx:46
+#: src/components/project/ProjectContextInput.tsx:47
 msgid "What is it about, who takes part and where? You can also paste the agenda or the invitation."
 msgstr "De quoi s'agit-il, qui participe et où ? Vous pouvez aussi coller l'ordre du jour ou l'invitation."
 
@@ -18563,7 +18563,7 @@ msgstr "Retiré de l'analyse."
 msgid "Within my organisation"
 msgstr "Au sein de mon organisation"
 
-#: src/components/project/KeyTermsInput.tsx:34
+#: src/components/project/KeyTermsInput.tsx:39
 msgid "Without them, a name or word the transcription model does not know often comes out misspelt. Adding them now improves everything built on the transcripts: summaries, chats, reports and the library."
 msgstr "Sans eux, un nom ou un mot inconnu du modèle de transcription est souvent mal orthographié. Les ajouter maintenant améliore tout ce qui repose sur les transcriptions : résumés, discussions, rapports et bibliothèque."
 

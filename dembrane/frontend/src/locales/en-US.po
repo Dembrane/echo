@@ -1318,7 +1318,7 @@ msgstr "About"
 msgid "About key terms"
 msgstr "About key terms"
 
-#: src/components/project/ProjectContextInput.tsx:41
+#: src/components/project/ProjectContextInput.tsx:42
 msgid "About the project context"
 msgstr "About the project context"
 
@@ -1653,7 +1653,7 @@ msgstr "Add tags"
 #~ msgid "Add Tags"
 #~ msgstr "Add Tags"
 
-#: src/components/project/KeyTermsInput.tsx:41
+#: src/components/project/KeyTermsInput.tsx:46
 msgid "Add the people, places, organisations and jargon you expect to hear."
 msgstr "Add the people, places, organisations and jargon you expect to hear."
 
@@ -5184,7 +5184,7 @@ msgstr "dembrane home"
 msgid "dembrane is not responsible for what a third party does with that content."
 msgstr "dembrane is not responsible for what a third party does with that content."
 
-#: src/components/project/ProjectContextInput.tsx:60
+#: src/components/project/ProjectContextInput.tsx:61
 msgid "dembrane reads the first 4,000 characters on every answer, so keep the essentials near the top: the people, the places and the question."
 msgstr "dembrane reads the first 4,000 characters on every answer, so keep the essentials near the top: the people, the places and the question."
 
@@ -5892,7 +5892,7 @@ msgstr "Ends on {endDate}, then moves to Free"
 msgid "English fallback"
 msgstr "English fallback"
 
-#: src/components/project/KeyTermsInput.tsx:103
+#: src/components/project/KeyTermsInput.tsx:109
 msgid "Enter a key term or proper noun"
 msgstr "Enter a key term or proper noun"
 
@@ -8127,12 +8127,12 @@ msgstr "Keeps the tier until the date below, then reverts to Free unless they su
 
 #: src/routes/project/CreateProjectRoute.tsx:628
 #: src/routes/project/CreateProjectRoute.tsx:722
-#: src/components/project/KeyTermsInput.tsx:97
+#: src/components/project/KeyTermsInput.tsx:103
 #: src/components/common/settingChange.tsx:26
 msgid "Key terms"
 msgstr "Key terms"
 
-#: src/components/project/KeyTermsInput.tsx:28
+#: src/components/project/KeyTermsInput.tsx:33
 #: src/components/chat/ProjectUpdateSuggestionCard.tsx:68
 msgid "Key terms tell transcription how to spell the names and words that matter in this project."
 msgstr "Key terms tell transcription how to spell the names and words that matter in this project."
@@ -11719,7 +11719,7 @@ msgstr "Presentation update failed"
 msgid "Presentation updated"
 msgstr "Presentation updated"
 
-#: src/components/project/KeyTermsInput.tsx:98
+#: src/components/project/KeyTermsInput.tsx:104
 msgid "Press Enter to add. Separate several with commas."
 msgstr "Press Enter to add. Separate several with commas."
 
@@ -11866,7 +11866,7 @@ msgid "project chats"
 msgstr "project chats"
 
 #: src/routes/project/CreateProjectRoute.tsx:717
-#: src/components/project/ProjectContextInput.tsx:40
+#: src/components/project/ProjectContextInput.tsx:41
 #: src/components/project/ProjectBasicEdit.tsx:144
 #: src/components/common/settingChange.tsx:15
 msgid "Project context"
@@ -12629,7 +12629,7 @@ msgstr "Remove {0} from this workspace? They'll lose access to all projects insi
 msgid "Remove {label} from the suggestions"
 msgstr "Remove {label} from the suggestions"
 
-#: src/components/project/KeyTermsInput.tsx:128
+#: src/components/project/KeyTermsInput.tsx:134
 msgid "Remove {term}"
 msgstr "Remove {term}"
 
@@ -13482,7 +13482,7 @@ msgstr "Saving..."
 msgid "Say it in your own words. Type, or press record and talk."
 msgstr "Say it in your own words. Type, or press record and talk."
 
-#: src/components/project/ProjectContextInput.tsx:42
+#: src/components/project/ProjectContextInput.tsx:43
 msgid "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 msgstr "Say what the session is about, who takes part and where; you can paste an agenda or invitation. dembrane uses it to keep chat answers, replies to participants and Popcorn on your question, and to suggest key terms."
 
@@ -18281,7 +18281,7 @@ msgstr "What gets sent"
 msgid "What is at stake here"
 msgstr "What is at stake here"
 
-#: src/components/project/ProjectContextInput.tsx:46
+#: src/components/project/ProjectContextInput.tsx:47
 msgid "What is it about, who takes part and where? You can also paste the agenda or the invitation."
 msgstr "What is it about, who takes part and where? You can also paste the agenda or the invitation."
 
@@ -18564,7 +18564,7 @@ msgstr "Withdrawn from the analysis."
 msgid "Within my organisation"
 msgstr "Within my organisation"
 
-#: src/components/project/KeyTermsInput.tsx:34
+#: src/components/project/KeyTermsInput.tsx:39
 msgid "Without them, a name or word the transcription model does not know often comes out misspelt. Adding them now improves everything built on the transcripts: summaries, chats, reports and the library."
 msgstr "Without them, a name or word the transcription model does not know often comes out misspelt. Adding them now improves everything built on the transcripts: summaries, chats, reports and the library."
 

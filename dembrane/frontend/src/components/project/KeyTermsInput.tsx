@@ -22,28 +22,34 @@ const parseTerms = (value: string) =>
 		.filter(Boolean);
 
 /** What key terms do, said once: above the input, or behind the "i" beside its heading. */
-export const KeyTermsExplanation = () => (
-	<Stack gap="xs">
-		<Text size="sm">
-			<Trans>
-				Key terms tell transcription how to spell the names and words that
-				matter in this project.
-			</Trans>
-		</Text>
-		<Text size="sm">
-			<Trans>
-				Without them, a name or word the transcription model does not know often
-				comes out misspelt. Adding them now improves everything built on the
-				transcripts: summaries, chats, reports and the library.
-			</Trans>
-		</Text>
-		<Text size="sm">
-			<Trans>
-				Add the people, places, organisations and jargon you expect to hear.
-			</Trans>
-		</Text>
-	</Stack>
-);
+export const KeyTermsExplanation = ({ inTip = false }: { inTip?: boolean }) => {
+	// In an "i" tip the three lines take the tip's own type size and sit closer.
+	const line = inTip
+		? ({ component: "span", display: "block", inherit: true } as const)
+		: ({ size: "sm" } as const);
+	return (
+		<Stack gap={inTip ? 4 : "xs"} component={inTip ? "span" : "div"}>
+			<Text {...line}>
+				<Trans>
+					Key terms tell transcription how to spell the names and words that
+					matter in this project.
+				</Trans>
+			</Text>
+			<Text {...line}>
+				<Trans>
+					Without them, a name or word the transcription model does not know
+					often comes out misspelt. Adding them now improves everything built on
+					the transcripts: summaries, chats, reports and the library.
+				</Trans>
+			</Text>
+			<Text {...line}>
+				<Trans>
+					Add the people, places, organisations and jargon you expect to hear.
+				</Trans>
+			</Text>
+		</Stack>
+	);
+};
 
 /**
  * Key terms are stored on the project as one comma-separated string
