@@ -5,7 +5,9 @@ import type { Signed } from "@dembrane/http";
 import type { Completer } from "@dembrane/llm";
 import { withPayer } from "@dembrane/observability";
 import { defaultSettings, demoIdentity, freshState, type Json, seedDemo } from "@dembrane/popcorn";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
+import type { z } from "zod";
+import type { DemoStatusName } from "../contract";
 import { type AccountsDeps, isStaffEmail } from "../deps";
 import { emit } from "../events";
 import type { Language, OfferItem, OfferTemplate } from "../offer";
@@ -144,16 +146,19 @@ async function load(d: AccountsDeps, id: string): Promise<Row> {
   return row;
 }
 
+/** A run's claim on the row: its attempt, and the statuses it may write from. */
+type Own = { attempt: number; from?: z.infer<typeof DemoStatusName>[] };
+
 /**
  * Writes the demo's row and says whether it did. A run passes `own`: it only writes while
- * the row is still on its attempt, and with `running` only while the build has not been
- * marked as stopped (`settle` in service.ts).
+ * the row is still on its attempt and, with `from`, in one of those statuses, so never once
+ * the build was marked as stopped (`settle` in service.ts).
  */
 async function save(
   d: AccountsDeps,
   id: string,
   patch: Partial<typeof schema.account_demo.$inferInsert>,
-  own?: { attempt: number; running?: boolean },
+  own?: Own,
 ): Promise<boolean> {
   const rows = await d.db
     .update(schema.account_demo)
@@ -162,7 +167,7 @@ async function save(
       and(
         eq(schema.account_demo.id, id),
         own ? eq(schema.account_demo.attempt, own.attempt) : undefined,
-        own?.running ? eq(schema.account_demo.status, "running") : undefined,
+        own?.from ? inArray(schema.account_demo.status, own.from) : undefined,
       ),
     )
     .returning({ id: schema.account_demo.id });
@@ -194,10 +199,10 @@ async function twice<T>(fn: () => Promise<T>): Promise<T> {
  * one last time and shows as stopped, with its Retry; that is why WORKFLOW_VERSION, which
  * would stop every kind of run in flight from resuming, stays as it is.
  *
- * A run only writes to the row of its own attempt, and its steps only while the build is
- * still "running". A run that comes back late (resumed after a long wait, or one step
- * that outlived the job's time limit) finds the build marked as stopped or retried, and
- * stands down without touching what the newer attempt wrote.
+ * A run only writes to the row of its own attempt: it starts from "queued" (or "running",
+ * resumed), and its steps write only while the build is still "running". A run that comes
+ * back late (resumed after a long wait, or one step that outlived the job's time limit)
+ * finds the build marked as stopped or retried, and stands down without touching it.
  */
 export async function buildDemo(
   d: DemoBuildDeps,
@@ -209,8 +214,9 @@ export async function buildDemo(
   if (row.status === "published" || row.status === "draft") return;
   if (row.attempt !== attempt) return;
   const input = row.input as DemoInput;
-  if (!(await save(d, demoId, { status: "running" }, { attempt }))) return;
-  const mine = { attempt, running: true };
+  const starting: Own = { attempt, from: ["queued", "running"] };
+  if (!(await save(d, demoId, { status: "running" }, starting))) return;
+  const mine: Own = { attempt, from: ["running"] };
   const write = async (patch: Partial<typeof schema.account_demo.$inferInsert>) => {
     if (!(await save(d, demoId, patch, mine))) throw new Superseded();
   };

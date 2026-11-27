@@ -3560,7 +3560,7 @@ msgstr "Перевірено {checkedAgo}. Нічого нового з часу
 msgid "Checking live conversations"
 msgstr "Перевірка активних розмов"
 
-#: src/routes/auth/VerifyEmail.tsx:96
+#: src/routes/auth/VerifyEmail.tsx:103
 msgid "Checking your session."
 msgstr "Перевіряємо вашу сесію."
 
@@ -5787,11 +5787,11 @@ msgstr "Надіслати код на пошту"
 msgid "Email me a sign-in code instead"
 msgstr "Надіслати код для входу на пошту"
 
-#: src/routes/auth/VerifyEmail.tsx:76
+#: src/routes/auth/VerifyEmail.tsx:83
 msgid "Email verification"
 msgstr "Підтвердження електронної пошти"
 
-#: src/routes/auth/VerifyEmail.tsx:28
+#: src/routes/auth/VerifyEmail.tsx:30
 msgid "Email verification | dembrane"
 msgstr "Підтвердження електронної пошти | dembrane"
 
@@ -7066,8 +7066,8 @@ msgstr "Перейти до чатів"
 msgid "Go to conversations"
 msgstr "Перейти до розмов"
 
-#: src/routes/auth/VerifyEmail.tsx:115
-#: src/routes/auth/VerifyEmail.tsx:170
+#: src/routes/auth/VerifyEmail.tsx:122
+#: src/routes/auth/VerifyEmail.tsx:177
 msgid "Go to dashboard"
 msgstr "Перейти до панелі керування"
 
@@ -7860,7 +7860,7 @@ msgstr "It looks like we couldn't load this outcome. This might be a temporary i
 msgid "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 msgstr "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 
-#: src/routes/auth/VerifyEmail.tsx:155
+#: src/routes/auth/VerifyEmail.tsx:162
 msgid "It may have already been used or expired. If your email is verified, log in to continue."
 msgstr "Посилання вже використано або його термін минув. Якщо вашу електронну пошту підтверджено, увійдіть, щоб продовжити."
 
@@ -7868,7 +7868,7 @@ msgstr "Посилання вже використано або його тер�
 msgid "It may have been deleted."
 msgstr "Можливо, її видалили."
 
-#: src/routes/auth/VerifyEmail.tsx:150
+#: src/routes/auth/VerifyEmail.tsx:157
 msgid "It may have expired. You are still signed in to your own account here."
 msgstr "Можливо, термін дії посилання минув. Ви й далі ввійшли тут у власний обліковий запис."
 
@@ -8680,7 +8680,7 @@ msgid "Locked to match the invite. To use a different address, ask the admin to 
 msgstr "Зафіксовано відповідно до запрошення. Щоб використати іншу адресу, попросіть адміністратора надіслати запрошення повторно."
 
 #: src/routes/invite/AcceptInviteRoute.tsx:285
-#: src/routes/auth/VerifyEmail.tsx:180
+#: src/routes/auth/VerifyEmail.tsx:187
 #: src/routes/auth/Login.tsx:584
 #: src/routes/auth/Login.tsx:688
 msgid "Log in"
@@ -14674,7 +14674,7 @@ msgstr "Щось пішло не так під час транскрибуван
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 
-#: src/routes/auth/VerifyEmail.tsx:81
+#: src/routes/auth/VerifyEmail.tsx:88
 msgid "Something went wrong. Please open the link from your email again, or <0>start over</0>."
 msgstr "Щось пішло не так. Будь ласка, відкрийте посилання з листа знову або <0>почніть спочатку</0>."
 
@@ -15609,7 +15609,7 @@ msgstr "Не вдалося завантажити чернетку"
 msgid "The edge budget must be a whole number above zero, so {applied} applies."
 msgstr "Ліміт зв'язків має бути цілим числом більше нуля, тому застосовано {applied}."
 
-#: src/routes/auth/VerifyEmail.tsx:104
+#: src/routes/auth/VerifyEmail.tsx:111
 msgid "The email address this link was sent to is verified. You are still signed in to your own account here."
 msgstr "Електронну адресу, на яку надіслано це посилання, підтверджено. Ви й далі ввійшли тут у власний обліковий запис."
 
@@ -16293,7 +16293,7 @@ msgstr "Це вам недоступно"
 #~ msgid "This link has already been used. You're signed in and ready to go."
 #~ msgstr "Це посилання вже використано. Ви увійшли та готові до роботи."
 
-#: src/routes/auth/VerifyEmail.tsx:146
+#: src/routes/auth/VerifyEmail.tsx:153
 msgid "This link is no longer valid"
 msgstr "Це посилання більше не дійсне"
 
@@ -17045,7 +17045,7 @@ msgstr "Пробні та безкоштовні облікові записи, 
 msgid "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 
-#: src/routes/auth/VerifyEmail.tsx:183
+#: src/routes/auth/VerifyEmail.tsx:190
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Не вдається увійти? Напишіть на support@dembrane.com."
 
@@ -17851,7 +17851,7 @@ msgstr "Перевіряйте результати й уточнюйте від
 msgid "Verifying"
 msgstr "Перевірка"
 
-#: src/routes/auth/VerifyEmail.tsx:124
+#: src/routes/auth/VerifyEmail.tsx:131
 msgid "Verifying your email address."
 msgstr "Перевіряємо вашу адресу електронної пошти."
 
@@ -19221,7 +19221,7 @@ msgstr "Вашу електронну пошту ще не підтвердже�
 msgid "Your email is verified. Log in to continue."
 msgstr "Вашу електронну пошту підтверджено. Увійдіть, щоб продовжити."
 
-#: src/routes/auth/VerifyEmail.tsx:131
+#: src/routes/auth/VerifyEmail.tsx:138
 msgid "Your email is verified. Taking you to the login page."
 msgstr "Вашу електронну пошту підтверджено. Переходимо на сторінку входу."
 

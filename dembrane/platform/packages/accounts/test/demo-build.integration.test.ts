@@ -530,8 +530,8 @@ run("demos made in echo", () => {
       await w.db
         .update(schema.account_demo)
         .set({
-          status: "failed",
-          // As the retry leaves it: the row is on the attempt the run below is.
+          // As Retry leaves it: queued, on the attempt the run below is.
+          status: "queued",
           attempt: 2,
           steps: {
             ...steps,
@@ -1526,6 +1526,35 @@ run("demos made in echo", () => {
 
       await buildDemo(deps, status.id, 2);
       expect((await read()).status).toBe("draft");
+    } finally {
+      w.clock.now = started;
+    }
+  });
+
+  test("a run the queue resumes after the build was marked as stopped stands down", async () => {
+    const status = K.DemoStatus.parse(
+      (await start({ contact_email: "laat-hervat@voorbeeldstad.example" })).data,
+    );
+    await cutOffInExtract(status.id);
+    const read = async () =>
+      K.DemoStatus.parse(
+        (await call(w, "GET", `/api/v2/admin/accounts/demos/${status.id}`, "staff")).data,
+      );
+    const started = w.clock.now;
+    try {
+      w.clock.now = new Date(started.getTime() + 32 * 60_000);
+      expect((await read()).status).toBe("failed");
+
+      // The same attempt, replayed from the top: it leaves the stopped build and its Retry.
+      const reads = extracted.length;
+      await buildDemo(deps, status.id, 1);
+      expect(extracted.length).toBe(reads);
+      const after = await read();
+      expect(after.status).toBe("failed");
+      expect(after.steps.find((s) => s.name === "extract")).toMatchObject({
+        status: "failed",
+        error: BUILD_STOPPED,
+      });
     } finally {
       w.clock.now = started;
     }

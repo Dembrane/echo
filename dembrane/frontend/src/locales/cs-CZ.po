@@ -3560,7 +3560,7 @@ msgstr "Zkontrolováno {checkedAgo}. Od vašeho posledního rozhovoru nic novéh
 msgid "Checking live conversations"
 msgstr "Kontrola probíhajících rozhovorů"
 
-#: src/routes/auth/VerifyEmail.tsx:96
+#: src/routes/auth/VerifyEmail.tsx:103
 msgid "Checking your session."
 msgstr "Checking your session."
 
@@ -5787,11 +5787,11 @@ msgstr "Poslat kód e-mailem"
 msgid "Email me a sign-in code instead"
 msgstr "Poslat přihlašovací kód raději e-mailem"
 
-#: src/routes/auth/VerifyEmail.tsx:76
+#: src/routes/auth/VerifyEmail.tsx:83
 msgid "Email verification"
 msgstr "Email verification"
 
-#: src/routes/auth/VerifyEmail.tsx:28
+#: src/routes/auth/VerifyEmail.tsx:30
 msgid "Email verification | dembrane"
 msgstr "Email verification | dembrane"
 
@@ -7066,8 +7066,8 @@ msgstr "Přejít na chaty"
 msgid "Go to conversations"
 msgstr "Přejít na rozhovory"
 
-#: src/routes/auth/VerifyEmail.tsx:115
-#: src/routes/auth/VerifyEmail.tsx:170
+#: src/routes/auth/VerifyEmail.tsx:122
+#: src/routes/auth/VerifyEmail.tsx:177
 msgid "Go to dashboard"
 msgstr "Go to dashboard"
 
@@ -7860,7 +7860,7 @@ msgstr "It looks like we couldn't load this outcome. This might be a temporary i
 msgid "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 msgstr "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 
-#: src/routes/auth/VerifyEmail.tsx:155
+#: src/routes/auth/VerifyEmail.tsx:162
 msgid "It may have already been used or expired. If your email is verified, log in to continue."
 msgstr "It may have already been used or expired. If your email is verified, log in to continue."
 
@@ -7868,7 +7868,7 @@ msgstr "It may have already been used or expired. If your email is verified, log
 msgid "It may have been deleted."
 msgstr "Možná byl smazán."
 
-#: src/routes/auth/VerifyEmail.tsx:150
+#: src/routes/auth/VerifyEmail.tsx:157
 msgid "It may have expired. You are still signed in to your own account here."
 msgstr "Jeho platnost mohla vypršet. Zde jste stále přihlášeni ke svému vlastnímu účtu."
 
@@ -8680,7 +8680,7 @@ msgid "Locked to match the invite. To use a different address, ask the admin to 
 msgstr "Locked to match the invite. To use a different address, ask the admin to re-invite that email."
 
 #: src/routes/invite/AcceptInviteRoute.tsx:285
-#: src/routes/auth/VerifyEmail.tsx:180
+#: src/routes/auth/VerifyEmail.tsx:187
 #: src/routes/auth/Login.tsx:584
 #: src/routes/auth/Login.tsx:688
 msgid "Log in"
@@ -14674,7 +14674,7 @@ msgstr "Při přepisu došlo k chybě. Zkuste to znovu."
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 
-#: src/routes/auth/VerifyEmail.tsx:81
+#: src/routes/auth/VerifyEmail.tsx:88
 msgid "Something went wrong. Please open the link from your email again, or <0>start over</0>."
 msgstr "Something went wrong. Please open the link from your email again, or <0>start over</0>."
 
@@ -15609,7 +15609,7 @@ msgstr "Koncept se nepodařilo načíst"
 msgid "The edge budget must be a whole number above zero, so {applied} applies."
 msgstr "Rozpočet hran musí být celé číslo větší než nula, proto platí {applied}."
 
-#: src/routes/auth/VerifyEmail.tsx:104
+#: src/routes/auth/VerifyEmail.tsx:111
 msgid "The email address this link was sent to is verified. You are still signed in to your own account here."
 msgstr "E-mailová adresa, na kterou byl tento odkaz odeslán, je ověřena. Zde jste stále přihlášeni ke svému vlastnímu účtu."
 
@@ -16292,7 +16292,7 @@ msgstr "This isn't available to you"
 #~ msgid "This link has already been used. You're signed in and ready to go."
 #~ msgstr "This link has already been used. You're signed in and ready to go."
 
-#: src/routes/auth/VerifyEmail.tsx:146
+#: src/routes/auth/VerifyEmail.tsx:153
 msgid "This link is no longer valid"
 msgstr "This link is no longer valid"
 
@@ -17044,7 +17044,7 @@ msgstr "Zkušební a bezplatné účty, nezapočítané do celkového počtu pla
 msgid "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgstr "Trigger automated workflows in tools like Zapier, Make, or n8n"
 
-#: src/routes/auth/VerifyEmail.tsx:183
+#: src/routes/auth/VerifyEmail.tsx:190
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Trouble logging in? Contact support@dembrane.com."
 
@@ -17850,7 +17850,7 @@ msgstr "Ověřuj výsledky a zpřesňuj odpovědi"
 msgid "Verifying"
 msgstr "Ověřování"
 
-#: src/routes/auth/VerifyEmail.tsx:124
+#: src/routes/auth/VerifyEmail.tsx:131
 msgid "Verifying your email address."
 msgstr "Verifying your email address."
 
@@ -19219,7 +19219,7 @@ msgstr "Váš e-mail ještě není ověřený. Zkontrolujte schránku a kliknět
 msgid "Your email is verified. Log in to continue."
 msgstr "Your email is verified. Log in to continue."
 
-#: src/routes/auth/VerifyEmail.tsx:131
+#: src/routes/auth/VerifyEmail.tsx:138
 msgid "Your email is verified. Taking you to the login page."
 msgstr "Your email is verified. Taking you to the login page."
 

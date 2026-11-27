@@ -3560,7 +3560,7 @@ msgstr "Zuletzt geprüft {checkedAgo}. Nichts Neues seit deinem letzten Gespräc
 msgid "Checking live conversations"
 msgstr "Laufende Gespräche werden geprüft"
 
-#: src/routes/auth/VerifyEmail.tsx:96
+#: src/routes/auth/VerifyEmail.tsx:103
 msgid "Checking your session."
 msgstr "Deine Sitzung wird überprüft."
 
@@ -5787,11 +5787,11 @@ msgstr "Code per E-Mail senden"
 msgid "Email me a sign-in code instead"
 msgstr "Stattdessen Anmeldecode per E-Mail senden"
 
-#: src/routes/auth/VerifyEmail.tsx:76
+#: src/routes/auth/VerifyEmail.tsx:83
 msgid "Email verification"
 msgstr "E-Mail-Bestätigung"
 
-#: src/routes/auth/VerifyEmail.tsx:28
+#: src/routes/auth/VerifyEmail.tsx:30
 msgid "Email verification | dembrane"
 msgstr "E-Mail-Bestätigung | dembrane"
 
@@ -7066,8 +7066,8 @@ msgstr "Zu den Chats"
 msgid "Go to conversations"
 msgstr "Zu den Gesprächen"
 
-#: src/routes/auth/VerifyEmail.tsx:115
-#: src/routes/auth/VerifyEmail.tsx:170
+#: src/routes/auth/VerifyEmail.tsx:122
+#: src/routes/auth/VerifyEmail.tsx:177
 msgid "Go to dashboard"
 msgstr "Zum Dashboard"
 
@@ -7860,7 +7860,7 @@ msgstr "Wir konnten dieses Ergebnis nicht laden. Dies könnte ein vorübergehend
 msgid "It looks like you don't have a report for this project yet. Generate one to get an overview of your conversations."
 msgstr "Es sieht so aus, als hättest du noch keinen Bericht für dieses Projekt. Erstelle einen, um eine Übersicht deiner Gespräche zu erhalten."
 
-#: src/routes/auth/VerifyEmail.tsx:155
+#: src/routes/auth/VerifyEmail.tsx:162
 msgid "It may have already been used or expired. If your email is verified, log in to continue."
 msgstr "Er wurde möglicherweise bereits verwendet oder ist abgelaufen. Wenn deine E-Mail-Adresse bestätigt ist, melde dich an, um fortzufahren."
 
@@ -7868,7 +7868,7 @@ msgstr "Er wurde möglicherweise bereits verwendet oder ist abgelaufen. Wenn dei
 msgid "It may have been deleted."
 msgstr "Möglicherweise wurde es gelöscht."
 
-#: src/routes/auth/VerifyEmail.tsx:150
+#: src/routes/auth/VerifyEmail.tsx:157
 msgid "It may have expired. You are still signed in to your own account here."
 msgstr "Er ist möglicherweise abgelaufen. Du bist hier weiterhin mit deinem eigenen Konto angemeldet."
 
@@ -8680,7 +8680,7 @@ msgid "Locked to match the invite. To use a different address, ask the admin to 
 msgstr "Gesperrt, um mit der Einladung übereinzustimmen. Um eine andere Adresse zu verwenden, bitte den Administrator um eine neue Einladung an diese E-Mail-Adresse."
 
 #: src/routes/invite/AcceptInviteRoute.tsx:285
-#: src/routes/auth/VerifyEmail.tsx:180
+#: src/routes/auth/VerifyEmail.tsx:187
 #: src/routes/auth/Login.tsx:584
 #: src/routes/auth/Login.tsx:688
 msgid "Log in"
@@ -14674,7 +14674,7 @@ msgstr "Beim Transkribieren ist etwas schiefgelaufen. Bitte versuche es erneut."
 msgid "Something went wrong with the conversation. Please try refreshing the page or contact support if the issue persists"
 msgstr "Beim Gespräch ist ein Fehler aufgetreten. Bitte versuche es erneut oder wende dich an den Support, wenn das Problem weiterhin besteht"
 
-#: src/routes/auth/VerifyEmail.tsx:81
+#: src/routes/auth/VerifyEmail.tsx:88
 msgid "Something went wrong. Please open the link from your email again, or <0>start over</0>."
 msgstr "Etwas ist schiefgelaufen. Bitte öffne den Link aus deiner E-Mail erneut oder <0>beginne von vorn</0>."
 
@@ -15609,7 +15609,7 @@ msgstr "Der Entwurf konnte nicht geladen werden"
 msgid "The edge budget must be a whole number above zero, so {applied} applies."
 msgstr "Das Edge-Budget muss eine ganze Zahl größer als null sein, daher gilt {applied}."
 
-#: src/routes/auth/VerifyEmail.tsx:104
+#: src/routes/auth/VerifyEmail.tsx:111
 msgid "The email address this link was sent to is verified. You are still signed in to your own account here."
 msgstr "Die E-Mail-Adresse, an die dieser Link gesendet wurde, ist bestätigt. Du bist hier weiterhin mit deinem eigenen Konto angemeldet."
 
@@ -16293,7 +16293,7 @@ msgstr "Dies ist für dich nicht verfügbar"
 #~ msgid "This link has already been used. You're signed in and ready to go."
 #~ msgstr "Dieser Link wurde bereits verwendet. Du bist angemeldet und startklar."
 
-#: src/routes/auth/VerifyEmail.tsx:146
+#: src/routes/auth/VerifyEmail.tsx:153
 msgid "This link is no longer valid"
 msgstr "Dieser Link ist nicht mehr gültig"
 
@@ -17043,7 +17043,7 @@ msgstr "Test- und Gratis-Konten, nicht in der Gesamtzahl der zahlenden Konten en
 msgid "Trigger automated workflows in tools like Zapier, Make, or n8n"
 msgstr "Automatisierte Workflows in Tools wie Zapier, Make oder n8n auslösen"
 
-#: src/routes/auth/VerifyEmail.tsx:183
+#: src/routes/auth/VerifyEmail.tsx:190
 msgid "Trouble logging in? Contact support@dembrane.com."
 msgstr "Probleme bei der Anmeldung? Wende dich an support@dembrane.com."
 
@@ -17849,7 +17849,7 @@ msgstr "Ergebnisse prüfen und Antworten verfeinern"
 msgid "Verifying"
 msgstr "Wird verifiziert"
 
-#: src/routes/auth/VerifyEmail.tsx:124
+#: src/routes/auth/VerifyEmail.tsx:131
 msgid "Verifying your email address."
 msgstr "Deine E-Mail-Adresse wird überprüft."
 
@@ -19219,7 +19219,7 @@ msgstr "Deine E-Mail-Adresse ist noch nicht bestätigt. Bitte prüfe deinen Post
 msgid "Your email is verified. Log in to continue."
 msgstr "Deine E-Mail-Adresse ist bestätigt. Melde dich an, um fortzufahren."
 
-#: src/routes/auth/VerifyEmail.tsx:131
+#: src/routes/auth/VerifyEmail.tsx:138
 msgid "Your email is verified. Taking you to the login page."
 msgstr "Deine E-Mail-Adresse ist bestätigt. Du wirst zur Anmeldeseite weitergeleitet."
 
