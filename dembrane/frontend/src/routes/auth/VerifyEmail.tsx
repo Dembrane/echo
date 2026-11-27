@@ -18,8 +18,11 @@ import { I18nLink } from "@/components/common/i18nLink";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 
 // Email link target: /verify-email?token=...
-// First click verifies; later clicks short-circuit on auth state or
-// Directus's INVALID_TOKEN. 15s mutation timeout prevents the original
+// The token names the address it verifies, so the call is made whoever is
+// signed in: a link opened in a browser where someone else is signed in still
+// verifies its own address, and the session stays as it is. A link clicked a
+// second time answers as verified until it expires; an expired or broken one
+// fails, signed in or not. 15s mutation timeout prevents the original
 // infinite-loading bug.
 export const VerifyEmailRoute = () => {
 	useDocumentTitle(t`Email verification | dembrane`);
@@ -28,26 +31,27 @@ export const VerifyEmailRoute = () => {
 	const navigate = useI18nNavigate();
 	const { isAuthenticated, loading: authLoading } = useAuthenticated();
 
-	// doRedirect=false — we route ourselves so login vs dashboard is
+	// doRedirect=false: we route ourselves so login vs dashboard is
 	// decided in one place.
 	const verifyMutation = useVerifyMutation(false);
 
 	const ranRef = useRef(false);
 
 	useEffect(() => {
-		// Wait for the session check first — firing before we know auth
-		// state was the cause of the infinite-loading race. Authenticated
-		// users skip the call entirely (token is stale → misleading error).
+		// Wait for the session check first: firing before we know auth
+		// state was the cause of the infinite-loading race.
 		if (authLoading) return;
 		if (!token) return;
 		if (ranRef.current) return;
-		if (isAuthenticated) return;
 
 		ranRef.current = true;
 		verifyMutation.mutate(
 			{ token },
 			{
 				onSuccess: () => {
+					// Someone signed in stays where they are: the login page is not
+					// their next step.
+					if (isAuthenticated) return;
 					setTimeout(() => navigate("/login?verified=1"), 1500);
 				},
 			},
@@ -55,14 +59,13 @@ export const VerifyEmailRoute = () => {
 	}, [authLoading, isAuthenticated, token, verifyMutation, navigate]);
 
 	const missingToken = !token;
-	const showAlreadyVerified = !missingToken && !authLoading && isAuthenticated;
+	const signedIn = !authLoading && isAuthenticated;
 	const showVerifying =
-		!missingToken &&
-		!authLoading &&
-		!isAuthenticated &&
-		verifyMutation.isPending;
-	const showSuccess = !missingToken && verifyMutation.isSuccess;
-	const showError = !missingToken && verifyMutation.isError;
+		!missingToken && !authLoading && verifyMutation.isPending;
+	const showSuccess = !missingToken && !signedIn && verifyMutation.isSuccess;
+	const showVerifiedSignedIn =
+		!missingToken && signedIn && verifyMutation.isSuccess;
+	const showError = !missingToken && !authLoading && verifyMutation.isError;
 	const showSessionLoading = !missingToken && authLoading;
 
 	return (
@@ -95,23 +98,20 @@ export const VerifyEmailRoute = () => {
 						</Group>
 					)}
 
-					{/* Authenticated → token already did its job; skip the call. */}
-					{showAlreadyVerified && (
-						<Stack gap="sm">
-							<Alert color="blue" variant="light">
-								<Stack gap={4}>
-									<Text size="sm">
-										<Trans>Your email is already verified</Trans>
-									</Text>
-									<Text size="xs">
-										<Trans>
-											This link has already been used. You're signed in and
-											ready to go.
-										</Trans>
-									</Text>
-								</Stack>
-							</Alert>
-							<Button variant="filled" size="md" onClick={() => navigate("/o")}>
+					{showVerifiedSignedIn && (
+						<Stack gap="xl">
+							<Text size="sm" c="dimmed">
+								<Trans>
+									The email address this link was sent to is verified. You are
+									still signed in to your own account here.
+								</Trans>
+							</Text>
+							<Button
+								variant="filled"
+								size="md"
+								onClick={() => navigate("/o")}
+								fullWidth
+							>
 								<Trans>Go to dashboard</Trans>
 							</Button>
 						</Stack>
@@ -134,8 +134,10 @@ export const VerifyEmailRoute = () => {
 						</Text>
 					)}
 
-					{/* Failure → most people are actually already verified; Log in
-					    is the realistic action, and login offers a resend if not. */}
+					{/* Failure: signed out, most people are actually already verified, so
+					    Log in is the realistic action, and login offers a resend if not.
+					    Signed in, the link may be someone else's: nothing is claimed about
+					    whose address is verified. */}
 					{showError && (
 						<Stack gap="xl">
 							<Alert color="yellow" variant="light">
@@ -144,28 +146,46 @@ export const VerifyEmailRoute = () => {
 										<Trans>This link is no longer valid</Trans>
 									</Text>
 									<Text size="xs">
-										<Trans>
-											It may have already been used or expired. If your email is
-											verified, log in to continue.
-										</Trans>
+										{signedIn ? (
+											<Trans>
+												It may have expired. You are still signed in to your own
+												account here.
+											</Trans>
+										) : (
+											<Trans>
+												It may have already been used or expired. If your email
+												is verified, log in to continue.
+											</Trans>
+										)}
 									</Text>
 								</Stack>
 							</Alert>
-							<Stack gap="lg">
+							{signedIn ? (
 								<Button
 									variant="filled"
 									size="md"
-									onClick={() => navigate("/login")}
+									onClick={() => navigate("/o")}
 									fullWidth
 								>
-									<Trans>Log in</Trans>
+									<Trans>Go to dashboard</Trans>
 								</Button>
-								<Text size="xs" c="dimmed">
-									<Trans>
-										Trouble logging in? Contact support@dembrane.com.
-									</Trans>
-								</Text>
-							</Stack>
+							) : (
+								<Stack gap="lg">
+									<Button
+										variant="filled"
+										size="md"
+										onClick={() => navigate("/login")}
+										fullWidth
+									>
+										<Trans>Log in</Trans>
+									</Button>
+									<Text size="xs" c="dimmed">
+										<Trans>
+											Trouble logging in? Contact support@dembrane.com.
+										</Trans>
+									</Text>
+								</Stack>
+							)}
 						</Stack>
 					)}
 				</Stack>

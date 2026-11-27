@@ -804,6 +804,8 @@ run("a demo placed in an organisation the contact already works in", () => {
         .update(schema.account_demo)
         .set({
           status: "failed",
+          // As the retry leaves it: the row is on the attempt the run below is.
+          attempt: 2,
           steps: {
             ...steps,
             seed: { ...steps.seed, status: "failed" },

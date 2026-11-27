@@ -26,9 +26,11 @@ export const VerifyArtefactError = ({
 					issue. You can try reloading or go back to select a different topic.
 				</Trans>
 			</Text>
-			{/* A row of steps: Back on the left, the pill on the right (rules.css). */}
-			<Group data-steps gap="sm">
+			{/* Back in the left corner, the pill in the right corner (rules.css). */}
+			<Group data-steps justify="space-between" gap="sm">
 				<Button
+					variant="subtle"
+					color="gray"
 					size="md"
 					leftSection={<ArrowLeftIcon size={20} />}
 					onClick={onGoBack}

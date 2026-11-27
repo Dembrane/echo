@@ -100,7 +100,7 @@ msgid "{0} signed on {1}. The signed copy is in your documents."
 msgstr "{0} podepsáno dne {1}. Podepsaná kopie je ve vašich dokumentech."
 
 #. placeholder {0}: personLine(before)
-#: src/features/accounts/staff/CustomerSigner.tsx:311
+#: src/features/accounts/staff/CustomerSigner.tsx:312
 msgid "{0} signs it now."
 msgstr "Nyní podepisuje {0}."
 
@@ -576,7 +576,7 @@ msgstr "Najednou"
 msgid "At signing, they tick"
 msgstr "Při podpisu zaškrtnou"
 
-#: src/features/accounts/staff/CustomerSigner.tsx:301
+#: src/features/accounts/staff/CustomerSigner.tsx:294
 #: src/features/accounts/signing/SignatureCapture.tsx:233
 #: src/features/accounts/signing/SignRoute.tsx:1113
 #: src/features/accounts/customer/WhoSigns.tsx:519
@@ -697,7 +697,7 @@ msgstr "Může upravovat"
 
 #: src/features/accounts/staff/SendOfferModals.tsx:83
 #: src/features/accounts/staff/EmailCustomerModal.tsx:134
-#: src/features/accounts/staff/CustomerSigner.tsx:331
+#: src/features/accounts/staff/CustomerSigner.tsx:332
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:266
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:329
 #: src/features/accounts/customer/WhoSigns.tsx:517
@@ -736,7 +736,7 @@ msgstr "Upravit koncept"
 msgid "Change what {first} does"
 msgstr "Změnit, co dělá {first}"
 
-#: src/features/accounts/staff/CustomerSigner.tsx:294
+#: src/features/accounts/staff/CustomerSigner.tsx:302
 msgid "Change who signs"
 msgstr "Změnit, kdo podepisuje"
 
@@ -1944,7 +1944,7 @@ msgstr "Jméno v oslovení"
 #~ msgstr "Název portálu nebo odkaz na něj"
 
 #: src/features/accounts/staff/CustomerSigner.tsx:173
-#: src/features/accounts/staff/CustomerSigner.tsx:328
+#: src/features/accounts/staff/CustomerSigner.tsx:329
 msgid "Name the signer"
 msgstr "Určit podepisujícího"
 
@@ -3710,7 +3710,7 @@ msgstr "Tato osoba může nabídku podepsat"
 msgid "They chose"
 msgstr "Vybrali si"
 
-#: src/features/accounts/staff/CustomerSigner.tsx:319
+#: src/features/accounts/staff/CustomerSigner.tsx:320
 msgid "They get an email with a link to sign, and log in with a code sent to that address."
 msgstr "Tato osoba dostane e-mail s odkazem k podpisu a přihlásí se kódem zaslaným na tuto adresu."
 
