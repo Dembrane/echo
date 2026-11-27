@@ -83,6 +83,8 @@ run("dead worker recovery", () => {
     });
     const status = async (id: string) =>
       (await sql`select status from dbos.workflow_status where workflow_uuid = ${id}`)[0]?.status;
+    // A job's "finished" trace line is its handler's last; DBOS records the outcome after.
+    const settled = async (id: string) => !["ENQUEUED", "PENDING"].includes(await status(id));
     const counts = () =>
       sql`select workflow_id, queue_name, lost, set_aside_at is not null as set_aside
           from dbos_workflow_lost_worker order by workflow_id`;
@@ -100,7 +102,12 @@ run("dead worker recovery", () => {
 
       const b = spawn("worker-b", { HANG_JOBS: "stuck" });
       procs.push(b);
-      await until(() => has("worker-b second start stuck") && has("worker-b finished beside"));
+      await until(
+        async () =>
+          has("worker-b second start stuck") &&
+          has("worker-b finished beside") &&
+          (await settled("beside")),
+      );
       b.kill(9);
 
       const c = spawn("worker-c", { HANG_JOBS: "stuck" });
@@ -123,6 +130,7 @@ run("dead worker recovery", () => {
       await dbos.resumeWorkflow("stuck", { queueName: kept?.queue_name });
       await until(() => has("worker-d finished stuck"));
       await until(async () => (await counts()).length === 0);
+      await until(() => settled("stuck"));
       expect(await status("stuck")).toBe("SUCCESS");
       expect(traceLines().filter((l) => l.endsWith("first stuck"))).toEqual([
         "worker-a first stuck",
