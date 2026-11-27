@@ -324,3 +324,48 @@ it("hands back the refusal behind a used-up AI budget", async () => {
 	act(() => result.current.dismissError());
 	expect(result.current.errorCause).toBeNull();
 });
+
+// The browser's microphone prompt can stay open for a long time; whatever the person did
+// meanwhile wins over the answer that comes back.
+const heldMicrophone = () => {
+	let grant: (stream: MediaStream) => void = () => {};
+	const stopped = vi.fn();
+	const stream = {
+		getTracks: () => [{ stop: stopped }],
+	} as unknown as MediaStream;
+	getUserMedia.mockImplementation(
+		() =>
+			new Promise<MediaStream>((resolve) => {
+				grant = resolve;
+			}),
+	);
+	return { grant: () => grant(stream), stopped };
+};
+
+it("a recording cancelled while the microphone prompt is open never starts", async () => {
+	const mic = heldMicrophone();
+	const { result } = renderVoice();
+	act(() => result.current.start());
+	await waitFor(() => expect(result.current.isStarting).toBe(true));
+	act(() => result.current.cancel());
+	expect(result.current.isStarting).toBe(false);
+	await act(async () => {
+		mic.grant();
+	});
+	expect(mic.stopped).toHaveBeenCalled();
+	expect(FakeMediaRecorder.instances).toHaveLength(0);
+	expect(result.current.status).toBe("idle");
+});
+
+it("a microphone granted after the field unmounted is handed back at once", async () => {
+	const mic = heldMicrophone();
+	const { result, unmount } = renderVoice();
+	act(() => result.current.start());
+	await waitFor(() => expect(getUserMedia).toHaveBeenCalled());
+	unmount();
+	await act(async () => {
+		mic.grant();
+	});
+	expect(mic.stopped).toHaveBeenCalled();
+	expect(FakeMediaRecorder.instances).toHaveLength(0);
+});

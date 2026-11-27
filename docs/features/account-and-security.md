@@ -28,9 +28,22 @@ verification email". You can ask for a new one every 60 seconds.
 > Were you invited? Register with the address the invite was sent to. An invite works only
 > for that address. See [invites & access](./invites-and-access.md).
 
-The first time you sign in, dembrane asks a few questions about how you plan to use it. You
-can skip them. If nobody invited you, you first name your organisation and can invite your
-team.
+The first time you sign in, dembrane asks a few questions about how you plan to use it. If
+nobody invited you, you first name your organisation and can invite your team. Then "About
+you" asks, one screen at a time:
+
+1. Whether you plan to use dembrane in health, education, recruitment, critical
+   infrastructure management, law enforcement or justice contexts. After a yes, whether you
+   have completed a training.
+2. What you plan to use dembrane for: within your organisation, with external clients, or
+   both.
+3. "What problem are you trying to solve with dembrane?" Type your answer, or choose
+   "Voice", speak and choose "Stop". Your words appear in the box as text you can read and
+   change before you choose "Done". The recording itself is not kept. Up to 5000
+   characters.
+
+You can skip them. "Skip" on the last screen keeps the answers you already gave. The
+dembrane team reads your answers so it can help you get started.
 
 ## Sign in
 

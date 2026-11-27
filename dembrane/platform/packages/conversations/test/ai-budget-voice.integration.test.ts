@@ -140,9 +140,12 @@ run("AI budget: voice input", () => {
     return (await usedThisPeriod(d.db, a)).audio_seconds;
   }
 
-  async function voice(as: string, form: Record<string, string>) {
+  async function voice(as: string, form: Record<string, string>, bytes = 3) {
     const fd = new FormData();
-    fd.append("file", new File([new Uint8Array([1, 2, 3])], "note.webm", { type: "audio/webm" }));
+    fd.append(
+      "file",
+      new File([new Uint8Array(bytes).fill(1)], "note.webm", { type: "audio/webm" }),
+    );
     for (const [k, v] of Object.entries(form)) fd.append(k, v);
     const before = transcriber.calls.length;
     const res = await app.request("/api/stateless/transcribe", {
@@ -301,6 +304,140 @@ run("AI budget: voice input", () => {
     expect(await voice(nobody, { purpose: "pricing_intake" })).toMatchObject({
       status: 403,
       code: "access.not_onboarded",
+      transcribed: 0,
+    });
+  });
+
+  test("onboarding with no project and no workspace transcribes for someone with no workspace", async () => {
+    // An invited person may have no workspace of their own yet.
+    const nobody = await person();
+    expect(await voice(nobody, { purpose: "onboarding" })).toMatchObject({
+      status: 200,
+      transcribed: 1,
+      payer: { internal: "voice_without_project" },
+    });
+  });
+
+  test("onboarding from a free workspace at zero still transcribes and spends nothing", async () => {
+    const { ws, as } = await account();
+    await spend(ws);
+    const r = await voice(as, { purpose: "onboarding" });
+    expect({ ...r, used: await audioUsed(ws) }).toMatchObject({
+      status: 200,
+      transcribed: 1,
+      payer: { internal: "voice_without_project" },
+      used: 0,
+    });
+  });
+
+  test("onboarding is rate limited per person, 20 notes a day", async () => {
+    const as = await person();
+    const real = limiter;
+    let clock = new Date("2026-11-26T09:00:00Z");
+    limiter = new RateLimiter(new MemoryRateCounter(), () => clock);
+    try {
+      for (let i = 0; i < 20; i++)
+        expect((await voice(as, { purpose: "onboarding" })).status).toBe(200);
+      // Still refused an hour later: the window is a day.
+      clock = new Date("2026-11-26T10:30:00Z");
+      expect(await voice(as, { purpose: "onboarding" })).toMatchObject({
+        status: 429,
+        code: "rate_limit.exceeded",
+        transcribed: 0,
+      });
+      // Its own counter: another person is not held back.
+      expect((await voice(await person(), { purpose: "onboarding" })).status).toBe(200);
+      // A day after the first note the person may record again.
+      clock = new Date("2026-11-27T09:00:01Z");
+      expect((await voice(as, { purpose: "onboarding" })).status).toBe(200);
+    } finally {
+      limiter = real;
+    }
+  });
+
+  test("onboarding is checked under its own limit name, with a day-long window", async () => {
+    const as = await person();
+    const checked: string[] = [];
+    const real = limiter;
+    limiter = {
+      async check(limit: Limit, identifier: string) {
+        checked.push(`${limit.name}:${limit.capacity}/${limit.windowSeconds}:${identifier}`);
+      },
+    } as unknown as RateLimiter;
+    try {
+      expect((await voice(as, { purpose: "onboarding" })).status).toBe(200);
+      expect(checked).toEqual([
+        `onboarding_transcription:20/86400:${people.get(as)?.directusUserId}`,
+      ]);
+    } finally {
+      limiter = real;
+    }
+  });
+
+  test("onboarding ignores a project, a workspace and both prompts sent with it", async () => {
+    const { ws, p, as } = await account();
+    await spend(ws);
+    const before = transcriber.calls.length;
+    const r = await voice(as, {
+      purpose: "onboarding",
+      project_id: p,
+      workspace_id: ws,
+      prompt_override: "Say something else",
+      custom_guidance_prompt: "Guide it",
+    });
+    expect({ ...r, used: await audioUsed(ws) }).toMatchObject({
+      status: 200,
+      transcribed: 1,
+      // Nobody pays: not the project, not the workspace at zero budget.
+      payer: { internal: "voice_without_project" },
+      used: 0,
+    });
+    const call = transcriber.calls.at(before);
+    expect(call?.promptOverride ?? null).toBeNull();
+    expect(call?.customGuidancePrompt ?? null).toBeNull();
+  });
+
+  test("onboarding ignores a project the caller cannot see, rather than refusing it", async () => {
+    const { p } = await account();
+    const stranger = await person();
+    expect(await voice(stranger, { purpose: "onboarding", project_id: p })).toMatchObject({
+      status: 200,
+      transcribed: 1,
+      payer: { internal: "voice_without_project" },
+    });
+  });
+
+  test("onboarding ignores audio_file_uri: the uploaded note is what is transcribed", async () => {
+    const as = await person();
+    const before = transcriber.calls.length;
+    const r = await voice(as, {
+      purpose: "onboarding",
+      audio_file_uri: "https://elsewhere.test/a.mp3",
+    });
+    expect(r).toMatchObject({ status: 200, transcribed: 1 });
+    expect(transcriber.calls.at(before)?.audio.byteLength).toBe(3);
+  });
+
+  test("onboarding refuses a file over 20 MB with 413", async () => {
+    const as = await person();
+    expect(await voice(as, { purpose: "onboarding" }, 20 * 1024 * 1024 + 1)).toMatchObject({
+      status: 413,
+      code: "upload.too_large",
+      transcribed: 0,
+    });
+    // Exactly 20 MB still goes through.
+    expect((await voice(as, { purpose: "onboarding" }, 20 * 1024 * 1024)).status).toBe(200);
+  });
+
+  test("issue reports keep the 100 MB ceiling", async () => {
+    const as = await person();
+    expect((await voice(as, { purpose: "issue_report" }, 21 * 1024 * 1024)).status).toBe(200);
+  });
+
+  test("an unknown purpose is still refused with 422", async () => {
+    const as = await person();
+    expect(await voice(as, { purpose: "signup" })).toMatchObject({
+      status: 422,
       transcribed: 0,
     });
   });

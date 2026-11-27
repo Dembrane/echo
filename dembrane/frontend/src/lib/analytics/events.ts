@@ -90,7 +90,13 @@ export interface AnalyticsEvents {
 
 	// Onboarding.
 	onboarding_step_viewed: { step: OnboardingStep };
-	onboarding_step_completed: { step: OnboardingStep; skipped?: boolean };
+	// The two problem booleans come with the questions step when it is not skipped whole.
+	onboarding_step_completed: {
+		step: OnboardingStep;
+		skipped?: boolean;
+		problem_answered?: boolean;
+		problem_voice_used?: boolean;
+	};
 
 	// Creating a project.
 	project_create_started: NoProps;

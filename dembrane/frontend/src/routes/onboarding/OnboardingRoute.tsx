@@ -17,10 +17,15 @@ import { useDocumentTitle } from "@mantine/hooks";
 import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useParams } from "react-router";
 import { useCurrentUser } from "@/components/auth/hooks";
 import { toast } from "@/components/common/Toaster";
 import { notifyError } from "@/components/error/notifyError";
 import { InviteEmailList } from "@/components/organisation/InviteEmailList";
+import { useVoiceTranscription } from "@/components/voice/useVoiceTranscription";
+import { VoiceInputError } from "@/components/voice/VoiceInputError";
+import { VoiceTextField } from "@/components/voice/VoiceTextField";
+import { mergeTranscriptIntoDraft } from "@/components/voice/voiceInput";
 import { API_BASE_URL } from "@/config";
 import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 import { useMyInvites } from "@/hooks/useMyInvites";
@@ -63,6 +68,10 @@ async function sendInvite(workspaceId: string, email: string) {
 	return response.json();
 }
 
+// The same ceiling as the feedback box; the server cuts at it too.
+const MAX_PROBLEM_CHARS = 5000;
+const ANSWERS_VERSION = "26-nov-26";
+
 // The workspace this visit created and the step reached, so a reload mid-flow keeps both.
 const VISIT_KEY = "onboarding_visit";
 type Visit = { workspaceId: string; step: "invite" | "questions" };
@@ -82,6 +91,7 @@ const writeVisit = (visit: Visit | null) => {
 
 export const OnboardingRoute = () => {
 	const navigate = useI18nNavigate();
+	const { language } = useParams();
 	const queryClient = useQueryClient();
 	const user = useCurrentUser();
 	const { data: meV2, isLoading: meLoading } = useV2Me();
@@ -136,8 +146,29 @@ export const OnboardingRoute = () => {
 	// appears when the high-risk answer (q2) is "yes", so the ordered list of
 	// sub-questions is derived from q2. qSubStep indexes into it.
 	const [qSubStep, setQSubStep] = useState(0);
+	// The open question comes last: two quick clicks first, then the one that takes effort.
 	const questionFlow =
-		q2 === "yes" ? ["risk", "training", "usage"] : ["risk", "usage"];
+		q2 === "yes"
+			? ["risk", "training", "usage", "problem"]
+			: ["risk", "usage", "problem"];
+	const [problem, setProblem] = useState("");
+	const [problemVoiceUsed, setProblemVoiceUsed] = useState(false);
+	// A voice note becomes text to read over; the audio is not kept. No workspace is
+	// sent: an invited person may have none, and this purpose is never budget-checked.
+	const voice = useVoiceTranscription({
+		language: (language ?? i18n.locale)?.split("-")[0],
+		onTranscript: (transcript) => {
+			setProblemVoiceUsed(true);
+			setProblem((current) =>
+				mergeTranscriptIntoDraft(current, transcript).slice(
+					0,
+					MAX_PROBLEM_CHARS,
+				),
+			);
+		},
+		purpose: "onboarding",
+	});
+	const isVoiceActive = voice.status !== "idle";
 	const [submittingAnswers, setSubmittingAnswers] = useState(false);
 	// Skip the questions step if the user already answered (re-onboarding).
 	const alreadyAnswered = Boolean(meV2?.onboarding_answer_json);
@@ -317,15 +348,30 @@ export const OnboardingRoute = () => {
 	// but non-blocking — a submit failure must not trap the user on this screen.
 	// A skip persists too (skipped=true): the login gate re-nudges anyone with
 	// no onboarding_answer_json, so a skip that wrote nothing looped every login.
-	const submitAnswers = async (skip: boolean) => {
-		track("onboarding_step_completed", { skipped: skip, step: "questions" });
+	// "closed" is Skip on the open question: the earlier answers still count.
+	const submitAnswers = async (send: "all" | "closed" | "skip") => {
+		const skip = send === "skip";
+		const answer = send === "all" ? problem.trim() : "";
+		voice.cancel();
+		track("onboarding_step_completed", {
+			skipped: skip,
+			step: "questions",
+			// Whether, never what: the text stays out of analytics.
+			...(skip
+				? {}
+				: {
+						problem_answered: answer.length > 0,
+						problem_voice_used: problemVoiceUsed,
+					}),
+		});
+		const closed = [{ q1 }, { q2: q2 ?? "" }, { q3: q3 ?? "" }];
 		setSubmittingAnswers(true);
 		try {
 			await fetch(`${API_BASE_URL}/v2/onboarding/answers`, {
 				body: JSON.stringify({
-					data: skip ? [] : [{ q1 }, { q2: q2 ?? "" }, { q3: q3 ?? "" }],
+					data: skip ? [] : answer ? [...closed, { q4: answer }] : closed,
 					skipped: skip,
-					version: "17-jun-26",
+					version: ANSWERS_VERSION,
 				}),
 				credentials: "include",
 				headers: { "Content-Type": "application/json" },
@@ -444,16 +490,19 @@ export const OnboardingRoute = () => {
 				? q2 !== null
 				: currentQ === "training"
 					? q3 !== null
-					: q1.length > 0;
+					: currentQ === "usage"
+						? q1.length > 0
+						: problem.trim().length > 0 && !isVoiceActive;
 
 		const goNext = () => {
 			if (isLastQ) {
-				submitAnswers(false);
+				submitAnswers("all");
 				return;
 			}
 			setQSubStep((i) => i + 1);
 		};
 		const goBack = () => {
+			voice.cancel();
 			if (qSubStep > 0) {
 				setQSubStep((i) => i - 1);
 				return;
@@ -574,6 +623,33 @@ export const OnboardingRoute = () => {
 							</Stack>
 						)}
 
+						{currentQ === "problem" && (
+							<Stack key="problem" gap="sm">
+								<Text size="md" lh={1.4}>
+									{t`What problem are you trying to solve with dembrane?`}
+								</Text>
+								<VoiceTextField
+									value={problem}
+									onChange={setProblem}
+									voice={voice}
+									ariaLabel={t`Your answer`}
+									placeholder={t`A sentence or two is plenty. Type it or record it.`}
+									maxLength={MAX_PROBLEM_CHARS}
+									minRows={4}
+									maxRows={12}
+									testIdPrefix="onboarding-problem"
+								/>
+								{/* Under the box, next to the Voice button it is about, so the
+								    question stays attached to its box. */}
+								{voice.errorKind && (
+									<VoiceInputError
+										kind={voice.errorKind}
+										onDismiss={voice.dismissError}
+									/>
+								)}
+							</Stack>
+						)}
+
 						{/* A row of steps: Skip on the left, the pill on the right (rules.css). */}
 						<Group data-steps gap="sm">
 							<Button
@@ -581,7 +657,9 @@ export const OnboardingRoute = () => {
 								variant="subtle"
 								color="gray"
 								disabled={submittingAnswers}
-								onClick={() => submitAnswers(true)}
+								onClick={() =>
+									submitAnswers(currentQ === "problem" ? "closed" : "skip")
+								}
 							>
 								<Trans>Skip</Trans>
 							</Button>

@@ -79,6 +79,9 @@ export const AUTHOR_COLUMNS: readonly (readonly [string, string])[] = [
   ["verification_topic", "user_updated"],
 ];
 
+/** Staff notices whose message quotes what the actor answered in onboarding. */
+const ONBOARDING_NOTICES = ["ONBOARDING_FOLLOWUP", "ONBOARDING_PROBLEM_SHARED"];
+
 const lowerEq = (col: AnyPgColumn, email: string) => sql`lower(${col}) = ${email}`;
 
 /** Every query a data subject request needs: find one person, read their rows, erase them. */
@@ -589,6 +592,17 @@ export function privacyStorage(db: Db) {
           .delete(project_report_notification_participants)
           .where(lowerEq(project_report_notification_participants.email, p.email));
         await tx.delete(auth_verification).where(lowerEq(auth_verification.identifier, p.email));
+        // Staff notices that quote the person's onboarding answers. Other notices they acted
+        // in keep their row and lose the actor link (ON DELETE SET NULL).
+        if (p.appId)
+          await tx
+            .delete(notification)
+            .where(
+              and(
+                eq(notification.actor_user_id, p.appId),
+                inArray(notification.event_code, ONBOARDING_NOTICES),
+              ),
+            );
 
         // Memberships, notifications, licences and access requests go with the app_user
         // (ON DELETE CASCADE); sessions, sign-in methods and 2FA with the auth_user.

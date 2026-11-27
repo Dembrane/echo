@@ -36,7 +36,7 @@ type UseVoiceTranscriptionOptions = VoiceBilling & {
 	onDurationLimit?: () => void;
 };
 
-type UseVoiceTranscriptionResult = {
+export type UseVoiceTranscriptionResult = {
 	status: VoiceTranscriptionStatus;
 	elapsedMs: number;
 	levels: number[];

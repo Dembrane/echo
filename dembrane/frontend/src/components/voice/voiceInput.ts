@@ -65,6 +65,8 @@ export type VoiceErrorKind =
 	| "not_found"
 	// A free account's monthly AI budget is used up (402 ai_budget).
 	| "free_limit"
+	// The endpoint's per-person limit for a purpose (429 rate_limit.exceeded).
+	| "rate_limited"
 	| "transcription_failed"
 	| "network"
 	| "unknown";
@@ -101,7 +103,8 @@ export const captureErrorKind = (error: unknown): VoiceErrorKind => {
  * The status codes are the endpoint's own: 413 is its size ceiling, 502 is a
  * TranscriptionError from the pipeline, 403 is write access it does not have,
  * and 404 is a project it is not a member of (the access ladder answers
- * "not found" rather than confirming the project exists). Only the ai_budget
+ * "not found" rather than confirming the project exists), and 429 is the per-person
+ * limit a purpose carries (rate_limit.exceeded). Only the ai_budget
  * 402 is `free_limit` (the AI wall); any other 402 stays generic.
  */
 export const transcribeErrorKind = (error: unknown): VoiceErrorKind => {
@@ -111,6 +114,7 @@ export const transcribeErrorKind = (error: unknown): VoiceErrorKind => {
 	if (status === 402 && isFreeTierLimitError(error) === "ai_budget")
 		return "free_limit";
 	if (status === 413) return "too_large";
+	if (status === 429) return "rate_limited";
 	if (status === 400) return "empty";
 	if (status === 403) return "not_allowed";
 	if (status === 404) return "not_found";

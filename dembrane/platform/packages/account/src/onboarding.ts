@@ -209,8 +209,9 @@ async function requestSample(ctx: InviteCtx, workspaceId: string) {
 
 /**
  * The post-registration questionnaire: stored on app_user, and answers that need a partner
- * review or a training get an inbox row for staff and an email to the training owner.
- * The follow-up is best effort and never fails the save.
+ * review or a training get an inbox row for staff and an email to the training owner. The
+ * open problem answer (q4) is told to every staff member. Both are best effort and never
+ * fail the save.
  */
 export async function submitOnboardingAnswers(
   ctx: InviteCtx,
@@ -220,18 +221,83 @@ export async function submitOnboardingAnswers(
   const { store, deps } = ctx;
   await deps.limiter.check(ANSWERS_LIMIT, who.directusUserId);
   const me = await onboardedUser(store, who);
-  const answers = { version: body.version, data: body.data, skipped: body.skipped };
-  await accountStorage(deps.db).setOnboardingAnswers(me.id, answers, ctx.now);
+  const data = cleanProblem(body.data);
+  const answers = { version: body.version, data, skipped: body.skipped };
+  // The answer already stored is read under the same lock as the write, so two posts of
+  // one answer tell staff once.
+  let before: string | null = null;
+  await accountStorage(deps.db).updateAppUserLocked(me.id, ctx.now, (fresh) => {
+    before = storedProblem(fresh.onboarding_answer_json);
+    return { onboarding_answer_json: answers };
+  });
 
-  const review = flagReview(body.data);
+  const review = flagReview(data);
+  const problem = body.skipped ? null : problemFrom(data);
+  if (problem && problem !== before) {
+    try {
+      await shareProblem(ctx, me, problem);
+    } catch (err) {
+      deps.logger?.error({ err }, "onboarding problem notify failed");
+    }
+  }
   if (!body.skipped && (review.partner || review.highRisk || review.training !== null)) {
     try {
-      await notifyStaff(ctx, me, review);
+      await notifyStaff(ctx, me, review, problem);
     } catch (err) {
       deps.logger?.error({ err }, "onboarding follow-up notify failed");
     }
   }
   return { status: "success", onboarding_answer_json: answers };
+}
+
+/** The same ceiling as the box in About you. */
+const PROBLEM_MAX_CHARS = 5000;
+
+const problemText = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const text = value.trim().slice(0, PROBLEM_MAX_CHARS);
+  return text || null;
+};
+
+const isEntry = (a: unknown): a is Record<string, unknown> =>
+  !!a && typeof a === "object" && !Array.isArray(a);
+
+/** The problem they want to solve: the last string q4, trimmed and cut, or null. */
+export function problemFrom(answers: readonly unknown[]): string | null {
+  let last: string | null = null;
+  for (const a of answers) if (isEntry(a) && typeof a.q4 === "string") last = a.q4;
+  return problemText(last);
+}
+
+/** The q4 a stored answers JSON holds, read by the same rule. */
+function storedProblem(json: unknown): string | null {
+  const j = typeof json === "string" ? safeParse(json) : json;
+  if (!isEntry(j) || !Array.isArray(j.data)) return null;
+  return problemFrom(j.data);
+}
+
+const safeParse = (text: string): unknown => {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+};
+
+/** Stores q4 by the rule staff read it with: trimmed and cut, and dropped when unusable. */
+function cleanProblem(data: Record<string, unknown>[]): Record<string, unknown>[] {
+  const out: Record<string, unknown>[] = [];
+  for (const a of data) {
+    if (!isEntry(a) || !("q4" in a)) {
+      out.push(a);
+      continue;
+    }
+    const { q4, ...rest } = a;
+    const text = problemText(q4);
+    if (text) out.push({ ...rest, q4: text });
+    else if (Object.keys(rest).length) out.push(rest);
+  }
+  return out;
 }
 
 /** q1 mentions clients: partner review. q2 yes: high-risk use. q3: followed a training (yes/no). */
@@ -240,8 +306,8 @@ export function flagReview(answers: readonly unknown[]) {
   let highRisk = false;
   let training: string | null = null;
   for (const a of answers) {
-    if (!a || typeof a !== "object" || Array.isArray(a)) continue;
-    const { q1, q2, q3 } = a as Record<string, unknown>;
+    if (!isEntry(a)) continue;
+    const { q1, q2, q3 } = a;
     if (typeof q1 === "string" && q1.toLowerCase().includes("client")) partner = true;
     else if (
       Array.isArray(q1) &&
@@ -256,10 +322,26 @@ export function flagReview(answers: readonly unknown[]) {
   return { partner, highRisk, training };
 }
 
+type Answerer = { id: string; display_name: string | null; email: string | null };
+
+/** Every staff member hears the answer in the bell, quoted, at info severity. */
+async function shareProblem(ctx: InviteCtx, me: Answerer, problem: string) {
+  const staff = await ctx.audiences.staff();
+  if (!staff.length) return;
+  await ctx.deps.notifier.emitToAudience(staff, {
+    actorUserId: me.id,
+    eventCode: "ONBOARDING_PROBLEM_SHARED",
+    title: `Problem to solve: ${me.display_name || me.email || "A new user"}`,
+    message: `${me.email || ""}: ${problem}`.trim(),
+    action: "NONE",
+  });
+}
+
 async function notifyStaff(
   ctx: InviteCtx,
-  me: { id: string; display_name: string | null; email: string | null },
+  me: Answerer,
   r: ReturnType<typeof flagReview>,
+  problem: string | null,
 ) {
   const who = me.display_name || me.email || "A new user";
   const email = me.email || "";
@@ -269,6 +351,11 @@ async function notifyStaff(
   if (r.training === "yes") lines.push("Says they followed a training. Verify it.");
   else if (r.training === "no") lines.push("Has not followed a training. Organise one.");
   const summary = lines.join(" ") || "Needs onboarding follow-up.";
+  // The mail is the one place the training owner reads; the bell notice stays as it was.
+  // Line breaks in the answer would break the list, so they become spaces.
+  const mailLines = problem
+    ? [...lines, `Problem they want to solve: ${problem.replace(/\s*[\r\n]+\s*/g, " ")}`]
+    : lines;
   const title = `Onboarding follow-up: ${who}`;
 
   const staff = await ctx.audiences.staff();
@@ -288,7 +375,7 @@ async function notifyStaff(
       subject: title,
       template: "plain",
       data: {
-        text: `${who} (${email}) just completed onboarding and needs follow-up:\n\n${lines.map((l) => `- ${l}`).join("\n")}\n`,
+        text: `${who} (${email}) just completed onboarding and needs follow-up:\n\n${mailLines.map((l) => `- ${l}`).join("\n")}\n`,
       },
       context: `onboarding follow-up / ${me.id}`,
     });

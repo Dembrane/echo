@@ -91,6 +91,9 @@ export const useVoiceRecorder = ({
 	const cancelledRef = useRef(false);
 	const reachedLimitRef = useRef(false);
 	const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+	// Bumped by cancel and unmount: a microphone prompt answered after either belongs to a
+	// recording nobody wants any more.
+	const attemptRef = useRef(0);
 
 	const meterCtxRef = useRef<AudioContext | null>(null);
 	const meterSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -134,7 +137,13 @@ export const useVoiceRecorder = ({
 
 	// The stream and the AudioContext outlive React on their own, so a panel
 	// that unmounts mid-recording must hand the microphone back.
-	useEffect(() => teardown, [teardown]);
+	useEffect(
+		() => () => {
+			attemptRef.current++;
+			teardown();
+		},
+		[teardown],
+	);
 
 	const stopRecorder = useCallback(() => {
 		const recorder = recorderRef.current;
@@ -198,12 +207,19 @@ export const useVoiceRecorder = ({
 		}
 
 		setIsStarting(true);
+		const attempt = ++attemptRef.current;
 		let stream: MediaStream;
 		try {
 			stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 		} catch (error) {
+			if (attempt !== attemptRef.current) return;
 			setIsStarting(false);
 			onErrorRef.current(captureErrorKind(error));
+			return;
+		}
+		if (attempt !== attemptRef.current) {
+			// Cancelled or unmounted while the prompt was open: hand the microphone back.
+			for (const track of stream.getTracks()) track.stop();
 			return;
 		}
 
@@ -275,7 +291,11 @@ export const useVoiceRecorder = ({
 	}, [stopRecorder]);
 
 	const cancel = useCallback(() => {
-		if (!recorderRef.current) return;
+		if (!recorderRef.current) {
+			attemptRef.current++;
+			setIsStarting(false);
+			return;
+		}
 		cancelledRef.current = true;
 		stopRecorder();
 	}, [stopRecorder]);

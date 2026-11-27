@@ -19,6 +19,8 @@ const RECOVERABLE_KINDS = new Set<VoiceErrorKind>([
 	"device",
 	"too_short",
 	"empty",
+	// Typing still works, and the limit lifts by itself.
+	"rate_limited",
 ]);
 
 export const voiceErrorMessage = (kind: VoiceErrorKind): string => {
@@ -41,6 +43,8 @@ export const voiceErrorMessage = (kind: VoiceErrorKind): string => {
 			return t`This project could not be reached.`;
 		case "free_limit":
 			return t`This month's AI is used up.`;
+		case "rate_limited":
+			return t`That is a lot of voice notes in a short time. Type it instead, or try again later.`;
 		case "transcription_failed":
 			return t`The transcription did not finish. Try again.`;
 		case "network":

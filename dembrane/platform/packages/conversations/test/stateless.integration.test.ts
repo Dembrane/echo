@@ -182,6 +182,13 @@ run("stateless transcription against the seed", () => {
     expect(row?.n).toBe(2);
   });
 
+  test("the onboarding purpose needs no project and no workspace; an unknown one is refused", async () => {
+    const res = await call({ purpose: "onboarding", file: note() });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ transcript: "hello from the note", note: "" });
+    expect((await call({ purpose: "signup", file: note() })).status).toBe(422);
+  });
+
   test("a model failure answers 502 and still removes the upload", async () => {
     transcriber.failNext(new TranscriptParseError("Unparseable transcript JSON", "length"));
     const res = await call({ project_id: p1, file: note() });

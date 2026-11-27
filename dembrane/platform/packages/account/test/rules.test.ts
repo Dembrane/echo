@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { hashMatches, inviteAcceptUrl, inviteHash, urlencode } from "../src/invites/hash";
 import { isOutsider, rank } from "../src/invites/membership";
-import { flagReview } from "../src/onboarding";
+import { flagReview, problemFrom } from "../src/onboarding";
 import { passwordProblems } from "../src/password";
 import { fileTitle } from "../src/settings";
 
@@ -54,6 +54,29 @@ test("onboarding follow-up flags come from q1, q2 and the last q3", () => {
     highRisk: false,
     training: null,
   });
+});
+
+test("the problem to solve is the last string q4, trimmed and cut at 5000 characters", () => {
+  expect(problemFrom([{ q1: "internal" }, { q4: "  first  " }, { q4: " Too many notes. " }])).toBe(
+    "Too many notes.",
+  );
+  expect(problemFrom([{ q4: ` ${"a".repeat(6000)} ` }])).toBe("a".repeat(5000));
+  // A later non-string q4 does not hide the last string one.
+  expect(problemFrom([{ q4: "kept" }, { q4: 42 }])).toBe("kept");
+});
+
+test("no problem text when q4 is missing, not a string or blank", () => {
+  expect(problemFrom([])).toBeNull();
+  expect(problemFrom([{ q1: "internal" }, { q2: "no" }])).toBeNull();
+  expect(problemFrom([{ q4: 7 }, { q4: ["a"] }, { q4: null }, 1, null])).toBeNull();
+  expect(problemFrom([{ q4: "   " }])).toBeNull();
+});
+
+test("a q4 entry does not change the follow-up flags", () => {
+  const base = [{ q1: "internal" }, { q2: "no" }];
+  expect(flagReview([...base, { q4: "We serve clients with high-risk yes" }])).toEqual(
+    flagReview(base),
+  );
 });
 
 test("password policy lists every unmet rule", () => {
