@@ -502,4 +502,43 @@ describe("the fixture backend's room", () => {
 			expect(doc.fields.length).toBeGreaterThan(0);
 		});
 	});
+
+	describe("who may name a signer, as the server says", () => {
+		const docId = fx.offerDetail.id;
+		it("is owners and admins on the customer side, and nobody else anywhere", async () => {
+			const named = async () => [
+				(await client.call("readDocument", { params: { docId, orgId } }))
+					.may_name_signer,
+				(await page()).documents.every((d) => d.may_name_signer),
+			];
+			expect(await named()).toEqual([true, true]);
+			as("billing");
+			expect(await named()).toEqual([false, false]);
+			as("colleague");
+			const roomDoc = await client.call("readDocument", {
+				params: { docId, orgId },
+			});
+			expect(roomDoc.may_name_signer).toBe(false);
+			// The staff side, and the signer's own list, never name anyone.
+			as("admin");
+			const staff = await client.call("staffReadDocument", {
+				params: { docId, orgId },
+			});
+			expect(staff.may_name_signer).toBe(false);
+			const card = await client.call("accountCard", { params: { orgId } });
+			expect(card.documents.some((d) => d.may_name_signer)).toBe(false);
+			const requests = await client.call("signingRequests", {});
+			expect(requests.some((r) => r.document.may_name_signer)).toBe(false);
+		});
+
+		it("is what the static fixtures say too", () => {
+			expect(fx.accountCard.documents.some((d) => d.may_name_signer)).toBe(
+				false,
+			);
+			expect(fx.signingRequests.some((r) => r.document.may_name_signer)).toBe(
+				false,
+			);
+			expect(fx.pushOfferResponse.document.may_name_signer).toBe(false);
+		});
+	});
 });

@@ -586,6 +586,9 @@ function withUrls(
 		file_url: `${base}/documents/${doc.id}/file`,
 		// The fixtures' person runs the account (or is staff), so may always save the PDF.
 		may_download: true,
+		// Naming who signs is an owner's or admin's, on the customer side (asActor): never
+		// staff, the named signer or a room member, as the server's documentSummary.
+		may_name_signer: false,
 		signed_pdf_url:
 			doc.status === "signed" ? `${base}/documents/${doc.id}/signed.pdf` : null,
 		staff_url:
@@ -1678,7 +1681,7 @@ export async function handle(
 				return via === "room"
 					? asRoom(withUrls(doc(), cBase, "member"))
 					: via === "signer"
-						? { ...withUrls(doc(), cBase, "signer"), may_name_signer: false }
+						? withUrls(doc(), cBase, "signer")
 						: asActor(withUrls(doc(), cBase, "member"), s);
 			case "staffReadDocument":
 				return withUrls(doc(), sBase, "staff");

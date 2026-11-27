@@ -761,8 +761,12 @@ export const roomInvite: Out<typeof RoomInvite> = {
   has_account: false,
 };
 
+/** The signer's own list: naming someone else is not theirs (mySigningRequests). */
 export const signingRequests: Out<typeof SigningRequests> = [
-  { organisation: { id: ORG, name: "Example Town Council (sample)" }, document: offerSummary },
+  {
+    organisation: { id: ORG, name: "Example Town Council (sample)" },
+    document: { ...offerSummary, may_name_signer: false },
+  },
 ];
 
 /** GET /api/v2/admin/accounts */
@@ -835,8 +839,10 @@ export const accountCard: Out<typeof AccountCard> = {
   ],
   pending_invites: [],
   usage: { workspaces: 1, projects: 2 },
+  // Staff read them as staff: naming who signs goes through the staff route instead.
   documents: [offerSummary, invoiceSummary, dpaSummary].map((x) => ({
     ...x,
+    may_name_signer: false,
     file_url: x.file_url?.replace(C, `/api/v2/admin/accounts/${ORG}`) ?? null,
     signed_pdf_url: x.signed_pdf_url?.replace(C, `/api/v2/admin/accounts/${ORG}`) ?? null,
   })),
