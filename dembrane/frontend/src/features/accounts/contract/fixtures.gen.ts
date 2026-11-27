@@ -649,7 +649,8 @@ const roomRobin: Out<typeof RoomPerson> = {
   invited_at: null,
   signs: [],
   may_remove: false,
-  may_relabel: false,
+  // Their own labels: Robin changes them from their own row.
+  may_relabel: true,
 };
 /** A member Robin brought in, who has not said yet whether the labels are right. */
 const roomSam: Out<typeof RoomPerson> = {
@@ -726,11 +727,11 @@ export const roomPage: Out<typeof RoomPage> = {
 
 /** GET .../room as Sam, brought in by Robin: the room's people only, asked about the labels. */
 export const roomPageAsColleague: Out<typeof RoomPage> = {
-  // Sam manages nobody here: Robin brought Noor in, and nobody changes their own labels.
+  // Sam manages nobody here (Robin brought Noor in); he changes only his own labels.
   people: [roomRobin, roomSam, roomNoor].map((p) => ({
     ...p,
     may_remove: false,
-    may_relabel: false,
+    may_relabel: p.app_user_id === COLLEAGUE_APP_USER,
   })),
   signers: roomSigners,
   dismissed_hints: ["privacy_ai"],

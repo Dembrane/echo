@@ -10,10 +10,10 @@ import type { SignKind } from "./model";
 import { type AddPreset, PeopleList } from "./PeopleList";
 
 /**
- * Who is involved, connected: the room's people from the server, the first-visit question
- * above them when it is asked, and every write (add, change what someone does, take
- * someone out, wave a hint away) through the accounts mutations, which refresh the room.
- * A refusal shows in the server's own words.
+ * Involved in procurement, connected: the room's people from the server, the first-visit
+ * question above them when it is asked, and every write (add, change what someone does or
+ * what you do yourself, take someone out, wave a hint away) through the accounts
+ * mutations, which refresh the room. A refusal shows in the server's own words.
  */
 export function RoomSection({ orgId }: { orgId: string }) {
 	const { data: page } = useRoom(orgId);

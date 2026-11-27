@@ -83,7 +83,8 @@ export interface DraftPerson {
  * to change the address. The last step says what happened.
  *
  * `change` is the same "what" step on its own, for someone already in: it saves. The
- * dialog's title asks the question there, so the step does not repeat it.
+ * dialog's title asks the question there, so the step does not repeat it. `self`: the
+ * person is the one asking, so the line under the question is about them.
  * `onDraft` collects the person without sending anything (who signs sends them itself).
  */
 export function AddPersonSteps({
@@ -93,6 +94,7 @@ export function AddPersonSteps({
 	preset,
 	signing,
 	change = false,
+	self = false,
 	onDraft,
 	onSubmit,
 	onCancel,
@@ -106,10 +108,12 @@ export function AddPersonSteps({
 	/** Who signs, when there is a document to sign; shown only to those who may name. */
 	signing?: Signing;
 	change?: boolean;
+	self?: boolean;
 	onDraft?: (person: DraftPerson) => void;
+	/** Saves; null when the answer is not the add's (your own labels). */
 	onSubmit: (
 		body: RequestOf<"addRoomPerson">,
-	) => Promise<ResponseOf<"addRoomPerson">>;
+	) => Promise<ResponseOf<"addRoomPerson"> | null>;
 	onCancel: () => void;
 	onDone: () => void;
 	/** The dialog's title for the current step, or null for the dialog's own. */
@@ -379,6 +383,7 @@ export function AddPersonSteps({
 							value={what}
 							onChange={setWhat}
 							question={change ? null : t`What does ${first} do?`}
+							hint={self ? "you" : "them"}
 						/>
 						<SigningChoice
 							kinds={kinds}

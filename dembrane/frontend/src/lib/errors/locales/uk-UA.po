@@ -19,6 +19,16 @@ msgstr ""
 #~ msgstr "Введіть принаймні один із номерів: VAT, KvK або KBO."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:30
+#~ msgid "error.room.no_labels_question"
+#~ msgstr "Тут нема на що відповідати."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:11
+#~ msgid "error.room.labels_already_answered"
+#~ msgstr "Ти вже сказав, що робиш тут."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
 msgstr "Поле «{field}» не може бути порожнім. Заповніть його або видаліть."
@@ -394,12 +404,12 @@ msgid "error.member.owner_removes_owner"
 msgstr "Лише власник може видалити іншого власника."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:20
+#: src/lib/errors/messages/room.ts:16
 msgid "error.room.name_signer_admins_only"
 msgstr "Лише власник чи адміністратор може вибрати, хто підписує. Ти можеш підписати сам або нагадати вже вибраній людині."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:25
+#: src/lib/errors/messages/room.ts:21
 msgid "error.room.new_person_admins_only"
 msgstr "Лише власник чи адміністратор може запросити того, хто ще не є учасником. Ти можеш додати колегу, який уже є учасником."
 
@@ -434,12 +444,12 @@ msgid "error.project.not_owner"
 msgstr "Це може зробити лише власник цього проєкту."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:15
+#: src/lib/errors/messages/room.ts:11
 msgid "error.room.manage_forbidden"
 msgstr "Лише той, хто запросив цю людину, адміністратор чи Оплата можуть змінити, що вона робить."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:38
+#: src/lib/errors/messages/room.ts:30
 msgid "error.room.remove_forbidden"
 msgstr "Лише той, хто запросив цю людину, адміністратор чи Оплата можуть її прибрати."
 
@@ -789,11 +799,6 @@ msgid "error.billing.no_payment_profile"
 msgstr "Ще немає способу оплати для оновлення. Спочатку виберіть тариф."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:30
-msgid "error.room.no_labels_question"
-msgstr "Тут нема на що відповідати."
-
-#. js-lingui-explicit-id
 #: src/lib/errors/messages/demo.ts:7
 msgid "error.demo.contact_not_in_organisation"
 msgstr "Ця людина більше не в цій організації, тому демо не опубліковано. Додайте її знову або опублікуйте з вимкненим листом."
@@ -1059,7 +1064,7 @@ msgid "error.organisation.external_cannot_manage"
 msgstr "Ця людина має роль зовнішнього користувача в одному з ваших робочих просторів. Спочатку зніміть цю роль, а потім призначте її адміністратором або власником."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:34
+#: src/lib/errors/messages/room.ts:26
 msgid "error.room.person_not_found"
 msgstr "Цієї людини тут більше немає."
 
@@ -1672,11 +1677,6 @@ msgstr "Напишіть щось для інсайту."
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
 msgstr "Напишіть щось, щоб зберегти у пам'яті."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:11
-msgid "error.room.labels_already_answered"
-msgstr "Ти вже сказав, що робиш тут."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

@@ -1639,12 +1639,14 @@ export const RoomPerson = z.object({
   signs: z.array(z.enum(["offer", "dpa"])),
   /**
    * Whether the caller may take them out: someone in by invitation, for those who run the
-   * account or whoever invited them. False for anyone in by role, and on the staff side.
+   * account or whoever invited them. False for anyone in by role, for the caller themselves,
+   * and on the staff side.
    */
   may_remove: z.boolean(),
   /**
-   * Whether the caller may change what they do: anyone in the room but the caller, for those
-   * who run the account or whoever invited them. False on the staff side.
+   * Whether the caller may change what they do: anyone in the room, for those who run the
+   * account or whoever invited them, and the caller's own row (POST .../room/me/labels).
+   * False on the staff side.
    */
   may_relabel: z.boolean(),
 });
@@ -1700,7 +1702,10 @@ export const RemoveRoomPersonResponse = z.object({
   membership: z.enum(["withdrawn", "kept"]),
 });
 
-/** POST .../room/me/labels: the once-asked answer about one's own labels. */
+/**
+ * POST .../room/me/labels: what the caller does, in their own words. The answer to the
+ * once-asked question (`labels_question`), or a change at any time after.
+ */
 export const AnswerRoomLabelsRequest = z.object({ labels: RoomLabels, other: optText(80) });
 
 export const DismissHintResponse = z.object({ dismissed_hints: z.array(HintLabel) });

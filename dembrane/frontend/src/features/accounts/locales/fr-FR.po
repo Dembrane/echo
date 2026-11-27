@@ -123,7 +123,7 @@ msgstr "{days, plural, one {# jour de retard} other {# jours de retard}}"
 msgid "{days, plural, one {# day} other {# days}}"
 msgstr "{days, plural, one {# jour} other {# jours}}"
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:466
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:471
 msgid "{domain} is not your own email domain. Check that the address is right."
 msgstr "{domain} n’est pas ton propre domaine e-mail. Vérifie que l’adresse est correcte."
 
@@ -211,11 +211,11 @@ msgstr "{name} · invité, pas encore arrivé"
 msgid "{name} (you)"
 msgstr "{name} (toi)"
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:496
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:501
 msgid "{name} is already here."
 msgstr "{name} est déjà là."
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:497
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:502
 msgid "{name} is already here. Only what they do changes."
 msgstr "{name} est déjà là. Seul son rôle change."
 
@@ -239,7 +239,7 @@ msgstr "{oldName} ne signe plus, et le lien que nous avons envoyé à {oldFirst}
 msgid "{org} invited you to sign"
 msgstr "{org} vous invite à signer"
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:533
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:538
 msgid "{reach, plural, one {{first} will also be a member of # workspace that is open to everyone in your organisation.} other {{first} will also be a member of # workspaces that are open to everyone in your organisation.}}"
 msgstr "{reach, plural, one {{first} sera aussi membre de # espace de travail ouvert à toute ton organisation.} other {{first} sera aussi membre de # espaces de travail ouverts à toute ton organisation.}}"
 
@@ -369,7 +369,7 @@ msgstr "Compte créé"
 msgid "Account enabled"
 msgstr "Compte activé"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:947
+#: src/features/accounts/staff/AccountCardRoute.tsx:954
 msgid "Account manager asked to check in"
 msgstr "Responsable de compte invité à relancer"
 
@@ -400,7 +400,7 @@ msgid "Actions"
 msgstr "Actions"
 
 #: src/features/accounts/customer/room/PeopleList.tsx:93
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:280
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:284
 msgid "Add"
 msgstr "Ajouter"
 
@@ -447,7 +447,7 @@ msgstr "Ajouter des puces"
 #: src/features/accounts/customer/room/RoomPictures.tsx:52
 #: src/features/accounts/customer/room/PeopleList.tsx:94
 #: src/features/accounts/customer/room/PeopleList.tsx:168
-#: src/features/accounts/customer/room/AddPersonModal.tsx:53
+#: src/features/accounts/customer/room/AddPersonModal.tsx:65
 msgid "Add someone"
 msgstr "Ajouter quelqu’un"
 
@@ -580,7 +580,7 @@ msgstr "À la signature, ils cochent"
 #: src/features/accounts/signing/SignatureCapture.tsx:233
 #: src/features/accounts/signing/SignRoute.tsx:1113
 #: src/features/accounts/customer/WhoSigns.tsx:519
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:428
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:433
 msgid "Back"
 msgstr "Retour"
 
@@ -704,7 +704,7 @@ msgstr "Peut modifier"
 #: src/features/accounts/customer/Questions.tsx:250
 #: src/features/accounts/customer/BillingForm.tsx:551
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:100
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:428
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:433
 msgid "Cancel"
 msgstr "Annuler"
 
@@ -732,9 +732,13 @@ msgstr "Modifier le brouillon"
 #~ msgid "Change what {0} does"
 #~ msgstr ""
 
-#: src/features/accounts/customer/room/PersonRow.tsx:122
+#: src/features/accounts/customer/room/PersonRow.tsx:126
 msgid "Change what {first} does"
 msgstr "Modifier ce que fait {first}"
+
+#: src/features/accounts/customer/room/PersonRow.tsx:124
+msgid "Change what I do"
+msgstr "Modifier ce que je fais"
 
 #: src/features/accounts/staff/CustomerSigner.tsx:302
 msgid "Change who signs"
@@ -998,7 +1002,7 @@ msgid "Custom"
 msgstr "Sur mesure"
 
 #: src/features/accounts/format.ts:122
-#: src/features/accounts/staff/AccountCardRoute.tsx:1003
+#: src/features/accounts/staff/AccountCardRoute.tsx:1010
 #: src/features/accounts/customer/Questions.tsx:171
 msgid "Customer"
 msgstr "Client"
@@ -1176,7 +1180,7 @@ msgstr "Documents qui font partie de l'accord"
 #: src/features/accounts/customer/WhoSigns.tsx:356
 #: src/features/accounts/customer/NextSteps.tsx:133
 #: src/features/accounts/customer/NextSteps.tsx:482
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:543
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:548
 msgid "Done"
 msgstr "Terminé"
 
@@ -1272,7 +1276,7 @@ msgstr "Modifier"
 msgid "Email"
 msgstr "E-mail"
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:306
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:310
 msgid "Email address"
 msgstr "Adresse e-mail"
 
@@ -1462,6 +1466,10 @@ msgstr "Chercher quelqu’un"
 msgid "First name"
 msgstr "Prénom"
 
+#: src/features/accounts/staff/AccountCardRoute.tsx:947
+msgid "First-visit question answered"
+msgstr "Réponse à la question de la première visite"
+
 #~ msgid "For e-invoicing"
 #~ msgstr "Pour la facturation électronique"
 
@@ -1542,7 +1550,7 @@ msgstr "Gère le contrat"
 #~ msgid "Handles contract and purchasing"
 #~ msgstr "Gère le contrat et les achats"
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:285
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:289
 msgid "Have {first} sign"
 msgstr "Faire signer {first}"
 
@@ -1666,11 +1674,11 @@ msgstr "Invitation | dembrane"
 #~ msgid "Invite a colleague"
 #~ msgstr "Invitez un collègue"
 
-#: src/features/accounts/customer/room/PersonRow.tsx:71
+#: src/features/accounts/customer/room/PersonRow.tsx:72
 msgid "invited"
 msgstr "invité"
 
-#: src/features/accounts/customer/room/PersonRow.tsx:145
+#: src/features/accounts/customer/room/PersonRow.tsx:150
 msgid "Invited"
 msgstr "Invité"
 
@@ -1758,7 +1766,7 @@ msgstr "Les factures arriveront via Peppol"
 msgid "Invoicing"
 msgstr "Facturation"
 
-#: src/features/accounts/customer/room/PersonRow.tsx:94
+#: src/features/accounts/customer/room/PersonRow.tsx:95
 msgid "Involve {first} in procurement"
 msgstr "Impliquer {first} dans l’achat"
 
@@ -1907,6 +1915,10 @@ msgstr "Pouvez-vous également accepter le traitement des données pour votre or
 #~ msgid "Member"
 #~ msgstr "Membre"
 
+#: src/features/accounts/staff/AccountCardRoute.tsx:949
+msgid "Member involved in procurement"
+msgstr "Membre impliqué dans l’achat"
+
 #: src/features/accounts/customer/room/PeopleList.tsx:103
 msgid "Members"
 msgstr "Membres"
@@ -1931,7 +1943,7 @@ msgstr "Mensuellement"
 #: src/features/accounts/staff/FieldEditorRoute.tsx:66
 #: src/features/accounts/staff/CustomerSigner.tsx:89
 #: src/features/accounts/staff/AcceptedOutsideModals.tsx:166
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:362
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:366
 msgid "Name"
 msgstr "Nom"
 
@@ -1990,8 +2002,8 @@ msgstr "Nouveau sur dembrane. La démo aura une nouvelle organisation."
 #: src/features/accounts/FitLabel.tsx:11
 #: src/features/accounts/signing/SignRoute.tsx:1238
 #: src/features/accounts/customer/WhoSigns.tsx:533
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:275
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:282
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:279
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:286
 msgid "Next"
 msgstr "Suivant"
 
@@ -2134,11 +2146,11 @@ msgid "None"
 msgstr "Aucune"
 
 #: src/features/accounts/customer/WhoSigns.tsx:441
-#: src/features/accounts/customer/room/PersonRow.tsx:73
+#: src/features/accounts/customer/room/PersonRow.tsx:74
 msgid "not added yet"
 msgstr "pas encore ajouté"
 
-#: src/features/accounts/customer/room/PersonRow.tsx:147
+#: src/features/accounts/customer/room/PersonRow.tsx:152
 msgid "Not added yet"
 msgstr "Pas encore ajouté"
 
@@ -2458,7 +2470,7 @@ msgstr "Facultatif. Si tu ne choisis rien, la personne reste informée."
 msgid "Optional. With nothing chosen, you are kept informed."
 msgstr "Facultatif. Si tu ne choisis rien, tu restes informé."
 
-#: src/features/accounts/customer/room/PersonRow.tsx:113
+#: src/features/accounts/customer/room/PersonRow.tsx:114
 msgid "Options for {first}"
 msgstr "Options pour {first}"
 
@@ -2522,7 +2534,7 @@ msgstr "En attente"
 
 #. placeholder {0}: d.part
 #. placeholder {1}: d.of
-#: src/features/accounts/staff/AccountCardRoute.tsx:966
+#: src/features/accounts/staff/AccountCardRoute.tsx:973
 msgid "part {0} of {1}"
 msgstr "échéance {0} sur {1}"
 
@@ -2609,6 +2621,14 @@ msgstr "Préparer une offre"
 #: src/features/accounts/staff/LinesEditor.tsx:244
 msgid "Price"
 msgstr "Prix"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:945
+msgid "Procurement hint dismissed"
+msgstr "Conseil sur l’achat masqué"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:946
+msgid "Procurement invitation accepted"
+msgstr "Invitation à l’achat acceptée"
 
 #: src/features/accounts/signing/SignRoute.tsx:689
 #: src/features/accounts/customer/AccountPickerRoute.tsx:82
@@ -2703,15 +2723,15 @@ msgstr "Indiquez la référence sur le virement pour que nous puissions associer
 msgid "Quantity"
 msgstr "Quantité"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:957
+#: src/features/accounts/staff/AccountCardRoute.tsx:964
 msgid "Question answered"
 msgstr "Question répondue"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:955
+#: src/features/accounts/staff/AccountCardRoute.tsx:962
 msgid "Question closed"
 msgstr "Question close"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:956
+#: src/features/accounts/staff/AccountCardRoute.tsx:963
 msgid "Question opened"
 msgstr "Question ouverte"
 
@@ -2744,7 +2764,7 @@ msgstr "Lis l’offre et le DPA avec ton équipe"
 msgid "Reads \"{0} x dembrane\""
 msgstr "Affiche « {0} x dembrane »"
 
-#: src/features/accounts/customer/room/PersonRow.tsx:147
+#: src/features/accounts/customer/room/PersonRow.tsx:152
 msgid "Reads the offer and the DPA"
 msgstr "Lit l’offre et le DPA"
 
@@ -2796,7 +2816,7 @@ msgid "Reminded"
 msgstr "Relancé"
 
 #: src/features/accounts/customer/room/confirm.tsx:82
-#: src/features/accounts/customer/room/PersonRow.tsx:131
+#: src/features/accounts/customer/room/PersonRow.tsx:136
 msgid "Remove {first}"
 msgstr "Retirer {first}"
 
@@ -2923,8 +2943,8 @@ msgstr "piloter le déploiement"
 
 #: src/features/accounts/staff/FieldEditorRoute.tsx:281
 #: src/features/accounts/customer/room/FirstVisitQuestion.tsx:91
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:278
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:287
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:282
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:291
 msgid "Save"
 msgstr "Enregistrer"
 
@@ -2985,7 +3005,7 @@ msgstr "Sélectionnez un champ pour définir son type, son libellé et s'il est 
 #: src/features/accounts/staff/AccountCardRoute.tsx:245
 #: src/features/accounts/customer/Questions.tsx:263
 #: src/features/accounts/customer/NextSteps.tsx:679
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:289
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:293
 msgid "Send"
 msgstr "Envoyer"
 
@@ -3050,7 +3070,7 @@ msgstr "L'envoi remplace la version envoyée."
 #: src/features/accounts/staff/UploadPdfModal.tsx:96
 #: src/features/accounts/staff/FieldEditorRoute.tsx:268
 #: src/features/accounts/staff/AccountCardRoute.tsx:240
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:175
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:179
 msgid "Sent"
 msgstr "Envoyé"
 
@@ -3125,7 +3145,7 @@ msgid "Shares add up to {0}%"
 msgstr "Les parts totalisent {0}%"
 
 #: src/features/accounts/staff/DemoRoute.tsx:348
-#: src/features/accounts/staff/AccountCardRoute.tsx:1017
+#: src/features/accounts/staff/AccountCardRoute.tsx:1024
 msgid "Show all"
 msgstr "Tout afficher"
 
@@ -3139,7 +3159,7 @@ msgid "Show finished ({0})"
 msgstr "Afficher les tâches terminées ({0})"
 
 #: src/features/accounts/staff/DemoRoute.tsx:349
-#: src/features/accounts/staff/AccountCardRoute.tsx:1017
+#: src/features/accounts/staff/AccountCardRoute.tsx:1024
 msgid "Show less"
 msgstr "Afficher moins"
 
@@ -3327,6 +3347,10 @@ msgstr "Une autre personne de votre organisation signe ensuite."
 msgid "Someone new"
 msgstr "Quelqu’un de nouveau"
 
+#: src/features/accounts/staff/AccountCardRoute.tsx:950
+msgid "Someone new involved in procurement"
+msgstr "Nouvelle personne impliquée dans l’achat"
+
 #: src/features/accounts/format.ts:166
 msgid "Someone who may agree to data processing for your organisation signs it."
 msgstr "Une personne autorisée à accepter le traitement des données pour votre organisation le signe."
@@ -3336,7 +3360,7 @@ msgstr "Une personne autorisée à accepter le traitement des données pour votr
 msgid "Something went wrong"
 msgstr "Une erreur s'est produite"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:1005
+#: src/features/accounts/staff/AccountCardRoute.tsx:1012
 msgid "Staff"
 msgstr "Équipe"
 
@@ -3406,9 +3430,13 @@ msgstr "Sous-total"
 msgid "Support access"
 msgstr "Accès pour l'assistance"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:1006
+#: src/features/accounts/staff/AccountCardRoute.tsx:1013
 msgid "System"
 msgstr "Système"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:951
+msgid "Taken out of procurement"
+msgstr "Retiré de l’achat"
 
 #: src/features/accounts/staff/DemoRoute.tsx:383
 msgid "Takes the public link down until you publish again."
@@ -3422,31 +3450,31 @@ msgstr "Nous contacter"
 msgid "Task"
 msgstr "Tâche"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:945
-#: src/features/accounts/staff/AccountCardRoute.tsx:946
+#: src/features/accounts/staff/AccountCardRoute.tsx:952
+#: src/features/accounts/staff/AccountCardRoute.tsx:953
 msgid "Task approved"
 msgstr "Tâche approuvée"
 
 #: src/features/accounts/staff/TaskModals.tsx:100
-#: src/features/accounts/staff/AccountCardRoute.tsx:948
+#: src/features/accounts/staff/AccountCardRoute.tsx:955
 msgid "Task created"
 msgstr "Tâche créée"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:949
+#: src/features/accounts/staff/AccountCardRoute.tsx:956
 msgid "Task done"
 msgstr "Tâche terminée"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:950
-#: src/features/accounts/staff/AccountCardRoute.tsx:951
+#: src/features/accounts/staff/AccountCardRoute.tsx:957
+#: src/features/accounts/staff/AccountCardRoute.tsx:958
 msgid "Task sent back"
 msgstr "Tâche renvoyée"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:952
+#: src/features/accounts/staff/AccountCardRoute.tsx:959
 msgid "Task submitted"
 msgstr "Tâche soumise"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:953
-#: src/features/accounts/staff/AccountCardRoute.tsx:954
+#: src/features/accounts/staff/AccountCardRoute.tsx:960
+#: src/features/accounts/staff/AccountCardRoute.tsx:961
 msgid "Task withdrawn"
 msgstr "Tâche retirée"
 
@@ -3575,19 +3603,19 @@ msgstr "Le brouillon n'est pas encore prêt."
 msgid "The draft is ready. Check it, then publish."
 msgstr "Le brouillon est prêt. Vérifiez-le, puis publiez."
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:356
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:360
 msgid "The email address is empty."
 msgstr "L'adresse e-mail est vide."
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:480
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:485
 msgid "The email also has a link to sign the DPA."
 msgstr "L’e-mail contient aussi un lien pour signer le DPA."
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:476
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:481
 msgid "The email also has a link to sign the offer and the DPA."
 msgstr "L’e-mail contient aussi un lien pour signer l’offre et le DPA."
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:478
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:483
 msgid "The email also has a link to sign the offer."
 msgstr "L’e-mail contient aussi un lien pour signer l’offre."
 
@@ -3606,7 +3634,7 @@ msgstr "L'invitation a été envoyée à"
 msgid "The invitation was withdrawn, or a newer one replaced it. Ask the person who invited you to send it again."
 msgstr "L’invitation a été retirée, ou une plus récente l’a remplacée. Demande à la personne qui t’a invité de la renvoyer."
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:371
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:375
 msgid "The name is empty."
 msgstr "Le nom est vide."
 
@@ -3784,7 +3812,7 @@ msgstr "Cette invitation a expiré"
 msgid "This invitation is for {invitee}"
 msgstr "Cette invitation est destinée à {invitee}"
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:355
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:359
 msgid "This is not an email address."
 msgstr "Ce n'est pas une adresse e-mail."
 
@@ -3813,7 +3841,7 @@ msgstr "Via Peppol"
 msgid "Tick the box"
 msgstr "Cocher la case"
 
-#: src/features/accounts/staff/AccountCardRoute.tsx:980
+#: src/features/accounts/staff/AccountCardRoute.tsx:987
 msgid "Timeline"
 msgstr "Chronologie"
 
@@ -4103,11 +4131,11 @@ msgstr "Nous n'avons pas trouvé ce document pour l'adresse que vous utilisez. I
 #~ msgid "We email {first} a link. {first} can then read the offer and the DPA."
 #~ msgstr "Nous envoyons un lien à {first}. Ensuite, {first} peut lire l’offre et le DPA."
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:492
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:497
 msgid "We email {name} at {email} a link to join your organisation and read the offer and the DPA."
 msgstr "Nous envoyons à {name} ({email}) un lien pour rejoindre ton organisation et lire l’offre et le DPA."
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:494
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:499
 msgid "We email {name} at {email} a link to read the offer and the DPA."
 msgstr "Nous envoyons à {name} ({email}) un lien pour lire l’offre et le DPA."
 
@@ -4147,7 +4175,7 @@ msgstr "Nous avons envoyé à {dpaName} ({dpaEmail}) un lien pour signer le DPA.
 #~ msgid "We emailed {name} at {email} a link to sign the offer."
 #~ msgstr "Nous avons envoyé à {name} ({email}) un lien pour signer l’offre."
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:529
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:534
 msgid "We emailed {name} at {email}."
 msgstr "Nous avons envoyé un e-mail à {name} ({email})."
 
@@ -4222,7 +4250,7 @@ msgstr "Nous verrons avec vous comment vous recevez les factures. Notre réponse
 msgid "Website"
 msgstr "Site web"
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:528
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:533
 msgid "What {first} does is saved."
 msgstr "Le rôle de {first} est enregistré."
 
@@ -4230,8 +4258,12 @@ msgstr "Le rôle de {first} est enregistré."
 msgid "What do you do in this decision?"
 msgstr "Quel est ton rôle dans cette décision ?"
 
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:381
-#: src/features/accounts/customer/room/AddPersonModal.tsx:53
+#: src/features/accounts/customer/room/AddPersonModal.tsx:62
+msgid "What do you do?"
+msgstr "Que fais-tu ?"
+
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:385
+#: src/features/accounts/customer/room/AddPersonModal.tsx:64
 msgid "What does {first} do?"
 msgstr "Que fait {first} ?"
 
@@ -4242,6 +4274,10 @@ msgstr "Ce qu'il reste à faire pour dembrane dans chacune de vos organisations.
 #: src/features/accounts/staff/PushOfferModal.tsx:651
 msgid "What it changes"
 msgstr "Ce que cela modifie"
+
+#: src/features/accounts/staff/AccountCardRoute.tsx:948
+msgid "What someone does changed"
+msgstr "Ce que fait quelqu’un a changé"
 
 #: src/features/accounts/staff/NewDemoRoute.tsx:282
 msgid "What they want to hear from whom, and why now."
@@ -4345,8 +4381,8 @@ msgstr "Oui, je le peux"
 msgid "Yes, that is right"
 msgstr "Oui, c’est bien ça"
 
-#: src/features/accounts/customer/room/PersonRow.tsx:69
-#: src/features/accounts/customer/room/AddPersonSteps.tsx:164
+#: src/features/accounts/customer/room/PersonRow.tsx:70
+#: src/features/accounts/customer/room/AddPersonSteps.tsx:168
 msgid "you"
 msgstr "toi"
 

@@ -12,7 +12,8 @@ import type { AddPreset } from "./PeopleList";
  * The one way to bring a person in or change what they do, in a dialog: from "Add
  * someone", a hint, a member not added yet, "Share" on a document, who signs and "Send to
  * someone else". Each opening starts over. On a phone it fills the screen with the row
- * of steps at its foot (StepsModal).
+ * of steps at its foot (StepsModal). Opened on your own row, it asks what you do and saves
+ * your own answer (answerRoomLabels).
  */
 export function AddPersonModal({
 	orgId,
@@ -35,10 +36,18 @@ export function AddPersonModal({
 	const { data: page } = useAccountPage(opened ? orgId : undefined);
 	const { data: me } = useV2Me({ enabled: opened });
 	const add = useAccountsMutation("addRoomPerson", { orgId });
+	const answer = useAccountsMutation("answerRoomLabels", { orgId });
 	const name = useAccountsMutation("nameSigner", { orgId });
 	const [stepTitle, setStepTitle] = useState<string | null>(null);
 	const roomMe = room?.me ?? null;
-	const docs = room && page ? signable(room, page) : {};
+	const who = preset?.person;
+	// Your own row: what you do, in your own words; who signs is "Tell us who signs".
+	const self =
+		change &&
+		roomMe !== null &&
+		room?.people.find((p) => p.email === who?.email)?.app_user_id ===
+			roomMe.app_user_id;
+	const docs = room && page && !self ? signable(room, page) : {};
 	const signing: Signing | undefined =
 		roomMe && Object.keys(docs).length
 			? {
@@ -47,10 +56,13 @@ export function AddPersonModal({
 						name.mutateAsync({ body, params: { docId } }),
 				}
 			: undefined;
-	const who = preset?.person;
 	const first = who ? firstName(who) : "";
 	// Changing what someone does asks it once, as the title.
-	const fallback = change && who ? t`What does ${first} do?` : t`Add someone`;
+	const fallback = self
+		? t`What do you do?`
+		: change && who
+			? t`What does ${first} do?`
+			: t`Add someone`;
 	return (
 		<StepsModal
 			opened={opened && room !== undefined && roomMe !== null}
@@ -68,7 +80,14 @@ export function AddPersonModal({
 					preset={preset}
 					signing={signing}
 					change={change}
-					onSubmit={(body) => add.mutateAsync({ body })}
+					self={self}
+					onSubmit={async (body) => {
+						if (!self) return add.mutateAsync({ body });
+						await answer.mutateAsync({
+							body: { labels: body.labels, other: body.other },
+						});
+						return null;
+					}}
 					onCancel={onClose}
 					onDone={onClose}
 					onTitle={setStepTitle}

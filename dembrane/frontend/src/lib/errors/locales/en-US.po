@@ -19,6 +19,16 @@ msgstr ""
 #~ msgstr "Enter at least one of your VAT, KvK or KBO numbers."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:30
+#~ msgid "error.room.no_labels_question"
+#~ msgstr "There is nothing to answer here."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:11
+#~ msgid "error.room.labels_already_answered"
+#~ msgstr "You already said what you do here."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
 msgstr "{field} cannot be empty. Fill it in or remove it."
@@ -394,12 +404,12 @@ msgid "error.member.owner_removes_owner"
 msgstr "Only an owner can remove another owner."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:20
+#: src/lib/errors/messages/room.ts:16
 msgid "error.room.name_signer_admins_only"
 msgstr "Only an owner or admin can choose who signs. You can sign yourself, or remind the person already named."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:25
+#: src/lib/errors/messages/room.ts:21
 msgid "error.room.new_person_admins_only"
 msgstr "Only an owner or admin can invite someone who is not a member yet. You can add a colleague who is already a member."
 
@@ -434,12 +444,12 @@ msgid "error.project.not_owner"
 msgstr "Only the owner of this project can do this."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:15
+#: src/lib/errors/messages/room.ts:11
 msgid "error.room.manage_forbidden"
 msgstr "Only the person who invited them, an admin or Billing can change what they do."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:38
+#: src/lib/errors/messages/room.ts:30
 msgid "error.room.remove_forbidden"
 msgstr "Only the person who invited them, an admin or Billing can take them out."
 
@@ -789,11 +799,6 @@ msgid "error.billing.no_payment_profile"
 msgstr "There is no payment method to update yet. Choose a plan first."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:30
-msgid "error.room.no_labels_question"
-msgstr "There is nothing to answer here."
-
-#. js-lingui-explicit-id
 #: src/lib/errors/messages/demo.ts:7
 msgid "error.demo.contact_not_in_organisation"
 msgstr "They are no longer in this organisation, so the demo was not published. Add them back, or publish with the email off."
@@ -1059,7 +1064,7 @@ msgid "error.organisation.external_cannot_manage"
 msgstr "This person is an external on one of your workspaces. Remove that role first, then make them an admin or owner."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:34
+#: src/lib/errors/messages/room.ts:26
 msgid "error.room.person_not_found"
 msgstr "This person is no longer in the room."
 
@@ -1672,11 +1677,6 @@ msgstr "Write something for the insight."
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
 msgstr "Write something for the memory to keep."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:11
-msgid "error.room.labels_already_answered"
-msgstr "You already said what you do here."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

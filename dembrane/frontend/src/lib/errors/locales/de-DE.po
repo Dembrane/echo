@@ -19,6 +19,16 @@ msgstr ""
 #~ msgstr "Geben Sie mindestens eine Ihrer VAT-, KvK- oder KBO-Nummern ein."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:30
+#~ msgid "error.room.no_labels_question"
+#~ msgstr "Hier gibt es nichts zu beantworten."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:11
+#~ msgid "error.room.labels_already_answered"
+#~ msgstr "Du hast schon gesagt, was du hier tust."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
 msgstr "{field} darf nicht leer sein. Fülle es aus oder entferne es."
@@ -394,12 +404,12 @@ msgid "error.member.owner_removes_owner"
 msgstr "Nur ein Eigentümer kann einen anderen Eigentümer entfernen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:20
+#: src/lib/errors/messages/room.ts:16
 msgid "error.room.name_signer_admins_only"
 msgstr "Nur Eigentümer oder Admins können wählen, wer unterschreibt. Du kannst selbst unterschreiben oder die schon benannte Person erinnern."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:25
+#: src/lib/errors/messages/room.ts:21
 msgid "error.room.new_person_admins_only"
 msgstr "Nur Eigentümer oder Admins können jemanden einladen, der noch kein Mitglied ist. Du kannst eine Kollegin oder einen Kollegen hinzufügen, die oder der schon Mitglied ist."
 
@@ -434,12 +444,12 @@ msgid "error.project.not_owner"
 msgstr "Dies kann nur der Eigentümer dieses Projekts tun."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:15
+#: src/lib/errors/messages/room.ts:11
 msgid "error.room.manage_forbidden"
 msgstr "Nur wer die Person eingeladen hat, ein Admin oder die Abrechnung kann ändern, was sie tut."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:38
+#: src/lib/errors/messages/room.ts:30
 msgid "error.room.remove_forbidden"
 msgstr "Nur wer die Person eingeladen hat, ein Admin oder die Abrechnung kann sie entfernen."
 
@@ -789,11 +799,6 @@ msgid "error.billing.no_payment_profile"
 msgstr "Es gibt noch keine Zahlungsmethode zum Aktualisieren. Wähle zuerst einen Tarif."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:30
-msgid "error.room.no_labels_question"
-msgstr "Hier gibt es nichts zu beantworten."
-
-#. js-lingui-explicit-id
 #: src/lib/errors/messages/demo.ts:7
 msgid "error.demo.contact_not_in_organisation"
 msgstr "Diese Person ist nicht mehr in dieser Organisation, daher wurde die Demo nicht veröffentlicht. Füge sie wieder hinzu oder veröffentliche mit ausgeschalteter E-Mail."
@@ -1059,7 +1064,7 @@ msgid "error.organisation.external_cannot_manage"
 msgstr "Diese Person ist extern in einem deiner Arbeitsbereiche. Entferne zuerst diese Rolle und ernenne sie dann zum Administrator oder Eigentümer."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:34
+#: src/lib/errors/messages/room.ts:26
 msgid "error.room.person_not_found"
 msgstr "Diese Person ist nicht mehr dabei."
 
@@ -1672,11 +1677,6 @@ msgstr "Schreibe etwas für die Erkenntnis."
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
 msgstr "Schreibe etwas, das behalten werden soll."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:11
-msgid "error.room.labels_already_answered"
-msgstr "Du hast schon gesagt, was du hier tust."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

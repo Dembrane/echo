@@ -19,6 +19,16 @@ msgstr ""
 #~ msgstr "Voer minimaal één van je VAT-, KvK- of KBO-nummers in."
 
 #. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:30
+#~ msgid "error.room.no_labels_question"
+#~ msgstr "Hier valt niets te beantwoorden."
+
+#. js-lingui-explicit-id
+#: src/lib/errors/messages/room.ts:11
+#~ msgid "error.room.labels_already_answered"
+#~ msgstr "Je hebt al gezegd wat je hier doet."
+
+#. js-lingui-explicit-id
 #: src/lib/errors/messages/request.ts:5
 msgid "error.request.field_empty"
 msgstr "{field} kan niet leeg zijn. Vul het in of verwijder het."
@@ -394,12 +404,12 @@ msgid "error.member.owner_removes_owner"
 msgstr "Alleen een eigenaar kan een andere eigenaar verwijderen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:20
+#: src/lib/errors/messages/room.ts:16
 msgid "error.room.name_signer_admins_only"
 msgstr "Alleen een eigenaar of beheerder kan kiezen wie ondertekent. Je kunt zelf ondertekenen, of de persoon herinneren die al is gekozen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:25
+#: src/lib/errors/messages/room.ts:21
 msgid "error.room.new_person_admins_only"
 msgstr "Alleen een eigenaar of beheerder kan iemand uitnodigen die nog geen lid is. Je kunt wel een collega toevoegen die al lid is."
 
@@ -434,12 +444,12 @@ msgid "error.project.not_owner"
 msgstr "Alleen de eigenaar van dit project kan dit doen."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:15
+#: src/lib/errors/messages/room.ts:11
 msgid "error.room.manage_forbidden"
 msgstr "Alleen wie diegene heeft uitgenodigd, een beheerder of Facturering kan aanpassen wat diegene doet."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:38
+#: src/lib/errors/messages/room.ts:30
 msgid "error.room.remove_forbidden"
 msgstr "Alleen wie diegene heeft uitgenodigd, een beheerder of Facturering kan diegene eruit halen."
 
@@ -789,11 +799,6 @@ msgid "error.billing.no_payment_profile"
 msgstr "Er is nog geen betaalmethode om bij te werken. Kies eerst een abonnement."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:30
-msgid "error.room.no_labels_question"
-msgstr "Hier valt niets te beantwoorden."
-
-#. js-lingui-explicit-id
 #: src/lib/errors/messages/demo.ts:7
 msgid "error.demo.contact_not_in_organisation"
 msgstr "Ze zitten niet meer in deze organisatie, dus de demo is niet gepubliceerd. Voeg ze weer toe, of publiceer met de mail uit."
@@ -1059,7 +1064,7 @@ msgid "error.organisation.external_cannot_manage"
 msgstr "Deze persoon is een externe in een van je werkruimtes. Verwijder eerst die rol en maak diegene daarna beheerder of eigenaar."
 
 #. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:34
+#: src/lib/errors/messages/room.ts:26
 msgid "error.room.person_not_found"
 msgstr "Deze persoon zit er niet meer in."
 
@@ -1672,11 +1677,6 @@ msgstr "Schrijf iets voor het inzicht."
 #: src/lib/errors/messages/memory.ts:5
 msgid "error.memory.content_required"
 msgstr "Schrijf iets om als herinnering te bewaren."
-
-#. js-lingui-explicit-id
-#: src/lib/errors/messages/room.ts:11
-msgid "error.room.labels_already_answered"
-msgstr "Je hebt al gezegd wat je hier doet."
 
 #. js-lingui-explicit-id
 #: src/lib/errors/messages/organisation.ts:32

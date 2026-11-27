@@ -165,6 +165,29 @@ describe("the decision lens", () => {
 		});
 	});
 
+	it("gives your own row the same menu, to change what you do and never to remove yourself", async () => {
+		const mine = {
+			...people[3],
+			may_relabel: true,
+			may_remove: false,
+		} as RoomPersonT;
+		const props = await show(
+			page({ people: people.map((p) => (p.app_user_id === ME ? mine : p)) }),
+		);
+		const robin = screen
+			.getAllByTestId("room-person")
+			.find(
+				(r) => r.getAttribute("data-email") === "robin@example-town.example",
+			) as HTMLElement;
+		fireEvent.click(within(robin).getByTestId("person-menu"));
+		expect((await screen.findByTestId("person-change")).textContent).toBe(
+			"Change what I do",
+		);
+		expect(screen.queryByTestId("person-remove")).toBeNull();
+		fireEvent.click(screen.getByTestId("person-change"));
+		expect(props.onChange).toHaveBeenCalledWith(mine);
+	});
+
 	it("tags labels by their words, signing as an outlined marker with the pen, and nobody as 'informed'", async () => {
 		await show(page());
 		const noor = screen

@@ -22,7 +22,8 @@ import { PersonTags } from "./Tags";
  * on the right. The middle says what the lens is about. Decision: what they do, as tags
  * (signing first, outlined blue; labels in the quiet tint). Access: their organisation
  * role and whether they read the offer, with what they do following quietly in words.
- * A member not added yet is marked so, with one action: add them.
+ * A member not added yet is marked so, with one action: add them. Your own row has the
+ * same menu, to change what you do (never to take yourself out).
  */
 export function PersonRow({
 	lens,
@@ -119,7 +120,11 @@ export function PersonRow({
 							<Menu.Dropdown>
 								{change && (
 									<Menu.Item onClick={onChange} data-testid="person-change">
-										<Trans>Change what {first} does</Trans>
+										{you ? (
+											<Trans>Change what I do</Trans>
+										) : (
+											<Trans>Change what {first} does</Trans>
+										)}
 									</Menu.Item>
 								)}
 								{remove && (
