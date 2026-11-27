@@ -113,8 +113,13 @@ run("agent turn survives a worker crash", () => {
       "I'll look through the conversations.",
       "People mostly want more parking near the station.",
     ]);
-    const workflows = await sql`
+    const turns = () => sql`
       select workflow_uuid, status from dbos.workflow_status where name = 'agentic.turn.run'`;
+    // DBOS records a run's outcome after its handler returns, so after everything above.
+    await until(async () =>
+      (await turns()).every((w) => !["ENQUEUED", "PENDING"].includes(w.status)),
+    );
+    const workflows = await turns();
     expect(workflows.map((w) => [w.workflow_uuid, w.status])).toEqual([
       [`agentic-turn:${ids.run}:1`, "SUCCESS"],
     ]);
