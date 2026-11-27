@@ -1,5 +1,5 @@
-import { createHmac } from "node:crypto";
 import { expect, test } from "@playwright/test";
+import { AUTH_SECRET, verificationToken } from "./helpers";
 
 // Register, verify, log in: the whole way in for a new person, through the real UI and API.
 //
@@ -8,23 +8,6 @@ import { expect, test } from "@playwright/test";
 // HS256 JWT of { email } signed with the API's AUTH_SECRET. Pass that secret as
 // E2E_AUTH_SECRET; without it the spec skips. Needs the dashboard (E2E_BASE_URL, default
 // :5173) talking to a running API with a migrated database. Not a PR gate.
-const AUTH_SECRET = process.env.E2E_AUTH_SECRET ?? "";
-
-const base64url = (value: string | Buffer) =>
-	Buffer.from(value).toString("base64url");
-
-function verificationToken(email: string, secret: string): string {
-	const now = Math.floor(Date.now() / 1000);
-	const header = base64url(JSON.stringify({ alg: "HS256" }));
-	const payload = base64url(
-		JSON.stringify({ email: email.toLowerCase(), exp: now + 3600, iat: now }),
-	);
-	const signature = createHmac("sha256", secret)
-		.update(`${header}.${payload}`)
-		.digest("base64url");
-	return `${header}.${payload}.${signature}`;
-}
-
 test.skip(!AUTH_SECRET, "set E2E_AUTH_SECRET to the API's AUTH_SECRET");
 
 test("a new person registers, verifies their email and logs in", async ({

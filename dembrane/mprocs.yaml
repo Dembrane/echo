@@ -3,7 +3,7 @@
 procs:
   api:
     cwd: "<CONFIG_DIR>/platform"
-    shell: "bun --env-file=.env.local --watch apps/api/src/main.ts"
+    shell: "bun --env-file=.env.local apps/api/src/main.ts"
   worker:
     cwd: "<CONFIG_DIR>/platform"
     shell: "bun --env-file=.env.local apps/worker/src/main.ts"

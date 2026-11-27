@@ -222,6 +222,9 @@ export default defineConfig(({ mode }) => {
 				},
 			},
 		},
+		// Two dev servers on one checkout (the verify skill's dashboard and
+		// portal) would rebuild one shared dependency cache under each other.
+		cacheDir: process.env.VITE_CACHE_DIR || "node_modules/.vite",
 		define: {
 			__APP_BUILD_ID__: JSON.stringify(buildId),
 		},
