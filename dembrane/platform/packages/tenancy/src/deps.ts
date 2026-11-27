@@ -21,6 +21,13 @@ export interface TenancyDeps {
    * project" done. It must never throw; the project exists.
    */
   readonly onProjectCreated?: (projectId: string) => Promise<void>;
+  /**
+   * Whether customer accounts holds a pending organisation invitation: made by naming a
+   * signer or by the data room, and withdrawn when that naming or room access ends. Inviting
+   * the address from the Members page replaces such an invitation with its own, which
+   * nothing in accounts withdraws. Without it, any pending invitation is "already invited".
+   */
+  readonly invitationHeld?: (orgId: string, email: string, inviteId: string) => Promise<boolean>;
 }
 
 export function clock(deps: Pick<TenancyDeps, "now">): Date {

@@ -73,3 +73,13 @@ export async function pendingOrgInvites(db: Conn, orgId: string, nowIso: string,
 export async function insertOrgInvite(db: Conn, row: typeof org_invite.$inferInsert) {
   await db.insert(org_invite).values(row);
 }
+
+/** Withdraws a pending org invitation (soft delete); one taken up or withdrawn stays as it is. */
+export async function withdrawOrgInvite(db: Conn, id: string, nowIso: string) {
+  await db
+    .update(org_invite)
+    .set({ deleted_at: nowIso })
+    .where(
+      and(eq(org_invite.id, id), isNull(org_invite.accepted_at), isNull(org_invite.deleted_at)),
+    );
+}

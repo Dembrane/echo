@@ -40,6 +40,7 @@ import {
   insertOrgInvite,
   pendingOrgInvites,
   pendingWorkspaceInvites,
+  withdrawOrgInvite,
 } from "../storage/invites";
 import {
   conversationDurationsBetween,
@@ -504,6 +505,8 @@ export function orgService(deps: TenancyDeps) {
     /**
      * Invites to the org without any workspace. Everyone not already a member, with or
      * without an account, gets an invite link valid for seven days to accept or decline.
+     * Someone with an invitation waiting is "already invited", unless customer accounts
+     * holds it (invitationHeld): then this one replaces it.
      */
     async invite(who: Signed, orgId: string, body: { email: string; role: string }) {
       const member = requireOnboarded(who);
@@ -542,7 +545,12 @@ export function orgService(deps: TenancyDeps) {
           email,
         });
       const [pending] = await pendingOrgInvites(db, orgId, iso(now), email);
-      if (pending)
+      // One a naming or the data room holds is theirs to withdraw when that ends: this
+      // invitation replaces it, so the admin's stands whatever happens to the signer or the
+      // room. It lasts at least as long, so a signer's 30 days are not cut short.
+      const replaces =
+        pending && (await deps.invitationHeld?.(orgId, email, pending.id)) ? pending : null;
+      if (pending && !replaces)
         return {
           status: "already_invited",
           email,
@@ -551,8 +559,13 @@ export function orgService(deps: TenancyDeps) {
         };
       const inviteId = newId();
       const url = link(inviteId);
-      const expiresAt = iso(new Date(now.getTime() + 7 * 86_400_000));
+      const expiresAt = iso(
+        new Date(
+          Math.max(now.getTime() + 7 * 86_400_000, replaces ? Date.parse(replaces.expires_at) : 0),
+        ),
+      );
       await db.transaction(async (tx) => {
+        if (replaces) await withdrawOrgInvite(tx, replaces.id, iso(now));
         await insertOrgInvite(tx, {
           id: inviteId,
           org_id: orgId,

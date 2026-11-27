@@ -473,7 +473,8 @@ export async function setSigner(
  * made another way (the Members page, the room) were never on a naming's event, so they
  * stay, and one already taken up stays a membership. Returns the ids withdrawn, for the
  * event that records the change. The one place that decides it: setSigner, unsetSigner and
- * removeRoomPerson call it.
+ * removeRoomPerson call it. invitationHeld says which invitations it and the room may
+ * withdraw, so the Members page can replace them with its own.
  */
 export async function releaseSignerInvite(
   tx: Conn,
@@ -487,6 +488,23 @@ export async function releaseSignerInvite(
   for (const id of await store.signerInviteIds(tx, orgId, email))
     if (await store.withdrawOrgInvite(tx, id, now)) withdrawn.push(id);
   return withdrawn;
+}
+
+/**
+ * Whether a pending invitation is one this package made and may withdraw later: a naming's
+ * (releaseSignerInvite reads the same ids) or the room's (removeRoomPerson withdraws the
+ * row's). The Members page asks it before answering "already invited": an owner or admin
+ * inviting such an address replaces the invitation with one of their own, which neither a
+ * change of signer nor a removal from the room withdraws.
+ */
+export async function invitationHeld(
+  c: Conn,
+  orgId: string,
+  email: string,
+  inviteId: string,
+): Promise<boolean> {
+  if ((await store.signerInviteIds(c, orgId, email)).includes(inviteId)) return true;
+  return (await store.roomPersonByEmail(c, orgId, email))?.orgInviteId === inviteId;
 }
 
 /**
