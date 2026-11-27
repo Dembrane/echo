@@ -593,14 +593,15 @@ run("accounts routes against Postgres", () => {
         .where(and(eq(schema.org_invite.org_id, w.orgId), eq(schema.org_invite.email, email)));
     expect(await invites("signer@example.test")).toEqual([{ role: "billing" }]);
     expect(
-      await store.inviteSigner(w.db, {
+      await store.inviteToOrg(w.db, {
         id: crypto.randomUUID(),
         orgId: w.orgId,
         email: "Admin@Example.test",
+        role: "billing",
         invitedBy: null,
         now: w.clock.now,
       }),
-    ).toBe(false);
+    ).toBeNull();
     // The signer sees that document, and nothing else of the organisation.
     const seen = await call(w, "GET", `${C()}/documents/${id}`, "signer");
     expect(seen.status).toBe(200);

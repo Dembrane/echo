@@ -453,7 +453,7 @@ export function workspaceService(deps: TenancyDeps) {
           });
         }
         const creator = await appUser(tx, member.appUserId);
-        const creatorName = creator?.display_name || "A organisation admin";
+        const creatorName = creator?.display_name || "An organisation admin";
         await emitToAll(tx, now, await orgAdmins(tx, orgId), {
           actor: member.appUserId,
           event: "WORKSPACE_CREATED",

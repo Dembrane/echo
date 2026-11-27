@@ -45,8 +45,8 @@ import { iso } from "./views";
  * The data room: the colleagues an organisation brings in to decide on an offer with it.
  * Who runs the account (owner, admin, Billing) is in by their role; a member brought in
  * reads the offer and the DPA (access.ts); someone new is invited as a plain member, by an
- * owner or admin only. Each
- * person carries labels saying what they do in the decision. Nobody takes a seat: seats
+ * owner or admin only. Each person carries labels saying what they do in the decision,
+ * which they may change themselves. Nobody takes a seat: seats
  * come from direct workspace rows, and the room makes none.
  */
 

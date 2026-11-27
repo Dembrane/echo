@@ -1,4 +1,4 @@
-import { sendEmail } from "@dembrane/account";
+import { sendEmail, subjectOf } from "@dembrane/account";
 import {
   ConflictError,
   ForbiddenError,
@@ -622,20 +622,22 @@ async function emailSigner(
   // The signer's own language when they have an account, else the document's.
   const language =
     (await localeOfEmail(tx, email).catch(() => null)) ?? resolveLocale(doc.language);
+  const data = {
+    inviter_name: me?.name || me?.email || org.name,
+    org_name: org.name,
+    document_title: doc.title,
+    // Opens the invitation page for this person, not a bare sign-in.
+    sign_url: signerInviteUrl(d.settings.dashboardUrl, d.settings.inviteSecret, doc),
+  };
   await d.jobs.enqueue(
     sendEmail,
     {
       language,
       to: email,
-      subject: `Please sign ${doc.title}`,
+      // The catalog's subject, as the email itself words it (subjectOf).
+      subject: subjectOf({ template: "account_signer_invite", data }, language) ?? "",
       template: "account_signer_invite",
-      data: {
-        inviter_name: me?.name || me?.email || org.name,
-        org_name: org.name,
-        document_title: doc.title,
-        // Opens the invitation page for this person, not a bare sign-in.
-        sign_url: signerInviteUrl(d.settings.dashboardUrl, d.settings.inviteSecret, doc),
-      },
+      data,
       context: `account signer invite ${doc.id}`,
     },
     { tx },
