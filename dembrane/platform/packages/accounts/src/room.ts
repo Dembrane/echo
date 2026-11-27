@@ -631,7 +631,10 @@ export async function answerRoomLabels(
   const { org } = access;
   const row = await myRoomRow(d, who, access);
   const me = await store.identity(d.db, who.directusUserId);
-  const email = (row?.email ?? me?.email ?? "").toLowerCase();
+  // Without a row, one is made under the caller's verified address (the one their row is
+  // found by); with none there is no row to make or find.
+  const email = (row?.email ?? (me?.verified ? me.email : "")).toLowerCase();
+  if (!email) throw new NotFoundError("room.person_not_found");
   const asked = asksLabels(row, who.appUserId);
   const labels = inOrder(input.labels);
   const change = labelChange(row, labels, input.other);

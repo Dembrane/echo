@@ -382,6 +382,21 @@ run("who does what in the data room", () => {
     expect(events("server_room_labels_changed").at(-1)?.distinctId).toBe("admin@example.test");
   });
 
+  test("someone who runs the account with no room row and no verified address: not found, and no row is made", async () => {
+    const who = await person("unverified", "unverified@example.test", { role: "admin" });
+    await w.db
+      .update(schema.auth_user)
+      .set({ emailVerified: false })
+      .where(eq(schema.auth_user.id, w.people[who].directusUserId));
+    const before = (await w.db.select().from(schema.account_room_person)).length;
+    const r = await call(w, "POST", `${C()}/room/me/labels`, who, {
+      labels: ["go_ahead"],
+      other: null,
+    });
+    expect([r.status, codeOf(r)]).toEqual([404, "room.person_not_found"]);
+    expect(await w.db.select().from(schema.account_room_person)).toHaveLength(before);
+  });
+
   test("a member already: room access and labels at once, an email in their own language, no invitation", async () => {
     w.jobs.jobs.length = 0;
     const r = await add("billing", "kees@example.test", ["rollout"]);
