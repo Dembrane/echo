@@ -32,8 +32,8 @@ gets two more entries: "Tasks" and "Documents".
 
 If you belong to more than one organisation, a "Tasks" page shows one card for each: "What
 each of your organisations still has to do for dembrane." A prompt points you to open
-tasks: "You have {n} thing(s) to do in {name}", with "Go to your tasks" and a close
-button.
+tasks: "You have 1 thing to do in {name}" or "You have {n} things to do in {name}", with
+"Go to your tasks" and a close button.
 
 ## How an offer reaches you
 

@@ -18,14 +18,31 @@ import * as fx from "../../contract/fixtures.gen";
 // The room's own row: the same "..." menu as anyone's, "Change what I do", opening the
 // one change flow titled "What do you do?", which saves through answerRoomLabels.
 
+const ROBIN = "robin@example-town.example";
 const calls: { name: string; body?: unknown }[] = [];
+// The server as far as this screen needs it: answerRoomLabels changes Robin's own row and
+// answers with it, and the room the mutation then refreshes shows the change.
+let people = fx.roomPage.people;
 vi.mock("../../api/client", async (importOriginal) => ({
 	...(await importOriginal<typeof import("../../api/client")>()),
 	call: vi.fn(async (name: string, opts?: { body?: unknown }) => {
 		calls.push({ body: opts?.body, name });
-		if (name === "roomPage") return fx.roomPage;
+		if (name === "roomPage") return { ...fx.roomPage, people };
 		if (name === "accountPage") return fx.accountPage;
-		if (name === "answerRoomLabels") return fx.roomPage.people[0];
+		if (name === "answerRoomLabels") {
+			const body = opts?.body as { labels: string[]; other: string | null };
+			people = people.map((p) =>
+				p.email === ROBIN
+					? {
+							...p,
+							labels: body.labels as typeof p.labels,
+							labels_answered_at: "2026-09-28T12:00:00.000Z",
+							other: body.other,
+						}
+					: p,
+			);
+			return people.find((p) => p.email === ROBIN);
+		}
 		throw new Error(`unexpected call ${name}`);
 	}),
 }));
@@ -74,22 +91,39 @@ describe("changing what you do yourself", () => {
 				</MantineProvider>
 			</I18nProvider>,
 		);
-		const robin = (await screen.findAllByTestId("room-person")).find(
-			(r) => r.getAttribute("data-email") === "robin@example-town.example",
-		) as HTMLElement;
+		const robinRow = async () =>
+			(await screen.findAllByTestId("room-person")).find(
+				(r) => r.getAttribute("data-email") === ROBIN,
+			) as HTMLElement;
+		const robin = await robinRow();
+		expect(within(robin).queryByText("Checks IT and security")).toBeNull();
 		fireEvent.click(within(robin).getByTestId("person-menu"));
 		fireEvent.click(await screen.findByTestId("person-change"));
 		const dialog = await screen.findByRole("dialog");
 		expect(within(dialog).getByText("What do you do?")).toBeTruthy();
 		// Who signs is not chosen here: that is for "Tell us who signs".
 		expect(within(dialog).queryByRole("group", { name: "Signing" })).toBeNull();
+		fireEvent.click(within(dialog).getByTestId("label-it_security"));
 		fireEvent.click(within(dialog).getByTestId("person-next"));
 		await waitFor(() =>
-			expect(calls.find((c) => c.name === "answerRoomLabels")?.body).toEqual({
-				labels: ["go_ahead", "contract_purchasing"],
-				other: null,
-			}),
+			expect(
+				calls.find((c) => c.name === "answerRoomLabels")?.body,
+			).toMatchObject({ other: null }),
 		);
+		expect(
+			(
+				calls.find((c) => c.name === "answerRoomLabels")?.body as {
+					labels: string[];
+				}
+			).labels.sort(),
+		).toEqual(["contract_purchasing", "go_ahead", "it_security"]);
 		expect(calls.some((c) => c.name === "addRoomPerson")).toBe(false);
+		// After saving: the dialog closes and Robin's own row says what they do now.
+		await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+		await waitFor(async () =>
+			expect(
+				within(await robinRow()).getByText("Checks IT and security"),
+			).toBeTruthy(),
+		);
 	});
 });
