@@ -559,13 +559,18 @@ export function orgService(deps: TenancyDeps) {
         };
       const inviteId = newId();
       const url = link(inviteId);
+      // A replacement keeps the expiry of the one it replaces when that is later (a signer's
+      // or the room's, up to 30 days), so a room link the person already holds keeps working.
+      // The Members email still says "expires in 7 days": it understates, on purpose.
       const expiresAt = iso(
         new Date(
           Math.max(now.getTime() + 7 * 86_400_000, replaces ? Date.parse(replaces.expires_at) : 0),
         ),
       );
-      await db.transaction(async (tx) => {
-        if (replaces) await withdrawOrgInvite(tx, replaces.id, iso(now));
+      const replaced = await db.transaction(async (tx) => {
+        // Taken up or withdrawn since it was read: nothing is replaced, so nothing is made
+        // or sent, and the answer below says where they stand now.
+        if (replaces && !(await withdrawOrgInvite(tx, replaces.id, iso(now)))) return false;
         await insertOrgInvite(tx, {
           id: inviteId,
           org_id: orgId,
@@ -591,7 +596,22 @@ export function orgService(deps: TenancyDeps) {
             orgId,
             expiresAt,
           });
+        return true;
       });
+      if (!replaced) {
+        const joined = await directusUserByEmail(db, email);
+        const user = joined ? await appUserByDirectusId(db, joined.id) : null;
+        const membership = user ? await anyOrgMembership(db, orgId, user.id) : null;
+        if (membership && membership.deleted_at === null)
+          return { status: "already_member", email, email_sent: false, invite_url: null };
+        const [still] = await pendingOrgInvites(db, orgId, iso(now), email);
+        return {
+          status: "already_invited",
+          email,
+          email_sent: false,
+          invite_url: still ? link(still.id) : null,
+        };
+      }
       return {
         status: "invited",
         email,

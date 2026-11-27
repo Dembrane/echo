@@ -379,7 +379,8 @@ export const store = {
 
   /**
    * Withdraws an invitation (soft delete): its link and the code sign-in it allowed stop.
-   * One already taken up or withdrawn stays as it is. True when this withdrew it.
+   * One already taken up or withdrawn stays as it is. True when this withdrew it. The same
+   * query as withdrawOrgInvite in packages/tenancy/src/storage/invites.ts: change both together.
    */
   async withdrawOrgInvite(c: Conn, id: string, now: Date): Promise<boolean> {
     const rows = await c
