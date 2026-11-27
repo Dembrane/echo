@@ -51,17 +51,16 @@ function queries(sql: Sql) {
       ) as Promise<Row[]>;
     },
 
-    /** Free (or legacy stamped) drafts untouched since `before` move to error; returns their ids. */
+    /**
+     * Drafts untouched since `before` move to error on every plan: past that time no run can
+     * still be alive, and a draft blocks the project's next report. Returns their ids.
+     */
     async failStuckDrafts(before: string, now: string, code: string, message: string) {
-      // Free is the workspace's own account tier, as allowance decides it.
       const rows = await sql`update project_report r
         set status = 'error', error_code = ${code}, error_message = ${message}, date_updated = ${now}
         from project p
         where p.id = r.project_id and p.is_sample is not true
           and r.kind = 'report' and r.status = 'draft' and r.deleted_at is null
-          and (r.free_period_start is not null or exists (
-            select 1 from workspace w join billing_account own on own.id = w.billing_account_id
-            where w.id = p.workspace_id and own.tier = 'free'))
           and coalesce(r.date_updated, r.date_created) < ${before}
         returning r.id::int`;
       return rows.map((r) => r.id as number).sort((a, b) => a - b);

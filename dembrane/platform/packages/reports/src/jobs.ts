@@ -183,6 +183,26 @@ type Phase2 =
  * was in and summaries already written are not asked for again.
  */
 export function generateReportWorkflow(d: GenerateDeps) {
+  const run = generateReportRun(d);
+  return async (p: Payload): Promise<void> => {
+    try {
+      await run(p);
+    } catch (err) {
+      // A step DBOS timed out skips the step's own error handling: end the report here so
+      // the host sees the failure now and can start a new one, instead of after the sweep.
+      try {
+        await step("ended", () =>
+          markError(d, p, "GENERATION_DID_NOT_FINISH", "Report generation did not finish"),
+        );
+      } catch (inner) {
+        d.logger.error({ err: inner, reportId: p.reportId }, "ending the report failed");
+      }
+      throw err;
+    }
+  };
+}
+
+function generateReportRun(d: GenerateDeps) {
   return async (p: Payload): Promise<void> => {
     const t0 = await step("started-at", async () => Date.now());
     const phase1 = await step<Phase1>(
