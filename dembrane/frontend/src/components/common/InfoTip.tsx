@@ -1,4 +1,4 @@
-import { ActionIcon, Tooltip } from "@mantine/core";
+import { ActionIcon, Group, Input, Tooltip } from "@mantine/core";
 import { InfoIcon } from "@phosphor-icons/react";
 import { type ReactNode, useId, useRef, useState } from "react";
 import { testId } from "@/lib/testUtils";
@@ -59,5 +59,45 @@ export function InfoTip({ label, children, testId: id }: InfoTipProps) {
 				<InfoIcon size={16} aria-hidden />
 			</ActionIcon>
 		</Tooltip>
+	);
+}
+
+interface FieldWithInfoProps {
+	/** The field's name, as its label reads. */
+	title: ReactNode;
+	/** The id of the field inside. */
+	htmlFor: string;
+	/** What the "i" is called to a screen reader, e.g. "About the project context". */
+	about: string;
+	/** The explanation the tip shows: what would otherwise sit under the label all the time. */
+	info: ReactNode;
+	testId?: string;
+	/** The field itself, without a label of its own. */
+	children: ReactNode;
+}
+
+/**
+ * A field whose explanation sits behind an "i" beside its label, instead of under the label
+ * all the time. The "i" is beside the label, not inside it, so the field's name stays the
+ * label's words alone. The label hugs the field as any label does (rule 05).
+ */
+export function FieldWithInfo({
+	title,
+	htmlFor,
+	about,
+	info,
+	testId: id,
+	children,
+}: FieldWithInfoProps) {
+	return (
+		<Input.Wrapper>
+			<Group gap={4} wrap="nowrap" align="center" mb={4}>
+				<Input.Label htmlFor={htmlFor}>{title}</Input.Label>
+				<InfoTip label={about} testId={id}>
+					{info}
+				</InfoTip>
+			</Group>
+			{children}
+		</Input.Wrapper>
 	);
 }

@@ -29,7 +29,8 @@ The full table is on [roles and permissions](./roles-and-permissions.md).
 Choose "Create" above the search box on the workspace home, then "Quick project" or
 "Project from a template". On a phone the button is a plus. Home, the page that asks "What
 would you like to do?", has the same "Create" button; if you can create projects in more
-than one workspace, it first asks "Which workspace?".
+than one workspace, it first asks "Which workspace?". A workspace you have just created has
+no projects yet, so it opens on this page; "Cancel" takes you to its empty overview.
 
 1. Choose how to start. Under "Start from a template", the first card, "Quick start", makes
    a plain project: nothing is set up for you, and you can change every setting later. The
@@ -39,7 +40,8 @@ than one workspace, it first asks "Which workspace?".
    skips this step and starts from "Quick start".
 2. Fill in "Project name" and, if you like, "Project context". The context says what the
    project is about and what you want to learn. dembrane uses it when it writes summaries,
-   answers in chat and replies to participants.
+   answers in chat and replies to participants. The "i" beside a label says more about
+   that field when you point at it or tap it.
 3. Choose "Create project". "More options" holds the key terms, who can see the project
    ("Open to the workspace" or "Private", which needs Innovator or higher), "Set up with the
    assistant after creating" where it is offered, and a summary to check. You can skip all

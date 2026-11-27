@@ -4,7 +4,9 @@
 	display: flex;
 	gap: var(--mantine-spacing-sm);
 	list-style: none;
-	margin: 0;
+	/* The padding keeps a card's focus ring from being clipped; the margin takes it back, so
+	 * the first card starts on the page's left line, under the heading. */
+	margin: 0 -4px;
 	overflow-x: auto;
 	overscroll-behavior-x: contain;
 	padding: 4px 4px var(--mantine-spacing-sm);

@@ -61,7 +61,7 @@ msgstr "Brainstorming"
 msgid "Calm conversation in rounds"
 msgstr "Klidný rozhovor v kolech"
 
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:102
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:98
 msgid "can bring in other groups"
 msgstr "může přinést jiné skupiny"
 
@@ -93,7 +93,7 @@ msgstr "Rozhodnutí a úkoly"
 msgid "Differences"
 msgstr "Rozdíly"
 
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:116
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:112
 msgid "Each conversation gets a title"
 msgstr "Každý rozhovor dostane název"
 
@@ -126,7 +126,7 @@ msgstr "Nápady všech, rychle"
 msgid "templates.verb.explore"
 msgstr "Prozkoumat"
 
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:96
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:92
 msgid "Explore"
 msgstr "Explore"
 
@@ -286,7 +286,7 @@ msgstr "Pro panely mladých a setkání naslouchání: moderátor se ptá jedné
 msgid "Hard points"
 msgstr "Těžké body"
 
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:122
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:118
 msgid "Host script"
 msgstr "Scénář pro vedoucí"
 
@@ -302,7 +302,7 @@ msgstr "Nápady, které stojí za to"
 #~ msgid "Ideation workshop"
 #~ msgstr "Workshop nápadů"
 
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:128
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:124
 msgid "in your host guide, ready to edit"
 msgstr "ve tvém průvodci, připravený k úpravě"
 
@@ -342,7 +342,7 @@ msgstr "Další šablony"
 #~ msgid "Most used. Filter to find more."
 #~ msgstr "Nejpoužívanější. Filtruj a najdi další."
 
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:109
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:105
 msgid "Name box"
 msgstr "Pole pro jméno"
 
@@ -359,7 +359,7 @@ msgid "No template fits both. Clear a filter, or use Quick start."
 msgstr "Žádná šablona neodpovídá obojímu. Zruš filtr, nebo použij Rychlý start."
 
 #: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:53
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:111
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:107
 msgid "None"
 msgstr "Žádné"
 
@@ -375,9 +375,9 @@ msgstr "Žádné: nic k vyplnění"
 #~ msgid "Nothing to fill in before recording"
 #~ msgstr "Před nahráváním není nic potřeba vyplnit"
 
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:89
 #: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:93
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:97
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:118
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:114
 msgid "Off"
 msgstr "Off"
 
@@ -429,7 +429,7 @@ msgstr "Rychlý start"
 #~ msgid "Reads back what was heard"
 #~ msgstr "Shrne, co zaznělo"
 
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:104
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:100
 msgid "reads this conversation only"
 msgstr "čte jen tento rozhovor"
 
@@ -441,7 +441,7 @@ msgstr "Nahrávky, které už máte"
 msgid "Recurring meeting"
 msgstr "Pravidelná schůzka"
 
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:88
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:84
 msgid "reminded before finishing"
 msgstr "připomínka před dokončením"
 
@@ -521,7 +521,7 @@ msgstr "Kontrola stolu"
 msgid "Table conversations"
 msgstr "Rozhovory u stolů"
 
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:110
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:106
 msgid "Tags"
 msgstr "Tags"
 
@@ -545,7 +545,7 @@ msgstr "Šablony se nenačetly. Přesto můžeš použít Rychlý start a projek
 msgid "Tips and best practices"
 msgstr "Tipy a osvědčené postupy"
 
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:114
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:110
 msgid "Titles"
 msgstr "Názvy"
 
@@ -553,7 +553,7 @@ msgstr "Názvy"
 msgid "Turning points"
 msgstr "Body zlomu"
 
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:113
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:109
 msgid "Tutorial"
 msgstr "Návod"
 
@@ -573,7 +573,7 @@ msgstr "Porozumět, co si lidé myslí"
 msgid "Upload recordings"
 msgstr "Nahrát nahrávky"
 
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:81
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:77
 msgid "Verify"
 msgstr "Verify"
 
@@ -585,7 +585,7 @@ msgstr "Co se chystáte dělat?"
 msgid "What do you need to do?"
 msgstr "Co potřebuješ udělat?"
 
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:72
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:73
 msgid "What this sets up"
 msgstr "Co se tím nastaví"
 
@@ -597,6 +597,6 @@ msgstr "Co jsme slyšeli"
 #~ msgid "Working group"
 #~ msgstr "Pracovní skupina"
 
-#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:133
+#: src/components/project/templates/TemplateSetupSummary/TemplateSetupSummary.tsx:129
 msgid "You can change every setting after creating."
 msgstr "Každé nastavení můžeš po vytvoření změnit."
