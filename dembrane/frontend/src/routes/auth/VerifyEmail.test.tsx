@@ -4,14 +4,17 @@ import { I18nProvider } from "@lingui/react";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { StrictMode } from "react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeAll, expect, it, vi } from "vitest";
 import { VerifyEmailRoute } from "./VerifyEmail";
 
-const { session, verify } = vi.hoisted(() => ({
+const { navigate, session, verify } = vi.hoisted(() => ({
+	navigate: vi.fn(),
 	session: vi.fn<() => Promise<boolean>>(),
 	verify: vi.fn<(token: string) => Promise<void>>(),
 }));
+vi.mock("@/hooks/useI18nNavigate", () => ({ useI18nNavigate: () => navigate }));
 vi.mock("@/lib/auth", async (original) => ({
 	...(await original<typeof import("@/lib/auth")>()),
 	hasSession: session,
@@ -37,17 +40,17 @@ beforeAll(() => {
 
 afterEach(() => {
 	cleanup();
+	navigate.mockReset();
 	session.mockReset();
 	verify.mockReset();
 });
 
-const open = (path = "/verify-email?token=abc") =>
+const open = (
+	path = "/verify-email?token=abc",
+	client = new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+) =>
 	render(
-		<QueryClientProvider
-			client={
-				new QueryClient({ defaultOptions: { queries: { retry: false } } })
-			}
-		>
+		<QueryClientProvider client={client}>
 			<I18nProvider i18n={i18n}>
 				<MantineProvider>
 					<MemoryRouter initialEntries={[path]}>
@@ -113,4 +116,73 @@ it("no token: nothing is verified", async () => {
 	await screen.findByText(/Please open the link from your email/);
 	await waitFor(() => expect(session).toHaveBeenCalled());
 	expect(verify).not.toHaveBeenCalled();
+});
+
+// In the app the session is known before this page mounts, so the call fires
+// during StrictMode's double mount (dev).
+const strictWithSession = (signedIn: boolean) => {
+	const client = new QueryClient({
+		defaultOptions: { queries: { retry: false } },
+	});
+	if (signedIn) client.setQueryData(["auth", "session"], true);
+	else
+		client
+			.getQueryCache()
+			.build(client, { queryKey: ["auth", "session"] })
+			.setState({ error: new Error("No session"), status: "error" });
+	return render(
+		<StrictMode>
+			<QueryClientProvider client={client}>
+				<I18nProvider i18n={i18n}>
+					<MantineProvider>
+						<MemoryRouter initialEntries={["/verify-email?token=abc"]}>
+							<VerifyEmailRoute />
+						</MemoryRouter>
+					</MantineProvider>
+				</I18nProvider>
+			</QueryClientProvider>
+		</StrictMode>,
+	);
+};
+
+it("StrictMode, session known at mount: the answer reaches the page", async () => {
+	verify.mockResolvedValue();
+	strictWithSession(true);
+	await screen.findByText(
+		/The email address this link was sent to is verified/,
+	);
+	expect(verify).toHaveBeenCalledTimes(1);
+});
+
+it("StrictMode, session known at mount, a broken link: the page says so", async () => {
+	verify.mockRejectedValue(new Error("INVALID_TOKEN"));
+	strictWithSession(true);
+	await screen.findByText("This link is no longer valid");
+	expect(verify).toHaveBeenCalledTimes(1);
+});
+
+it("StrictMode, signed out at mount: the answer reaches the page", async () => {
+	verify.mockResolvedValue();
+	strictWithSession(false);
+	await screen.findByText(/Your email is verified/);
+	expect(verify).toHaveBeenCalledTimes(1);
+});
+
+it("signed out: on to login after a moment, unless the page was left first", async () => {
+	session.mockResolvedValue(false);
+	verify.mockResolvedValue();
+	open();
+	await screen.findByText(/Your email is verified/);
+	await waitFor(
+		() => expect(navigate).toHaveBeenCalledWith("/login?verified=1"),
+		{ timeout: 3000 },
+	);
+	cleanup();
+	navigate.mockReset();
+
+	const left = open();
+	await screen.findByText(/Your email is verified/);
+	left.unmount();
+	await new Promise((r) => setTimeout(r, 1800));
+	expect(navigate).not.toHaveBeenCalled();
 });

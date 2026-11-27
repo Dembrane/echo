@@ -11,7 +11,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useDocumentTitle } from "@mantine/hooks";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useAuthenticated, useVerifyMutation } from "@/components/auth/hooks";
 import { I18nLink } from "@/components/common/i18nLink";
@@ -23,7 +23,9 @@ import { useI18nNavigate } from "@/hooks/useI18nNavigate";
 // verifies its own address, and the session stays as it is. A link clicked a
 // second time answers as verified until it expires; an expired or broken one
 // fails, signed in or not. 15s mutation timeout prevents the original
-// infinite-loading bug.
+// infinite-loading bug. The answer is kept in state from mutateAsync: a call
+// made during StrictMode's double mount never reaches the mutation's own
+// status, and the page would say "Verifying" for good (dev).
 export const VerifyEmailRoute = () => {
 	useDocumentTitle(t`Email verification | dembrane`);
 	const [search] = useSearchParams();
@@ -33,9 +35,12 @@ export const VerifyEmailRoute = () => {
 
 	// doRedirect=false: we route ourselves so login vs dashboard is
 	// decided in one place.
-	const verifyMutation = useVerifyMutation(false);
+	const { mutateAsync } = useVerifyMutation(false);
 
 	const ranRef = useRef(false);
+	const [result, setResult] = useState<"pending" | "success" | "error">();
+	const redirect = useRef<ReturnType<typeof setTimeout>>(undefined);
+	useEffect(() => () => clearTimeout(redirect.current), []);
 
 	useEffect(() => {
 		// Wait for the session check first: firing before we know auth
@@ -45,27 +50,29 @@ export const VerifyEmailRoute = () => {
 		if (ranRef.current) return;
 
 		ranRef.current = true;
-		verifyMutation.mutate(
-			{ token },
-			{
-				onSuccess: () => {
-					// Someone signed in stays where they are: the login page is not
-					// their next step.
-					if (isAuthenticated) return;
-					setTimeout(() => navigate("/login?verified=1"), 1500);
-				},
+		setResult("pending");
+		mutateAsync({ token }).then(
+			() => {
+				setResult("success");
+				// Someone signed in stays where they are: the login page is not
+				// their next step.
+				if (isAuthenticated) return;
+				redirect.current = setTimeout(
+					() => navigate("/login?verified=1"),
+					1500,
+				);
 			},
+			() => setResult("error"),
 		);
-	}, [authLoading, isAuthenticated, token, verifyMutation, navigate]);
+	}, [authLoading, isAuthenticated, token, mutateAsync, navigate]);
 
 	const missingToken = !token;
 	const signedIn = !authLoading && isAuthenticated;
-	const showVerifying =
-		!missingToken && !authLoading && verifyMutation.isPending;
-	const showSuccess = !missingToken && !signedIn && verifyMutation.isSuccess;
+	const showVerifying = !missingToken && !authLoading && result === "pending";
+	const showSuccess = !missingToken && !signedIn && result === "success";
 	const showVerifiedSignedIn =
-		!missingToken && signedIn && verifyMutation.isSuccess;
-	const showError = !missingToken && !authLoading && verifyMutation.isError;
+		!missingToken && signedIn && result === "success";
+	const showError = !missingToken && !authLoading && result === "error";
 	const showSessionLoading = !missingToken && authLoading;
 
 	return (

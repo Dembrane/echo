@@ -132,6 +132,8 @@ export function createAuth(opts: AuthOptions) {
       },
     },
     emailVerification: {
+      // No autoSignInAfterVerification: a link opened where someone else is signed in must
+      // keep their session (verify-email-session.integration.test.ts).
       sendOnSignUp: true,
       sendVerificationEmail: async ({ user, url, token }) => {
         await opts.sendVerification?.(user.email, url, token);
