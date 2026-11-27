@@ -32,9 +32,9 @@ function spawn(executor: string, env: Record<string, string>) {
   });
 }
 const lines = () => readFileSync(trace, "utf8").trim().split("\n");
-async function until(check: () => boolean, ms = 45_000) {
+async function until(check: () => boolean | Promise<boolean>, ms = 45_000) {
   const end = Date.now() + ms;
-  while (!check()) {
+  while (!(await check())) {
     if (Date.now() > end) throw new Error(`timed out; trace:\n${readFileSync(trace, "utf8")}`);
     await Bun.sleep(100);
   }
@@ -73,6 +73,10 @@ run("report generation survives a killed worker", () => {
     const second = spawn("worker-b", {});
     procs.push(second);
     await until(() => lines().includes("worker-b webhook"));
+    // The webhook is the run's last traced step; its "completed" event is written after it.
+    const events = () =>
+      sql`select event from processing_status where project_id = ${PROJECT} order by id`;
+    await until(async () => (await events()).length >= 2);
 
     const work = lines().filter((l) => !l.endsWith(" ready"));
     expect(work).toEqual([
@@ -92,9 +96,7 @@ run("report generation survives a killed worker", () => {
     });
     const [conv] = await sql`select summary from conversation where id = ${CONVERSATION}`;
     expect(conv?.summary).toBe("Residents want later buses.");
-    const events =
-      await sql`select event from processing_status where project_id = ${PROJECT} order by id`;
-    expect(events.map((e) => e.event)).toEqual([
+    expect((await events()).map((e) => e.event)).toEqual([
       "task_create_report.completed",
       "task_create_report_continue.completed",
     ]);
