@@ -30,7 +30,7 @@ interface TemplateCardButtonProps {
 export const TemplateCardButton = ({
 	template,
 	onChoose,
-	selected = false,
+	selected,
 	compact = false,
 	tabIndex,
 	onKeyDown,

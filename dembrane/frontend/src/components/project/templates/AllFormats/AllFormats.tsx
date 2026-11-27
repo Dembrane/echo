@@ -7,7 +7,6 @@ import {
 	offeredCards,
 	type TemplateChoiceContext,
 	type TemplateFilter,
-	type TemplateKey,
 	type TemplateSummary,
 	visibleCards,
 } from "../projectTemplates";
@@ -19,8 +18,6 @@ interface AllFormatsProps {
 	/** From GET /v2/project-templates; undefined while it loads. */
 	templates: readonly TemplateSummary[] | undefined;
 	failed?: boolean;
-	/** The template the project starts from now, drawn chosen. */
-	selected?: TemplateKey;
 	/** A card was pressed: the flow moves on with it. */
 	onChoose: (key: ChoiceKey, context: TemplateChoiceContext) => void;
 	onFilterChange?: (filter: "verb" | "setup", value: string) => void;
@@ -42,7 +39,6 @@ const activeFilters = (f: TemplateFilter): string[] => [
 export const AllFormats = ({
 	templates,
 	failed = false,
-	selected,
 	onChoose,
 	onFilterChange,
 	onUpload,
@@ -84,7 +80,6 @@ export const AllFormats = ({
 					<TemplateCardButton
 						key={tpl.key}
 						template={tpl}
-						selected={tpl.key === selected}
 						onChoose={() =>
 							onChoose(tpl.key, {
 								...cardFacts(tpl),

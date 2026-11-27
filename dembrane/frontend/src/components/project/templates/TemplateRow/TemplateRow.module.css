@@ -5,7 +5,9 @@
 	display: flex;
 	gap: var(--mantine-spacing-sm);
 	list-style: none;
-	margin: 0;
+	/* The padding keeps a card's focus ring and chosen box from being clipped; the margin
+	 * takes it back, so the first card lines up with the heading and the fields. */
+	margin: 0 -4px;
 	overflow-x: auto;
 	overscroll-behavior-x: contain;
 	padding: 4px 4px var(--mantine-spacing-sm);
@@ -18,6 +20,12 @@
 	display: flex;
 	flex: 0 0 160px;
 	scroll-snap-align: start;
+}
+/* On a phone two cards and a clear part of the third fit, so the bar says there is more. */
+@media (max-width: 640px) {
+	.item {
+		flex-basis: 148px;
+	}
 }
 /* The far end is a resting place too: without it the bar snaps back to the last card's
  * neighbour on any re-layout and cuts the last card (the chosen one, perhaps) in half. */

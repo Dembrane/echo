@@ -461,7 +461,6 @@ export const CreateProjectRoute = () => {
 							<LazyAllFormats
 								templates={templates.data}
 								failed={templates.isError}
-								selected={template}
 								onChoose={chooseTemplate}
 								onFilterChange={(filter, value) =>
 									track("project_template_filter_changed", {
